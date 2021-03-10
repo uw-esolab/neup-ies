@@ -695,7 +695,7 @@ if __name__ == "__main__":
     t_plot        = get_array('time_hr') / 24
     op_mode_1      = get_array('op_mode_1')
     
-    #operating modes
+    #operating modes, copied from ssc/tcs/csp_solver.cpp
     n_modes, modes_order = np.unique(op_mode_1,return_index=True)
     n_modes = n_modes[np.argsort(modes_order)] # re-order modes by first appearance of each
     op_modes_list = [
@@ -746,8 +746,8 @@ if __name__ == "__main__":
     lp = 16 #labelpad
     fs = 12 #fontsize
     lw = 2  #linewidth
-    fsl = 'x-small'
-    loc = 'upper right'
+    fsl = 'x-small'      #fontsize legend
+    loc = 'upper right'  #location of legend
     
     
     fig = plt.figure(figsize=[10,8])
@@ -755,7 +755,7 @@ if __name__ == "__main__":
     ax2 = fig.add_subplot(312)
     ax3 = fig.add_subplot(313)
 
-
+    # Energy plot
     ax1.plot(t_plot, p_cycle, linewidth = lw, label='P_cycle (Electric)')
     ax1.plot(t_plot, q_dot_rec_in, linewidth = lw, label='Q_dot to Salt (Thermal)')
     ax1.plot(t_plot, gen, linewidth = lw, label='Power generated')
@@ -763,18 +763,19 @@ if __name__ == "__main__":
     ax1.set_ylabel('Power (MW)', labelpad=lp, fontsize=fs, fontweight='bold')
     ax1.legend(loc=loc,fontsize=fsl)
     
-    
+    # Mass flow rate plot
     ax2.plot(t_plot, m_dot, linewidth = lw, label='m_dot_water_pc')
     ax2.set_ylabel('Mass flow (kg/s)', labelpad=lp, fontsize=fs, fontweight='bold')
     ax2.legend(loc=loc,fontsize=fsl)
     
-    
+    # Temperature plot
     ax3.plot(t_plot, T_pc_in, linewidth = lw, label='PC HTF inlet')
     ax3.plot(t_plot, T_pc_out, linewidth = lw, label='PC HTF outlet')
     ax3.set_xlabel('Time (days)', labelpad=lp, fontsize=fs, fontweight='bold')
     ax3.set_ylabel('Temperature (C)', labelpad=lp, fontsize=fs, fontweight='bold')
     ax3.legend(loc=loc,fontsize=fsl)
     
+    # operating modes time history
     fig = plt.figure()
     ax = fig.gca()
     ax.plot(t_plot, op_mode_1)
