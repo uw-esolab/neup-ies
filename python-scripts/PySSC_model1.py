@@ -49,17 +49,28 @@ if __name__ == "__main__":
     # =============================================================================
     data = ssc.data_create()
 
-    # solarpilot ----------------------------------------------------------
-    ssc.data_set_number( data, b'field_model_type', 2 )
+    # avoiding solarpilot ----------------------------------------------------------
+    ssc.data_set_number( data, b'field_model_type', 3 )
+    ssc.data_set_number( data, b'eta_map_aod_format', 0 )
+    ssc.data_set_matrix_from_csv( data, b'eta_map', eta_map)
+    ssc.data_set_matrix_from_csv( data, b'flux_maps', flux_maps)
+    ssc.data_set_number( data, b'A_sf_in', 1269054.492 )
+    ssc.data_set_number( data, b'N_hel', 8790 )
     #-------------------------------------------------------------------------------
     
     # choosing nuclear vs csp ------------------------------------------------------
-    module_name = b'tcsmolten_salt'
+    is_nuclear = 1
+    ssc.data_set_number( data, b'is_nuclear_only', is_nuclear) #set to 1 == True
+    if is_nuclear == 1:
+        module_name = b'nuclear_tes'
+        ssc.data_set_number( data, b'q_dot_nuclear_des', 950)
+    else:
+        module_name = b'tcsmolten_salt'
     #--------------------------------------------------------------------------------
     
     # changing end time of simulation -----------------------------------------------
     hours        = 24*7 # hours of simulation desired
-    is_full_year = 1  # set to 1 for true if desired simulation time is 1 year
+    is_full_year = 0  # set to 1 for true if desired simulation time is 1 year
     if is_full_year:
         hours = int(31536000 / 3600) # 1 full year in hours
     ssc.data_set_number( data, b'time_start', 0 )
@@ -68,26 +79,33 @@ if __name__ == "__main__":
     
     # setting dispatch parameters ---------------------------------------------------
     ssc.data_set_number( data, b'is_dispatch', 0) #set to 1 == True
+    ## new!! add ampl engine dispatch, going to be similar to calling pyomo 
+    ssc.data_set_number( data, b'is_ampl_engine', 1) #set to 1 for True
+    ssc.data_set_number( data, b'is_write_ampl_dat', 1)
+    ssc.data_set_number( data, b'is_python_call', 1)
+    ssc.data_set_string( data, b'ampl_data_dir', b'/home/gabrielsoto/Documents/NE2/sam_scripts/')
+    # ssc.data_set_string( data, b'ampl_exec_call', b'./pyomo.sh' )     #is this correct? can this be a command to run python script
+    ssc.data_set_string( data, b'ampl_exec_call', b'python dummy.py' ) 
     #--------------------------------------------------------------------------------
     
     ssc.data_set_string( data, b'solar_resource_file', solar_resource_file )
     ssc.data_set_number( data, b'ppa_multiplier_model', 0 )
     ssc.data_set_array_from_csv( data, b'dispatch_factors_ts', dispatch_factors_ts)
     ssc.data_set_number( data, b'gross_net_conversion_factor', 0.90000000000000002 )
-    ssc.data_set_number( data, b'helio_width',              12.199999999999999 )
-    ssc.data_set_number( data, b'helio_height',             12.199999999999999 )
-    ssc.data_set_number( data, b'helio_optical_error_mrad', 1.53 )
-    ssc.data_set_number( data, b'helio_active_fraction',    0.98999999999999999 )
-    ssc.data_set_number( data, b'dens_mirror',              0.96999999999999997 )
-    ssc.data_set_number( data, b'helio_reflectance',        0.90000000000000002 )
-    ssc.data_set_number( data, b'rec_absorptance',          0.93999999999999995 )
-    ssc.data_set_number( data, b'rec_hl_perm2',             30 )
+    ssc.data_set_number( data, b'helio_width',              0 )
+    ssc.data_set_number( data, b'helio_height',             0 )
+    ssc.data_set_number( data, b'helio_optical_error_mrad', 0 )
+    ssc.data_set_number( data, b'helio_active_fraction',    0 )
+    ssc.data_set_number( data, b'dens_mirror',              0 )
+    ssc.data_set_number( data, b'helio_reflectance',        0 )
+    ssc.data_set_number( data, b'rec_absorptance',          0 )
+    ssc.data_set_number( data, b'rec_hl_perm2',             0 )
     ssc.data_set_number( data, b'land_max', 9.5 )
     ssc.data_set_number( data, b'land_min', 0.75 )
     ssc.data_set_number( data, b'dni_des', 950 )
-    ssc.data_set_number( data, b'p_start',                  0.025000000000000001 )
-    ssc.data_set_number( data, b'p_track',                  0.055 )
-    ssc.data_set_number( data, b'hel_stow_deploy',          8 )
+    ssc.data_set_number( data, b'p_start',                  0 )
+    ssc.data_set_number( data, b'p_track',                  0 )
+    ssc.data_set_number( data, b'hel_stow_deploy',          0 )
     ssc.data_set_number( data, b'v_wind_max', 15 )
     ssc.data_set_number( data, b'c_atm_0', 0.0067889999999999999 )
     ssc.data_set_number( data, b'c_atm_1', 0.1046 )
@@ -99,7 +117,7 @@ if __name__ == "__main__":
     ssc.data_set_number( data, b'cant_type', 1 )
     ssc.data_set_number( data, b'n_flux_days', 8 )
     ssc.data_set_number( data, b'delta_flux_hrs', 2 )
-    ssc.data_set_number( data, b'water_usage_per_wash',     0.69999999999999996 )
+    ssc.data_set_number( data, b'water_usage_per_wash',     0 )
     ssc.data_set_number( data, b'washing_frequency', 63 )
     ssc.data_set_number( data, b'check_max_flux', 0 )
     ssc.data_set_number( data, b'sf_excess', 1 )
@@ -136,8 +154,8 @@ if __name__ == "__main__":
     ssc.data_set_number( data, b'csp.pt.sf.land_overhead_factor', 1 )
     ssc.data_set_number( data, b'T_htf_cold_des', 290 )
     ssc.data_set_number( data, b'T_htf_hot_des', 574 )
-    ssc.data_set_number( data, b'P_ref',                     115 )
-    ssc.data_set_number( data, b'design_eff',                0.41199999999999998 )
+    ssc.data_set_number( data, b'P_ref',                     550 )
+    ssc.data_set_number( data, b'design_eff',                0.5 )
     ssc.data_set_number( data, b'tshours', 10 )
     ssc.data_set_number( data, b'solarm', 2.3999999999999999 )
     ssc.data_set_number( data, b'N_panels', 20 )
@@ -247,7 +265,7 @@ if __name__ == "__main__":
     ssc.data_set_number( data, b'bop_par_0', 0 )
     ssc.data_set_number( data, b'bop_par_1', 0.48299999999999998 )
     ssc.data_set_number( data, b'bop_par_2', 0 )
-    f_turb_tou_periods =[ 1.05, 1, 1, 1, 1, 1, 1, 1, 1 ]
+    f_turb_tou_periods =[ 1.05, 1, 1, 1, 1, 0.8, 1, 1, 1 ]
     ssc.data_set_array( data, b'f_turb_tou_periods',  f_turb_tou_periods)
     weekday_schedule = [[ 6,   6,   6,   6,   6,   6,   5,   5,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   5,   5,   5 ], 
                         [ 6,   6,   6,   6,   6,   6,   5,   5,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   5,   5,   5 ], 
@@ -627,7 +645,11 @@ if __name__ == "__main__":
             idx = idx + 1
         SystemExit( "Simulation Error" )
     ssc.module_free(module)
-    print('                        CSP')
+    print('')
+    if is_nuclear:
+        print('                        Nuclear')
+    else:
+        print('                        CSP')
     annual_energy = ssc.data_get_number(data, b'annual_energy') / 1e6
     print ('Annual energy (year 1)        = ', annual_energy, ' GWh')
     capacity_factor = ssc.data_get_number(data, b'capacity_factor')
@@ -751,9 +773,9 @@ if __name__ == "__main__":
     ax1.legend(loc=loc,fontsize=fsl)
     
     # Mass flow rate plot
-    ax2.plot(t_plot, m_dot, linewidth = lw, label='m_dot_water_pc')
-    ax2.set_ylabel('Mass flow (kg/s)', labelpad=lp, fontsize=fs, fontweight='bold')
-    ax2.legend(loc=loc,fontsize=fsl)
+    # ax2.plot(t_plot, m_dot, linewidth = lw, label='m_dot_water_pc')
+    # ax2.set_ylabel('Mass flow (kg/s)', labelpad=lp, fontsize=fs, fontweight='bold')
+    # ax2.legend(loc=loc,fontsize=fsl)
     
     # Temperature plot
     ax3.plot(t_plot, T_pc_in, linewidth = lw, label='PC HTF inlet')
@@ -763,10 +785,11 @@ if __name__ == "__main__":
     ax3.legend(loc=loc,fontsize=fsl)
     
     # operating modes time history
-    fig = plt.figure()
-    ax = fig.gca()
-    ax.plot(t_plot, op_mode_1)
+    # fig = plt.figure()
+    # ax = fig.gca()
+    ax2.plot(t_plot, op_mode_1)
     for op in n_modes:
         inds = op_mode_1 == op
-        ax.plot(t_plot[inds], op_mode_1[inds], '.', label=op_modes_list[int(op)])
-    ax.legend(loc='best')
+        ax2.plot(t_plot[inds], op_mode_1[inds], '.', label=op_modes_list[int(op)])
+    ax2.set_ylabel('Operating Mode', labelpad=lp, fontsize=fs, fontweight='bold')
+    ax2.legend(loc=loc,fontsize=fsl)
