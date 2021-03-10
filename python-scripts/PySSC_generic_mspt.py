@@ -32,18 +32,16 @@ if __name__ == "__main__":
     # Starting data collection for run
     # =============================================================================
     data = ssc.data_create()
-    ssc.data_set_string( data, b'solar_resource_file', solar_resource_file )
-    ssc.data_set_number( data, b'ppa_multiplier_model', 0 )
-    ssc.data_set_array_from_csv( data, b'dispatch_factors_ts', dispatch_factors_ts)
 
-    # avoiding solarpilot --------------------------------------------------------
+    # avoiding solarpilot ----------------------------------------------------------
     ssc.data_set_number( data, b'field_model_type', 3 )
     ssc.data_set_number( data, b'eta_map_aod_format', 0 )
     ssc.data_set_matrix_from_csv( data, b'eta_map', eta_map)
     ssc.data_set_matrix_from_csv( data, b'flux_maps', flux_maps)
     ssc.data_set_number( data, b'A_sf_in', 1269054.492 )
     ssc.data_set_number( data, b'N_hel', 8790 )
-
+    #-------------------------------------------------------------------------------
+    
     # choosing nuclear vs csp ------------------------------------------------------
     is_nuclear = 1
     ssc.data_set_number( data, b'is_nuclear_only', is_nuclear) #set to 1 == True
@@ -53,22 +51,34 @@ if __name__ == "__main__":
     else:
         module_name = b'tcsmolten_salt'
     #--------------------------------------------------------------------------------
-
+    
+    # changing end time of simulation -----------------------------------------------
+    hours        = 24 # hours of simulation desired
+    is_full_year = 0  # set to 1 for true if desired simulation time is 1 year
+    if is_full_year:
+        hours = int(31536000 / 3600) # 1 full year in hours
+    ssc.data_set_number( data, b'time_start', 0 )
+    ssc.data_set_number( data, b'time_stop', 3600*hours )
+    #--------------------------------------------------------------------------------
+    
+    ssc.data_set_string( data, b'solar_resource_file', solar_resource_file )
+    ssc.data_set_number( data, b'ppa_multiplier_model', 0 )
+    ssc.data_set_array_from_csv( data, b'dispatch_factors_ts', dispatch_factors_ts)
     ssc.data_set_number( data, b'gross_net_conversion_factor', 0.90000000000000002 )
-    ssc.data_set_number( data, b'helio_width', 12.199999999999999 )
-    ssc.data_set_number( data, b'helio_height', 12.199999999999999 )
-    ssc.data_set_number( data, b'helio_optical_error_mrad', 1.53 )
-    ssc.data_set_number( data, b'helio_active_fraction', 0.98999999999999999 )
-    ssc.data_set_number( data, b'dens_mirror', 0.96999999999999997 )
-    ssc.data_set_number( data, b'helio_reflectance', 0.90000000000000002 )
-    ssc.data_set_number( data, b'rec_absorptance', 0.93999999999999995 )
-    ssc.data_set_number( data, b'rec_hl_perm2', 30 )
+    ssc.data_set_number( data, b'helio_width',              0 )
+    ssc.data_set_number( data, b'helio_height',             0 )
+    ssc.data_set_number( data, b'helio_optical_error_mrad', 0 )
+    ssc.data_set_number( data, b'helio_active_fraction',    0 )
+    ssc.data_set_number( data, b'dens_mirror',              0 )
+    ssc.data_set_number( data, b'helio_reflectance',        0 )
+    ssc.data_set_number( data, b'rec_absorptance',          0 )
+    ssc.data_set_number( data, b'rec_hl_perm2',             0 )
     ssc.data_set_number( data, b'land_max', 9.5 )
     ssc.data_set_number( data, b'land_min', 0.75 )
     ssc.data_set_number( data, b'dni_des', 950 )
-    ssc.data_set_number( data, b'p_start', 0.025000000000000001 )
-    ssc.data_set_number( data, b'p_track', 0.055 )
-    ssc.data_set_number( data, b'hel_stow_deploy', 8 )
+    ssc.data_set_number( data, b'p_start',                  0 )
+    ssc.data_set_number( data, b'p_track',                  0 )
+    ssc.data_set_number( data, b'hel_stow_deploy',          0 )
     ssc.data_set_number( data, b'v_wind_max', 15 )
     ssc.data_set_number( data, b'c_atm_0', 0.0067889999999999999 )
     ssc.data_set_number( data, b'c_atm_1', 0.1046 )
@@ -80,7 +90,7 @@ if __name__ == "__main__":
     ssc.data_set_number( data, b'cant_type', 1 )
     ssc.data_set_number( data, b'n_flux_days', 8 )
     ssc.data_set_number( data, b'delta_flux_hrs', 2 )
-    ssc.data_set_number( data, b'water_usage_per_wash', 0.69999999999999996 )
+    ssc.data_set_number( data, b'water_usage_per_wash',     0 )
     ssc.data_set_number( data, b'washing_frequency', 63 )
     ssc.data_set_number( data, b'check_max_flux', 0 )
     ssc.data_set_number( data, b'sf_excess', 1 )
@@ -212,13 +222,11 @@ if __name__ == "__main__":
     ssc.data_set_number( data, b'P_cond_min', 2 )
     ssc.data_set_number( data, b'n_pl_inc', 8 )
     F_wc =[ 0, 0, 0, 0, 0, 0, 0, 0, 0 ]
-    ssc.data_set_array( data, b'F_wc',  F_wc);
+    ssc.data_set_array( data, b'F_wc',  F_wc)
     ssc.data_set_number( data, b'tech_type', 1 )
     ssc.data_set_number( data, b'ud_f_W_dot_cool_des', 0 )
     ssc.data_set_number( data, b'ud_m_dot_water_cool_des', 0 )
     ssc.data_set_matrix_from_csv( data, b'ud_ind_od', ud_ind_od)
-    ssc.data_set_number( data, b'time_start', 0 )
-    ssc.data_set_number( data, b'time_stop', 31536000 )
     ssc.data_set_number( data, b'pb_fixed_par', 0.0054999999999999997 )
     ssc.data_set_number( data, b'aux_par', 0.023 )
     ssc.data_set_number( data, b'aux_par_f', 1 )
@@ -284,7 +292,7 @@ if __name__ == "__main__":
                               [ 6,   6,   6,   6,   6,   6,   5,   5,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   5,   5,   5 ], 
                               [ 6,   6,   6,   6,   6,   6,   5,   5,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   5,   5,   5 ], 
                               [ 6,   6,   6,   6,   6,   6,   5,   5,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   5,   5,   5 ]];
-    ssc.data_set_matrix( data, b'dispatch_sched_weekday', dispatch_sched_weekday );
+    ssc.data_set_matrix( data, b'dispatch_sched_weekday', dispatch_sched_weekday )
     dispatch_sched_weekend = [[ 6,   6,   6,   6,   6,   6,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5 ], 
                               [ 6,   6,   6,   6,   6,   6,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5 ], 
                               [ 6,   6,   6,   6,   6,   6,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5 ], 
@@ -297,7 +305,7 @@ if __name__ == "__main__":
                               [ 6,   6,   6,   6,   6,   6,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5 ], 
                               [ 6,   6,   6,   6,   6,   6,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5 ], 
                               [ 6,   6,   6,   6,   6,   6,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5 ]];
-    ssc.data_set_matrix( data, b'dispatch_sched_weekend', dispatch_sched_weekend );
+    ssc.data_set_matrix( data, b'dispatch_sched_weekend', dispatch_sched_weekend )
     ssc.data_set_number( data, b'dispatch_factor1', 2.0640000000000001 )
     ssc.data_set_number( data, b'dispatch_factor2', 1.2 )
     ssc.data_set_number( data, b'dispatch_factor3', 1 )
@@ -347,7 +355,7 @@ if __name__ == "__main__":
             print ('    : ' + msg.decode("utf - 8"))
             msg = ssc.module_log(module, idx)
             idx = idx + 1
-        SystemExit( "Simulation Error" );
+        SystemExit( "Simulation Error" )
     ssc.module_free(module)
     ssc.data_set_number( data, b'system_use_lifetime_output', 0 )
     ssc.data_set_number( data, b'analysis_period', 25 )
@@ -364,7 +372,7 @@ if __name__ == "__main__":
             print ('    : ' + msg.decode("utf - 8"))
             msg = ssc.module_log(module, idx)
             idx = idx + 1
-        SystemExit( "Simulation Error" );
+        SystemExit( "Simulation Error" )
     ssc.module_free(module)
     ssc.data_set_number( data, b'ppa_soln_mode', 0 )
     ppa_price_input =[ 0.13 ]
@@ -631,13 +639,13 @@ if __name__ == "__main__":
     print ('Levelized COE (nominal)       = ', lcoe_nom)
     lcoe_real = ssc.data_get_number(data, b'lcoe_real')
     print ('Levelized COE (real)          = ', lcoe_real)
-    project_return_aftertax_npv = ssc.data_get_number(data, b'project_return_aftertax_npv');
+    project_return_aftertax_npv = ssc.data_get_number(data, b'project_return_aftertax_npv')
     print ('Net present value             = ', project_return_aftertax_npv)
     flip_actual_irr = ssc.data_get_number(data, b'flip_actual_irr')
     print ('Internal rate of return (IRR) = ', flip_actual_irr)
     flip_actual_year = ssc.data_get_number(data, b'flip_actual_year')
     print ('Year IRR is achieved          = ', flip_actual_year)
-    project_return_aftertax_irr = ssc.data_get_number(data, b'project_return_aftertax_irr');
+    project_return_aftertax_irr = ssc.data_get_number(data, b'project_return_aftertax_irr')
     print ('IRR at end of project         = ', project_return_aftertax_irr)
     cost_installed = ssc.data_get_number(data, b'cost_installed')
     print ('Net capital cost              = ', cost_installed)
@@ -647,4 +655,4 @@ if __name__ == "__main__":
     print ('Size of debt                  = ', size_of_debt)
     a_sf = ssc.data_get_number(data, b'A_sf')
     print ('Area of solar field           = ', a_sf)
-    ssc.data_free(data);
+
