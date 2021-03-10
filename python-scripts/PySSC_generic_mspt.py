@@ -1,4 +1,5 @@
 from PySSC import PySSC
+import os
 if __name__ == "__main__":
     ssc = PySSC()
     
@@ -11,6 +12,9 @@ if __name__ == "__main__":
     print ('SSC Version = ', ssc.version())
     print ('SSC Build Information = ', ssc.build_info().decode("utf - 8"))
     ssc.module_exec_set_print(0)
+    # getting process ID to attach in a C++ debugger
+    pid = os.getpid()
+    print("PID = ", pid)
     
     # File locations
     bprnt_dir = pdir.encode("utf-8") #parent directory in unicode coding
@@ -21,12 +25,26 @@ if __name__ == "__main__":
     wlim_series         = bdata_dir + b'/data-files/wlim_series.csv'
     helio_positions     = bdata_dir + b'/data-files/helio_positions.csv'
     grid_curtailment    = bdata_dir + b'/data-files/grid_curtailment.csv'
+    eta_map             = bdata_dir + b'/data-files/eta_map.csv'
+    flux_maps           = bdata_dir + b'/data-files/flux_maps.csv'
     
+    # =============================================================================
+    # Starting data collection for run
+    # =============================================================================
     data = ssc.data_create()
     ssc.data_set_string( data, b'solar_resource_file', solar_resource_file )
     ssc.data_set_number( data, b'ppa_multiplier_model', 0 )
     ssc.data_set_array_from_csv( data, b'dispatch_factors_ts', dispatch_factors_ts)
-    ssc.data_set_number( data, b'field_model_type', 2 )
+
+    # avoiding solarpilot --------------
+    ssc.data_set_number( data, b'field_model_type', 3 )
+    ssc.data_set_number( data, b'eta_map_aod_format', 0 )
+    ssc.data_set_matrix_from_csv( data, b'eta_map', eta_map)
+    ssc.data_set_matrix_from_csv( data, b'flux_maps', flux_maps)
+    ssc.data_set_number( data, b'A_sf_in', 1269054.492 )
+    ssc.data_set_number( data, b'N_hel', 8790 )
+    #-----------------------------------
+
     ssc.data_set_number( data, b'gross_net_conversion_factor', 0.90000000000000002 )
     ssc.data_set_number( data, b'helio_width', 12.199999999999999 )
     ssc.data_set_number( data, b'helio_height', 12.199999999999999 )
