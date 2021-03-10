@@ -6,11 +6,12 @@ class PySSC:
     def __init__(self):
         cwd = os.getcwd()
         dir_list = cwd.split('/')
-        parent_dir = ''
+        self.parent_dir = ''
         for x in dir_list[1:-2]:
             tmp_str = '/'+x
-            parent_dir += tmp_str
-        self.pdll = CDLL(parent_dir + '/build/ssc/ssc/sscd.so')   # instead of relative path, require user to have on LD_LIBRARY_PATH
+            self.parent_dir += tmp_str
+        self.ssc_dir = self.parent_dir + '/build/ssc/ssc/sscd.so'
+        self.pdll = CDLL(self.ssc_dir)   
 
     INVALID=0
     STRING=1
