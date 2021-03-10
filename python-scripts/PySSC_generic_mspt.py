@@ -36,14 +36,23 @@ if __name__ == "__main__":
     ssc.data_set_number( data, b'ppa_multiplier_model', 0 )
     ssc.data_set_array_from_csv( data, b'dispatch_factors_ts', dispatch_factors_ts)
 
-    # avoiding solarpilot --------------
+    # avoiding solarpilot --------------------------------------------------------
     ssc.data_set_number( data, b'field_model_type', 3 )
     ssc.data_set_number( data, b'eta_map_aod_format', 0 )
     ssc.data_set_matrix_from_csv( data, b'eta_map', eta_map)
     ssc.data_set_matrix_from_csv( data, b'flux_maps', flux_maps)
     ssc.data_set_number( data, b'A_sf_in', 1269054.492 )
     ssc.data_set_number( data, b'N_hel', 8790 )
-    #-----------------------------------
+
+    # choosing nuclear vs csp ------------------------------------------------------
+    is_nuclear = 1
+    ssc.data_set_number( data, b'is_nuclear_only', is_nuclear) #set to 1 == True
+    if is_nuclear == 1:
+        module_name = b'nuclear_tes'
+        ssc.data_set_number( data, b'q_dot_nuclear_des', 950)
+    else:
+        module_name = b'tcsmolten_salt'
+    #--------------------------------------------------------------------------------
 
     ssc.data_set_number( data, b'gross_net_conversion_factor', 0.90000000000000002 )
     ssc.data_set_number( data, b'helio_width', 12.199999999999999 )
@@ -108,8 +117,8 @@ if __name__ == "__main__":
     ssc.data_set_number( data, b'csp.pt.sf.land_overhead_factor', 1 )
     ssc.data_set_number( data, b'T_htf_cold_des', 290 )
     ssc.data_set_number( data, b'T_htf_hot_des', 574 )
-    ssc.data_set_number( data, b'P_ref', 115 )
-    ssc.data_set_number( data, b'design_eff', 0.41199999999999998 )
+    ssc.data_set_number( data, b'P_ref', 550 )
+    ssc.data_set_number( data, b'design_eff', 0.5 )
     ssc.data_set_number( data, b'tshours', 10 )
     ssc.data_set_number( data, b'solarm', 2.3999999999999999 )
     ssc.data_set_number( data, b'N_panels', 20 )
@@ -185,7 +194,7 @@ if __name__ == "__main__":
     ssc.data_set_number( data, b'radfluid_vol_ratio', 3 )
     ssc.data_set_number( data, b'ctes_cost', 0.69999998807907104 )
     ssc.data_set_number( data, b'rad_pressuredrop', 75 )
-    ssc.data_set_number( data, b'pc_config', 0 )
+    ssc.data_set_number( data, b'pc_config', 1 )
     ssc.data_set_number( data, b'pb_pump_coef', 0.55000000000000004 )
     ssc.data_set_number( data, b'startup_time', 0.5 )
     ssc.data_set_number( data, b'startup_frac', 0.5 )
@@ -239,7 +248,7 @@ if __name__ == "__main__":
     ssc.data_set_number( data, b'disp_csu_cost', 10000 )
     ssc.data_set_number( data, b'disp_pen_delta_w', 0.10000000000000001 )
     ssc.data_set_number( data, b'disp_inventory_incentive', 0.14999999999999999 )
-    ssc.data_set_number( data, b'is_wlim_series', 0 )
+    ssc.data_set_number( data, b'is_wlim_series', 1 )
     ssc.data_set_array_from_csv( data, b'wlim_series', wlim_series)
     dispatch_sched_weekday = [[ 6,   6,   6,   6,   6,   6,   5,   5,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   5,   5,   5 ], [ 6,   6,   6,   6,   6,   6,   5,   5,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   5,   5,   5 ], [ 6,   6,   6,   6,   6,   6,   5,   5,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   5,   5,   5 ], [ 6,   6,   6,   6,   6,   6,   5,   5,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   5,   5,   5 ], [ 6,   6,   6,   6,   6,   6,   5,   5,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   5,   5,   5 ], [ 3,   3,   3,   3,   3,   3,   3,   3,   2,   2,   2,   2,   1,   1,   1,   1,   1,   1,   2,   2,   2,   3,   3,   3 ], [ 3,   3,   3,   3,   3,   3,   3,   3,   2,   2,   2,   2,   1,   1,   1,   1,   1,   1,   2,   2,   2,   3,   3,   3 ], [ 3,   3,   3,   3,   3,   3,   3,   3,   2,   2,   2,   2,   1,   1,   1,   1,   1,   1,   2,   2,   2,   3,   3,   3 ], [ 3,   3,   3,   3,   3,   3,   3,   3,   2,   2,   2,   2,   1,   1,   1,   1,   1,   1,   2,   2,   2,   3,   3,   3 ], [ 6,   6,   6,   6,   6,   6,   5,   5,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   5,   5,   5 ], [ 6,   6,   6,   6,   6,   6,   5,   5,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   5,   5,   5 ], [ 6,   6,   6,   6,   6,   6,   5,   5,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   5,   5,   5 ]];
     ssc.data_set_matrix( data, b'dispatch_sched_weekday', dispatch_sched_weekday )
@@ -284,10 +293,10 @@ if __name__ == "__main__":
     ssc.data_set_number( data, b'const_per_upfront_rate5', 0 )
     ssc.data_set_number( data, b'adjust:constant', 4 )
     ssc.data_set_number( data, b'sf_adjust:constant', 0 )
-    module = ssc.module_create(b'tcsmolten_salt')    
-    ssc.module_exec_set_print( 0 );
+    module = ssc.module_create(module_name)    
+    ssc.module_exec_set_print( 0 )
     if ssc.module_exec(module, data) == 0:
-        print ('tcsmolten_salt simulation error')
+        print ('nuclear_tes simulation error')
         idx = 1
         msg = ssc.module_log(module, 0)
         while (msg != None):
