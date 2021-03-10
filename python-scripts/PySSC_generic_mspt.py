@@ -1,5 +1,12 @@
 from PySSC import PySSC
+import matplotlib.pyplot as plt
+import numpy as np
 import os
+
+from pylab import *
+rc('axes', linewidth=2)
+rc('font', weight='bold',size=12)
+
 if __name__ == "__main__":
     ssc = PySSC()
     
@@ -53,12 +60,23 @@ if __name__ == "__main__":
     #--------------------------------------------------------------------------------
     
     # changing end time of simulation -----------------------------------------------
-    hours        = 24 # hours of simulation desired
+    hours        = 24*7 # hours of simulation desired
     is_full_year = 0  # set to 1 for true if desired simulation time is 1 year
     if is_full_year:
         hours = int(31536000 / 3600) # 1 full year in hours
     ssc.data_set_number( data, b'time_start', 0 )
     ssc.data_set_number( data, b'time_stop', 3600*hours )
+    #--------------------------------------------------------------------------------
+    
+    # setting dispatch parameters ---------------------------------------------------
+    ssc.data_set_number( data, b'is_dispatch', 0) #set to 1 == True
+    ## new!! add ampl engine dispatch, going to be similar to calling pyomo 
+    ssc.data_set_number( data, b'is_ampl_engine', 1) #set to 1 for True
+    ssc.data_set_number( data, b'is_write_ampl_dat', 1)
+    ssc.data_set_number( data, b'is_python_call', 1)
+    ssc.data_set_string( data, b'ampl_data_dir', b'/home/gabrielsoto/Documents/NE2/sam_scripts/')
+    # ssc.data_set_string( data, b'ampl_exec_call', b'./pyomo.sh' )     #is this correct? can this be a command to run python script
+    ssc.data_set_string( data, b'ampl_exec_call', b'python dummy.py' ) 
     #--------------------------------------------------------------------------------
     
     ssc.data_set_string( data, b'solar_resource_file', solar_resource_file )
@@ -656,3 +674,111 @@ if __name__ == "__main__":
     a_sf = ssc.data_get_number(data, b'A_sf')
     print ('Area of solar field           = ', a_sf)
 
+
+# =============================================================================
+#     Plotting
+# =============================================================================
+
+    def get_array(out_str):
+        out_array = ssc.data_get_array(data,out_str.encode('utf-8'))
+        out_array = np.asarray(out_array)[0:hours]
+        return out_array
+        
+    p_cycle       = get_array('P_cycle')
+    gen           = get_array('gen') / 1e3
+    p_cool        = get_array('P_cooling_tower_tot')
+    q_dot_rec_in  = get_array('q_dot_rec_inc')
+    m_dot         = get_array('m_dot_rec')
+    T_pc_in       = get_array('T_pc_in')
+    T_pc_out      = get_array('T_pc_out')
+    e_ch_tes      = get_array('e_ch_tes')
+    t_plot        = get_array('time_hr') / 24
+    op_mode_1      = get_array('op_mode_1')
+    
+    #operating modes
+    n_modes, modes_order = np.unique(op_mode_1,return_index=True)
+    n_modes = n_modes[np.argsort(modes_order)] # re-order modes by first appearance of each
+    op_modes_list = [
+        "ENTRY_MODE",
+        "CR_OFF__PC_OFF__TES_OFF,"
+        "CR_SU__PC_OFF__TES_OFF",
+        "CR_ON__PC_SU__TES_OFF",
+        "CR_ON__PC_SB__TES_OFF",        
+        "CR_ON__PC_RM_HI__TES_OFF",
+        "CR_ON__PC_RM_LO__TES_OFF",        
+        "CR_DF__PC_MAX__TES_OFF",
+        "CR_OFF__PC_SU__TES_DC",
+        "CR_ON__PC_OFF__TES_CH",
+        "SKIP_10",
+        "CR_ON__PC_TARGET__TES_CH",
+        "CR_ON__PC_TARGET__TES_DC",
+        "CR_ON__PC_RM_LO__TES_EMPTY",
+        "CR_DF__PC_OFF__TES_FULL",       
+        "CR_OFF__PC_SB__TES_DC",
+        "CR_OFF__PC_MIN__TES_EMPTY",
+        "CR_OFF__PC_RM_LO__TES_EMPTY",
+        "CR_ON__PC_SB__TES_CH",
+        "CR_SU__PC_MIN__TES_EMPTY",
+        "SKIP_20",
+        "CR_SU__PC_SB__TES_DC",
+        "CR_ON__PC_SB__TES_DC",
+        "CR_OFF__PC_TARGET__TES_DC",
+        "CR_SU__PC_TARGET__TES_DC",
+        "CR_ON__PC_RM_HI__TES_FULL",
+        "CR_ON__PC_MIN__TES_EMPTY",
+        "CR_SU__PC_RM_LO__TES_EMPTY",
+        "CR_DF__PC_MAX__TES_FULL",
+        "CR_ON__PC_SB__TES_FULL",
+        "SKIP_30",
+        "CR_SU__PC_SU__TES_DC",
+        "CR_ON__PC_SU__TES_CH",
+        "CR_DF__PC_SU__TES_FULL",
+        "CR_DF__PC_SU__TES_OFF",
+        "CR_TO_COLD__PC_TARGET__TES_DC",
+        "CR_TO_COLD__PC_RM_LO__TES_EMPTY",
+        "CR_TO_COLD__PC_SB__TES_DC",
+        "CR_TO_COLD__PC_MIN__TES_EMPTY",
+        "CR_TO_COLD__PC_OFF__TES_OFF",
+        "SKIP_40",
+        "CR_TO_COLD__PC_SU__TES_DC" ]
+
+
+    lp = 16 #labelpad
+    fs = 12 #fontsize
+    lw = 2  #linewidth
+    fsl = 'x-small'
+    loc = 'upper right'
+    
+    
+    fig = plt.figure(figsize=[10,8])
+    ax1 = fig.add_subplot(311)
+    ax2 = fig.add_subplot(312)
+    ax3 = fig.add_subplot(313)
+
+
+    ax1.plot(t_plot, p_cycle, linewidth = lw, label='P_cycle (Electric)')
+    ax1.plot(t_plot, q_dot_rec_in, linewidth = lw, label='Q_dot to Salt (Thermal)')
+    ax1.plot(t_plot, gen, linewidth = lw, label='Power generated')
+    ax1.plot(t_plot, e_ch_tes, linewidth = lw, label='Salt Charge Level (MWht)')
+    ax1.set_ylabel('Power (MW)', labelpad=lp, fontsize=fs, fontweight='bold')
+    ax1.legend(loc=loc,fontsize=fsl)
+    
+    
+    ax2.plot(t_plot, m_dot, linewidth = lw, label='m_dot_water_pc')
+    ax2.set_ylabel('Mass flow (kg/s)', labelpad=lp, fontsize=fs, fontweight='bold')
+    ax2.legend(loc=loc,fontsize=fsl)
+    
+    
+    ax3.plot(t_plot, T_pc_in, linewidth = lw, label='PC HTF inlet')
+    ax3.plot(t_plot, T_pc_out, linewidth = lw, label='PC HTF outlet')
+    ax3.set_xlabel('Time (days)', labelpad=lp, fontsize=fs, fontweight='bold')
+    ax3.set_ylabel('Temperature (C)', labelpad=lp, fontsize=fs, fontweight='bold')
+    ax3.legend(loc=loc,fontsize=fsl)
+    
+    fig = plt.figure()
+    ax = fig.gca()
+    ax.plot(t_plot, op_mode_1)
+    for op in n_modes:
+        inds = op_mode_1 == op
+        ax.plot(t_plot[inds], op_mode_1[inds], '.', label=op_modes_list[int(op)])
+    ax.legend(loc='best')
