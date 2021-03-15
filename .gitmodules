@@ -1,0 +1,3 @@
+[submodule "ssc"]
+	path = ssc
+	url = git@github.com:gjsoto/ssc.git
