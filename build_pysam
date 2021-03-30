@@ -2,7 +2,7 @@
 
 ## Held Together by Duct Tape/Written by Gabriel Soto
 
-export DEVDIR=$(pwd)
+export DEVDIR=$(dirname "$(dirname "$(realpath $0)")")
 
 export GTEST=$DEVDIR/googletest
 export GTEST_LIB=$DEVDIR/googletest/build/lib/libgtest.a
@@ -24,7 +24,7 @@ then
 	make -j8
 	cd $DEVDIR
 else 
-  	echo --green "GoogleTest already exists"
+  	echo "GoogleTest already exists"
 fi
 
 #====================================================#
