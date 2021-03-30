@@ -1,0 +1,137 @@
+#!/bin/sh
+
+## Held Together by Duct Tape/Written by Gabriel Soto
+
+export DEVDIR=$(pwd)
+
+export GTEST=$DEVDIR/googletest
+export GTEST_LIB=$DEVDIR/googletest/build/lib/libgtest.a
+export LKDIR=$DEVDIR/lk
+export WEXDIR=$DEVDIR/wex
+export SSCDIR=$DEVDIR/ssc
+export SAMNTDIR=$DEVDIR/sam
+export PYSAMDIR=$DEVDIR/pysam
+
+#====================================================#
+#---- building googletest ----------------------------
+cd $DEVDIR
+if [ ! -d "$GTEST" ]
+then 
+   	git clone $git:google/googletest.git
+   	mkdir googletest/build
+	cd googletest/build
+	cmake -G "CodeLite - Unix Makefiles" -DCMAKE_BUILD_TYPE:STRING=Release -DCMAKE_SYSTEM_VERSION=10.0 -Dgtest_force_shared_crt=ON ..
+	make -j8
+	cd $DEVDIR
+else 
+  	echo --green "GoogleTest already exists"
+fi
+
+#====================================================#
+#---- building LK ------------------------------------
+if [ ! -d "$LKDIR" ]
+then
+	git clone $git:NREL/lk.git
+	mkdir lk/build
+	cd lk/build
+	cmake -DCMAKE_BUILD_TYPE=Release ..
+	make -j8
+	cd $DEVDIR
+else
+	echo "LK already exists"
+fi
+
+#====================================================#
+#---- building wex -----------------------------------
+if [ ! -d "$WEXDIR" ]
+then
+	git clone $git:NREL/wex.git
+	mkdir wex/build
+	cd wex/build
+	cmake -DCMAKE_BUILD_TYPE=Release -DSAM_SKIP_TOOLS=1 ..
+	make -j8
+	cd $DEVDIR
+else
+	echo "WEX already exists"
+fi
+
+#====================================================#
+#----  cloning modified ssc --------------------------
+if [ ! -d "$SSCDIR" ]
+then
+	git clone $git:gjsoto/ssc.git
+else
+	echo "SSC already exists"
+fi
+
+# checking out a stable branch off ssc
+# this can be updated, maybe added as flag
+cd ssc
+git checkout model1testmerge
+
+#====================================================#
+#---- cloning sam ------------------------------------
+cd $DEVDIR
+git clone $git:NREL/sam.git
+cd sam
+git checkout pysam-v2.2.2
+
+#====================================================#
+#---- cloning pysam ----------------------------------
+cd $DEVDIR
+git clone $git:NREL/pysam.git
+
+#====================================================#
+#---- build modified ssc -----------------------------
+cd $DEVDIR
+mkdir build_ssc
+cd build_ssc
+
+# making SSC in Export mode, skipping tests
+cmake ${SSCDIR} -DCMAKE_BUILD_TYPE=Export -DSAM_SKIP_TOOLS=1 -DSAMAPI_EXPORT=1 -DSAM_SKIP_TESTS=1 ../ssc/
+make -j8
+
+#====================================================#
+#---- build SAM --------------------------------------
+cd $DEVDIR
+mkdir build_sam
+cd build_sam
+
+# making sure that LIB environment variables are updated to true path
+export SSCE_LIB=$DEVDIR/build_ssc/ssc
+export SSC_LIB=$DEVDIR/build_ssc/ssc
+
+# I apologize for this line of code, its better than forking the SAM repository just for one line
+# updating 'ssc.so' to 'libssc.so'
+sed -i '146s/.*/            NAMES ssc.dylib ssc.lib libssc.so/' $DEVDIR/sam/api/api_autogen/CMakeLists.txt
+
+# make SAM in Export mode, this one breaks... For some reason it doesnt read the correct SAM_API scripts?
+cmake ${SAMNTDIR}/api -DCMAKE_BUILD_TYPE=Export -DSAMAPI_EXPORT=1 -DSAM_SKIP_AUTOGEN=0 ../sam/api
+make -j8
+
+# not a typo... for some reason have to do this twice. Only then will it read the correct modules
+cmake ${SAMNTDIR}/api -DCMAKE_BUILD_TYPE=Export -DSAMAPI_EXPORT=1 -DSAM_SKIP_AUTOGEN=0 ../sam/api
+make -j8
+
+#====================================================#
+#---- build PySAM ------------------------------------
+cd $DEVDIR/pysam
+
+# creating new environment, add your own otherwise
+conda create --name pysam_test python=3.7 -y
+conda activate pysam_test
+
+# making sure conda environment requirements are met
+pip install -r tests/requirements.txt
+pip uninstall NREL-PySAM NREL-PySAM-stubs
+
+# run python setup to install PySAM, creating .egg files
+python setup.py install
+
+# create .whl files for distribution and to custom pip install PySAM
+python setup.py bdist_wheel
+
+#now you should pip install, something like:
+# 	cd $DEVDIR/pysam
+# 	pip install <dist/wheel_file_name.whl>
+
