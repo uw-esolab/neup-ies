@@ -70,7 +70,7 @@ if __name__ == "__main__":
     
     # changing end time of simulation -----------------------------------------------
     hours        = 24*20 # hours of simulation desired
-    is_full_year = 0  # set to 1 for true if desired simulation time is 1 year
+    is_full_year = 1  # set to 1 for true if desired simulation time is 1 year
     if is_full_year:
         hours = int(31536000 / 3600) # 1 full year in hours
     ssc.data_set_number( data, b'time_start', 0 )
@@ -154,7 +154,7 @@ if __name__ == "__main__":
     ssc.data_set_number( data, b'csp.pt.sf.land_overhead_factor', 1 )
     ssc.data_set_number( data, b'T_htf_cold_des', 290 )
     ssc.data_set_number( data, b'T_htf_hot_des', 574 )
-    ssc.data_set_number( data, b'P_ref',                     550 )
+    ssc.data_set_number( data, b'P_ref',                     470 )
     ssc.data_set_number( data, b'design_eff',                0.5 )
     ssc.data_set_number( data, b'tshours', 10 )
     ssc.data_set_number( data, b'solarm', 2.3999999999999999 )
@@ -189,7 +189,7 @@ if __name__ == "__main__":
     ssc.data_set_number( data, b'startup_target_Tdiff', -5 )
     ssc.data_set_number( data, b'is_rec_startup_from_T_soln', 0 )
     ssc.data_set_number( data, b'is_rec_enforce_min_startup', 0 )
-    ssc.data_set_number( data, b'csp.pt.tes.init_hot_htf_percent', 30 )
+    ssc.data_set_number( data, b'csp.pt.tes.init_hot_htf_percent', 0 )
     ssc.data_set_number( data, b'h_tank', 12 )
     ssc.data_set_number( data, b'cold_tank_max_heat', 15 )
     ssc.data_set_number( data, b'u_tank', 0.40000000000000002 )
@@ -250,7 +250,7 @@ if __name__ == "__main__":
     ssc.data_set_number( data, b'n_pl_inc', 8 )
     F_wc =[ 0, 0, 0, 0, 0, 0, 0, 0, 0 ]
     ssc.data_set_array( data, b'F_wc',  F_wc)
-    ssc.data_set_number( data, b'tech_type', 1 )
+    ssc.data_set_number( data, b'tech_type', 0 )
     ssc.data_set_number( data, b'ud_f_W_dot_cool_des', 0 )
     ssc.data_set_number( data, b'ud_m_dot_water_cool_des', 0 )
     ssc.data_set_matrix_from_csv( data, b'ud_ind_od', ud_ind_od)
@@ -265,7 +265,7 @@ if __name__ == "__main__":
     ssc.data_set_number( data, b'bop_par_0', 0 )
     ssc.data_set_number( data, b'bop_par_1', 0.48299999999999998 )
     ssc.data_set_number( data, b'bop_par_2', 0 )
-    f_turb_tou_periods =[ 1.05, 1, 1, 1, 1, 0.8, 1, 1, 1 ]
+    f_turb_tou_periods =[ 1.05, 1, 0.5, 1, 1, 0.6, 1, 1, 1 ]
     ssc.data_set_array( data, b'f_turb_tou_periods',  f_turb_tou_periods)
     weekday_schedule = [[ 6,   6,   6,   6,   6,   6,   5,   5,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   5,   5,   5 ], 
                         [ 6,   6,   6,   6,   6,   6,   5,   5,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   5,   5,   5 ], 
@@ -278,7 +278,7 @@ if __name__ == "__main__":
                         [ 3,   3,   3,   3,   3,   3,   3,   3,   2,   2,   2,   2,   1,   1,   1,   1,   1,   1,   2,   2,   2,   3,   3,   3 ], 
                         [ 6,   6,   6,   6,   6,   6,   5,   5,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   5,   5,   5 ], 
                         [ 6,   6,   6,   6,   6,   6,   5,   5,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   5,   5,   5 ], 
-                        [ 6,   6,   6,   6,   6,   6,   5,   5,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   5,   5,   5 ]];
+                        [ 6,   6,   6,   6,   6,   6,   5,   5,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   5,   5,   5 ]]
     ssc.data_set_matrix( data, b'weekday_schedule', weekday_schedule )
     weekend_schedule = [[ 6,   6,   6,   6,   6,   6,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5 ], 
                         [ 6,   6,   6,   6,   6,   6,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5 ], 
@@ -291,7 +291,7 @@ if __name__ == "__main__":
                         [ 3,   3,   3,   3,   3,   3,   3,   3,   3,   3,   3,   3,   3,   3,   3,   3,   3,   3,   3,   3,   3,   3,   3,   3 ], 
                         [ 6,   6,   6,   6,   6,   6,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5 ], 
                         [ 6,   6,   6,   6,   6,   6,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5 ], 
-                        [ 6,   6,   6,   6,   6,   6,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5 ]];
+                        [ 6,   6,   6,   6,   6,   6,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5,   5 ]]
     ssc.data_set_matrix( data, b'weekend_schedule', weekend_schedule )
     ssc.data_set_number( data, b'is_tod_pc_target_also_pc_max', 0 )
     ssc.data_set_number( data, b'is_dispatch', 0 )
@@ -307,9 +307,31 @@ if __name__ == "__main__":
     ssc.data_set_number( data, b'disp_inventory_incentive', 0.14999999999999999 )
     ssc.data_set_number( data, b'is_wlim_series', 0 )
     ssc.data_set_array_from_csv( data, b'wlim_series', wlim_series)
-    dispatch_sched_weekday = [[]]
+    dispatch_sched_weekday = [[ 6,   6,   6,   6,   6,   6,   5,   5,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   5,   5,   5 ], 
+                        [ 6,   6,   6,   6,   6,   6,   5,   5,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   5,   5,   5 ], 
+                        [ 6,   6,   6,   6,   6,   6,   5,   5,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   5,   5,   5 ], 
+                        [ 6,   6,   6,   6,   6,   6,   5,   5,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   5,   5,   5 ], 
+                        [ 6,   6,   6,   6,   6,   6,   5,   5,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   5,   5,   5 ], 
+                        [ 3,   3,   3,   3,   3,   3,   3,   3,   2,   2,   2,   2,   1,   1,   1,   1,   1,   1,   2,   2,   2,   3,   3,   3 ], 
+                        [ 3,   3,   3,   3,   3,   3,   3,   3,   2,   2,   2,   2,   1,   1,   1,   1,   1,   1,   2,   2,   2,   3,   3,   3 ], 
+                        [ 3,   3,   3,   3,   3,   3,   3,   3,   2,   2,   2,   2,   1,   1,   1,   1,   1,   1,   2,   2,   2,   3,   3,   3 ], 
+                        [ 3,   3,   3,   3,   3,   3,   3,   3,   2,   2,   2,   2,   1,   1,   1,   1,   1,   1,   2,   2,   2,   3,   3,   3 ], 
+                        [ 6,   6,   6,   6,   6,   6,   5,   5,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   5,   5,   5 ], 
+                        [ 6,   6,   6,   6,   6,   6,   5,   5,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   5,   5,   5 ], 
+                        [ 6,   6,   6,   6,   6,   6,   5,   5,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   5,   5,   5 ]]
     ssc.data_set_matrix( data, b'dispatch_sched_weekday', dispatch_sched_weekday )
-    dispatch_sched_weekend = [[ ]]
+    dispatch_sched_weekend = [[ 6,   6,   6,   6,   6,   6,   5,   5,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   5,   5,   5 ], 
+                        [ 6,   6,   6,   6,   6,   6,   5,   5,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   5,   5,   5 ], 
+                        [ 6,   6,   6,   6,   6,   6,   5,   5,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   5,   5,   5 ], 
+                        [ 6,   6,   6,   6,   6,   6,   5,   5,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   5,   5,   5 ], 
+                        [ 6,   6,   6,   6,   6,   6,   5,   5,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   5,   5,   5 ], 
+                        [ 3,   3,   3,   3,   3,   3,   3,   3,   2,   2,   2,   2,   1,   1,   1,   1,   1,   1,   2,   2,   2,   3,   3,   3 ], 
+                        [ 3,   3,   3,   3,   3,   3,   3,   3,   2,   2,   2,   2,   1,   1,   1,   1,   1,   1,   2,   2,   2,   3,   3,   3 ], 
+                        [ 3,   3,   3,   3,   3,   3,   3,   3,   2,   2,   2,   2,   1,   1,   1,   1,   1,   1,   2,   2,   2,   3,   3,   3 ], 
+                        [ 3,   3,   3,   3,   3,   3,   3,   3,   2,   2,   2,   2,   1,   1,   1,   1,   1,   1,   2,   2,   2,   3,   3,   3 ], 
+                        [ 6,   6,   6,   6,   6,   6,   5,   5,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   5,   5,   5 ], 
+                        [ 6,   6,   6,   6,   6,   6,   5,   5,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   5,   5,   5 ], 
+                        [ 6,   6,   6,   6,   6,   6,   5,   5,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   4,   5,   5,   5 ]]
     ssc.data_set_matrix( data, b'dispatch_sched_weekend', dispatch_sched_weekend )
     ssc.data_set_number( data, b'dispatch_factor1', 2.0640000000000001 )
     ssc.data_set_number( data, b'dispatch_factor2', 1.2 )
@@ -321,7 +343,7 @@ if __name__ == "__main__":
     ssc.data_set_number( data, b'dispatch_factor8', 1 )
     ssc.data_set_number( data, b'dispatch_factor9', 1 )
     ssc.data_set_number( data, b'is_dispatch_series', 1 ) #use this instead of tou
-    dispatch_series =[ 0 ]
+    dispatch_series = [1.2]*8760
     ssc.data_set_array( data, b'dispatch_series',  dispatch_series)
     ssc.data_set_number( data, b'rec_height', 21.602900000000002 )
     ssc.data_set_number( data, b'D_rec', 17.649999999999999 )

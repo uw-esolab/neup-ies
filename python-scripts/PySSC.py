@@ -10,7 +10,7 @@ class PySSC:
         for x in dir_list[1:-2]:
             tmp_str = '/'+x
             self.parent_dir += tmp_str
-        self.ssc_dir = self.parent_dir + '/build/ssc/ssc/libsscd.so' # the file can sometimes be named 'sscd.so'
+        self.ssc_dir = self.parent_dir + '/build/ssc/ssc/libssc.so' # the file can sometimes be named 'sscd.so'
         self.pdll = CDLL(self.ssc_dir)   
 
     INVALID=0
