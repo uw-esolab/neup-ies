@@ -5,12 +5,9 @@ c_number = c_double # must be c_double or c_double depending on how defined in s
 class PySSC:
     def __init__(self):
         cwd = os.getcwd()
-        dir_list = cwd.split('/')
-        self.parent_dir = ''
-        for x in dir_list[1:-2]:
-            tmp_str = '/'+x
-            self.parent_dir += tmp_str
-        self.ssc_dir = self.parent_dir + '/build/ssc/ssc/libssc.so' # the file can sometimes be named 'sscd.so'
+        neup_dir = os.path.dirname(cwd)
+        self.parent_dir = os.path.dirname(neup_dir)
+        self.ssc_dir = self.parent_dir + '/build_ssc/ssc/libssc.so' # the file can sometimes be named 'sscd.so'
         self.pdll = CDLL(self.ssc_dir)   
 
     INVALID=0

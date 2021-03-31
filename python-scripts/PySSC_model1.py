@@ -35,7 +35,7 @@ if __name__ == "__main__":
     # File locations
     bprnt_dir = pdir.encode("utf-8") #parent directory in unicode coding
     bdata_dir = cwd.encode("utf-8")  #data repo directory in unicode conding
-    solar_resource_file = bprnt_dir + b'/build/sam/deploy/solar_resource/tucson_az_32.116521_-110.933042_psmv3_60_tmy.csv'
+    solar_resource_file = bprnt_dir + b'/sam/deploy/solar_resource/tucson_az_32.116521_-110.933042_psmv3_60_tmy.csv'
     dispatch_factors_ts = bdata_dir + b'/data-files/dispatch_factors_ts.csv'
     ud_ind_od           = bdata_dir + b'/data-files/ud_ind_od.csv'
     wlim_series         = bdata_dir + b'/data-files/wlim_series.csv'
