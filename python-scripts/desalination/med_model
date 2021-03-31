@@ -1,0 +1,54 @@
+#MED Model for ReTI Research Lab under Professor Ben Lindley
+#Created by Grace Stanke
+import numpy as np
+import pyro
+
+class MED:
+    def __init__(self):
+        self.vapor_rate = [ 100., 90 ]                      
+        self.brine_conc = .035                              #Average concentration of salt in seawater
+        self.brine_rate = 100.
+        self.max_brine_conc=100.
+        self.temp_n_1 = 37                                  #Known starting temp of the MED model - 37 C is assuming we are starting at the second n-effect
+        self.latentheat = 100.
+        self.tempchange = 3.                                #Known temperature change from Sharan paper
+        self.i = 1                                          #used for loop
+        self.distill = [ 0, 1 ]                             #starting value
+        # self.vapor_rate = vapor flow rate
+        # self.brine_conc = brine concentration
+        # self.max_brine_conc = maximum brine concentration
+        # self.brine_rate = brine flow rate
+        # self.temp_n_1 = starting temperature, assume to be 40 C
+        # self.latentheat = latent heat 
+        # self.tempchange = temperature change between each n effect
+        return
+
+    def call(self):
+        while i < 5:
+            self.brine_rate += brine_flow_out(self)                 #Updates brine_rate variable for every n-effect
+            self.distill.append(distill(self))                      #Adds the amount of distillate from each n-effect, creating a vector
+            self.vapor_rate.append(vapor_flow_out(self)             #Adds the vapor rate from each effect to the vector
+            self.i += i+1                                           #Resets the loop starting over for the next effect
+
+
+    def brine_flow_out(self):
+        brine_out = (brine_rate*brine_conc)/(brine_rate-vapor_rate(i))
+        
+    def distill(self):
+        distill.append(sum(vapor_rate))
+        total_distill = sum(distill)
+    
+    def vapor_flow_out(self):
+        temp_n = temp_n_1 - tempchange
+        enth_vn = pyro.h(steam, temp_n)
+        enth_bn = pyro.h(seawater, temp_n)      #Need independent table
+        enth_bn_1 = pyro.h(steam, temp_n_1)     #Need independent table
+        enth_vn_1 = pyro.h(seawater, temp_n_1)
+        sumvpfr = np.sum(vapor_rate)
+        vapor_flow_out = (1/(enth_vn-enth_bn))*(vapor_rate(i)*latentheat+(((distill*max_brine_conc)/(max_brine_conc-feed_conc))-sumvpfr)*(enth_bn_1-enth_bn))
+        self.temp_n_1 += temp_n
+
+    def feedflowrate(self):
+            ffrate[i] = (max_brine_conce*vapor_rate[i])/(max_brine_conc-brine_conc)
+
+
