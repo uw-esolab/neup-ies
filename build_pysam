@@ -88,7 +88,7 @@ mkdir build_ssc
 cd build_ssc
 
 # making SSC in Export mode, skipping tests
-cmake ${SSCDIR} -DCMAKE_BUILD_TYPE=Export -DSAM_SKIP_TOOLS=1 -DSAMAPI_EXPORT=1 -DSAM_SKIP_TESTS=1 ../ssc/
+cmake ${SSCDIR} -G "CodeLite - Unix Makefiles" -DCMAKE_BUILD_TYPE=Export -DSAM_SKIP_TOOLS=1 -DSAMAPI_EXPORT=1 -DSAM_SKIP_TESTS=1 ../ssc/
 make -j8
 
 #====================================================#
@@ -106,11 +106,11 @@ export SSC_LIB=$DEVDIR/build_ssc/ssc
 sed -i '146s/.*/            NAMES ssc.dylib ssc.lib libssc.so/' $DEVDIR/sam/api/api_autogen/CMakeLists.txt
 
 # make SAM in Export mode, this one breaks... For some reason it doesnt read the correct SAM_API scripts?
-cmake ${SAMNTDIR}/api -DCMAKE_BUILD_TYPE=Export -DSAMAPI_EXPORT=1 -DSAM_SKIP_AUTOGEN=0 ../sam/api
+cmake ${SAMNTDIR}/api -G "CodeLite - Unix Makefiles" -DCMAKE_BUILD_TYPE=Export -DSAMAPI_EXPORT=1 -DSAM_SKIP_AUTOGEN=0 ../sam/api
 make -j8
 
 # not a typo... for some reason have to do this twice. Only then will it read the correct modules
-cmake ${SAMNTDIR}/api -DCMAKE_BUILD_TYPE=Export -DSAMAPI_EXPORT=1 -DSAM_SKIP_AUTOGEN=0 ../sam/api
+cmake ${SAMNTDIR}/api -G "CodeLite - Unix Makefiles" -DCMAKE_BUILD_TYPE=Export -DSAMAPI_EXPORT=1 -DSAM_SKIP_AUTOGEN=0 ../sam/api
 make -j8
 
 #====================================================#

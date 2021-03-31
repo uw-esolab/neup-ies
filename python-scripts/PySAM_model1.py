@@ -21,6 +21,9 @@ from pylab import rc
 rc('axes', linewidth=2)
 rc('font', weight='bold',size=12)
 
+pid = os.getpid()
+print("PID = ", pid)
+
 # defining directories
 cwd        = os.getcwd() #should we make this static? cwd can change based on IDE preferences
 neup_dir   = os.path.dirname(cwd)
@@ -188,13 +191,11 @@ op_modes_list = [
     "SKIP_40",
     "CR_TO_COLD__PC_SU__TES_DC" ]
 
-
 lp = 16 #labelpad
 fs = 12 #fontsize
 lw = 2  #linewidth
 fsl = 'x-small'      #fontsize legend
 loc = 'upper right'  #location of legend
-
 
 fig = plt.figure(figsize=[10,8])
 ax1 = fig.add_subplot(311)

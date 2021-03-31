@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 
-from pylab import *
+from pylab import rc
 rc('axes', linewidth=2)
 rc('font', weight='bold',size=12)
 
