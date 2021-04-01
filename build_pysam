@@ -128,6 +128,7 @@ fi;
 
 # making sure conda environment requirements are met
 pip install -r tests/requirements.txt
+pip install -r $DEVDIR/neup-ies/requirements.txt
 pip uninstall NREL-PySAM NREL-PySAM-stubs
 
 # run python setup to install PySAM, creating .egg files
