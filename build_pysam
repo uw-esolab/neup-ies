@@ -117,9 +117,14 @@ make -j8
 #---- build PySAM ------------------------------------
 cd $DEVDIR/pysam
 
-# creating new environment, add your own otherwise
-conda create --name pysam_test python=3.7 -y
-conda activate pysam_test
+# creating new environment if pysam_daotk doesn't exist
+ENVS=$(conda env list)
+if [[ $ENVS = *"pysam_daotk"* ]]; then
+   source activate pysam_daotk
+else 
+   conda create --name pysam_daotk python=3.7 -y
+   conda activate pysam_daotk
+fi;
 
 # making sure conda environment requirements are met
 pip install -r tests/requirements.txt
