@@ -51,16 +51,16 @@ def read_pandas(filepath):
 solar_resource_file = parent_dir + '/sam/deploy/solar_resource/tucson_az_32.116521_-110.933042_psmv3_60_tmy.csv'
 
 # creating data arrays from csv files
-df_array = read_pandas(cwd + '/data-files/dispatch_factors_ts.csv')
-ud_array = read_pandas(cwd + '/data-files/ud_ind_od.csv')
-wl_array = read_pandas(cwd + '/data-files/wlim_series.csv')
-hp_array = read_pandas(cwd + '/data-files/helio_positions.csv')
-gc_array = read_pandas(cwd + '/data-files/grid_curtailment.csv')
-em_array = read_pandas(cwd + '/data-files/eta_map.csv')
-fm_array = read_pandas(cwd + '/data-files/flux_maps.csv')
+df_array = read_pandas(cwd + '/data/dispatch_factors_ts.csv')
+ud_array = read_pandas(cwd + '/data/ud_ind_od.csv')
+wl_array = read_pandas(cwd + '/data/wlim_series.csv')
+hp_array = read_pandas(cwd + '/data/helio_positions.csv')
+gc_array = read_pandas(cwd + '/data/grid_curtailment.csv')
+em_array = read_pandas(cwd + '/data/eta_map.csv')
+fm_array = read_pandas(cwd + '/data/flux_maps.csv')
 
 # defining modules to run
-with open("json-scripts/model1.json") as f:
+with open("json/model1.json") as f:
     # loading json script to a dictionary
     dic = json.load(f)
     nt_dat = pssc.dict_to_ssc_table(dic, "nuclear_tes")
