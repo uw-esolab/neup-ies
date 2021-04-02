@@ -14,7 +14,7 @@ import PySAM.Singleowner as Singleowner
 import PySAM.PySSC as pssc
 
 ssc = pssc.PySSC()
-with open("json-scripts/100mW_Generic.json") as f:
+with open("json/100mW_Generic.json") as f:
     dic = json.load(f)
     gs_dat = pssc.dict_to_ssc_table(dic, "generic_system")
     grid_dat = pssc.dict_to_ssc_table(dic, "grid")

@@ -13,51 +13,39 @@ import PySAM.Grid as Grid
 import PySAM.Singleowner as Singleowner
 import PySAM.PySSC as pssc
 ssc = pssc.PySSC()
+
+from util.FileMethods import FileMethods
+
 import json, os
-import pandas
 import matplotlib.pyplot as plt
 import numpy as np
 from pylab import rc
 rc('axes', linewidth=2)
 rc('font', weight='bold',size=12)
 
+pid = os.getpid()
+print("PID = ", pid)
+
 # defining directories
-cwd        = os.getcwd() #should we make this static? cwd can change based on IDE preferences
-neup_dir   = os.path.dirname(cwd)
+cwd        = FileMethods.samsim_dir
+neup_dir   = FileMethods.neup_dir
 parent_dir = os.path.dirname(neup_dir)
 ssc_dir    = parent_dir + '/build_ssc/ssc/libssc.so'
-
-# method to read in csv file and output data array in correct shape
-def read_pandas(filepath):
-    """ Method to read csv file and return data array
-    
-    Inputs:
-        filepath (str) - full path to csv file
-    Outputs:
-        data_array (list) - data in either list (SSC_ARRAY) or nested list (SSC_MATRIX)
-    
-    """
-    dataframe = pandas.read_csv(filepath,header=None)
-    if dataframe.shape[1] == 1:
-        data_array = dataframe.T.to_numpy()[0]
-    else:
-        data_array = dataframe.to_numpy().tolist()
-    return data_array
 
 # solar file that comes with SAM repository
 solar_resource_file = parent_dir + '/sam/deploy/solar_resource/tucson_az_32.116521_-110.933042_psmv3_60_tmy.csv'
 
 # creating data arrays from csv files
-df_array = read_pandas(cwd + '/data-files/dispatch_factors_ts.csv')
-ud_array = read_pandas(cwd + '/data-files/ud_ind_od.csv')
-wl_array = read_pandas(cwd + '/data-files/wlim_series.csv')
-hp_array = read_pandas(cwd + '/data-files/helio_positions.csv')
-gc_array = read_pandas(cwd + '/data-files/grid_curtailment.csv')
-em_array = read_pandas(cwd + '/data-files/eta_map.csv')
-fm_array = read_pandas(cwd + '/data-files/flux_maps.csv')
+df_array = FileMethods.read_csv_through_pandas(cwd + '/data/dispatch_factors_ts.csv')
+ud_array = FileMethods.read_csv_through_pandas(cwd + '/data/ud_ind_od.csv')
+wl_array = FileMethods.read_csv_through_pandas(cwd + '/data/wlim_series.csv')
+hp_array = FileMethods.read_csv_through_pandas(cwd + '/data/helio_positions.csv')
+gc_array = FileMethods.read_csv_through_pandas(cwd + '/data/grid_curtailment.csv')
+em_array = FileMethods.read_csv_through_pandas(cwd + '/data/eta_map.csv')
+fm_array = FileMethods.read_csv_through_pandas(cwd + '/data/flux_maps.csv')
 
 # defining modules to run
-with open("json-scripts/generic_mspt.json") as f:
+with open("json/generic_mspt.json") as f:
     # loading json script to a dictionary
     dic = json.load(f)
     ms_dat = pssc.dict_to_ssc_table(dic, "tcsmolten_salt")
