@@ -25,7 +25,7 @@ pid = os.getpid()
 print("PID = ", pid)
 
 # defining directories
-cwd        = os.getcwd() #should we make this static? cwd can change based on IDE preferences
+cwd        = os.path.dirname(os.path.realpath(__file__)) 
 neup_dir   = os.path.dirname(cwd)
 parent_dir = os.path.dirname(neup_dir)
 ssc_dir    = parent_dir + '/build_ssc/ssc/libssc.so'
