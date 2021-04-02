@@ -48,9 +48,9 @@ fm_array = FileMethods.read_csv_through_pandas(cwd + '/data/flux_maps.csv')
 with open("json/model1.json") as f:
     # loading json script to a dictionary
     dic = json.load(f)
-    nt_dat = pssc.dict_to_ssc_table(dic, "nuclear_tes")
-    grid_dat = pssc.dict_to_ssc_table(dic, "grid")
-    so_dat = pssc.dict_to_ssc_table(dic, "singleowner")
+    nt_dat = pssc.dict_to_ssc_table(dic['SSC_inputs'], "nuclear_tes")
+    grid_dat = pssc.dict_to_ssc_table(dic['SSC_inputs'], "grid")
+    so_dat = pssc.dict_to_ssc_table(dic['SSC_inputs'], "singleowner")
     
     # creating Nuclear module from data
     nt = NuclearTes.wrap(nt_dat)
