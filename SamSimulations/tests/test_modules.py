@@ -6,8 +6,8 @@ Created on Thu Apr  1 14:36:02 2021
 @author: gabrielsoto
 """
 
-import unittest, os,sys
-from util.FileMethods import FileMethods
+import unittest
+
 
 class TestPySAMModules(unittest.TestCase):
     """
@@ -20,6 +20,4 @@ class TestPySAMModules(unittest.TestCase):
                          'generic_nuclear_model1']
     
     
-    def setUp(self):
-        return 0
         
