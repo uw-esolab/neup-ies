@@ -18,7 +18,7 @@ class TestUtils(unittest.TestCase):
     def test_csvread(self):
         
         #testing with test1.csv file, only has 1 column
-        csvpath1 = os.path.join( FileMethods.neup_dir , "data/tests/test1.csv")
+        csvpath1 = os.path.join( FileMethods.samsim_dir , "data/tests/test1.csv")
         data_array1 = FileMethods.read_csv_through_pandas(csvpath1)
         
         #----checking that the output array is 1 dimensional as expected
@@ -26,7 +26,7 @@ class TestUtils(unittest.TestCase):
         self.assertEqual(len(data_array1.shape),1,     "test1 is not a 1D array") 
         
         #testing with test1.csv file, has 2 columns
-        csvpath2 = os.path.join( FileMethods.neup_dir , "data/tests/test2.csv")
+        csvpath2 = os.path.join( FileMethods.samsim_dir , "data/tests/test2.csv")
         data_array2 = FileMethods.read_csv_through_pandas(csvpath2)
         
         #----checking that the output array is a list of lists

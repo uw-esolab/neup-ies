@@ -12,8 +12,8 @@ class FileMethods(object):
     
     #defining directory where this particular file is located and other useful directories
     util_dir      = os.path.dirname(os.path.realpath(__file__))
-    neup_dir      = os.path.dirname(util_dir)
-    parent_dir    = os.path.dirname(neup_dir)
+    samsim_dir    = os.path.dirname(util_dir)
+    neup_dir    = os.path.dirname(samsim_dir)
     
     def read_csv_through_pandas(filepath):
         """ Method to read csv file and return data array
