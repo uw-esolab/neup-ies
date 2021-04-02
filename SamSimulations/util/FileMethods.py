@@ -13,10 +13,7 @@ class FileMethods(object):
     #defining directory where this particular file is located and other useful directories
     util_dir      = os.path.dirname(os.path.realpath(__file__))
     neup_dir      = os.path.dirname(util_dir)
-    scripts_dir   = os.path.join(neup_dir,"python-scripts")
-    test_dir      = os.path.join(neup_dir,"tests")
     parent_dir    = os.path.dirname(neup_dir)
-    json_test_dir = os.path.join(scripts_dir,"json-scripts/tests")
     
     def read_csv_through_pandas(filepath):
         """ Method to read csv file and return data array
