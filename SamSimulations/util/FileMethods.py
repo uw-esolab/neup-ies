@@ -10,6 +10,7 @@ import pandas, os
 
 class FileMethods(object):
     
+    #defining directory where this particular file is located and other useful directories
     util_dir      = os.path.dirname(os.path.realpath(__file__))
     neup_dir      = os.path.dirname(util_dir)
     scripts_dir   = os.path.join(neup_dir,"python-scripts")
@@ -26,9 +27,11 @@ class FileMethods(object):
             data_array (list) - data in either list (SSC_ARRAY) or nested list (SSC_MATRIX)
         
         """
-        dataframe = pandas.read_csv(filepath,header=None)
+        dataframe = pandas.read_csv(filepath,header=None) #important: No Header assumed
+        #recasting dataframe to a 1D numpy array if there is only 1 columnn in csv (SSC ARRAY)
         if dataframe.shape[1] == 1:
             data_array = dataframe.T.to_numpy()[0]
+        #recasting dataframe to a ND numpy array, then to list of lists (equiv to SSC MATRIX)
         else:
             data_array = dataframe.to_numpy().tolist()
         return data_array
