@@ -27,22 +27,18 @@ pid = os.getpid()
 print("PID = ", pid)
 
 # defining directories
-cwd        = FileMethods.samsim_dir
-neup_dir   = FileMethods.neup_dir
-parent_dir = os.path.dirname(neup_dir)
-ssc_dir    = parent_dir + '/build_ssc/ssc/libssc.so'
+parent_dir = FileMethods.parent_dir
+PySAM_dict , SSC_dict = FileMethods.read_json('model1')
 
-# solar file that comes with SAM repository
-solar_resource_file = parent_dir + '/sam/deploy/solar_resource/tucson_az_32.116521_-110.933042_psmv3_60_tmy.csv'
+solar_resource_file = parent_dir + PySAM_dict['solar_resource_rel_parent']
+df_array = FileMethods.read_csv_through_pandas(PySAM_dict['dispatch_factors_file'])
+ud_array = FileMethods.read_csv_through_pandas(PySAM_dict['ud_file'])
+wl_array = FileMethods.read_csv_through_pandas(PySAM_dict['wlim_file'])
+hp_array = FileMethods.read_csv_through_pandas(PySAM_dict['helio_file'])
+gc_array = FileMethods.read_csv_through_pandas(PySAM_dict['grid_file'])
+em_array = FileMethods.read_csv_through_pandas(PySAM_dict['eta_file'])
+fm_array = FileMethods.read_csv_through_pandas(PySAM_dict['flux_file'])
 
-# creating data arrays from csv files
-df_array = FileMethods.read_csv_through_pandas(cwd + '/data/dispatch_factors_ts.csv')
-ud_array = FileMethods.read_csv_through_pandas(cwd + '/data/ud_ind_od.csv')
-wl_array = FileMethods.read_csv_through_pandas(cwd + '/data/wlim_series.csv')
-hp_array = FileMethods.read_csv_through_pandas(cwd + '/data/helio_positions.csv')
-gc_array = FileMethods.read_csv_through_pandas(cwd + '/data/grid_curtailment.csv')
-em_array = FileMethods.read_csv_through_pandas(cwd + '/data/eta_map.csv')
-fm_array = FileMethods.read_csv_through_pandas(cwd + '/data/flux_maps.csv')
 
 # defining modules to run
 with open("json/model1.json") as f:
