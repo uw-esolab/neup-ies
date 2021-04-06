@@ -23,7 +23,6 @@ class FileMethods(object):
             filepath (str) : full path to csv file
         Outputs:
             data_array (list) : data in either list (SSC_ARRAY) or nested list (SSC_MATRIX) form
-        
         """
         dataframe = pandas.read_csv(filepath,header=None) #important: No Header assumed
         
