@@ -30,16 +30,19 @@ class GenericSSCModule(object):
         self.get_csv_arrays( PySAM_dict )
 
 
-    def run_single_sim(self):
+    def run_sim(self):
         """ Method to run single simulation for Generic System
         """
         
+        # create Plant object and execute it
         plant = self.create_plant_object( )
         plant.execute( )
         
+        # use executed Plant object to create Grid object and execute it
         grid  = self.create_grid_object( plant )
         grid.execute( )
         
+        # use executed Plant object to create SingleOwner object and execute it
         so    = self.create_so_object( plant )
         so.execute( )
         
