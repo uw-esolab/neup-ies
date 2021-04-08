@@ -23,7 +23,7 @@ if __name__ == "__main__":
     #    /parent_dir/build/..
     #    /parent_dir/neup-ies/python-scripts
     pdir = ssc.parent_dir 
-    cwd  = pdir + '/neup-ies/python-scripts'
+    cwd  = pdir + '/neup-ies/SamSimulations'
     print ('Current folder = ', cwd)
     print ('SSC Version = ', ssc.version())
     print ('SSC Build Information = ', ssc.build_info().decode("utf - 8"))
@@ -36,13 +36,13 @@ if __name__ == "__main__":
     bprnt_dir = pdir.encode("utf-8") #parent directory in unicode coding
     bdata_dir = cwd.encode("utf-8")  #data repo directory in unicode conding
     solar_resource_file = bprnt_dir + b'/sam/deploy/solar_resource/tucson_az_32.116521_-110.933042_psmv3_60_tmy.csv'
-    dispatch_factors_ts = bdata_dir + b'/data-files/dispatch_factors_ts.csv'
-    ud_ind_od           = bdata_dir + b'/data-files/ud_ind_od.csv'
-    wlim_series         = bdata_dir + b'/data-files/wlim_series.csv'
-    helio_positions     = bdata_dir + b'/data-files/helio_positions.csv'
-    grid_curtailment    = bdata_dir + b'/data-files/grid_curtailment.csv'
-    eta_map             = bdata_dir + b'/data-files/eta_map.csv'
-    flux_maps           = bdata_dir + b'/data-files/flux_maps.csv'
+    dispatch_factors_ts = bdata_dir + b'/data/dispatch_factors_ts.csv'
+    ud_ind_od           = bdata_dir + b'/data/ud_ind_od.csv'
+    wlim_series         = bdata_dir + b'/data/wlim_series.csv'
+    helio_positions     = bdata_dir + b'/data/helio_positions.csv'
+    grid_curtailment    = bdata_dir + b'/data/grid_curtailment.csv'
+    eta_map             = bdata_dir + b'/data/eta_map.csv'
+    flux_maps           = bdata_dir + b'/data/flux_maps.csv'
     
     # =============================================================================
     # Starting data collection for run
