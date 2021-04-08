@@ -8,14 +8,7 @@ Most recently tested against PySAM 2.1.4
 @author: frohro
 """
 
-import PySAM.NuclearTes as NuclearTes
-import PySAM.Grid as Grid
-import PySAM.Singleowner as Singleowner
-import PySAM.PySSC as pssc
-ssc = pssc.PySSC()
-
-from util.FileMethods import FileMethods
-
+import modules.NuclearTES as NuclearTES
 import os
 import matplotlib.pyplot as plt
 import numpy as np
@@ -26,51 +19,19 @@ rc('font', weight='bold',size=12)
 pid = os.getpid()
 print("PID = ", pid)
 
+# =============================================================================
+#     Run Simulation
+# =============================================================================
+
 # defining directories
-parent_dir = FileMethods.parent_dir
-PySAM_dict, SSC_dict = FileMethods.read_json('model1')
+nuctes = NuclearTES.NuclearTES()
+nt, grid, so = nuctes.run_sim()
 
-solar_resource_file = parent_dir + PySAM_dict['solar_resource_rel_parent']
-df_array = FileMethods.read_csv_through_pandas(PySAM_dict['dispatch_factors_file'])
-ud_array = FileMethods.read_csv_through_pandas(PySAM_dict['ud_file'])
-wl_array = FileMethods.read_csv_through_pandas(PySAM_dict['wlim_file'])
-hp_array = FileMethods.read_csv_through_pandas(PySAM_dict['helio_file'])
-gc_array = FileMethods.read_csv_through_pandas(PySAM_dict['grid_file'])
-em_array = FileMethods.read_csv_through_pandas(PySAM_dict['eta_file'])
-fm_array = FileMethods.read_csv_through_pandas(PySAM_dict['flux_file'])
-
-# defining modules to run
-nt_dat   = pssc.dict_to_ssc_table(SSC_dict, "nuclear_tes")
-grid_dat = pssc.dict_to_ssc_table(SSC_dict, "grid")
-so_dat   = pssc.dict_to_ssc_table(SSC_dict, "singleowner")
-
-# creating Nuclear module from data
-nt = NuclearTes.wrap(nt_dat)
-
-# manually setting data arrays from csv files
-nt.SolarResource.solar_resource_file         = solar_resource_file
-nt.TimeOfDeliveryFactors.dispatch_factors_ts = df_array
-nt.UserDefinedPowerCycle.ud_ind_od           = ud_array
-nt.SystemControl.wlim_series                 = wl_array
-nt.HeliostatField.helio_positions            = hp_array
-nt.HeliostatField.eta_map                    = em_array
-nt.HeliostatField.flux_maps                  = fm_array
-nt.SystemControl.dispatch_series = [1.2]*8760
-
-# creating Grid module from existing Nuclear module
-grid = Grid.from_existing(nt)
-grid.assign(Grid.wrap(grid_dat).export())
-grid.GridLimits.grid_curtailment = gc_array #setting grid curtailment data taken from csv file
-
-# to create GenericSystem and Singleowner combined simulation, sharing the same data
-so = Singleowner.from_existing(nt)
-so.assign(Singleowner.wrap(so_dat).export())
-
-#execute modules
-nt.execute()
-grid.execute()
-so.execute()
 print('Made it past execute.')
+
+# =============================================================================
+#     Display Results
+# =============================================================================
 
 annual_energy          = nt.Outputs.annual_energy/1e9
 capacity_factor        = nt.Outputs.capacity_factor
