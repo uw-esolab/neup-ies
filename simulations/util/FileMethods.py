@@ -16,6 +16,7 @@ class FileMethods(object):
     neup_dir     = os.path.dirname(samsim_dir)
     parent_dir   = os.path.dirname(neup_dir)
     
+    
     def read_csv_through_pandas(filepath):
         """ Method to read csv file and return data array
         
@@ -35,17 +36,18 @@ class FileMethods(object):
             
         return data_array
 
+
     def read_json(json_name):
         """ Method to read json file and return dictionaries
         
         Inputs:
-            json_name (str) : name of json script found at 'neup-ies/SamSimulations/json'
+            json_name (str) : name of json script found at 'neup-ies/simulations/json'
         Outputs:
             pysam_dict (dict) : dictionary of PySAM inputs + file names
             ssc_dict (dict) : dictionary of SSC inputs needed to run modules
         """
         #defining filepath for JSON script (FUTURE: add non-default functionality to input whole path)
-        json_filepath = "json/" + json_name + '.json'
+        json_filepath = "json/" + json_name + ".json"
         
         with open(json_filepath) as f:
             # loading JSON script to a dictionary
