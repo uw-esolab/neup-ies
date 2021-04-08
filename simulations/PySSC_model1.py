@@ -23,7 +23,7 @@ if __name__ == "__main__":
     #    /parent_dir/build/..
     #    /parent_dir/neup-ies/python-scripts
     pdir = ssc.parent_dir 
-    cwd  = pdir + '/neup-ies/SamSimulations'
+    cwd  = pdir + '/neup-ies/simulations'
     print ('Current folder = ', cwd)
     print ('SSC Version = ', ssc.version())
     print ('SSC Build Information = ', ssc.build_info().decode("utf - 8"))
