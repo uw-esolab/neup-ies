@@ -109,3 +109,38 @@ class GenericSSCModule(object):
         # import Singleowner-specific data to Singleowner object
         self.SO.assign(Singleowner.wrap(so_dat).export())
 
+
+    def simulate_Plant(self, run_loop=False):
+        
+        # start and end times for full simulation
+        time_start = self.SSC_dict['time_start'] * u.s
+        time_end   = self.SSC_dict['time_stop'] * u.s
+        
+        # if running loop -> next time stop is ssc_horizon time
+        # else            -> next time stop is sim end time
+        time_next  = self.ssc_horizon.to('s') if run_loop else copy.deepcopy(time_end)
+        
+        # setting ind for subsequent calls
+        t_ind = int(time_next.to('hr').value)
+        
+        # initializing log array
+        gen_log = np.ndarray([0])
+        
+        # first execution of Plant through SSC
+        self.run_Plant_through_SSC( time_start , time_next )
+        
+        # store results of gen
+        gen_log = np.hstack(  [gen_log,   self.Plant.Outputs.gen[0:t_ind]  ]  )
+        
+        return gen_log
+
+
+    def run_Plant_through_SSC(self, start_hr, end_hr):
+        
+        if hasattr(self.Plant,'SystemControl'):
+            self.Plant.SystemControl.time_start = start_hr.to('s').value
+            self.Plant.SystemControl.time_stop = end_hr.to('s').value
+        
+        self.Plant.execute()
+        
+        
