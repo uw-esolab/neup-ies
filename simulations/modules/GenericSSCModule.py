@@ -11,6 +11,9 @@ import PySAM.Grid as Grid
 import PySAM.Singleowner as Singleowner
 import PySAM.PySSC as pssc
 from util.FileMethods import FileMethods
+import astropy.units as u
+import numpy as np
+import copy
 
 class GenericSSCModule(object):
     
@@ -22,6 +25,10 @@ class GenericSSCModule(object):
         
         # read in dictionaries from json script
         PySAM_dict, SSC_dict = FileMethods.read_json( self.json_name )
+        
+        # storing SSC and Pyomo time horizons, inputs are in unit of hours
+        self.ssc_horizon   = PySAM_dict['ssc_horizon'] * u.hr
+        self.pyomo_horizon = PySAM_dict['pyomo_horizon'] * u.hr
         
         # save SSC_dict for usage later
         self.SSC_dict = SSC_dict
@@ -40,15 +47,15 @@ class GenericSSCModule(object):
         #       - OR we have a separate method that runs things in a loop
         #               - reason for this is that we need to log gen output
         #               - and pass it into grid and so
-        self.create_plant_object( )
+        self.create_Plant( )
         self.Plant.execute( )
         
         # use executed Plant object to create Grid object and execute it
-        self.create_grid_object( )
+        self.create_Grid( )
         self.Grid.execute( )
         
         # use executed Plant object to create SingleOwner object and execute it
-        self.create_so_object( )
+        self.create_SO( )
         self.SO.execute( )
 
           
@@ -64,7 +71,7 @@ class GenericSSCModule(object):
         self.solar_resource_file = parent_dir + input_dict['solar_resource_rel_parent']
         
         
-    def create_plant_object(self):
+    def create_Plant(self):
         """ Method to create Plant object for the first time
         """
         
@@ -75,7 +82,7 @@ class GenericSSCModule(object):
         self.Plant = GenericSystem.wrap(plant_dat)
 
     
-    def create_grid_object(self):
+    def create_Grid(self):
         """ Method to create Grid object for the first time
         """
         
@@ -89,7 +96,7 @@ class GenericSSCModule(object):
         self.Grid.assign(Grid.wrap(grid_dat).export())
 
 
-    def create_so_object(self):
+    def create_SO(self):
         """ Method to create SingleOwner object for the first time
         """
         
@@ -102,4 +109,3 @@ class GenericSSCModule(object):
         # import Singleowner-specific data to Singleowner object
         self.SO.assign(Singleowner.wrap(so_dat).export())
 
-    
