@@ -27,14 +27,19 @@ class GenericSSCModule(object):
         self.SSC_dict = SSC_dict
         
         # save csv arrays to class 
-        self.get_csv_arrays( PySAM_dict )
+        self.store_csv_arrays( PySAM_dict )
 
 
     def run_sim(self):
         """ Method to run single simulation for Generic System
         """
-        
+
         # create Plant object and execute it
+        # TODO: here we can make a new method solely for plant execution
+        #       - it could ask for a flag to run one time or in a loop?
+        #       - OR we have a separate method that runs things in a loop
+        #               - reason for this is that we need to log gen output
+        #               - and pass it into grid and so
         plant = self.create_plant_object( )
         plant.execute( )
         
@@ -48,8 +53,9 @@ class GenericSSCModule(object):
         
         return plant, grid, so
         
-    def get_csv_arrays(self, input_dict):
-        """ Method to get data from specified csv files
+    
+    def store_csv_arrays(self, input_dict):
+        """ Method to get data from specified csv files and store in class
         
         Inputs:
             input_dict (dict) : dictionary with csv file names
@@ -61,7 +67,7 @@ class GenericSSCModule(object):
         
         
     def create_plant_object(self):
-        """ Method to create Plant object
+        """ Method to create Plant object for the first time
         """
         
         # create plant data encoding for generic system
@@ -74,7 +80,7 @@ class GenericSSCModule(object):
     
     
     def create_grid_object(self, plant):
-        """ Method to create Grid object
+        """ Method to create Grid object for the first time
         
         Inputs:
             plant (obj) : object representing Plant
@@ -93,7 +99,7 @@ class GenericSSCModule(object):
 
 
     def create_so_object(self, plant):
-        """ Method to create SingleOwner object
+        """ Method to create SingleOwner object for the first time
         
         Inputs:
             plant (obj) : object representing Plant
