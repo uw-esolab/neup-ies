@@ -18,37 +18,16 @@ class NuclearTES(GenericSSCModule):
         # initialize Generic module, csv data arrays should be saved here
         GenericSSCModule.__init__( self, plant_name, json_name )
 
-
-    def run_sim(self):
-        """ Method to run single simulation for Generic System
-        """
         
-        # create Plant object and execute it
-        plant = self.create_plant_object( )
-        plant.execute( )
-        
-        # use executed Plant object to create Grid object and execute it
-        grid  = self.create_grid_object( plant )
-        grid.GridLimits.grid_curtailment = self.gc_array  #set curtailment to be really high
-        grid.execute( )
-        
-        # use executed Plant object to create SingleOwner object and execute it
-        so    = self.create_so_object( plant )
-        so.execute( )
-        
-        return plant, grid, so
-        
-        
-    def get_csv_arrays(self, input_dict):
-        """ Method to get data from specified csv files
+    def store_csv_arrays(self, input_dict):
+        """ Method to get data from specified csv files and store in class
         
         Inputs:
             input_dict (dict) : dictionary with csv file names
         """
         
-        # saving location of solar resource file for SSC input
-        parent_dir = FileMethods.parent_dir
-        self.solar_resource_file = parent_dir + input_dict['solar_resource_rel_parent']
+        # saving location of solar resource file for SSC input using parent class def
+        GenericSSCModule.store_csv_arrays(self, input_dict)
         
         # read csv and save data to arrays
         self.df_array = FileMethods.read_csv_through_pandas(input_dict['dispatch_factors_file'])
@@ -61,7 +40,7 @@ class NuclearTES(GenericSSCModule):
         
         
     def create_plant_object(self):
-        """ Method to create Plant object
+        """ Method to create Plant object for the first time
         """
         
         # create plant data encoding for generic system
@@ -81,4 +60,20 @@ class NuclearTES(GenericSSCModule):
         plant.SystemControl.dispatch_series = [1.2]*8760
         
         return plant
+
+
+    def create_grid_object(self, plant):
+        """ Method to create Grid object for the first time
+        
+        Inputs:
+            plant (obj) : object representing Plant
+        """
+        
+        # create grid data using parent class
+        grid = GenericSSCModule.create_grid_object(self, plant)
+        
+        #set curtailment to be really high
+        grid.GridLimits.grid_curtailment = self.gc_array  
+        
+        return grid
     
