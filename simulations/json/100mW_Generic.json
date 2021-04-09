@@ -1,7 +1,9 @@
 {
     "PySAM_inputs": {
         "ssc_lib":                   "/build_ssc/ssc/libssc.so",
-        "solar_resource_rel_parent": "/sam/deploy/solar_resource/tucson_az_32.116521_-110.933042_psmv3_60_tmy.csv"
+        "solar_resource_rel_parent": "/sam/deploy/solar_resource/tucson_az_32.116521_-110.933042_psmv3_60_tmy.csv",
+        "ssc_horizon":               24,
+        "pyomo_horizon":             48
     },
     
     "SSC_inputs": {
@@ -11,6 +13,8 @@
     	"user_capacity_factor" : 43.600000000000001,
     	"heat_rate" : 10,
     	"conv_eff" : 34.118049621582031,
+        "time_start" :  0,
+        "time_stop" :  31536000,
     	"energy_output_array" : [ 0 ],
     	"system_use_lifetime_output" : 0,
     	"analysis_period" : 25,
