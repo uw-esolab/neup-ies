@@ -39,7 +39,7 @@ class NuclearTES(GenericSSCModule):
         self.fm_array = FileMethods.read_csv_through_pandas(input_dict['flux_file'])
         
         
-    def create_plant_object(self):
+    def create_Plant(self):
         """ Method to create Plant object for the first time
         """
         
@@ -60,7 +60,7 @@ class NuclearTES(GenericSSCModule):
         self.Plant.SystemControl.dispatch_series = [1.2]*8760
 
 
-    def create_grid_object(self):
+    def create_Grid(self):
         """ Method to create Grid object for the first time
         
         Inputs:
@@ -68,7 +68,7 @@ class NuclearTES(GenericSSCModule):
         """
         
         # create grid data using parent class
-        GenericSSCModule.create_grid_object(self)
+        GenericSSCModule.create_Grid(self)
         
         #set curtailment to be really high
         self.Grid.GridLimits.grid_curtailment = self.gc_array  
