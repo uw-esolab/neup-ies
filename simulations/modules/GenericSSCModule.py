@@ -40,20 +40,18 @@ class GenericSSCModule(object):
         #       - OR we have a separate method that runs things in a loop
         #               - reason for this is that we need to log gen output
         #               - and pass it into grid and so
-        plant = self.create_plant_object( )
-        plant.execute( )
+        self.create_plant_object( )
+        self.Plant.execute( )
         
         # use executed Plant object to create Grid object and execute it
-        grid  = self.create_grid_object( plant )
-        grid.execute( )
+        self.create_grid_object( )
+        self.Grid.execute( )
         
         # use executed Plant object to create SingleOwner object and execute it
-        so    = self.create_so_object( plant )
-        so.execute( )
-        
-        return plant, grid, so
-        
-    
+        self.create_so_object( )
+        self.SO.execute( )
+
+          
     def store_csv_arrays(self, input_dict):
         """ Method to get data from specified csv files and store in class
         
@@ -74,46 +72,34 @@ class GenericSSCModule(object):
         plant_dat = pssc.dict_to_ssc_table( self.SSC_dict, self.plant_name )
         
         # create new Plant object
-        plant = GenericSystem.wrap(plant_dat)
-        
-        return plant
+        self.Plant = GenericSystem.wrap(plant_dat)
+
     
-    
-    def create_grid_object(self, plant):
+    def create_grid_object(self):
         """ Method to create Grid object for the first time
-        
-        Inputs:
-            plant (obj) : object representing Plant
         """
         
         # create grid data encoding for grid
         grid_dat = pssc.dict_to_ssc_table( self.SSC_dict, "grid" )
         
         # create new Grid object from existing Plant object
-        grid = Grid.from_existing( plant )
+        self.Grid = Grid.from_existing( self.Plant )
         
         # import Grid-specific data to Grid object
-        grid.assign(Grid.wrap(grid_dat).export())
-        
-        return grid
+        self.Grid.assign(Grid.wrap(grid_dat).export())
 
 
-    def create_so_object(self, plant):
+    def create_so_object(self):
         """ Method to create SingleOwner object for the first time
-        
-        Inputs:
-            plant (obj) : object representing Plant
         """
         
         # create singleowner data encoding for singleowner object
         so_dat   = pssc.dict_to_ssc_table( self.SSC_dict, "singleowner" )
         
         # create new Singleowner object from existing Plant object
-        so = Singleowner.from_existing( plant )
+        self.SO = Singleowner.from_existing( self.Plant )
         
         # import Singleowner-specific data to Singleowner object
-        so.assign(Singleowner.wrap(so_dat).export())
-        
-        return so
-    
+        self.SO.assign(Singleowner.wrap(so_dat).export())
+
     

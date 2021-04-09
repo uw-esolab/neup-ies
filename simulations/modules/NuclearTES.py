@@ -47,22 +47,20 @@ class NuclearTES(GenericSSCModule):
         plant_dat = pssc.dict_to_ssc_table( self.SSC_dict, self.plant_name )
         
         # create new Plant object
-        plant = NuclearTes.wrap(plant_dat)
+        self.Plant = NuclearTes.wrap(plant_dat)
         
         # manually setting data arrays from csv files
-        plant.SolarResource.solar_resource_file         = self.solar_resource_file
-        plant.TimeOfDeliveryFactors.dispatch_factors_ts = self.df_array
-        plant.UserDefinedPowerCycle.ud_ind_od           = self.ud_array
-        plant.SystemControl.wlim_series                 = self.wl_array
-        plant.HeliostatField.helio_positions            = self.hp_array
-        plant.HeliostatField.eta_map                    = self.em_array
-        plant.HeliostatField.flux_maps                  = self.fm_array
-        plant.SystemControl.dispatch_series = [1.2]*8760
-        
-        return plant
+        self.Plant.SolarResource.solar_resource_file         = self.solar_resource_file
+        self.Plant.TimeOfDeliveryFactors.dispatch_factors_ts = self.df_array
+        self.Plant.UserDefinedPowerCycle.ud_ind_od           = self.ud_array
+        self.Plant.SystemControl.wlim_series                 = self.wl_array
+        self.Plant.HeliostatField.helio_positions            = self.hp_array
+        self.Plant.HeliostatField.eta_map                    = self.em_array
+        self.Plant.HeliostatField.flux_maps                  = self.fm_array
+        self.Plant.SystemControl.dispatch_series = [1.2]*8760
 
 
-    def create_grid_object(self, plant):
+    def create_grid_object(self):
         """ Method to create Grid object for the first time
         
         Inputs:
@@ -70,10 +68,9 @@ class NuclearTES(GenericSSCModule):
         """
         
         # create grid data using parent class
-        grid = GenericSSCModule.create_grid_object(self, plant)
+        GenericSSCModule.create_grid_object(self)
         
         #set curtailment to be really high
-        grid.GridLimits.grid_curtailment = self.gc_array  
-        
-        return grid
+        self.Grid.GridLimits.grid_curtailment = self.gc_array  
+
     
