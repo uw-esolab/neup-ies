@@ -25,7 +25,7 @@ print("PID = ", pid)
 
 # defining directories
 nuctes = NuclearTES.NuclearTES()
-nuctes.run_sim()
+nuctes.run_sim(1)
 nt = nuctes.Plant
 so = nuctes.SO
 

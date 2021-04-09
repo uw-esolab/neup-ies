@@ -37,25 +37,25 @@ class GenericSSCModule(object):
         self.store_csv_arrays( PySAM_dict )
 
 
-    def run_sim(self):
+    def run_sim(self, run_loop=False):
         """ Method to run single simulation for Generic System
         """
-
+        
+        self.run_loop = run_loop
         # create Plant object and execute it
-        # TODO: here we can make a new method solely for plant execution
-        #       - it could ask for a flag to run one time or in a loop?
-        #       - OR we have a separate method that runs things in a loop
-        #               - reason for this is that we need to log gen output
-        #               - and pass it into grid and so
         self.create_Plant( )
-        self.Plant.execute( )
+        self.simulate_Plant( )
         
         # use executed Plant object to create Grid object and execute it
         self.create_Grid( )
+        self.Grid.SystemOutput.gen = tuple(self.gen_log)
+        self.Grid.SystemOutput.annual_energy = np.sum(self.gen_log)
         self.Grid.execute( )
         
         # use executed Plant object to create SingleOwner object and execute it
         self.create_SO( )
+        self.SO.SystemOutput.gen = tuple(self.gen_log)
+        self.SO.SystemOutput.annual_energy_pre_curtailment_ac = np.sum(self.gen_log)
         self.SO.execute( )
 
           
@@ -110,7 +110,12 @@ class GenericSSCModule(object):
         self.SO.assign(Singleowner.wrap(so_dat).export())
 
 
-    def simulate_Plant(self, run_loop=False):
+    def simulate_Plant(self):
+        """ Full simulation of Plant
+        """
+        
+        # helper method for hstack-ing arrays
+        augment_log = lambda X,Y: np.hstack(  [ X, Y ]  )
         
         # start and end times for full simulation
         time_start = self.SSC_dict['time_start'] * u.s
@@ -118,29 +123,55 @@ class GenericSSCModule(object):
         
         # if running loop -> next time stop is ssc_horizon time
         # else            -> next time stop is sim end time
-        time_next  = self.ssc_horizon.to('s') if run_loop else copy.deepcopy(time_end)
+        time_next  = self.ssc_horizon.to('s') if self.run_loop else copy.deepcopy(time_end)
         
-        # setting ind for subsequent calls
-        t_ind = int(time_next.to('hr').value)
-        
-        # initializing log array
-        gen_log = np.ndarray([0])
+        # setting index for subsequent calls, static index for gen
+        self.t_ind = int(time_next.to('hr').value)
         
         # first execution of Plant through SSC
         self.run_Plant_through_SSC( time_start , time_next )
         
-        # store results of gen
-        gen_log = np.hstack(  [gen_log,   self.Plant.Outputs.gen[0:t_ind]  ]  )
+        # logging values of gen
+        self.gen_log = np.ndarray([0])
+        self.gen_log = augment_log( self.gen_log, self.Plant.Outputs.gen[0:self.t_ind ] )
         
-        return gen_log
-
+        # this loop should only be entered if run_loop == True
+        while (time_next < time_end):
+            print("current time", time_next.to('d'))
+            
+            time_start += self.ssc_horizon.to('s')
+            time_next  += self.ssc_horizon.to('s')
+            
+            self.update_Plant( )
+            
+            self.run_Plant_through_SSC( time_start , time_next )
+            self.gen_log = augment_log( self.gen_log, self.Plant.Outputs.gen[0:self.t_ind ] )
+            
 
     def run_Plant_through_SSC(self, start_hr, end_hr):
+        """ Simulation of Plant through SSC for given times
+        """
         
+        # oops, GenericSystem doesn't have 'SystemControl'...
         if hasattr(self.Plant,'SystemControl'):
             self.Plant.SystemControl.time_start = start_hr.to('s').value
             self.Plant.SystemControl.time_stop = end_hr.to('s').value
         
         self.Plant.execute()
+    
+    
+    def update_Plant(self):
+        """ Replace key Plant inputs with previous outputs in chainlinked simulations
+        """
+        
+        self.Plant.SystemControl.rec_op_mode_initial              = self.Plant.Outputs.rec_op_mode_final
+        self.Plant.SystemControl.rec_startup_time_remain_init     = self.Plant.Outputs.rec_startup_time_remain_final
+        self.Plant.SystemControl.rec_startup_energy_remain_init   = self.Plant.Outputs.rec_startup_energy_remain_final
+        self.Plant.SystemControl.T_tank_cold_init                 = self.Plant.Outputs.T_tes_cold[self.t_ind -1]
+        self.Plant.SystemControl.T_tank_hot_init                  = self.Plant.Outputs.T_tes_hot[self.t_ind -1]
+        self.Plant.ThermalStorage.csp_pt_tes_init_hot_htf_percent = self.Plant.Outputs.hot_tank_htf_percent_final
+        self.Plant.SystemControl.pc_op_mode_initial               = self.Plant.Outputs.pc_op_mode_final
+        self.Plant.SystemControl.pc_startup_energy_remain_initial = self.Plant.Outputs.pc_startup_time_remain_final
+        self.Plant.SystemControl.pc_startup_time_remain_init      = self.Plant.Outputs.pc_startup_energy_remain_final
         
         
