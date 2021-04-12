@@ -11,10 +11,12 @@ Most recently tested against PySAM 2.1.4
 import modules.NuclearTES as NuclearTES
 import os
 import matplotlib.pyplot as plt
+import pint
 import numpy as np
 from pylab import rc
 rc('axes', linewidth=2)
 rc('font', weight='bold',size=12)
+u = pint.UnitRegistry()
 
 pid = os.getpid()
 print("PID = ", pid)
@@ -25,7 +27,7 @@ print("PID = ", pid)
 
 # defining directories
 nuctes = NuclearTES.NuclearTES()
-nuctes.run_sim(1)
+nuctes.run_sim( run_loop=False )
 nt = nuctes.Plant
 so = nuctes.SO
 
@@ -35,8 +37,8 @@ print('Made it past execute.')
 #     Display Results
 # =============================================================================
 
-annual_energy          = nt.Outputs.annual_energy/1e9
-capacity_factor        = nt.Outputs.capacity_factor
+annual_energy          = (nt.Outputs.annual_energy*u.kWh).to('TWh')
+capacity_factor        = nuctes.capacity_factor.magnitude * 100
 annual_total_water_use = nt.Outputs.annual_total_water_use
 ppa                    = so.Outputs.ppa
 lppa_nom               = so.Outputs.lppa_nom
@@ -53,7 +55,7 @@ size_of_debt           = so.Outputs.size_of_debt/1e6
 
 print('')
 print('                        Nuclear')
-print ('Annual energy (year 1)        =   ', annual_energy, ' TWh')
+print ('Annual energy (year 1)        =   ', annual_energy)
 print ('Capacity factor (year 1)      =   ', capacity_factor, ' %')
 print ('Annual Water Usage            =   ', annual_total_water_use, ' m3')
 print ('PPA price (year 1)            =   ', ppa, ' ¢/kWh')

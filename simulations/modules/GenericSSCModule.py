@@ -11,7 +11,8 @@ import PySAM.Grid as Grid
 import PySAM.Singleowner as Singleowner
 import PySAM.PySSC as pssc
 from util.FileMethods import FileMethods
-import astropy.units as u
+import pint
+u = pint.UnitRegistry()
 import numpy as np
 import copy
 
@@ -42,20 +43,25 @@ class GenericSSCModule(object):
         """
         
         self.run_loop = run_loop
-        # create Plant object and execute it
+        SSC_dict = self.SSC_dict
+        
+        #--- create Plant object and execute it
         self.create_Plant( )
         self.simulate_Plant( )
         
-        # use executed Plant object to create Grid object and execute it
+        #logging annual energy and capacity factor
+        annual_energy = np.sum(self.gen_log)*u.kWh
+        ref_energy    = SSC_dict['P_ref']*u.MW * SSC_dict['gross_net_conversion_factor']
+        self.capacity_factor = (annual_energy / (ref_energy * 1*u.yr) ).to(' ')
+        
+        #--- use executed Plant object to create Grid object and execute it
         self.create_Grid( )
         self.Grid.SystemOutput.gen = tuple(self.gen_log)
-        self.Grid.SystemOutput.annual_energy = np.sum(self.gen_log)
+        self.Grid.SystemOutput.annual_energy = np.sum(annual_energy.magnitude)
         self.Grid.execute( )
         
-        # use executed Plant object to create SingleOwner object and execute it
+        #--- use executed Plant object to create SingleOwner object and execute it
         self.create_SO( )
-        self.SO.SystemOutput.gen = tuple(self.gen_log)
-        self.SO.SystemOutput.annual_energy_pre_curtailment_ac = np.sum(self.gen_log)
         self.SO.execute( )
 
           
@@ -122,11 +128,11 @@ class GenericSSCModule(object):
         time_end   = self.SSC_dict['time_stop'] * u.s
         
         # if running loop -> next time stop is ssc_horizon time
-        # else            -> next time stop is sim end time
+        #            else -> next time stop is sim end time
         time_next  = self.ssc_horizon.to('s') if self.run_loop else copy.deepcopy(time_end)
         
         # setting index for subsequent calls, static index for gen
-        self.t_ind = int(time_next.to('hr').value)
+        self.t_ind = int(time_next.to('hr').magnitude)
         
         # first execution of Plant through SSC
         self.run_Plant_through_SSC( time_start , time_next )
@@ -139,12 +145,17 @@ class GenericSSCModule(object):
         while (time_next < time_end):
             print("current time", time_next.to('d'))
             
+            # update time
             time_start += self.ssc_horizon.to('s')
             time_next  += self.ssc_horizon.to('s')
             
+            # update Plant parameters after previous run
             self.update_Plant( )
             
+            # run Plant again
             self.run_Plant_through_SSC( time_start , time_next )
+            
+            # log results
             self.gen_log = augment_log( self.gen_log, self.Plant.Outputs.gen[0:self.t_ind ] )
             
 
@@ -152,10 +163,10 @@ class GenericSSCModule(object):
         """ Simulation of Plant through SSC for given times
         """
         
-        # oops, GenericSystem doesn't have 'SystemControl'...
+        # oops, GenericSystem doesn't have 'SystemControl' subclass...
         if hasattr(self.Plant,'SystemControl'):
-            self.Plant.SystemControl.time_start = start_hr.to('s').value
-            self.Plant.SystemControl.time_stop = end_hr.to('s').value
+            self.Plant.SystemControl.time_start = start_hr.to('s').magnitude
+            self.Plant.SystemControl.time_stop = end_hr.to('s').magnitude
         
         self.Plant.execute()
     
@@ -167,8 +178,8 @@ class GenericSSCModule(object):
         self.Plant.SystemControl.rec_op_mode_initial              = self.Plant.Outputs.rec_op_mode_final
         self.Plant.SystemControl.rec_startup_time_remain_init     = self.Plant.Outputs.rec_startup_time_remain_final
         self.Plant.SystemControl.rec_startup_energy_remain_init   = self.Plant.Outputs.rec_startup_energy_remain_final
-        self.Plant.SystemControl.T_tank_cold_init                 = self.Plant.Outputs.T_tes_cold[self.t_ind -1]
-        self.Plant.SystemControl.T_tank_hot_init                  = self.Plant.Outputs.T_tes_hot[self.t_ind -1]
+        self.Plant.SystemControl.T_tank_cold_init                 = self.Plant.Outputs.T_tes_cold[self.t_ind-1]
+        self.Plant.SystemControl.T_tank_hot_init                  = self.Plant.Outputs.T_tes_hot[self.t_ind-1]
         self.Plant.ThermalStorage.csp_pt_tes_init_hot_htf_percent = self.Plant.Outputs.hot_tank_htf_percent_final
         self.Plant.SystemControl.pc_op_mode_initial               = self.Plant.Outputs.pc_op_mode_final
         self.Plant.SystemControl.pc_startup_energy_remain_initial = self.Plant.Outputs.pc_startup_time_remain_final
