@@ -64,8 +64,8 @@ class GenericSSCModule(object):
         #--- use executed Plant object to create SingleOwner object and execute it
         self.create_SO( )
         self.SO.execute( )
-
-          
+        
+         
     def store_csv_arrays(self, input_dict):
         """ Method to get data from specified csv files and store in class
         
@@ -170,6 +170,15 @@ class GenericSSCModule(object):
             self.Plant.SystemControl.time_stop = end_hr.to('s').magnitude
         
         self.Plant.execute()
+        
+        
+    def reset_all(self):
+        """ Reset SSC submodules
+        """
+        del self.Plant
+        del self.Grid
+        del self.SO
+        
     
     
     def update_Plant(self):

@@ -8,7 +8,7 @@ Created on Thu Apr  1 14:36:02 2021
 
 from modules.GenericSSCModule import GenericSSCModule
 from modules.NuclearTES import NuclearTES
-import unittest, os
+import unittest, os, math
 
 
 class TestPySAMModules(unittest.TestCase):
@@ -142,6 +142,7 @@ class TestPySAMModules(unittest.TestCase):
         the processes run in the correct order and output something.
         """
         
+        # list of important attributes for each submodule
         plant_output_attr = ['annual_energy', 'gen']
         grid_output_attr  = ['annual_energy_pre_curtailment_ac', 'gen']
         so_output_attr    = ['ppa', 'lppa_nom', 'lppa_real', 'project_return_aftertax_npv']
@@ -149,8 +150,8 @@ class TestPySAMModules(unittest.TestCase):
         # looping through all modules
         for mod in self.mod_list:
             
-            # run full simulation for entire year
-            mod.run_sim(0)
+            #---run full simulation for entire year
+            mod.run_sim(run_loop=False)
             
             # check that Plant have written outputs
             for p_attr in plant_output_attr:
@@ -167,11 +168,23 @@ class TestPySAMModules(unittest.TestCase):
                 self.assertTrue(hasattr(mod.SO.Outputs, s_attr) ,
                                 "{0} SO doesn't have Output {1}".format(mod.__class__.__name__ , s_attr) )
             
-            # fs = copy.deepcopy(mod)
-            
-            # if mod in self.mod_list_CL:
-            #     mod.run_sim(1)
-        
+
+            #---run looped-simulation if module has the ability to do so
+            if mod in self.mod_list_CL:
+                
+                # store results from full simulation
+                annual_energy   = mod.Grid.SystemOutput.annual_energy
+                ppa             = mod.SO.Outputs.ppa
+                
+                # reset submodules
+                mod.reset_all()
+                
+                #---run simulation in a loop
+                mod.run_sim(run_loop=True)
+                
+                # check that results are in the same ballpark
+                self.assertTrue( math.isclose (mod.Grid.SystemOutput.annual_energy, annual_energy, rel_tol=1e-2) )
+                self.assertTrue( math.isclose (mod.SO.Outputs.ppa, ppa  , rel_tol=1e-2) )
     
         
 if __name__ == "__main__":
