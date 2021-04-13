@@ -22,15 +22,13 @@ class TestPySAMModules(unittest.TestCase):
     For each individual class, there will be bespoke test classes.
     """
 
-    # test that a full, single run is close to results from chainlinking
     
-    # test that outputs are communicated from Plant to Grid to SO
     
     def setUp(self):
         """ Creating instances of modules upon start of each test
         """
         genmod = GenericSSCModule()
-        nuctes = NuclearTES()
+        nuctes = NuclearTES(json_name='tests/test_nuctes')
         
         #saving list of modules
         self.mod_list = [genmod, nuctes]
