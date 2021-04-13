@@ -29,30 +29,35 @@ class TestPySAMModules(unittest.TestCase):
     def setUp(self):
         """ Creating instances of modules upon start of each test
         """
-        self.genmod = GenericSSCModule()
-        self.nuctes = NuclearTES()
+        genmod = GenericSSCModule()
+        nuctes = NuclearTES()
+        
+        #saving list of modules
+        self.mod_list = [genmod, nuctes]
     
     
     def tearDown(self):
         """ Deleting instances of modules at end of each test
         """
-        del self.genmod
-        del self.nuctes
+        
+        # deleting each module
+        for mod in self.mod_list:
+            del mod
+        
+        # deleting module list. this might be overkill?
+        del self.mod_list
 
 
     def test__init__(self):
         """ Testing the shared processes in __init__ of all modules
         """
         
-        # defining modules after calling setUp( ) method
-        mod_list  = [self.genmod, self.nuctes]
-        
         # defining necessary attributes to be declared in __init__
         attr_list = ['json_name' , 'plant_name', 'ssc_horizon', 'pyomo_horizon', 
                      'SSC_dict']
         
         # looping through all defined modules + attributes
-        for mod in mod_list:
+        for mod in self.mod_list:
             for attr in attr_list:
                 
                 # checking that all attributes exist in every module
@@ -65,14 +70,11 @@ class TestPySAMModules(unittest.TestCase):
 
 
     def test_store_csv_arrays(self):
-        """ Testing the shared processes in __init__ of all modules
+        """ Testing the storage of csv arrays in all modules
         """
         
-        # defining modules after calling setUp( ) method
-        mod_list  = [self.genmod, self.nuctes]
-        
         # looping through all modules
-        for mod in mod_list:
+        for mod in self.mod_list:
             
             # checking that the solar_resource_file path attribute exists
             self.assertTrue(hasattr(mod,"solar_resource_file") ,
@@ -81,6 +83,8 @@ class TestPySAMModules(unittest.TestCase):
             # checking that the actual filepath exists in stated directory
             self.assertTrue(os.path.exists(mod.solar_resource_file) ,
                             "Solar Resource file path could not be found for {0}".format(mod.__class__.__name__) )
+    
+
     
 if __name__ == "__main__":
     unittest.main()

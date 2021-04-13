@@ -16,7 +16,8 @@ class TestUtils(unittest.TestCase):
     """
     
     def test_csvread(self):
-        
+        """ Testing csv file reading through pandas and subsequent conversion to arrays
+        """
         #testing with test1.csv file, only has 1 column
         csvpath1 = os.path.join( FileMethods.samsim_dir , "data/tests/test1.csv")
         data_array1 = FileMethods.read_csv_through_pandas(csvpath1)
