@@ -33,3 +33,6 @@ class TestUtils(unittest.TestCase):
         self.assertTrue(isinstance(data_array2,        list),  "test2 output is not a list" )
         self.assertTrue(isinstance(data_array2[0],     list),  "test2 output is not a list of lists" )
         self.assertFalse(isinstance(data_array2[0][0], list),  "test2 output has an extra column?" )
+
+if __name__ == "__main__":
+    unittest.main()
