@@ -30,13 +30,14 @@ class NuclearTES(GenericSSCModule):
         GenericSSCModule.store_csv_arrays(self, input_dict)
         
         # read csv and save data to arrays
-        self.df_array = FileMethods.read_csv_through_pandas(input_dict['dispatch_factors_file'])
-        self.ud_array = FileMethods.read_csv_through_pandas(input_dict['ud_file'])
-        self.wl_array = FileMethods.read_csv_through_pandas(input_dict['wlim_file'])
-        self.hp_array = FileMethods.read_csv_through_pandas(input_dict['helio_file'])
-        self.gc_array = FileMethods.read_csv_through_pandas(input_dict['grid_file'])
-        self.em_array = FileMethods.read_csv_through_pandas(input_dict['eta_file'])
-        self.fm_array = FileMethods.read_csv_through_pandas(input_dict['flux_file'])
+        samsim_dir = FileMethods.samsim_dir + '/'
+        self.df_array = FileMethods.read_csv_through_pandas(samsim_dir + input_dict['dispatch_factors_file'])
+        self.ud_array = FileMethods.read_csv_through_pandas(samsim_dir + input_dict['ud_file'])
+        self.wl_array = FileMethods.read_csv_through_pandas(samsim_dir + input_dict['wlim_file'])
+        self.hp_array = FileMethods.read_csv_through_pandas(samsim_dir + input_dict['helio_file'])
+        self.gc_array = FileMethods.read_csv_through_pandas(samsim_dir + input_dict['grid_file'])
+        self.em_array = FileMethods.read_csv_through_pandas(samsim_dir + input_dict['eta_file'])
+        self.fm_array = FileMethods.read_csv_through_pandas(samsim_dir + input_dict['flux_file'])
         
         
     def create_Plant(self):

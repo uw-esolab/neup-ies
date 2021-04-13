@@ -47,7 +47,7 @@ class FileMethods(object):
             ssc_dict (dict) : dictionary of SSC inputs needed to run modules
         """
         #defining filepath for JSON script (FUTURE: add non-default functionality to input whole path)
-        json_filepath = "json/" + json_name + ".json"
+        json_filepath = FileMethods.samsim_dir + "/json/" + json_name + ".json"
         
         with open(json_filepath) as f:
             # loading JSON script to a dictionary
