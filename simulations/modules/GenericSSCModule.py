@@ -51,8 +51,9 @@ class GenericSSCModule(object):
         
         #logging annual energy and capacity factor
         annual_energy = np.sum(self.gen_log)*u.kWh
-        ref_energy    = SSC_dict['P_ref']*u.MW * SSC_dict['gross_net_conversion_factor']
-        self.capacity_factor = (annual_energy / (ref_energy * 1*u.yr) ).to(' ')
+        if 'P_ref' in SSC_dict.keys():
+            ref_energy    = SSC_dict['P_ref']*u.MW * SSC_dict['gross_net_conversion_factor']
+            self.capacity_factor = (annual_energy / (ref_energy * 1*u.yr) ).to(' ')
         
         #--- use executed Plant object to create Grid object and execute it
         self.create_Grid( )
