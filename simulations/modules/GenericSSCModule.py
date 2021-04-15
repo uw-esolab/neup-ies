@@ -14,7 +14,7 @@ from util.FileMethods import FileMethods
 import pint
 u = pint.UnitRegistry()
 import numpy as np
-import copy
+import copy, os
 
 class GenericSSCModule(object):
     
@@ -75,7 +75,7 @@ class GenericSSCModule(object):
         
         # saving location of solar resource file for SSC input
         parent_dir = FileMethods.parent_dir
-        self.solar_resource_file = parent_dir + input_dict['solar_resource_rel_parent']
+        self.solar_resource_file = os.path.join(parent_dir, input_dict['solar_resource_rel_parent']) #os.path.join
         
         
     def create_Plant(self):
