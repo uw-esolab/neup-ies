@@ -5,11 +5,11 @@ from iapws import SeaWater,IAPWS97
 
 class MED:
     def __init__(self):
-        self.vapor_rate = [ 90., 80 ]                      
+        self.vapor_rate = [ 701.5 ]                      
         self.brine_conc = .0335                              #Average concentration of salt in seawater
         self.brine_rate = 50.
         self.max_brine_conc= .067
-        self.vapor_temp_n = [ 71.5 ]                          #Known starting temp of the MED model - 23 C is assuming we are starting at the second n-effect
+        self.vapor_temp_n = [ 71.5 ]                          #Known starting temp of the MED model - assuming we are starting at the second n-effect
         self.brine_temp_n = [ 23 ]
         self.latentheat = 10.
         self.tempchange = 3.                                #Known temperature change from Sharan paper
@@ -37,11 +37,12 @@ class MED:
     def vapor_flow_out(self, i):
         self.vapor_temp_n[i] = self.vapor_temp_n[i-1] - self.tempchange
         self.brine_temp_n[i] = self.brine_temp_n[i-1] + self.tempchange
-        enth_bn = SeaWater(T=self.brine_temp_n[i]+273.15,S=self.brine_conc,P=self.pressure) 
+        enth_bn = SeaWater(T=self.brine_temp_n[i]+273.15,S=self.brine_conc,P=self.pressure)
         enth_vn = IAPWS97(T=self.vapor_temp_n[i]+273.15,P=self.pressure)
         enth_bn_1 = SeaWater(T=self.brine_temp_n[i-1]+273.15,S=self.brine_conc,P=self.pressure)
         enth_vn_1 = IAPWS97(T=self.vapor_temp_n[i-1]+273.15,P=self.pressure)
-        vapor_out = (1/(enth_vn - enth_bn))*(self.vapor_rate[i]*self.latentheat+(((self.distill*self.max_brine_conc)/(self.max_brine_conc-self.brine_conc))-self.distill)*(enth_bn_1-enth_bn))
+        return enth_bn
+        vapor_out = (1/(np.asarray(enth_vn.h) - np.asarray(enth_bn.h)))*(self.vapor_rate[i]*self.latentheat+(((self.distill*self.max_brine_conc)/(self.max_brine_conc-self.brine_conc))-self.distill)*(np.asarray(enth_bn_1.h)- np.asarray(enth_bn.h)))
         return vapor_out
         
 
