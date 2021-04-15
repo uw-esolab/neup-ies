@@ -8,13 +8,15 @@ Most recently tested against PySAM 2.1.4
 @author: frohro
 """
 
-import PySAM.NuclearTes as NuclearTes
+import PySAM.TcsmoltenSalt as TcsmoltenSalt
 import PySAM.Grid as Grid
 import PySAM.Singleowner as Singleowner
 import PySAM.PySSC as pssc
 ssc = pssc.PySSC()
+
+from util.FileMethods import FileMethods
+
 import json, os
-import pandas
 import matplotlib.pyplot as plt
 import numpy as np
 from pylab import rc
@@ -25,50 +27,33 @@ pid = os.getpid()
 print("PID = ", pid)
 
 # defining directories
-cwd        = os.getcwd() #should we make this static? cwd can change based on IDE preferences
-neup_dir   = os.path.dirname(cwd)
+sim_dir    = FileMethods.samsim_dir
+neup_dir   = FileMethods.neup_dir
 parent_dir = os.path.dirname(neup_dir)
 ssc_dir    = parent_dir + '/build_ssc/ssc/libssc.so'
-
-# method to read in csv file and output data array in correct shape
-def read_pandas(filepath):
-    """ Method to read csv file and return data array
-    
-    Inputs:
-        filepath (str) - full path to csv file
-    Outputs:
-        data_array (list) - data in either list (SSC_ARRAY) or nested list (SSC_MATRIX)
-    
-    """
-    dataframe = pandas.read_csv(filepath,header=None)
-    if dataframe.shape[1] == 1:
-        data_array = dataframe.T.to_numpy()[0]
-    else:
-        data_array = dataframe.to_numpy().tolist()
-    return data_array
 
 # solar file that comes with SAM repository
 solar_resource_file = parent_dir + '/sam/deploy/solar_resource/tucson_az_32.116521_-110.933042_psmv3_60_tmy.csv'
 
 # creating data arrays from csv files
-df_array = read_pandas(cwd + '/data-files/dispatch_factors_ts.csv')
-ud_array = read_pandas(cwd + '/data-files/ud_ind_od.csv')
-wl_array = read_pandas(cwd + '/data-files/wlim_series.csv')
-hp_array = read_pandas(cwd + '/data-files/helio_positions.csv')
-gc_array = read_pandas(cwd + '/data-files/grid_curtailment.csv')
-em_array = read_pandas(cwd + '/data-files/eta_map.csv')
-fm_array = read_pandas(cwd + '/data-files/flux_maps.csv')
+df_array = FileMethods.read_csv_through_pandas(sim_dir + '/data/dispatch_factors_ts.csv')
+ud_array = FileMethods.read_csv_through_pandas(sim_dir + '/data/ud_ind_od.csv')
+wl_array = FileMethods.read_csv_through_pandas(sim_dir + '/data/wlim_series.csv')
+hp_array = FileMethods.read_csv_through_pandas(sim_dir + '/data/helio_positions.csv')
+gc_array = FileMethods.read_csv_through_pandas(sim_dir + '/data/grid_curtailment.csv')
+em_array = FileMethods.read_csv_through_pandas(sim_dir + '/data/eta_map.csv')
+fm_array = FileMethods.read_csv_through_pandas(sim_dir + '/data/flux_maps.csv')
 
 # defining modules to run
-with open("json-scripts/model1.json") as f:
+with open(sim_dir+"/json/generic_mspt.json") as f:
     # loading json script to a dictionary
     dic = json.load(f)
-    nt_dat = pssc.dict_to_ssc_table(dic, "nuclear_tes")
+    ms_dat = pssc.dict_to_ssc_table(dic, "tcsmolten_salt")
     grid_dat = pssc.dict_to_ssc_table(dic, "grid")
     so_dat = pssc.dict_to_ssc_table(dic, "singleowner")
     
     # creating Nuclear module from data
-    nt = NuclearTes.wrap(nt_dat)
+    nt = TcsmoltenSalt.wrap(ms_dat)
 
     # manually setting data arrays from csv files
     nt.SolarResource.solar_resource_file         = solar_resource_file
@@ -191,11 +176,13 @@ op_modes_list = [
     "SKIP_40",
     "CR_TO_COLD__PC_SU__TES_DC" ]
 
+
 lp = 16 #labelpad
 fs = 12 #fontsize
 lw = 2  #linewidth
 fsl = 'x-small'      #fontsize legend
 loc = 'upper right'  #location of legend
+
 
 fig = plt.figure(figsize=[10,8])
 ax1 = fig.add_subplot(311)

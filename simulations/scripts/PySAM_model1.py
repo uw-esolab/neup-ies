@@ -8,92 +8,37 @@ Most recently tested against PySAM 2.1.4
 @author: frohro
 """
 
-import PySAM.TcsmoltenSalt as TcsmoltenSalt
-import PySAM.Grid as Grid
-import PySAM.Singleowner as Singleowner
-import PySAM.PySSC as pssc
-ssc = pssc.PySSC()
-import json, os
-import pandas
+import modules.NuclearTES as NuclearTES
+import os
 import matplotlib.pyplot as plt
+import pint
 import numpy as np
 from pylab import rc
 rc('axes', linewidth=2)
 rc('font', weight='bold',size=12)
+u = pint.UnitRegistry()
+
+pid = os.getpid()
+print("PID = ", pid)
+
+# =============================================================================
+#     Run Simulation
+# =============================================================================
 
 # defining directories
-cwd        = os.getcwd() #should we make this static? cwd can change based on IDE preferences
-neup_dir   = os.path.dirname(cwd)
-parent_dir = os.path.dirname(neup_dir)
-ssc_dir    = parent_dir + '/build_ssc/ssc/libssc.so'
+nuctes = NuclearTES.NuclearTES()
+nuctes.run_sim( run_loop=False )
+nt = nuctes.Plant
+so = nuctes.SO
 
-# method to read in csv file and output data array in correct shape
-def read_pandas(filepath):
-    """ Method to read csv file and return data array
-    
-    Inputs:
-        filepath (str) - full path to csv file
-    Outputs:
-        data_array (list) - data in either list (SSC_ARRAY) or nested list (SSC_MATRIX)
-    
-    """
-    dataframe = pandas.read_csv(filepath,header=None)
-    if dataframe.shape[1] == 1:
-        data_array = dataframe.T.to_numpy()[0]
-    else:
-        data_array = dataframe.to_numpy().tolist()
-    return data_array
-
-# solar file that comes with SAM repository
-solar_resource_file = parent_dir + '/sam/deploy/solar_resource/tucson_az_32.116521_-110.933042_psmv3_60_tmy.csv'
-
-# creating data arrays from csv files
-df_array = read_pandas(cwd + '/data-files/dispatch_factors_ts.csv')
-ud_array = read_pandas(cwd + '/data-files/ud_ind_od.csv')
-wl_array = read_pandas(cwd + '/data-files/wlim_series.csv')
-hp_array = read_pandas(cwd + '/data-files/helio_positions.csv')
-gc_array = read_pandas(cwd + '/data-files/grid_curtailment.csv')
-em_array = read_pandas(cwd + '/data-files/eta_map.csv')
-fm_array = read_pandas(cwd + '/data-files/flux_maps.csv')
-
-# defining modules to run
-with open("json-scripts/generic_mspt.json") as f:
-    # loading json script to a dictionary
-    dic = json.load(f)
-    ms_dat = pssc.dict_to_ssc_table(dic, "tcsmolten_salt")
-    grid_dat = pssc.dict_to_ssc_table(dic, "grid")
-    so_dat = pssc.dict_to_ssc_table(dic, "singleowner")
-    
-    # creating Nuclear module from data
-    nt = TcsmoltenSalt.wrap(ms_dat)
-
-    # manually setting data arrays from csv files
-    nt.SolarResource.solar_resource_file         = solar_resource_file
-    nt.TimeOfDeliveryFactors.dispatch_factors_ts = df_array
-    nt.UserDefinedPowerCycle.ud_ind_od           = ud_array
-    nt.SystemControl.wlim_series                 = wl_array
-    nt.HeliostatField.helio_positions            = hp_array
-    nt.HeliostatField.eta_map                    = em_array
-    nt.HeliostatField.flux_maps                  = fm_array
-    nt.SystemControl.dispatch_series = [1.2]*8760
-    
-    # creating Grid module from existing Nuclear module
-    grid = Grid.from_existing(nt)
-    grid.assign(Grid.wrap(grid_dat).export())
-    grid.GridLimits.grid_curtailment = gc_array #setting grid curtailment data taken from csv file
-
-    # to create GenericSystem and Singleowner combined simulation, sharing the same data
-    so = Singleowner.from_existing(nt)
-    so.assign(Singleowner.wrap(so_dat).export())
-
-
-nt.execute()
-grid.execute()
-so.execute()
 print('Made it past execute.')
 
-annual_energy          = nt.Outputs.annual_energy/1e9
-capacity_factor        = nt.Outputs.capacity_factor
+# =============================================================================
+#     Display Results
+# =============================================================================
+
+annual_energy          = (nt.Outputs.annual_energy*u.kWh).to('TWh')
+capacity_factor        = nuctes.capacity_factor.magnitude * 100
 annual_total_water_use = nt.Outputs.annual_total_water_use
 ppa                    = so.Outputs.ppa
 lppa_nom               = so.Outputs.lppa_nom
@@ -110,7 +55,7 @@ size_of_debt           = so.Outputs.size_of_debt/1e6
 
 print('')
 print('                        Nuclear')
-print ('Annual energy (year 1)        =   ', annual_energy, ' TWh')
+print ('Annual energy (year 1)        =   ', annual_energy)
 print ('Capacity factor (year 1)      =   ', capacity_factor, ' %')
 print ('Annual Water Usage            =   ', annual_total_water_use, ' m3')
 print ('PPA price (year 1)            =   ', ppa, ' ¢/kWh')
@@ -188,13 +133,11 @@ op_modes_list = [
     "SKIP_40",
     "CR_TO_COLD__PC_SU__TES_DC" ]
 
-
 lp = 16 #labelpad
 fs = 12 #fontsize
 lw = 2  #linewidth
 fsl = 'x-small'      #fontsize legend
 loc = 'upper right'  #location of legend
-
 
 fig = plt.figure(figsize=[10,8])
 ax1 = fig.add_subplot(311)
