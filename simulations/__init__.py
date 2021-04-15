@@ -1,1 +1,1 @@
-name = "SamSimulations"
+name = "simulations"
