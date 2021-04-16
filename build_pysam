@@ -16,14 +16,14 @@ export PYSAMDIR=$DEVDIR/pysam
 #---- building googletest ----------------------------
 cd $DEVDIR
 if [ ! -d "$GTEST" ]
-then 
-   	git clone $git:google/googletest.git
+then
+   	git clone https://github.com/google/googletest.git
    	mkdir googletest/build
 	cd googletest/build
 	cmake -G "CodeLite - Unix Makefiles" -DCMAKE_BUILD_TYPE:STRING=Release -DCMAKE_SYSTEM_VERSION=10.0 -Dgtest_force_shared_crt=ON ..
 	make -j8
 	cd $DEVDIR
-else 
+else
   	echo "GoogleTest already exists"
 fi
 
@@ -31,7 +31,7 @@ fi
 #---- building LK ------------------------------------
 if [ ! -d "$LKDIR" ]
 then
-	git clone $git:NREL/lk.git
+	git clone https://github.com/NREL/lk.git
 	mkdir lk/build
 	cd lk/build
 	cmake -DCMAKE_BUILD_TYPE=Release ..
@@ -45,7 +45,7 @@ fi
 #---- building wex -----------------------------------
 if [ ! -d "$WEXDIR" ]
 then
-	git clone $git:NREL/wex.git
+	git clone https://github.com/NREL/wex.git
 	mkdir wex/build
 	cd wex/build
 	cmake -DCMAKE_BUILD_TYPE=Release -DSAM_SKIP_TOOLS=1 ..
@@ -59,7 +59,7 @@ fi
 #----  cloning modified ssc --------------------------
 if [ ! -d "$SSCDIR" ]
 then
-	git clone $git:gjsoto/ssc.git
+	git clone https://github.com/gjsoto/ssc.git
 else
 	echo "SSC already exists"
 fi
@@ -72,14 +72,14 @@ git checkout model1testmerge
 #====================================================#
 #---- cloning sam ------------------------------------
 cd $DEVDIR
-git clone $git:NREL/sam.git
+git clone https://github.com/NREL/sam.git
 cd sam
 git checkout pysam-v2.2.2
 
 #====================================================#
 #---- cloning pysam ----------------------------------
 cd $DEVDIR
-git clone $git:NREL/pysam.git
+git clone https://github.com/NREL/pysam.git
 
 #====================================================#
 #---- build modified ssc -----------------------------
@@ -121,7 +121,7 @@ cd $DEVDIR/pysam
 ENVS=$(conda env list)
 if [[ $ENVS = *"pysam_daotk"* ]]; then
    source activate pysam_daotk
-else 
+else
    conda create --name pysam_daotk python=3.7 -y
    conda activate pysam_daotk
 fi;
@@ -140,4 +140,3 @@ python setup.py bdist_wheel
 #now you should pip install, something like:
 # 	cd $DEVDIR/pysam
 # 	pip install <dist/wheel_file_name.whl>
-
