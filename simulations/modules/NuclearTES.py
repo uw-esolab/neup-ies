@@ -6,6 +6,8 @@ Created on Thu Apr  8 13:44:30 2021
 @author: gabrielsoto
 """
 
+import sys
+sys.path.append('..')
 import PySAM.NuclearTes as NuclearTes
 from modules.GenericSSCModule import GenericSSCModule
 import PySAM.PySSC as pssc

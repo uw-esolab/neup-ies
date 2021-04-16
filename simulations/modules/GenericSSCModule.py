@@ -6,6 +6,8 @@ Created on Thu Apr  8 13:40:22 2021
 @author: gabrielsoto
 """
 
+import os,sys
+sys.path.append('..')
 import PySAM.GenericSystem as GenericSystem
 import PySAM.Grid as Grid
 import PySAM.Singleowner as Singleowner
@@ -14,7 +16,7 @@ from util.FileMethods import FileMethods
 import pint
 u = pint.UnitRegistry()
 import numpy as np
-import copy, os
+import copy
 
 class GenericSSCModule(object):
     
