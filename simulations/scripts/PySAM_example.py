@@ -8,6 +8,8 @@ Most recently tested against PySAM 2.1.4
 @author: frohro
 """
 
+import sys
+sys.path.append('..')
 import modules.GenericSSCModule as GenericSSCModule
 
 # defining directories

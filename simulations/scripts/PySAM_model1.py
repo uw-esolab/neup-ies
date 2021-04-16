@@ -8,8 +8,9 @@ Most recently tested against PySAM 2.1.4
 @author: frohro
 """
 
+import os,sys
+sys.path.append('..')
 import modules.NuclearTES as NuclearTES
-import os
 import matplotlib.pyplot as plt
 import pint
 import numpy as np

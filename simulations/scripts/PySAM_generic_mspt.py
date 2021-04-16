@@ -8,6 +8,8 @@ Most recently tested against PySAM 2.1.4
 @author: frohro
 """
 
+import sys
+sys.path.append('..')
 import PySAM.TcsmoltenSalt as TcsmoltenSalt
 import PySAM.Grid as Grid
 import PySAM.Singleowner as Singleowner
