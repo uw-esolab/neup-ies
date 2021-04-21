@@ -6,12 +6,12 @@ import pdb
 
 class MED:
     def __init__(self):
-        self.vapor_rate = [ 701.5 ]                      
+        self.vapor_rate = [ 701.5, 700 ]                      
         self.brine_conc = .0335                              #Average concentration of salt in seawater
         self.brine_rate = 50.
         self.max_brine_conc= .067
-        self.vapor_temp_n = [ 71.5 ]                          #Known starting temp of the MED model - assuming we are starting at the second n-effect
-        self.brine_temp_n = [ 23 ]
+        self.vapor_temp_n = [ 71.5, 70 ]                          #Known starting temp of the MED model - assuming we are starting at the second n-effect
+        self.brine_temp_n = [ 23, 22 ]
         self.latentheat = 10.
         self.tempchange = 3.                                #Known temperature change from Sharan paper
         self.distill = [ 0, 1 ]
@@ -37,8 +37,8 @@ class MED:
         return brine_out
         
     def vapor_flow_out(self, i):
-        self.vapor_temp_n[i] = self.vapor_temp_n[i-1] - self.tempchange
-        self.brine_temp_n[i] = self.brine_temp_n[i-1] + self.tempchange
+        self.vapor_temp_n.append(self.vapor_temp_n[i-1] - self.tempchange)
+        self.brine_temp_n.append(self.brine_temp_n[i-1] + self.tempchange)
         enth_bn = SeaWater(T=self.brine_temp_n[i]+273.15,S=self.brine_conc,P=self.pressure).h
         enth_vn = IAPWS97(T=self.vapor_temp_n[i]+273.15,P=self.pressure).h
         enth_bn_1 = SeaWater(T=self.brine_temp_n[i-1]+273.15,S=self.brine_conc,P=self.pressure).h
