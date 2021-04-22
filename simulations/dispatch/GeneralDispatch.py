@@ -407,7 +407,7 @@ class GeneralDispatch(object):
         self.model.pc_su_persist_con = pe.Constraint(self.model.T,rule=pc_su_persist_rule)
         self.model.pc_su_subhourly_con = pe.Constraint(self.model.T,rule=pc_su_subhourly_rule)
         self.model.pc_sb_start_con = pe.Constraint(self.model.T,rule=pc_sb_start_rule)
-        self.modelpc_sb_part1_con = pe.Constraint(self.model.T,rule=pc_sb_part1_rule)
+        self.model.pc_sb_part1_con = pe.Constraint(self.model.T,rule=pc_sb_part1_rule)
         self.model.pc_sb_part2_con = pe.Constraint(self.model.T,rule=pc_sb_part2_rule)
         self.model.cycle_sb_pen_con = pe.Constraint(self.model.T,rule=cycle_sb_pen_rule)
         self.model.cycle_shutdown_con = pe.Constraint(self.model.T,rule=cycle_shutdown_rule)
