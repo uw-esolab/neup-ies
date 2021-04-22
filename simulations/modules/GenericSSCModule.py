@@ -122,7 +122,7 @@ class GenericSSCModule(object):
         """
         
         # helper method for hstack-ing arrays
-        augment_log = lambda X,Y: np.hstack(  [ X, Y ]  )
+        self.augment_log = lambda X,Y: np.hstack(  [ X, Y ]  )
         
         # start and end times for full simulation
         time_start = self.SSC_dict['time_start'] * u.s
@@ -135,12 +135,11 @@ class GenericSSCModule(object):
         # setting index for subsequent calls, static index for gen
         self.t_ind = int(time_next.to('hr').magnitude)
         
+        # setting up log array for gen
+        self.gen_log = np.ndarray([0])
+        
         # first execution of Plant through SSC
         self.run_Plant_through_SSC( time_start , time_next )
-        
-        # logging values of gen
-        self.gen_log = np.ndarray([0])
-        self.gen_log = augment_log( self.gen_log, self.Plant.Outputs.gen[0:self.t_ind ] )
         
         # this loop should only be entered if run_loop == True
         while (time_next < time_end):
@@ -157,9 +156,6 @@ class GenericSSCModule(object):
             # run Plant again
             self.run_Plant_through_SSC( time_start , time_next )
             
-            # log results
-            self.gen_log = augment_log( self.gen_log, self.Plant.Outputs.gen[0:self.t_ind ] )
-            
 
     def run_Plant_through_SSC(self, start_hr, end_hr):
         """ Simulation of Plant through SSC for given times
@@ -171,6 +167,9 @@ class GenericSSCModule(object):
             self.Plant.SystemControl.time_stop = end_hr.to('s').magnitude
         
         self.Plant.execute()
+        
+        # logging values of gen
+        self.gen_log = self.augment_log( self.gen_log, self.Plant.Outputs.gen[0:self.t_ind ] )
         
         
     def reset_all(self):
