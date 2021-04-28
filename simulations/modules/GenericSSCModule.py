@@ -128,14 +128,14 @@ class GenericSSCModule(object):
         time_start = self.SSC_dict['time_start'] * u.s
         time_end   = self.SSC_dict['time_stop'] * u.s
         
-        # if running loop -> next time stop is ssc_horizon time
-        #            else -> next time stop is sim end time
+        # if running loop -> next 'time stop' is ssc_horizon time
+        #            else -> next 'time stop' is sim end time
         time_next  = self.ssc_horizon.to('s') if self.run_loop else copy.deepcopy(time_end)
         
         # setting index for subsequent calls, static index for gen
         self.t_ind = int(time_next.to('hr').magnitude)
         
-        # setting up log array for gen
+        # setting up empty log array for gen
         self.gen_log = np.ndarray([0])
         
         # first execution of Plant through SSC
@@ -178,7 +178,6 @@ class GenericSSCModule(object):
         del self.Plant
         del self.Grid
         del self.SO
-        
     
     
     def update_Plant(self):
