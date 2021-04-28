@@ -64,10 +64,10 @@ else
 	echo "SSC already exists"
 fi
 
-# checking out a stable branch off ssc
+# checking out a stable tag or release from our modified SSC
 # this can be updated, maybe added as flag
 cd ssc
-git checkout model1testmerge
+git checkout NE2-model1-v0.1
 
 #====================================================#
 #---- cloning sam ------------------------------------
