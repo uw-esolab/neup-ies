@@ -13,6 +13,7 @@ import PySAM.Grid as Grid
 import PySAM.Singleowner as Singleowner
 import PySAM.PySSC as pssc
 from util.FileMethods import FileMethods
+from dispatch.GeneralDispatch import GeneralDispatchParamWrap as GDP
 import pint
 u = pint.UnitRegistry()
 import numpy as np
@@ -21,7 +22,7 @@ import copy, pandas
 class GenericSSCModule(object):
     
     def __init__(self, plant_name="generic_system", json_name="100mW_Generic", 
-                       is_dispatch=False, dispatch_time_step=1):
+                       is_dispatch=True, dispatch_time_step=1):
         
         # grab names, either default here or from child class
         self.json_name  = json_name
@@ -42,8 +43,14 @@ class GenericSSCModule(object):
         # save csv arrays to class 
         self.store_csv_arrays( PySAM_dict )
         
-        # save flag for dispatch
+        # save flag for dispatch 
         self.is_dispatch = is_dispatch
+        
+        if self.is_dispatch:
+            # initialize dispatch wrap class
+            self.dispatch_wrap = GDP.__init__(GDP,self.SSC_dict, PySAM_dict,
+                    self.pyomo_horizon, self.dispatch_time_step)
+
 
 
     def run_sim(self, run_loop=False, export=False, filename='temp.csv'):
@@ -226,29 +233,18 @@ class GenericSSCModule(object):
         params = {}
 
         nhel = 1
-        q_rec_design = self.SSC_dict['q_dot_nuclear_des'] * u.MW   # receiver design thermal power
-        p_pb_design  = self.SSC_dict['P_ref'] * u.MW               # power block design electrical power
-        eta_design   = self.SSC_dict['design_eff']                 # power block efficiency 
-        q_pb_design  = p_pb_design / eta_design                    # power block design thermal rating
-        
+
         # TO DOs
         dw_rec_pump  = 0*u.MW             # TODO: Pumping parasitic at design point reciever mass flow rate (MWe)
         tower_piping_ht_loss = 0*u.kW     # TODO: Tower piping heat trace full-load parasitic load (kWe) 
-        etap = 0                          # TODO: function needed for this slope
-        Wdotl = 0*u.kW                    # TODO: same function as etap
-        Wdotu = 0*u.kW                    # TODO: same function as etap
-        dm_pb_design = 0*u.kg/u.s         # TODO: get_cycle_design_mass_flow
-        Yu = 1*u.hr                       # TODO: minimum required power cycle uptime 
-        Yd = 1*u.hr                       # TODO: minimum required power cycle downtime 
         delta_rs = 0                      # TODO: time loop to get this fraction
         D = 0                             # TODO: time loop to get this fraction
         etaamb = 0                        # TODO: function to call ud table to get eta multiplier
         etac = 0                          # TODO: function to call ud table to get wdot multiplier
         
-        #------- Time indexed parameters ---------
-        params['T']        = int( self.pyomo_horizon.to('hr').magnitude )                       #T: time periods
-        params['Delta']    = np.array([self.dispatch_time_step.to('hr').magnitude]*params['T']) #\Delta_{t}: duration of period t
-        params['Delta_e']  = np.cumsum(params['Delta'])                                         #\Delta_{e,t}: cumulative time elapsed at end of period t
+        # setting parameters for the first time
+        params = self.dispatch_wrap.set_time_indexed_parameters( params )
+        params = self.dispatch_wrap.set_power_cycle_parameters( params )
         
         ### Cost Parameters ###
         params['alpha']  = 1.0
@@ -259,41 +255,22 @@ class GenericSSCModule(object):
         params['Er']     = (self.SSC_dict['rec_qf_delay'] * q_rec_design).to('kW')   #E^r: Required energy expended to start receiver [kWt$\cdot$h]
         params['Eu']     = (self.SSC_dict['tshours']*u.hr * q_pb_design).to('kWh')   #E^u: Thermal energy storage capacity [kWt$\cdot$h]
         params['Lr']     = (dw_rec_pump / q_rec_design).to('')     #L^r: Receiver pumping power per unit power produced [kWe/kWt]
-        params['Qrl']    = (self.SSC_dic['f_rec_min'] * q_rec_design).to('kW')    #Q^{rl}: Minimum operational thermal power delivered by receiver [kWt$\cdot$h]
-        params['Qrsb']   = (self.SSC_dic['q_rec_standby_fraction'] * q_rec_design).to('kW')  #Q^{rsb}: Required thermal power for receiver standby [kWt$\cdot$h]
-        params['Qrsd']   = (self.SSC_dic['q_rec_shutdown_fraction'] * q_rec_design).to('kW')   #Q^{rsd}: Required thermal power for receiver shut down [kWt$\cdot$h] 
+        params['Qrl']    = (self.SSC_dict['f_rec_min'] * q_rec_design).to('kW')    #Q^{rl}: Minimum operational thermal power delivered by receiver [kWt$\cdot$h]
+        params['Qrsb']   = (self.SSC_dict['q_rec_standby_fraction'] * q_rec_design).to('kW')  #Q^{rsb}: Required thermal power for receiver standby [kWt$\cdot$h]
+        params['Qrsd']   = (self.SSC_dict['q_rec_shutdown_fraction'] * q_rec_design).to('kW')   #Q^{rsd}: Required thermal power for receiver shut down [kWt$\cdot$h] 
         params['Qru']    = params['Er'] / params['deltal']         #Q^{ru}: Allowable power per period for receiver start-up [kWt$\cdot$h]
         params['Wh']     = self.SSC_dict['p_track']*u.kW           #W^h: Heliostat field tracking parasitic loss [kWe]
         params['Wht']    = tower_piping_ht_loss                    #W^{ht}: Tower piping heat trace parasitic loss [kWe]
         
-        ### Power Cycle Parameters ###
-        params['Ec']  = (self.SSC_dict['startup_frac'] * q_pb_design).to('kW')  #E^c: Required energy expended to start cycle [kWt$\cdot$h]
-        params['eta_des'] = eta_design              #\eta^{des}: Cycle nominal efficiency [-] 
-        params['etap']    = etap                    #\eta^p: Slope of linear approximation of power cycle performance curve [kWe/kWt]
-        params['Lc']  = ( (self.SSC_dict['pb_pump_coef']*u.kW/u.kg) * dm_pb_design.to('kg') / q_pb_design.to('kW') ).to('')   #L^c: Cycle heat transfer fluid pumping power per unit energy expended [kWe/kWt]
-        params['Qb']  = (self.SSC_dict['q_sby_frac'] * q_pb_design).to('kW')         #Q^b: Cycle standby thermal power consumption per period [kWt]
-        params['Ql']  = (self.SSC_dict['cycle_cutoff_frac'] * q_pb_design).to('kW')  #Q^l: Minimum operational thermal power input to cycle [kWt]
-        params['Qu']  = (self.SSC_dict['cycle_max_frac'] * q_pb_design).to('kW')     #Q^u: Cycle thermal power capacity [kWt]
-        params['Wb']  = (self.SSC_dict['Wb_fract']* p_pb_design).to('kW')  #W^b: Power cycle standby operation parasitic load [kWe]
-        params['Wdotl'] = Wdotl  #\dot{W}^l: Minimum cycle electric power output [kWe]
-        params['Wdotu'] = Wdotu  #\dot{W}^u: Cycle electric power rated capacity [kWe]
-        # ramp up/down -> frac/min
-        params['W_delta_plus']  = self.SSC_dict['disp_pc_rampup'] * params['Wdotu']      #W^{\Delta+}: Power cycle ramp-up designed limit [kWe/h]
-        params['W_delta_minus'] = self.SSC_dict['disp_pc_rampdown'] * params['Wdotu']    #W^{\Delta-}: Power cycle ramp-down designed limit [kWe/h]
-        params['W_v_plus']      = self.SSC_dict['disp_pc_rampup_vl'] * params['Wdotu']   #W^{v+}: Power cycle ramp-up violation limit [kWe/h]
-        params['W_v_minus']     = self.SSC_dict['disp_pc_rampdown_vl'] * params['Wdotu'] #W^{v-}: Power cycle ramp-down violation limit [kWe/h]
-        params['Yu']    = Yu      #Y^u: Minimum required power cycle uptime [h]
-        params['Yd']    = Yd      #Y^d: Minimum required power cycle downtime [h]
-        
         ### Time series CSP Parameters ###
         params['delta_rs'] = delta_rs #\delta^{rs}_{t}: Estimated fraction of period $t$ required for receiver start-up [-]
-        params['D'] = D               #D_{t}: Time-weighted discount factor in period $t$ [-]
+        params['D']      = D          #D_{t}: Time-weighted discount factor in period $t$ [-]
         params['etaamb'] = etaamb     #\eta^{amb}_{t}: Cycle efficiency ambient temperature adjustment factor in period $t$ [-]
-        params['etac'] = etac         #\eta^{c}_{t}: Normalized condenser parasitic loss in period $t$ [-] 
-        params['P']  = self.df_array  #P_{t}: Electricity sales price in period $t$ [\$/kWh]
-        params['Qin'] = np.array([q_rec_design.magnitude]*params['T'])*q_rec_design.units   #Q^{in}_{t}: Available thermal power generated by the CSP heliostat field in period $t$ [kWt]
-        params['Qc'] = params['Ec'] / np.ceil(self.SSC_dict['startup_time'] / np.min(params['Delta'])) / np.min(params['Delta'])   #Q^{c}_{t}: Allowable power per period for cycle start-up in period $t$ [kWt]
-        params['Wdotnet'] = [1.e10 for j in range(params['T'])]  #\dot{W}^{net}_{t}: Net grid transmission upper limit in period $t$ [kWe]
+        params['etac']   = etac       #\eta^{c}_{t}: Normalized condenser parasitic loss in period $t$ [-] 
+        params['P']      = self.df_array   #P_{t}: Electricity sales price in period $t$ [\$/kWh]
+        params['Qin']    = np.array([q_rec_design.magnitude]*params['T'])*q_rec_design.units   #Q^{in}_{t}: Available thermal power generated by the CSP heliostat field in period $t$ [kWt]
+        params['Qc']     = params['Ec'] / np.ceil(self.SSC_dict['startup_time'] / np.min(params['Delta'])) / np.min(params['Delta'])   #Q^{c}_{t}: Allowable power per period for cycle start-up in period $t$ [kWt]
+        params['Wdotnet']   = [1.e10 for j in range(params['T'])]  #\dot{W}^{net}_{t}: Net grid transmission upper limit in period $t$ [kWe]
         params['W_u_plus']  = [(params['Wdotl'] + params['W_delta_plus']*0.5*dt) for dt in params['Delta']]   #W^{u+}_{t}: Maximum power production when starting generation in period $t$  [kWe]
         params['W_u_minus'] = [(params['Wdotl'] + params['W_delta_minus']*0.5*dt) for dt in params['Delta']]  #W^{u-}_{t}: Maximum power production in period $t$ when stopping generation in period $t+1$  [kWe]
         

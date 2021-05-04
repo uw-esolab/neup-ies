@@ -447,8 +447,8 @@ class GeneralDispatchParamWrap(object):
         
         self.SSC_dict           = SSC_dict
         self.PySAM_dict         = PySAM_dict
-        self.pyomo_horizon      = pyomo_horizon
-        self.dispatch_time_step = dispatch_time_step
+        self.pyomo_horizon      = pyomo_horizon * u.hr
+        self.dispatch_time_step = dispatch_time_step * u.hr
         
         
     def set_time_indexed_parameters(self, param_dict):
@@ -471,7 +471,7 @@ class GeneralDispatchParamWrap(object):
         self.p_pb_design  = self.SSC_dict['P_ref'] * u.MW              # power block design electrical power
         self.eta_design   = self.SSC_dict['design_eff']                # power block efficiency
         self.q_pb_design  = self.p_pb_design / self.eta_design         # power block design thermal rating
-        self.dm_pb_design = 0
+        self.dm_pb_design = 0*u.kg/u.s                                 # TODO: get_cycle_design_mass_flow
         
         # fixed parameter calculations
         self.Ec    = self.SSC_dict['startup_frac'] * self.q_pb_design
@@ -508,7 +508,9 @@ class GeneralDispatchParamWrap(object):
         param_dict['Yu']      = self.Yu            #Y^u: Minimum required power cycle uptime [h]
         param_dict['Yd']      = self.Yd            #Y^d: Minimum required power cycle downtime [h]
         
-        return params
+        return param_dict
+
+    
     
 if __name__ == "__main__": 
     import dispatch_params
