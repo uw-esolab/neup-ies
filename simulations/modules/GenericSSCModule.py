@@ -226,7 +226,7 @@ class GenericSSCModule(object):
     def create_dispatch_params(self):
         
         params = {}
-
+        DW = self.dispatch_wrap
         nhel = 1
 
         # TO DOs
@@ -238,11 +238,11 @@ class GenericSSCModule(object):
         etac = 0                          # TODO: function to call ud table to get wdot multiplier
         
         # setting parameters for the first time
-        params = self.dispatch_wrap.set_time_indexed_parameters( params )
-        params = self.dispatch_wrap.set_power_cycle_parameters( params )
+        params = DW.set_time_indexed_parameters( params )
+        params = DW.set_power_cycle_parameters( params )
+        params = DW.set_fixed_cost_parameters( params )
         
-        ### Cost Parameters ###
-        params['alpha']  = 1.0
+        
         
         ### CSP Field and Receiver Parameters ###
         params['deltal'] = self.SSC_dict['rec_su_delay']*u.hr      #\delta^l: Minimum time to start the receiver [hr]

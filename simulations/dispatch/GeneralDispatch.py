@@ -512,7 +512,11 @@ class GeneralDispatchParamWrap(object):
 
     
     def set_fixed_cost_parameters(self, param_dict):
-        pass
+
+        ### Cost Parameters ###
+        param_dict['alpha']  = 1.0
+        
+        return param_dict
 
     
     
