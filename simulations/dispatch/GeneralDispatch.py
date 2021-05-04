@@ -437,7 +437,7 @@ class GeneralDispatch(object):
     
     
 # =============================================================================
-#     
+# Dispatch Wrapper
 # =============================================================================
 
 class GeneralDispatchParamWrap(object):
@@ -509,6 +509,10 @@ class GeneralDispatchParamWrap(object):
         param_dict['Yd']      = self.Yd            #Y^d: Minimum required power cycle downtime [h]
         
         return param_dict
+
+    
+    def set_fixed_cost_parameters(self, param_dict):
+        pass
 
     
     
