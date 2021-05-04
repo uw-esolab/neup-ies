@@ -20,7 +20,8 @@ import copy, pandas
 
 class GenericSSCModule(object):
     
-    def __init__(self, plant_name="generic_system", json_name="100mW_Generic"):
+    def __init__(self, plant_name="generic_system", json_name="100mW_Generic", 
+                       is_dispatch=False, dispatch_time_step=1):
         
         # grab names, either default here or from child class
         self.json_name  = json_name
@@ -33,12 +34,16 @@ class GenericSSCModule(object):
         self.ssc_horizon   = PySAM_dict['ssc_horizon'] * u.hr
         self.pyomo_horizon = PySAM_dict['pyomo_horizon'] * u.hr
         self.output_keys   = output_keys
+        self.dispatch_time_step = dispatch_time_step * u.hr
         
         # save SSC_dict for usage later
         self.SSC_dict = SSC_dict
         
         # save csv arrays to class 
         self.store_csv_arrays( PySAM_dict )
+        
+        # save flag for dispatch
+        self.is_dispatch = is_dispatch
 
 
     def run_sim(self, run_loop=False, export=False, filename='temp.csv'):
@@ -60,6 +65,7 @@ class GenericSSCModule(object):
         
         #--- use executed Plant object to create Grid object and execute it
         self.create_Grid( )
+        # update gen and annual energy so SystemOutput is consistent, carried over to SO object
         self.Grid.SystemOutput.gen = tuple(self.gen_log)
         self.Grid.SystemOutput.annual_energy = np.sum(annual_energy.magnitude)
         self.Grid.execute( )
@@ -143,6 +149,10 @@ class GenericSSCModule(object):
         # setting up empty log array for gen
         self.gen_log = np.ndarray([0])
         
+        # creating parameters for dispatch for first time
+        if self.is_dispatch:
+            disp_params = self.create_dispatch_params()
+        
         # first execution of Plant through SSC
         self.run_Plant_through_SSC( time_start , time_next )
         
@@ -154,6 +164,17 @@ class GenericSSCModule(object):
             # update time
             time_start += self.ssc_horizon.to('s')
             time_next  += self.ssc_horizon.to('s')
+            
+            # run dispatch
+            if self.is_dispatch:
+                # update dispatch variables from SSC outputs
+                disp_vars = self.update_dispatch_vars()
+                
+                # run dispatch
+                outputs = self.run_pyomo()
+                
+                # update SSC inputs from dispatch outputs
+                plant_updt = self.update_Plant_with_dispatch()
             
             # update Plant parameters after previous run
             self.update_Plant( )
@@ -198,6 +219,14 @@ class GenericSSCModule(object):
         self.Plant.SystemControl.pc_op_mode_initial               = self.Plant.Outputs.pc_op_mode_final
         self.Plant.SystemControl.pc_startup_energy_remain_initial = self.Plant.Outputs.pc_startup_time_remain_final
         self.Plant.SystemControl.pc_startup_time_remain_init      = self.Plant.Outputs.pc_startup_energy_remain_final
+
+
+    def create_dispatch_params(self):
+        
+        params = {}
+ 
+        
+        return params
         
     def export_results(self, filename):
         
