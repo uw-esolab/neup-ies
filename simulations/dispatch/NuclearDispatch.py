@@ -25,6 +25,9 @@ class NuclearDispatch(GeneralDispatch):
         # initialize Generic module, csv data arrays should be saved here
         GeneralDispatch.__init__( self, params )
 
+# =============================================================================
+# Dispatch Wrapper
+# =============================================================================
 
 class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
     
@@ -33,3 +36,11 @@ class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
         
         GeneralDispatchParamWrap.__init__( self, SSC_dict, PySAM_dict, 
                             pyomo_horizon, dispatch_time_step )
+
+
+    def set_fixed_cost_parameters(self, param_dict):
+    
+            # set up costs from parent class
+            param_dict = GeneralDispatchParamWrap.set_fixed_cost_parameters( param_dict )
+            
+            return param_dict
