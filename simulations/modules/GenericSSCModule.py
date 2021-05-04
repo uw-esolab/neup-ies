@@ -235,8 +235,6 @@ class GenericSSCModule(object):
         nhel = 1
 
         # TO DOs
-        dw_rec_pump  = 0*u.MW             # TODO: Pumping parasitic at design point reciever mass flow rate (MWe)
-        tower_piping_ht_loss = 0*u.kW     # TODO: Tower piping heat trace full-load parasitic load (kWe) 
         delta_rs = 0                      # TODO: time loop to get this fraction
         D = 0                             # TODO: time loop to get this fraction
         etaamb = 0                        # TODO: function to call ud table to get eta multiplier
@@ -247,20 +245,6 @@ class GenericSSCModule(object):
         params = DW.set_power_cycle_parameters( params )
         params = DW.set_fixed_cost_parameters( params )
         
-        
-        
-        ### CSP Field and Receiver Parameters ###
-        params['deltal'] = self.SSC_dict['rec_su_delay']*u.hr      #\delta^l: Minimum time to start the receiver [hr]
-        params['Ehs']    = self.SSC_dict['p_start']*u.kWh * nhel   #E^{hs}: Heliostat field startup or shut down parasitic loss [kWe$\cdot$h]
-        params['Er']     = (self.SSC_dict['rec_qf_delay'] * q_rec_design).to('kW')   #E^r: Required energy expended to start receiver [kWt$\cdot$h]
-        params['Eu']     = (self.SSC_dict['tshours']*u.hr * q_pb_design).to('kWh')   #E^u: Thermal energy storage capacity [kWt$\cdot$h]
-        params['Lr']     = (dw_rec_pump / q_rec_design).to('')     #L^r: Receiver pumping power per unit power produced [kWe/kWt]
-        params['Qrl']    = (self.SSC_dict['f_rec_min'] * q_rec_design).to('kW')    #Q^{rl}: Minimum operational thermal power delivered by receiver [kWt$\cdot$h]
-        params['Qrsb']   = (self.SSC_dict['q_rec_standby_fraction'] * q_rec_design).to('kW')  #Q^{rsb}: Required thermal power for receiver standby [kWt$\cdot$h]
-        params['Qrsd']   = (self.SSC_dict['q_rec_shutdown_fraction'] * q_rec_design).to('kW')   #Q^{rsd}: Required thermal power for receiver shut down [kWt$\cdot$h] 
-        params['Qru']    = params['Er'] / params['deltal']         #Q^{ru}: Allowable power per period for receiver start-up [kWt$\cdot$h]
-        params['Wh']     = self.SSC_dict['p_track']*u.kW           #W^h: Heliostat field tracking parasitic loss [kWe]
-        params['Wht']    = tower_piping_ht_loss                    #W^{ht}: Tower piping heat trace parasitic loss [kWe]
         
         ### Time series CSP Parameters ###
         params['delta_rs'] = delta_rs #\delta^{rs}_{t}: Estimated fraction of period $t$ required for receiver start-up [-]
