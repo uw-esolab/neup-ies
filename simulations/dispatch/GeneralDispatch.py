@@ -14,17 +14,20 @@ Modified by Gabriel Soto
 """
 #import pyomo
 import pyomo.environ as pe
+import numpy as np
+import pint
+u = pint.UnitRegistry()
 
 class GeneralDispatch(object):
     def __init__(self, params, include={"pv":False,"battery":False,"persistence":False}):
         self.model = pe.ConcreteModel()
         self.include = include
-        self.generateParams(params)
-        self.generateVariables()
-        self.addObjective()
-        self.generateConstraints()
+        self.generate_params(params)
+        self.generate_variables()
+        self.add_objective()
+        self.generate_constraints()
 
-    def generateParams(self,params):
+    def generate_params(self,params):
         ### Sets and Indices ###
         self.model.T = pe.Set(initialize = range(1,params["T"]+1))  #T: time periods
         self.model.num_periods = pe.Param(initialize=params["T"]) #N_T: number of time periods
@@ -108,7 +111,7 @@ class GeneralDispatch(object):
 
         
 
-    def generateVariables(self):
+    def generate_variables(self):
         ### Decision Variables ###
         #------- Variables ---------
         self.model.s = pe.Var(self.model.T, domain=pe.NonNegativeReals, bounds = (0,self.model.Eu))    #s: TES reserve quantity at period $t$  [kWt$\cdot$h]
@@ -148,7 +151,7 @@ class GeneralDispatch(object):
         
 
                 
-    def addObjective(self):
+    def add_objective(self):
         def objectiveRule(model):
             return (
                     sum( model.D[t] * 
@@ -414,7 +417,7 @@ class GeneralDispatch(object):
         self.model.cycle_start_pen_con = pe.Constraint(self.model.T,rule=cycle_start_pen_rule)
 
 
-    def generateConstraints(self):
+    def generate_constraints(self):
         self.addPersistenceConstraints()
         self.addReceiverStartupConstraints()
         self.addReceiverSupplyAndDemandConstraints()
@@ -426,20 +429,86 @@ class GeneralDispatch(object):
         self.addCycleLogicConstraints()
         
             
-    def solveModel(self, mipgap=0.005):
+    def solve_model(self, mipgap=0.005):
         opt = pe.SolverFactory('cbc')
         opt.options["ratioGap"] = mipgap
         results = opt.solve(self.model, tee=False, keepfiles=False)
         return results
     
     
-    def printCycleOutput(self):
-        for t in self.model.T:
-            if self.model.ycge[t].value > 1e-3:
-                print("Cycle off at period ",t," - Time = ",self.model.Delta_e[t])
-            if self.model.ycgb[t].value > 1e-3:
-                print("Cycle on at period  ",t," - Time = ",self.model.Delta_e[t])
+# =============================================================================
+#     
+# =============================================================================
+
+class GeneralDispatchParamWrap(object):
     
+    def __init__(self, SSC_dict=None, PySAM_dict=None, pyomo_horizon=48, 
+                       dispatch_time_step=1):
+        
+        self.SSC_dict           = SSC_dict
+        self.PySAM_dict         = PySAM_dict
+        self.pyomo_horizon      = pyomo_horizon
+        self.dispatch_time_step = dispatch_time_step
+        
+        
+    def set_time_indexed_parameters(self, param_dict):
+        
+        self.T     = int( self.pyomo_horizon.to('hr').magnitude )
+        self.Delta = np.array([self.dispatch_time_step.to('hr').magnitude]*params['T'])
+        
+        #------- Time indexed parameters ---------
+        param_dict['T']        = self.T                  #T: time periods
+        param_dict['Delta']    = self.Delta              #\Delta_{t}: duration of period t
+        param_dict['Delta_e']  = np.cumsum(self.Delta)   #\Delta_{e,t}: cumulative time elapsed at end of period t
+        
+        return param_dict
+
+    
+    def set_power_cycle_parameters(self, param_dict):
+        
+        # design parameters
+        self.q_rec_design = self.SSC_dict['q_dot_nuclear_des'] * u.MW  # receiver design thermal power
+        self.p_pb_design  = self.SSC_dict['P_ref'] * u.MW              # power block design electrical power
+        self.eta_design   = self.SSC_dict['design_eff']                # power block efficiency
+        self.q_pb_design  = self.p_pb_design / self.eta_design         # power block design thermal rating
+        self.dm_pb_design = 0
+        
+        # fixed parameter calculations
+        self.Ec    = self.SSC_dict['startup_frac'] * self.q_pb_design
+        self.etap  = 0  # TODO: function needed for this slope
+        self.Lc    = (self.SSC_dict['pb_pump_coef']*u.kW/u.kg) * self.dm_pb_design.to('kg') / self.q_pb_design.to('kW')
+        self.Qb    = (self.SSC_dict['q_sby_frac'] * self.q_pb_design)
+        self.Ql    = (self.SSC_dict['cycle_cutoff_frac'] * self.q_pb_design)
+        self.Qu    = (self.SSC_dict['cycle_max_frac'] * self.q_pb_design)
+        self.Wb    = (self.SSC_dict['Wb_fract']* self.p_pb_design)
+        self.Wdotl = 0*u.kW  # TODO: same function as etap
+        self.Wdotu = 0*u.kW  # TODO: same function as etap
+        self.W_delta_plus  = self.SSC_dict['disp_pc_rampup']      * param_dict['Wdotu'] # rampup -> frac/min
+        self.W_delta_minus = self.SSC_dict['disp_pc_rampdown']    * param_dict['Wdotu']
+        self.W_v_plus      = self.SSC_dict['disp_pc_rampup_vl']   * param_dict['Wdotu']
+        self.W_v_minus     = self.SSC_dict['disp_pc_rampdown_vl'] * param_dict['Wdotu']
+        self.Yu    = 0*u.hr  # TODO: minimum required power cycle uptime 
+        self.Yd    = 0*u.hr  # TODO: minimum required power cycle downtime 
+        
+        ### Power Cycle Parameters ###
+        param_dict['Ec']      = self.Ec.to('kW')   #E^c: Required energy expended to start cycle [kWt$\cdot$h]
+        param_dict['eta_des'] = self.eta_design    #\eta^{des}: Cycle nominal efficiency [-]
+        param_dict['etap']    = self.etap          #\eta^p: Slope of linear approximation of power cycle performance curve [kWe/kWt]
+        param_dict['Lc']      = self.Lc.to('')     #L^c: Cycle heat transfer fluid pumping power per unit energy expended [kWe/kWt]
+        param_dict['Qb']      = self.Qb.to('kW')   #Q^b: Cycle standby thermal power consumption per period [kWt]
+        param_dict['Ql']      = self.Ql.to('kW')   #Q^l: Minimum operational thermal power input to cycle [kWt]
+        param_dict['Qu']      = self.Qu.to('kW')   #Q^u: Cycle thermal power capacity [kWt]
+        param_dict['Wb']      = self.Wb.to('kW')   #W^b: Power cycle standby operation parasitic load [kWe]
+        param_dict['Wdotl']   = self.Wdotl         #\dot{W}^l: Minimum cycle electric power output [kWe]
+        param_dict['Wdotu']   = self.Wdotu         #\dot{W}^u: Cycle electric power rated capacity [kWe]
+        param_dict['W_delta_plus']  = self.W_delta_plus  #W^{\Delta+}: Power cycle ramp-up designed limit [kWe/h]
+        param_dict['W_delta_minus'] = self.W_delta_minus #W^{\Delta-}: Power cycle ramp-down designed limit [kWe/h]
+        param_dict['W_v_plus']      = self.W_v_plus      #W^{v+}: Power cycle ramp-up violation limit [kWe/h]
+        param_dict['W_v_minus']     = self.W_v_minus     #W^{v-}: Power cycle ramp-down violation limit [kWe/h]
+        param_dict['Yu']      = self.Yu            #Y^u: Minimum required power cycle uptime [h]
+        param_dict['Yd']      = self.Yd            #Y^d: Minimum required power cycle downtime [h]
+        
+        return params
     
 if __name__ == "__main__": 
     import dispatch_params
@@ -447,7 +516,7 @@ if __name__ == "__main__":
     params = dispatch_params.buildParamsFromAMPLFile("./input_files/data_energy.dat")
     include = {"pv":False,"battery":False,"persistence":False,"force_cycle":True}
     rt = GeneralDispatch(params,include)
-    rt_results = rt.solveModel()
+    rt_results = rt.solve_model()
     # outputs = dispatch_outputs.RTDispatchOutputs(rt.model)
     # outputs.print_outputs()
     
