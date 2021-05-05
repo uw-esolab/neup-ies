@@ -450,6 +450,9 @@ class GeneralDispatchParamWrap(object):
         self.pyomo_horizon      = pyomo_horizon
         self.dispatch_time_step = dispatch_time_step 
         
+        # setting a standard unit registry
+        self.u = u # TODO: figure out best place to put this, needs only 1 spot
+        
         self.set_design()
         
 
@@ -466,7 +469,7 @@ class GeneralDispatchParamWrap(object):
     def set_time_indexed_parameters(self, param_dict):
         
         self.T     = int( self.pyomo_horizon.to('hr').magnitude )
-        self.Delta = np.array([self.dispatch_time_step.to('hr').magnitude]*self.T)
+        self.Delta = np.array([self.dispatch_time_step.to('hr').magnitude]*self.T)*u.hr
         
         #------- Time indexed parameters ---------
         param_dict['T']        = self.T                  #T: time periods
