@@ -459,11 +459,11 @@ class GeneralDispatchParamWrap(object):
     def set_design(self):
         
         # design parameters
-        self.q_rec_design = self.SSC_dict['q_dot_nuclear_des'] * u.MW  # receiver design thermal power
-        self.p_pb_design  = self.SSC_dict['P_ref'] * u.MW              # power block design electrical power
-        self.eta_design   = self.SSC_dict['design_eff']                # power block design efficiency
-        self.q_pb_design  = self.p_pb_design / self.eta_design         # power block design thermal rating
-        self.dm_pb_design = 0*u.kg/u.s                                 # TODO: get_cycle_design_mass_flow
+        self.q_rec_design = self.SSC_dict['q_dot_nuclear_des'] * u.MW      # receiver design thermal power
+        self.p_pb_design  = self.SSC_dict['P_ref'] * u.MW                  # power block design electrical power
+        self.eta_design   = self.SSC_dict['design_eff']                    # power block design efficiency
+        self.q_pb_design  = (self.p_pb_design / self.eta_design).to('MW')  # power block design thermal rating
+        self.dm_pb_design = 0*u.kg/u.s                                     # TODO: get_cycle_design_mass_flow
         
         
     def set_time_indexed_parameters(self, param_dict):
@@ -472,9 +472,9 @@ class GeneralDispatchParamWrap(object):
         self.Delta = np.array([self.dispatch_time_step.to('hr').magnitude]*self.T)*u.hr
         
         #------- Time indexed parameters ---------
-        param_dict['T']        = self.T                  #T: time periods
-        param_dict['Delta']    = self.Delta              #\Delta_{t}: duration of period t
-        param_dict['Delta_e']  = np.cumsum(self.Delta)   #\Delta_{e,t}: cumulative time elapsed at end of period t
+        param_dict['T']        = self.T                          #T: time periods
+        param_dict['Delta']    = self.Delta.to('hr')             #\Delta_{t}: duration of period t
+        param_dict['Delta_e']  = np.cumsum(self.Delta).to('hr')  #\Delta_{e,t}: cumulative time elapsed at end of period t
         
         return param_dict
 
@@ -516,14 +516,14 @@ class GeneralDispatchParamWrap(object):
         param_dict['Ql']      = self.Ql.to('kW')   #Q^l: Minimum operational thermal power input to cycle [kWt]
         param_dict['Qu']      = self.Qu.to('kW')   #Q^u: Cycle thermal power capacity [kWt]
         param_dict['Wb']      = self.Wb.to('kW')   #W^b: Power cycle standby operation parasitic load [kWe]
-        param_dict['Wdotl']   = self.Wdotl.to('kW')                 #\dot{W}^l: Minimum cycle electric power output [kWe]
-        param_dict['Wdotu']   = self.Wdotu.to('kW')                 #\dot{W}^u: Cycle electric power rated capacity [kWe]
+        param_dict['Wdotl']   = self.Wdotl.to('kW')         #\dot{W}^l: Minimum cycle electric power output [kWe]
+        param_dict['Wdotu']   = self.Wdotu.to('kW')         #\dot{W}^u: Cycle electric power rated capacity [kWe]
         param_dict['W_delta_plus']  = self.W_delta_plus.to('kW/hr')  #W^{\Delta+}: Power cycle ramp-up designed limit [kWe/h]
         param_dict['W_delta_minus'] = self.W_delta_minus.to('kW/hr') #W^{\Delta-}: Power cycle ramp-down designed limit [kWe/h]
         param_dict['W_v_plus']      = self.W_v_plus.to('kW/hr')      #W^{v+}: Power cycle ramp-up violation limit [kWe/h]
         param_dict['W_v_minus']     = self.W_v_minus.to('kW/hr')     #W^{v-}: Power cycle ramp-down violation limit [kWe/h]
-        param_dict['Yu']      = self.Yu            #Y^u: Minimum required power cycle uptime [h]
-        param_dict['Yd']      = self.Yd            #Y^d: Minimum required power cycle downtime [h]
+        param_dict['Yu']      = self.Yu.to('hr')   #Y^u: Minimum required power cycle uptime [h]
+        param_dict['Yd']      = self.Yd.to('hr')   #Y^d: Minimum required power cycle downtime [h]
         
         return param_dict
 
