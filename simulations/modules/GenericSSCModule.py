@@ -244,10 +244,7 @@ class GenericSSCModule(object):
         params = DW.set_time_indexed_parameters( params )
         params = DW.set_power_cycle_parameters( params )
         params = DW.set_fixed_cost_parameters( params )
-        # params = DW.set_nuclear_parameters( params ) #TODO: should be in nuclearTES overloaded call
-        # params = DW.set_time_series_nuclear_parameters( params, self.df_array )
-        
-    
+
         ### Initial Condition Parameters ###
         
         

@@ -41,7 +41,7 @@ class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
     def set_fixed_cost_parameters(self, param_dict):
     
         # set up costs from parent class
-        param_dict = GeneralDispatchParamWrap.set_fixed_cost_parameters( param_dict )
+        param_dict = GeneralDispatchParamWrap.set_fixed_cost_parameters( self, param_dict )
         
         return param_dict
         
