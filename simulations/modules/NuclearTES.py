@@ -77,3 +77,16 @@ class NuclearTES(GenericSSCModule):
         self.Grid.GridLimits.grid_curtailment = self.gc_array  
 
     
+    def create_dispatch_params(self):
+        
+        DW = self.dispatch_wrap
+        
+        params = GenericSSCModule.create_dispatch_params(self)
+        # params = DW.set_nuclear_parameters( params ) #TODO: should be in nuclearTES overloaded call
+        # params = DW.set_time_series_nuclear_parameters( params, self.df_array )
+        
+    
+        ### Initial Condition Parameters ###
+        
+        
+        return params
