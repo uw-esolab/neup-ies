@@ -473,20 +473,28 @@ class GeneralDispatchParamWrap(object):
         self.q_pb_design  = self.p_pb_design / self.eta_design         # power block design thermal rating
         self.dm_pb_design = 0*u.kg/u.s                                 # TODO: get_cycle_design_mass_flow
         
+        # Magic numbers
+        Lc_fix  = 1*u.s # TODO: we're missing a time term to fix units
+        Wb_frac = 0.05  # TODO: get a better estimate- cycle standby parasitic load as frac of cycle capacity
+        pc_rampup    = 0.6 / u.hr # TODO: self.SSC_dict['disp_pc_rampup']   
+        pc_rampdown  = 12. / u.hr # TODO: self.SSC_dict['disp_pc_rampdown']   
+        pc_rampup_vl   = 1. / u.hr # TODO: self.SSC_dict['disp_pc_rampup_vl'] 
+        pc_rampdown_vl = 1. / u.hr # TODO: self.SSC_dict['disp_pc_rampdown_vl'] 
+        
         # fixed parameter calculations
         self.Ec    = self.SSC_dict['startup_frac'] * self.q_pb_design
         self.etap  = 0  # TODO: function needed for this slope
-        self.Lc    = (self.SSC_dict['pb_pump_coef']*u.kW/u.kg) * self.dm_pb_design.to('kg/s') / self.q_pb_design.to('kW')
-        self.Qb    = (self.SSC_dict['q_sby_frac'] * self.q_pb_design)
-        self.Ql    = (self.SSC_dict['cycle_cutoff_frac'] * self.q_pb_design)
-        self.Qu    = (self.SSC_dict['cycle_max_frac'] * self.q_pb_design)
-        self.Wb    = (self.SSC_dict['Wb_fract']* self.p_pb_design)
+        self.Lc    = (self.SSC_dict['pb_pump_coef']*u.kW/u.kg) * self.dm_pb_design.to('kg/s') * Lc_fix / self.q_pb_design.to('kW')
+        self.Qb    = self.SSC_dict['q_sby_frac'] * self.q_pb_design
+        self.Ql    = self.SSC_dict['cycle_cutoff_frac'] * self.q_pb_design
+        self.Qu    = self.SSC_dict['cycle_max_frac'] * self.q_pb_design
+        self.Wb    = Wb_frac* self.p_pb_design
         self.Wdotl = 0*u.kW  # TODO: same function as etap
         self.Wdotu = 0*u.kW  # TODO: same function as etap
-        self.W_delta_plus  = self.SSC_dict['disp_pc_rampup']      * param_dict['Wdotu'] # rampup -> frac/min
-        self.W_delta_minus = self.SSC_dict['disp_pc_rampdown']    * param_dict['Wdotu']
-        self.W_v_plus      = self.SSC_dict['disp_pc_rampup_vl']   * param_dict['Wdotu']
-        self.W_v_minus     = self.SSC_dict['disp_pc_rampdown_vl'] * param_dict['Wdotu']
+        self.W_delta_plus  = pc_rampup * self.Wdotu # rampup -> frac/min
+        self.W_delta_minus = pc_rampdown * self.Wdotu
+        self.W_v_plus      = pc_rampup_vl * self.Wdotu
+        self.W_v_minus     = pc_rampdown_vl * self.Wdotu
         self.Yu    = 0*u.hr  # TODO: minimum required power cycle uptime 
         self.Yd    = 0*u.hr  # TODO: minimum required power cycle downtime 
         
@@ -499,12 +507,12 @@ class GeneralDispatchParamWrap(object):
         param_dict['Ql']      = self.Ql.to('kW')   #Q^l: Minimum operational thermal power input to cycle [kWt]
         param_dict['Qu']      = self.Qu.to('kW')   #Q^u: Cycle thermal power capacity [kWt]
         param_dict['Wb']      = self.Wb.to('kW')   #W^b: Power cycle standby operation parasitic load [kWe]
-        param_dict['Wdotl']   = self.Wdotl         #\dot{W}^l: Minimum cycle electric power output [kWe]
-        param_dict['Wdotu']   = self.Wdotu         #\dot{W}^u: Cycle electric power rated capacity [kWe]
-        param_dict['W_delta_plus']  = self.W_delta_plus  #W^{\Delta+}: Power cycle ramp-up designed limit [kWe/h]
-        param_dict['W_delta_minus'] = self.W_delta_minus #W^{\Delta-}: Power cycle ramp-down designed limit [kWe/h]
-        param_dict['W_v_plus']      = self.W_v_plus      #W^{v+}: Power cycle ramp-up violation limit [kWe/h]
-        param_dict['W_v_minus']     = self.W_v_minus     #W^{v-}: Power cycle ramp-down violation limit [kWe/h]
+        param_dict['Wdotl']   = self.Wdotl.to('kW')                 #\dot{W}^l: Minimum cycle electric power output [kWe]
+        param_dict['Wdotu']   = self.Wdotu.to('kW')                 #\dot{W}^u: Cycle electric power rated capacity [kWe]
+        param_dict['W_delta_plus']  = self.W_delta_plus.to('kW/hr')  #W^{\Delta+}: Power cycle ramp-up designed limit [kWe/h]
+        param_dict['W_delta_minus'] = self.W_delta_minus.to('kW/hr') #W^{\Delta-}: Power cycle ramp-down designed limit [kWe/h]
+        param_dict['W_v_plus']      = self.W_v_plus.to('kW/hr')      #W^{v+}: Power cycle ramp-up violation limit [kWe/h]
+        param_dict['W_v_minus']     = self.W_v_minus.to('kW/hr')     #W^{v-}: Power cycle ramp-down violation limit [kWe/h]
         param_dict['Yu']      = self.Yu            #Y^u: Minimum required power cycle uptime [h]
         param_dict['Yd']      = self.Yd            #Y^d: Minimum required power cycle downtime [h]
         
