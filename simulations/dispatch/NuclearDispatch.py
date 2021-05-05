@@ -49,6 +49,7 @@ class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
         # grabbing unit registry set up in GeneralDispatch
         u = self.u 
         
+        time_fix = 1*u.hr                 # TODO: we're missing a time term to fix units
         dw_rec_pump  = 0*u.MW             # TODO: Pumping parasitic at design point reciever mass flow rate (MWe)
         tower_piping_ht_loss = 0*u.kW     # TODO: Tower piping heat trace full-load parasitic load (kWe) 
         q_rec_standby_fraction = 0.05     # TODO: Receiver standby energy consumption (fraction of design point thermal power)
@@ -56,28 +57,28 @@ class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
         
         self.deltal = self.SSC_dict['rec_su_delay']*u.hr
         self.Ehs    = self.SSC_dict['p_start']*u.kWh
-        self.Er     = self.SSC_dict['rec_qf_delay'] * self.q_rec_design
+        self.Er     = self.SSC_dict['rec_qf_delay'] * self.q_rec_design * time_fix
         self.Eu     = self.SSC_dict['tshours']*u.hr * self.q_pb_design
         self.Lr     = dw_rec_pump / self.q_rec_design
-        self.Qrl    = self.SSC_dict['f_rec_min'] * self.q_rec_design
-        self.Qrsb   = q_rec_standby_fraction  * self.q_rec_design
-        self.Qrsd   = q_rec_shutdown_fraction * self.q_rec_design
-        self.Qru    = self.Er/ self.deltal
+        self.Qrl    = self.SSC_dict['f_rec_min'] * self.q_rec_design * time_fix
+        self.Qrsb   = q_rec_standby_fraction  * self.q_rec_design * time_fix
+        self.Qrsd   = q_rec_shutdown_fraction * self.q_rec_design * time_fix
+        self.Qru    = self.Er/ self.deltal * time_fix 
         self.Wh     = self.SSC_dict['p_track']*u.kW
         self.Wht    = tower_piping_ht_loss
         
         ### CSP Field and Receiver Parameters ###
-        param_dict['deltal'] = self.deltal        #\delta^l: Minimum time to start the receiver [hr]
-        param_dict['Ehs']    = self.Ehs.to('kWh') #E^{hs}: Heliostat field startup or shut down parasitic loss [kWe$\cdot$h]
-        param_dict['Er']     = self.Er.to('kW')   #E^r: Required energy expended to start receiver [kWt$\cdot$h]
-        param_dict['Eu']     = self.Eu.to('kWh')  #E^u: Thermal energy storage capacity [kWt$\cdot$h]
-        param_dict['Lr']     = self.Lr.to('')     #L^r: Receiver pumping power per unit power produced [kWe/kWt]
-        param_dict['Qrl']    = self.Qrl.to('kW')  #Q^{rl}: Minimum operational thermal power delivered by receiver [kWt$\cdot$h]
-        param_dict['Qrsb']   = self.Qrsb.to('kW') #Q^{rsb}: Required thermal power for receiver standby [kWt$\cdot$h]
-        param_dict['Qrsd']   = self.Qrsd.to('kW') #Q^{rsd}: Required thermal power for receiver shut down [kWt$\cdot$h] 
-        param_dict['Qru']    = self.Qru           #Q^{ru}: Allowable power per period for receiver start-up [kWt$\cdot$h]
-        param_dict['Wh']     = self.Wh            #W^h: Heliostat field tracking parasitic loss [kWe]
-        param_dict['Wht']    = self.Wht           #W^{ht}: Tower piping heat trace parasitic loss [kWe]
+        param_dict['deltal'] = self.deltal.to('hr')    #\delta^l: Minimum time to start the receiver [hr]
+        param_dict['Ehs']    = self.Ehs.to('kWh')      #E^{hs}: Heliostat field startup or shut down parasitic loss [kWe$\cdot$h]
+        param_dict['Er']     = self.Er.to('kWh')       #E^r: Required energy expended to start receiver [kWt$\cdot$h]
+        param_dict['Eu']     = self.Eu.to('kWh')       #E^u: Thermal energy storage capacity [kWt$\cdot$h]
+        param_dict['Lr']     = self.Lr.to('')          #L^r: Receiver pumping power per unit power produced [kWe/kWt]
+        param_dict['Qrl']    = self.Qrl.to('kWh')      #Q^{rl}: Minimum operational thermal power delivered by receiver [kWt$\cdot$h]
+        param_dict['Qrsb']   = self.Qrsb.to('kWh')     #Q^{rsb}: Required thermal power for receiver standby [kWt$\cdot$h]
+        param_dict['Qrsd']   = self.Qrsd.to('kWh')     #Q^{rsd}: Required thermal power for receiver shut down [kWt$\cdot$h] 
+        param_dict['Qru']    = self.Qru.to('kWh')      #Q^{ru}: Allowable power per period for receiver start-up [kWt$\cdot$h]
+        param_dict['Wh']     = self.Wh.to('kW')        #W^h: Heliostat field tracking parasitic loss [kWe]
+        param_dict['Wht']    = self.Wht.to('kW')       #W^{ht}: Tower piping heat trace parasitic loss [kWe]
         
         return param_dict
     
