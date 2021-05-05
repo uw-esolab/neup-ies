@@ -16,8 +16,6 @@ from dispatch.GeneralDispatch import GeneralDispatch
 from dispatch.GeneralDispatch import GeneralDispatchParamWrap
 import pyomo.environ as pe
 import numpy as np
-import pint
-u = pint.UnitRegistry()
 
 class NuclearDispatch(GeneralDispatch):
     
@@ -48,9 +46,13 @@ class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
 
     def set_nuclear_parameters(self, param_dict):
         
+        # grabbing unit registry set up in GeneralDispatch
+        u = self.u 
         
         dw_rec_pump  = 0*u.MW             # TODO: Pumping parasitic at design point reciever mass flow rate (MWe)
         tower_piping_ht_loss = 0*u.kW     # TODO: Tower piping heat trace full-load parasitic load (kWe) 
+        q_rec_standby_fraction = 0.05     # TODO: Receiver standby energy consumption (fraction of design point thermal power)
+        q_rec_shutdown_fraction = 0.      # TODO: Receiver shutdown energy consumption (fraction of design point thermal power)
         
         self.deltal = self.SSC_dict['rec_su_delay']*u.hr
         self.Ehs    = self.SSC_dict['p_start']*u.kWh
@@ -58,8 +60,8 @@ class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
         self.Eu     = self.SSC_dict['tshours']*u.hr * self.q_pb_design
         self.Lr     = dw_rec_pump / self.q_rec_design
         self.Qrl    = self.SSC_dict['f_rec_min'] * self.q_rec_design
-        self.Qrsb   = self.SSC_dict['q_rec_standby_fraction'] * self.q_rec_design
-        self.Qrsd   = self.SSC_dict['q_rec_shutdown_fraction'] * self.q_rec_design
+        self.Qrsb   = q_rec_standby_fraction  * self.q_rec_design
+        self.Qrsd   = q_rec_shutdown_fraction * self.q_rec_design
         self.Qru    = self.Er/ self.deltal
         self.Wh     = self.SSC_dict['p_track']*u.kW
         self.Wht    = tower_piping_ht_loss
@@ -83,6 +85,7 @@ class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
     def set_time_series_nuclear_parameters(self, param_dict, df_array):
         
         #MAKE SURE TO CALL THIS METHOD AFTER THE NUCLEAR PARAMETERS 
+        u = self.u
         
         delta_rs = 0                      # TODO: time loop to get this fraction
         D = 0                             # TODO: time loop to get this fraction
@@ -97,8 +100,8 @@ class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
         self.Qin        = np.array([self.q_rec_design.magnitude]*self.T)*self.q_rec_design.units
         self.Qc         = self.Ec / np.ceil(self.SSC_dict['startup_time'] / np.min(self.Delta)) / np.min(self.Delta) #TODO: make sure Ec is called correctly
         self.Wdotnet    = [1.e10 for j in range(self.T)] 
-        self.W_u_plus   = [(self.Wdotl + self.W_delta_plus*0.5*dt) for dt in self.Delta]
-        self.W_u_minus  = [(self.Wdotl + self.W_delta_minus*0.5*dt) for dt in self.Delta]
+        self.W_u_plus   = [(self.Wdotl + self.W_delta_plus*0.5*dt).to('kW').magnitude for dt in self.Delta]*u.kW
+        self.W_u_minus  = [(self.Wdotl + self.W_delta_minus*0.5*dt).to('kW').magnitude for dt in self.Delta]*u.kW
         
         ### Time series CSP Parameters ###
         param_dict['delta_rs']  = self.delta_rs   #\delta^{rs}_{t}: Estimated fraction of period $t$ required for receiver start-up [-]
