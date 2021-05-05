@@ -48,10 +48,7 @@ class GenericSSCModule(object):
         
         if self.is_dispatch:
             # initialize dispatch wrap class
-            self.dispatch_wrap = GDP(self.SSC_dict, PySAM_dict,
-                    self.pyomo_horizon, self.dispatch_time_step)
-
-
+            self.dispatch_wrap = self.create_dispatch_wrapper( PySAM_dict )
 
     def run_sim(self, run_loop=False, export=False, filename='temp.csv'):
         """ Method to run single simulation for Generic System
@@ -228,6 +225,16 @@ class GenericSSCModule(object):
         self.Plant.SystemControl.pc_startup_time_remain_init      = self.Plant.Outputs.pc_startup_energy_remain_final
 
 
+    def create_dispatch_wrapper(self, PySAM_dict):
+        DispatchParameterClass = GDP
+        
+        dispatch_wrap = DispatchParameterClass(self.SSC_dict, PySAM_dict,
+                    self.pyomo_horizon, self.dispatch_time_step)
+        
+        return dispatch_wrap
+
+        
+        
     def create_dispatch_params(self):
         
         params = {}
