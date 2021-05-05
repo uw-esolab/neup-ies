@@ -16,7 +16,7 @@ Modified by Gabriel Soto
 import pyomo.environ as pe
 import numpy as np
 import pint
-u = pint.UnitRegistry()
+u = pint.UnitRegistry(autoconvert_offset_to_baseunit = True)
 
 class GeneralDispatch(object):
     def __init__(self, params, include={"pv":False,"battery":False,"persistence":False}):
@@ -455,7 +455,23 @@ class GeneralDispatchParamWrap(object):
         
         self.set_design()
         
-
+    ## Getters
+    def get_cp_htf(self, T):
+        
+        if self.SSC_dict['rec_htf'] != 17:
+            print ('HTF %d not recognized'%self.SSC_dict['rec_htf'])
+            return 0.0
+        
+        T = T.to('kelvin')
+        
+        a = -1.0e-10*u.J/u.g/u.kelvin**4
+        b = 2.0e-7*u.J/u.g/u.kelvin**3
+        c = 5.0e-6*u.J/u.g/u.kelvin**2
+        d = 1.4387*u.J/u.g/u.kelvin
+        
+        return (a*T**3 + b*T**2 + c*T + d).to('J/g/kelvin')  # J/kg/K
+        
+    ## Setters
     def set_design(self):
         
         # design parameters
@@ -463,7 +479,14 @@ class GeneralDispatchParamWrap(object):
         self.p_pb_design  = self.SSC_dict['P_ref'] * u.MW                  # power block design electrical power
         self.eta_design   = self.SSC_dict['design_eff']                    # power block design efficiency
         self.q_pb_design  = (self.p_pb_design / self.eta_design).to('MW')  # power block design thermal rating
-        self.dm_pb_design = 0*u.kg/u.s                                     # TODO: get_cycle_design_mass_flow
+        
+        T_htf_hot  = (self.SSC_dict['T_htf_cold_des']*u.celsius).to('degK')
+        T_htf_cold = (self.SSC_dict['T_htf_hot_des']*u.celsius).to('degK')
+        T_htf = 0.5*(T_htf_hot + T_htf_cold)
+        cp_des = self.get_cp_htf(T_htf)        
+        m_des = self.q_pb_design / (cp_des * (T_htf_hot - T_htf_cold) )  
+        
+        self.dm_pb_design = m_des.to('kg/s')                               # power block design mass flow rate
         
         
     def set_time_indexed_parameters(self, param_dict):

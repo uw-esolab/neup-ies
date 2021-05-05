@@ -226,6 +226,7 @@ class GenericSSCModule(object):
 
 
     def create_dispatch_wrapper(self, PySAM_dict):
+        
         DispatchParameterClass = GDP
         
         dispatch_wrap = DispatchParameterClass(self.SSC_dict, PySAM_dict,
@@ -233,7 +234,6 @@ class GenericSSCModule(object):
         
         return dispatch_wrap
 
-        
         
     def create_dispatch_params(self):
         
