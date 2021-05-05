@@ -442,19 +442,19 @@ class GeneralDispatch(object):
 
 class GeneralDispatchParamWrap(object):
     
-    def __init__(self, SSC_dict=None, PySAM_dict=None, pyomo_horizon=48, 
-                       dispatch_time_step=1):
+    def __init__(self, SSC_dict=None, PySAM_dict=None, pyomo_horizon=48*u.hr, 
+                       dispatch_time_step=1*u.hr):
         
         self.SSC_dict           = SSC_dict
         self.PySAM_dict         = PySAM_dict
-        self.pyomo_horizon      = pyomo_horizon * u.hr
-        self.dispatch_time_step = dispatch_time_step * u.hr
+        self.pyomo_horizon      = pyomo_horizon
+        self.dispatch_time_step = dispatch_time_step 
         
         
     def set_time_indexed_parameters(self, param_dict):
         
         self.T     = int( self.pyomo_horizon.to('hr').magnitude )
-        self.Delta = np.array([self.dispatch_time_step.to('hr').magnitude]*params['T'])
+        self.Delta = np.array([self.dispatch_time_step.to('hr').magnitude]*self.T)
         
         #------- Time indexed parameters ---------
         param_dict['T']        = self.T                  #T: time periods
@@ -476,7 +476,7 @@ class GeneralDispatchParamWrap(object):
         # fixed parameter calculations
         self.Ec    = self.SSC_dict['startup_frac'] * self.q_pb_design
         self.etap  = 0  # TODO: function needed for this slope
-        self.Lc    = (self.SSC_dict['pb_pump_coef']*u.kW/u.kg) * self.dm_pb_design.to('kg') / self.q_pb_design.to('kW')
+        self.Lc    = (self.SSC_dict['pb_pump_coef']*u.kW/u.kg) * self.dm_pb_design.to('kg/s') / self.q_pb_design.to('kW')
         self.Qb    = (self.SSC_dict['q_sby_frac'] * self.q_pb_design)
         self.Ql    = (self.SSC_dict['cycle_cutoff_frac'] * self.q_pb_design)
         self.Qu    = (self.SSC_dict['cycle_max_frac'] * self.q_pb_design)
