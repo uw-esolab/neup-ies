@@ -450,6 +450,18 @@ class GeneralDispatchParamWrap(object):
         self.pyomo_horizon      = pyomo_horizon
         self.dispatch_time_step = dispatch_time_step 
         
+        self.set_design()
+        
+
+    def set_design(self):
+        
+        # design parameters
+        self.q_rec_design = self.SSC_dict['q_dot_nuclear_des'] * u.MW  # receiver design thermal power
+        self.p_pb_design  = self.SSC_dict['P_ref'] * u.MW              # power block design electrical power
+        self.eta_design   = self.SSC_dict['design_eff']                # power block design efficiency
+        self.q_pb_design  = self.p_pb_design / self.eta_design         # power block design thermal rating
+        self.dm_pb_design = 0*u.kg/u.s                                 # TODO: get_cycle_design_mass_flow
+        
         
     def set_time_indexed_parameters(self, param_dict):
         
@@ -466,12 +478,6 @@ class GeneralDispatchParamWrap(object):
     
     def set_power_cycle_parameters(self, param_dict):
         
-        # design parameters
-        self.q_rec_design = self.SSC_dict['q_dot_nuclear_des'] * u.MW  # receiver design thermal power
-        self.p_pb_design  = self.SSC_dict['P_ref'] * u.MW              # power block design electrical power
-        self.eta_design   = self.SSC_dict['design_eff']                # power block efficiency
-        self.q_pb_design  = self.p_pb_design / self.eta_design         # power block design thermal rating
-        self.dm_pb_design = 0*u.kg/u.s                                 # TODO: get_cycle_design_mass_flow
         
         # Magic numbers
         Lc_fix  = 1*u.s # TODO: we're missing a time term to fix units

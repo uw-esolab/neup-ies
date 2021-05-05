@@ -48,12 +48,6 @@ class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
 
     def set_nuclear_parameters(self, param_dict):
         
-        # design parameters 
-        # TODO: find a way so that these are already set by the time this method is called
-        self.q_rec_design = self.SSC_dict['q_dot_nuclear_des'] * u.MW  # receiver design thermal power
-        self.p_pb_design  = self.SSC_dict['P_ref'] * u.MW              # power block design electrical power
-        self.eta_design   = self.SSC_dict['design_eff']                # power block efficiency
-        self.q_pb_design  = self.p_pb_design / self.eta_design         # power block design thermal rating
         
         dw_rec_pump  = 0*u.MW             # TODO: Pumping parasitic at design point reciever mass flow rate (MWe)
         tower_piping_ht_loss = 0*u.kW     # TODO: Tower piping heat trace full-load parasitic load (kWe) 
