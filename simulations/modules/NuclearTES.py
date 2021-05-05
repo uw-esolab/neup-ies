@@ -10,6 +10,7 @@ import sys
 sys.path.append('..')
 import PySAM.NuclearTes as NuclearTes
 from modules.GenericSSCModule import GenericSSCModule
+from dispatch.NuclearDispatch import NuclearDispatchParamWrap as NDP
 import PySAM.PySSC as pssc
 from util.FileMethods import FileMethods
 
@@ -76,14 +77,24 @@ class NuclearTES(GenericSSCModule):
         #set curtailment to be really high
         self.Grid.GridLimits.grid_curtailment = self.gc_array  
 
+
+    def create_dispatch_wrapper(self, PySAM_dict):
+        
+        DispatchParameterClass = NDP
+        
+        dispatch_wrap = DispatchParameterClass(self.SSC_dict, PySAM_dict,
+                    self.pyomo_horizon, self.dispatch_time_step)
+        
+        return dispatch_wrap
+
     
     def create_dispatch_params(self):
         
         DW = self.dispatch_wrap
         
         params = GenericSSCModule.create_dispatch_params(self)
-        # params = DW.set_nuclear_parameters( params ) #TODO: should be in nuclearTES overloaded call
-        # params = DW.set_time_series_nuclear_parameters( params, self.df_array )
+        params = DW.set_nuclear_parameters( params )
+        params = DW.set_time_series_nuclear_parameters( params, self.df_array )
         
     
         ### Initial Condition Parameters ###
