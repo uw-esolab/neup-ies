@@ -506,7 +506,7 @@ class GeneralDispatchParamWrap(object):
         pc_rampdown_vl = 1. / u.hr # TODO: self.SSC_dict['disp_pc_rampdown_vl'] 
         
         # fixed parameter calculations
-        self.Ec    = self.SSC_dict['startup_frac'] * self.q_pb_design
+        self.Ec    = self.SSC_dict['startup_frac'] * self.q_pb_design * self.SSC_dict['startup_time']*u.hr      # TODO: this should be an energy, multiplying by min startup time for now
         self.etap  = 0  # TODO: function needed for this slope
         self.Lc    = (self.SSC_dict['pb_pump_coef']*u.kW/(u.kg/u.s)) * self.dm_pb_design.to('kg/s') / self.q_pb_design.to('kW')
         self.Qb    = self.SSC_dict['q_sby_frac'] * self.q_pb_design
@@ -523,7 +523,7 @@ class GeneralDispatchParamWrap(object):
         self.Yd    = 0*u.hr  # TODO: minimum required power cycle downtime 
         
         ### Power Cycle Parameters ###
-        param_dict['Ec']      = self.Ec.to('kW')   #E^c: Required energy expended to start cycle [kWt$\cdot$h]
+        param_dict['Ec']      = self.Ec.to('kWh')  #E^c: Required energy expended to start cycle [kWt$\cdot$h]
         param_dict['eta_des'] = self.eta_design    #\eta^{des}: Cycle nominal efficiency [-]
         param_dict['etap']    = self.etap          #\eta^p: Slope of linear approximation of power cycle performance curve [kWe/kWt]
         param_dict['Lc']      = self.Lc.to('')     #L^c: Cycle heat transfer fluid pumping power per unit energy expended [kWe/kWt]
