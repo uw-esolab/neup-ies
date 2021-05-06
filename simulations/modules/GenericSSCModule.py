@@ -156,7 +156,7 @@ class GenericSSCModule(object):
         # creating parameters for dispatch for first time
         if self.is_dispatch:
             disp_params = self.create_dispatch_params()
-            outputs = self.run_pyomo()
+            # outputs = self.run_pyomo()
         
         # first execution of Plant through SSC
         self.run_Plant_through_SSC( time_start , time_next )

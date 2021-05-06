@@ -161,8 +161,8 @@ class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
         Drsu               = 1*u.hr   # Minimum time to start the receiver (hr)
         t_rec_suinitremain = self.SSC_dict['rec_startup_time_remain_init']*u.hr
         e_rec_suinitremain = self.SSC_dict['rec_startup_energy_remain_init']*u.Wh
-        rec_accum_time     = max(0.0, Drsu - t_rec_suinitremain )*u.hr
-        rec_accum_energy   = max(0.0, self.Er - e_rec_suinitremain )*u.kWh
+        rec_accum_time     = max(0.0, Drsu - t_rec_suinitremain )
+        rec_accum_energy   = max(0.0, self.Er - e_rec_suinitremain )
         # yrsd0             = False   # TODO: try to use Ty's changes to daotk
         # disp_rec_persist0 = 0 
         # drsu0             = disp_rec_persist0 if yrsu0 else 0.0   
@@ -194,7 +194,7 @@ class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
         
 
         # Initial receiver startup energy inventory
-        self.ursu0 = min(rec_accum_energy.magnitude, rec_accum_time * self.Qru)  # Note, SS receiver model in ssc assumes full available power is used for startup (even if, time requirement is binding)
+        self.ursu0 = min(rec_accum_energy, rec_accum_time * self.Qru)  # Note, SS receiver model in ssc assumes full available power is used for startup (even if, time requirement is binding)
         if self.ursu0 > (1.0 - 1.e-6)*self.Er:
             self.ursu0 = self.Er
 
