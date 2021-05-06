@@ -37,10 +37,22 @@ class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
 
 
     def set_fixed_cost_parameters(self, param_dict):
+        
+        # grabbing unit registry set up in GeneralDispatch
+        u = self.u
     
         # set up costs from parent class
         param_dict = GeneralDispatchParamWrap.set_fixed_cost_parameters( self, param_dict )
         
+        C_rec = 0 / u.kWh        
+        C_rsu = 0
+        C_chsp = 0
+
+        ### Cost Parameters ###
+        param_dict['Crec']   = C_rec.to('1/kWh') #C^{rec}: Operating cost of heliostat field and receiver [\$/kWt$\cdot$h]
+        param_dict['Crsu']   = C_rsu             #C^{rsu}: Penalty for receiver cold start-up [\$/start]
+        param_dict['Crhsp']  = C_chsp            #C^{rhsp}: Penalty for receiver hot start-up [\$/start]
+
         return param_dict
         
 
@@ -63,7 +75,7 @@ class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
         self.Qrl    = self.SSC_dict['f_rec_min'] * self.q_rec_design * time_fix
         self.Qrsb   = q_rec_standby_fraction  * self.q_rec_design * time_fix
         self.Qrsd   = q_rec_shutdown_fraction * self.q_rec_design * time_fix
-        self.Qru    = self.Er/ self.deltal * time_fix 
+        self.Qru    = self.Er / self.deltal * time_fix 
         self.Wh     = self.SSC_dict['p_track']*u.kW
         self.Wht    = tower_piping_ht_loss
         
