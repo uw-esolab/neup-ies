@@ -75,7 +75,7 @@ class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
         self.Qrl    = self.SSC_dict['f_rec_min'] * self.q_rec_design * time_fix
         self.Qrsb   = q_rec_standby_fraction  * self.q_rec_design * time_fix
         self.Qrsd   = q_rec_shutdown_fraction * self.q_rec_design * time_fix
-        self.Qru    = self.Er / self.deltal * time_fix 
+        self.Qru    = self.Er / self.deltal  
         self.Wh     = self.SSC_dict['p_track']*u.kW
         self.Wht    = tower_piping_ht_loss
         
@@ -88,7 +88,7 @@ class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
         param_dict['Qrl']    = self.Qrl.to('kWh')      #Q^{rl}: Minimum operational thermal power delivered by receiver [kWt$\cdot$h]
         param_dict['Qrsb']   = self.Qrsb.to('kWh')     #Q^{rsb}: Required thermal power for receiver standby [kWt$\cdot$h]
         param_dict['Qrsd']   = self.Qrsd.to('kWh')     #Q^{rsd}: Required thermal power for receiver shut down [kWt$\cdot$h] 
-        param_dict['Qru']    = self.Qru.to('kWh')      #Q^{ru}: Allowable power per period for receiver start-up [kWt$\cdot$h]
+        param_dict['Qru']    = self.Qru.to('kW')      #Q^{ru}: Allowable power per period for receiver start-up [kWt$\cdot$h]
         param_dict['Wh']     = self.Wh.to('kW')        #W^h: Heliostat field tracking parasitic loss [kWe]
         param_dict['Wht']    = self.Wht.to('kW')       #W^{ht}: Tower piping heat trace parasitic loss [kWe]
         
@@ -146,7 +146,7 @@ class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
         # important parameters
         e_pb_suinitremain  = self.SSC_dict['pc_startup_energy_remain_initial']*u.kWh
         s_current          = m_hot * cp_tes_init * (T_tes_hot_init - self.T_htf_cold) # TES capacity
-        s0                 = min(self.Eu.to('kWh').magnitude, s_current.to('kWh').magnitude  )
+        s0                 = min(self.Eu.to('kWh'), s_current.to('kWh')  )
         wdot0              = 0*u.MW
         yr0                = (self.SSC_dict['rec_op_mode_initial'] == 2)
         yrsb0              = False   # TODO: try to use Ty's changes to daotk
@@ -161,8 +161,8 @@ class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
         Drsu               = 1*u.hr   # Minimum time to start the receiver (hr)
         t_rec_suinitremain = self.SSC_dict['rec_startup_time_remain_init']*u.hr
         e_rec_suinitremain = self.SSC_dict['rec_startup_energy_remain_init']*u.Wh
-        rec_accum_time     = max(0.0, (Drsu - t_rec_suinitremain).to('hr').magnitude )
-        rec_accum_energy   = max(0.0, (self.Er - e_rec_suinitremain).to('kWh').magnitude )
+        rec_accum_time     = max(0.0, Drsu - t_rec_suinitremain )*u.hr
+        rec_accum_energy   = max(0.0, self.Er - e_rec_suinitremain )*u.kWh
         # yrsd0             = False   # TODO: try to use Ty's changes to daotk
         # disp_rec_persist0 = 0 
         # drsu0             = disp_rec_persist0 if yrsu0 else 0.0   
@@ -188,13 +188,13 @@ class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
         if np.isnan(e_pb_suinitremain): # SSC seems to report NaN when startup is completed
             self.ucsu0 = self.Ec
         else:   
-            self.ucsu0 = max(0.0, (self.Ec - e_rec_suinitremain).to('kWh').magnitude ) 
+            self.ucsu0 = max(0.0, self.Ec - e_rec_suinitremain ) 
             if self.ucsu0 > (1.0 - tol)*self.Ec:
                 self.ucsu0 = self.Ec
         
 
         # Initial receiver startup energy inventory
-        self.ursu0 = min(rec_accum_energy, rec_accum_time * self.Qru)  # Note, SS receiver model in ssc assumes full available power is used for startup (even if, time requirement is binding)
+        self.ursu0 = min(rec_accum_energy.magnitude, rec_accum_time * self.Qru)  # Note, SS receiver model in ssc assumes full available power is used for startup (even if, time requirement is binding)
         if self.ursu0 > (1.0 - 1.e-6)*self.Er:
             self.ursu0 = self.Er
 
