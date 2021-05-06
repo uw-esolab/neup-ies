@@ -451,26 +451,11 @@ class GeneralDispatchParamWrap(object):
         self.dispatch_time_step = dispatch_time_step 
         
         # setting a standard unit registry
-        self.u = u # TODO: figure out best place to put this, needs only 1 spot
+        self.u = u # TODO: figure out best place to put this, needs only 1 spot. Probably in util?
         
         self.set_design()
         
-    ## Getters
-    def get_cp_htf(self, T):
-        
-        if self.SSC_dict['rec_htf'] != 17:
-            print ('HTF %d not recognized'%self.SSC_dict['rec_htf'])
-            return 0.0
-        
-        T = T.to('kelvin')
-        
-        a = -1.0e-10*u.J/u.g/u.kelvin**4
-        b = 2.0e-7*u.J/u.g/u.kelvin**3
-        c = 5.0e-6*u.J/u.g/u.kelvin**2
-        d = 1.4387*u.J/u.g/u.kelvin
-        
-        return (a*T**3 + b*T**2 + c*T + d).to('J/g/kelvin')  # J/kg/K
-        
+
     ## Setters
     def set_design(self):
         
@@ -480,13 +465,22 @@ class GeneralDispatchParamWrap(object):
         self.eta_design   = self.SSC_dict['design_eff']                    # power block design efficiency
         self.q_pb_design  = (self.p_pb_design / self.eta_design).to('MW')  # power block design thermal rating
         
+        # temperature and specific heat values at design point
         T_htf_hot  = (self.SSC_dict['T_htf_cold_des']*u.celsius).to('degK')
         T_htf_cold = (self.SSC_dict['T_htf_hot_des']*u.celsius).to('degK')
-        T_htf = 0.5*(T_htf_hot + T_htf_cold)
-        cp_des = self.get_cp_htf(T_htf)        
-        m_des = self.q_pb_design / (cp_des * (T_htf_hot - T_htf_cold) )  
+        T_htf  = 0.5*(T_htf_hot + T_htf_cold)
+        cp_des = self.get_cp_htf(T_htf)
+        cp_des = cp_des.to('J/g/kelvin')       
         
-        self.dm_pb_design = m_des.to('kg/s')                               # power block design mass flow rate
+        # mass flow rate
+        dm_des = self.q_pb_design / (cp_des * (T_htf_hot - T_htf_cold) )  
+        self.dm_pb_design = dm_des.to('kg/s')                               # power block design mass flow rate
+        
+        # TES design point
+        e_tes_design = self.q_pb_design * self.SSC_dict['tshours']*u.hr  
+        m_tes_des = e_tes_design / cp_des / (T_htf_hot - T_htf_cold)     
+        self.e_tes_design = e_tes_design.to('kWh') # TES storage capacity (kWht)
+        self.m_tes_design = m_tes_des.to('kg')     # TES active storage mass (kg)
         
         
     def set_time_indexed_parameters(self, param_dict):
@@ -504,19 +498,17 @@ class GeneralDispatchParamWrap(object):
     
     def set_power_cycle_parameters(self, param_dict):
         
-        
         # Magic numbers
-        Lc_fix  = 1*u.s # TODO: we're missing a time term to fix units
-        Wb_frac = 0.05  # TODO: get a better estimate- cycle standby parasitic load as frac of cycle capacity
-        pc_rampup    = 0.6 / u.hr # TODO: self.SSC_dict['disp_pc_rampup']   
-        pc_rampdown  = 12. / u.hr # TODO: self.SSC_dict['disp_pc_rampdown']   
-        pc_rampup_vl   = 1. / u.hr # TODO: self.SSC_dict['disp_pc_rampup_vl'] 
+        Wb_frac = 0.05             # TODO: get a better estimate- cycle standby parasitic load as frac of cycle capacity
+        pc_rampup    = 0.6 / u.hr  # TODO: self.SSC_dict['disp_pc_rampup']  in SSC-> Cycle max ramp up (fraction of capacity per minute)
+        pc_rampdown  = 12. / u.hr  # TODO: self.SSC_dict['disp_pc_rampdown']   
+        pc_rampup_vl   = 1. / u.hr # TODO: self.SSC_dict['disp_pc_rampup_vl'] in SSC-> Cycle ramp up violation limit (fraction of capacity per minute)
         pc_rampdown_vl = 1. / u.hr # TODO: self.SSC_dict['disp_pc_rampdown_vl'] 
         
         # fixed parameter calculations
         self.Ec    = self.SSC_dict['startup_frac'] * self.q_pb_design
         self.etap  = 0  # TODO: function needed for this slope
-        self.Lc    = (self.SSC_dict['pb_pump_coef']*u.kW/u.kg) * self.dm_pb_design.to('kg/s') * Lc_fix / self.q_pb_design.to('kW')
+        self.Lc    = (self.SSC_dict['pb_pump_coef']*u.kW/(u.kg/u.s)) * self.dm_pb_design.to('kg/s') / self.q_pb_design.to('kW')
         self.Qb    = self.SSC_dict['q_sby_frac'] * self.q_pb_design
         self.Ql    = self.SSC_dict['cycle_cutoff_frac'] * self.q_pb_design
         self.Qu    = self.SSC_dict['cycle_max_frac'] * self.q_pb_design
@@ -553,11 +545,42 @@ class GeneralDispatchParamWrap(object):
     
     def set_fixed_cost_parameters(self, param_dict):
 
+        C_pc = 0 / u.kWh        
+        C_csu = 0
+        C_chsp = 0
+        C_delta_w = 0 / u.kW
+        C_v_w = 0 / u.kW
+        C_csb = 0 / u.kWh
+
         ### Cost Parameters ###
-        param_dict['alpha']  = 1.0
+        param_dict['alpha']       = 1.0        #\alpha: Conversion factor between unitless and monetary values [\$]
+        param_dict['Cpc']         = C_pc       #C^{pc}: Operating cost of power cycle [\$/kWe$\cdot$h]
+        param_dict['Ccsu']        = C_csu      #C^{csu}: Penalty for power cycle cold start-up [\$/start]
+        param_dict['Cchsp']       = C_chsp     #C^{chsp}: Penalty for power cycle hot start-up [\$/start]
+        param_dict['C_delta_w']   = C_delta_w  #C^{\delta_w}: Penalty for change in power cycle  production [\$/$\Delta\text{kWe}$]
+        param_dict['C_v_w']       = C_v_w      #C^{v_w}: Penalty for change in power cycle  production tcb{beyond designed limits} [\$/$\Delta\text{kWe}$]
+        param_dict['Ccsb']        = C_csb      #C^{csb}: Operating cost of power cycle standby operation [\$/kWt$\cdot$h]
         
         return param_dict
 
+
+    ## Getters
+    def get_cp_htf(self, T):
+        
+        # HTF: 17 = Salt (60% NaNO3, 40% KNO3)
+        if self.SSC_dict['rec_htf'] != 17:
+            print ('HTF %d not recognized'%self.SSC_dict['rec_htf'])
+            return 0.0
+        
+        T = T.to('kelvin')
+        
+        a = -1.0e-10*u.J/u.g/u.kelvin**4
+        b = 2.0e-7*u.J/u.g/u.kelvin**3
+        c = 5.0e-6*u.J/u.g/u.kelvin**2
+        d = 1.4387*u.J/u.g/u.kelvin
+        
+        return (a*T**3 + b*T**2 + c*T + d).to('J/g/kelvin')  # J/kg/K
+        
     
     
 if __name__ == "__main__": 
