@@ -129,3 +129,88 @@ class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
         param_dict['W_u_minus'] = self.W_u_minus  #W^{u-}_{t}: Maximum power production in period $t$ when stopping generation in period $t+1$  [kWe]
         
         return param_dict
+
+
+    def set_initial_state(self, param_dict):
+        
+        u = self.u
+        # can re-use this method by choosing self.SSC_dict if t ==0
+        #       or some input dict otherwise
+        
+        # TES masses, temperatures, specific heat
+        m_hot  = self.m_tes_design * (self.SSC_dict['csp.pt.tes.init_hot_htf_percent']/100)        # Available active mass in hot tank
+        T_tes_hot_init  = (self.SSC_dict['T_tank_hot_init']*u.celsius).to('degK')
+        T_tes_init  = 0.5*(T_tes_hot_init + self.T_htf_cold)
+        cp_tes_init = self.get_cp_htf(T_tes_init) 
+        
+        # important parameters
+        e_pb_suinitremain  = self.SSC_dict['pc_startup_energy_remain_initial']*u.kWh
+        s_current          = m_hot * cp_tes_init * (T_tes_hot_init - self.T_htf_cold) # TES capacity
+        s0                 = min(self.Eu.to('kWh').magnitude, s_current.to('kWh').magnitude  )
+        wdot0              = 0*u.MW
+        yr0                = (self.SSC_dict['rec_op_mode_initial'] == 2)
+        yrsb0              = False   # TODO: try to use Ty's changes to daotk
+        yrsu0              = (self.SSC_dict['rec_op_mode_initial'] == 1)
+        y0                 = (self.SSC_dict['pc_op_mode_initial'] == 1) 
+        ycsb0              = (self.SSC_dict['pc_op_mode_initial'] == 2) 
+        ycsu0              = (self.SSC_dict['pc_op_mode_initial'] == 0 or self.SSC_dict['pc_op_mode_initial'] == 4) 
+        disp_pc_persist0   = 0
+        disp_pc_off0       = 0
+        Yu0                = disp_pc_persist0 if y0 else 0.0
+        Yd0                = disp_pc_off0 if (not y0) else 0.0
+        Drsu               = 1*u.hr   # Minimum time to start the receiver (hr)
+        t_rec_suinitremain = self.SSC_dict['rec_startup_time_remain_init']*u.hr
+        e_rec_suinitremain = self.SSC_dict['rec_startup_energy_remain_init']*u.Wh
+        rec_accum_time     = max(0.0, (Drsu - t_rec_suinitremain).to('hr').magnitude )
+        rec_accum_energy   = max(0.0, (self.Er - e_rec_suinitremain).to('kWh').magnitude )
+        # yrsd0             = False   # TODO: try to use Ty's changes to daotk
+        # disp_rec_persist0 = 0 
+        # drsu0             = disp_rec_persist0 if yrsu0 else 0.0   
+        # drsd0             = disp_rec_persist0 if self.SSC_dict['rec_op_mode_initial'] == 0 else 0.0
+        
+        # defining parameters
+        self.s0    = s0              #s_0: Initial TES reserve quantity  [kWt$\cdot$h]
+        self.wdot0 = wdot0.to('kW')  #\dot{w}_0: Initial power cycle electricity generation [kWe] 
+        self.yr0   = yr0             #y^r_0: 1 if receiver is generating ``usable'' thermal power initially, 0 otherwise 
+        self.yrsb0 = yrsb0           #y^{rsb}_0: 1 if receiver is in standby mode initially, 0 otherwise
+        self.yrsu0 = yrsu0           #y^{rsu}_0: 1 if receiver is in starting up initially, 0 otherwise
+        self.y0    = y0              #y_0: 1 if cycle is generating electric power initially, 0 otherwise   
+        self.ycsb0 = ycsb0           #y^{csb}_0: 1 if cycle is in standby mode initially, 0 otherwise
+        self.ycsu0 = ycsu0           #y^{csu}_0: 1 if cycle is in starting up initially, 0 otherwise
+        self.Yu0   = Yu0             #Y^u_0: duration that cycle has been generating electric power [h]
+        self.Yd0   = Yd0             #Y^d_0: duration that cycle has not been generating power (i.e., shut down or in standby mode) [h]
+        # self.yrsd0 = yrsd0  # TODO: do we need this? doesn't exist in current GeneralDispatch
+        # self.drsu0 = drsu0  # TODO: need this? Duration that receiver has been starting up before the problem horizon (h)
+        # self.drsd0 = drsd0  # TODO: defining time in shutdown mode as time "off", will this work in the dispatch model?
+        
+        # Initial cycle startup energy accumulated
+        tol = 1.e-6
+        if np.isnan(e_pb_suinitremain): # SSC seems to report NaN when startup is completed
+            self.ucsu0 = self.Ec
+        else:   
+            self.ucsu0 = max(0.0, (self.Ec - e_rec_suinitremain).to('kWh').magnitude ) 
+            if self.ucsu0 > (1.0 - tol)*self.Ec:
+                self.ucsu0 = self.Ec
+        
+
+        # Initial receiver startup energy inventory
+        self.ursu0 = min(rec_accum_energy, rec_accum_time * self.Qru)  # Note, SS receiver model in ssc assumes full available power is used for startup (even if, time requirement is binding)
+        if self.ursu0 > (1.0 - 1.e-6)*self.Er:
+            self.ursu0 = self.Er
+
+        # self.ursd0 = 0.0   #TODO: How can we track accumulated shut-down energy (not modeled in ssc)
+        
+        param_dict['s0']     = self.s0      #s_0: Initial TES reserve quantity  [kWt$\cdot$h]
+        param_dict['ucsu0']  = self.ucsu0   #u^{csu}_0: Initial cycle start-up energy inventory  [kWt$\cdot$h]
+        param_dict['ursu0']  = self.ursu0   #u^{rsu}_0: Initial receiver start-up energy inventory [kWt$\cdot$h]
+        param_dict['wdot0']  = self.wdot0   #\dot{w}_0: Initial power cycle electricity generation [kW]e
+        param_dict['yr0']    = self.yr0     #y^r_0: 1 if receiver is generating ``usable'' thermal power initially, 0 otherwise
+        param_dict['yrsb0']  = self.yrsb0   #y^{rsb}_0: 1 if receiver is in standby mode initially, 0 otherwise
+        param_dict['yrsu0']  = self.yrsu0   #y^{rsu}_0: 1 if receiver is in starting up initially, 0 otherwise
+        param_dict['y0']     = self.y0      #y_0: 1 if cycle is generating electric power initially, 0 otherwise
+        param_dict['ycsb0']  = self.ycsb0   #y^{csb}_0: 1 if cycle is in standby mode initially, 0 otherwise
+        param_dict['ycsu0']  = self.ycsu0   #y^{csu}_0: 1 if cycle is in starting up initially, 0 otherwise
+        param_dict['Yu0']    = self.Yu0     #Y^u_0: duration that cycle has been generating electric power [h]
+        param_dict['Yd0']    = self.Yd0     #Y^d_0: duration that cycle has not been generating power (i.e., shut down or in standby mode) [h]
+        
+        return param_dict

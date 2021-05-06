@@ -95,6 +95,7 @@ class NuclearTES(GenericSSCModule):
         params = GenericSSCModule.create_dispatch_params(self)
         params = DW.set_nuclear_parameters( params )
         params = DW.set_time_series_nuclear_parameters( params, self.df_array )
+        params = DW.set_initial_state( params )
         
     
         ### Initial Condition Parameters ###
