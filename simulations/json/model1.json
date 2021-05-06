@@ -81,6 +81,7 @@
         "is_field_tracking_init" : false,
         "rec_op_mode_initial" : 0,
     	"rec_startup_energy_remain_init" : 0,
+    	"rec_startup_time_remain_init" : 0,
     	"disp_rec_persist0" : 0,
     	"T_tank_cold_init" : 0,
     	"T_tank_hot_init" : 0,
