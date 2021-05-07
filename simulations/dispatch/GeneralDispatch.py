@@ -16,6 +16,7 @@ Modified by Gabriel Soto
 import pyomo.environ as pe
 import numpy as np
 import pint
+from util.SSCHelperMethods import SSCHelperMethods as ssc_util
 u = pint.UnitRegistry(autoconvert_offset_to_baseunit = True)
 
 class GeneralDispatch(object):
@@ -496,7 +497,7 @@ class GeneralDispatchParamWrap(object):
         return param_dict
 
     
-    def set_power_cycle_parameters(self, param_dict):
+    def set_power_cycle_parameters(self, param_dict, ud_array):
         
         # Magic numbers
         Wb_frac = 0.05             # TODO: get a better estimate- cycle standby parasitic load as frac of cycle capacity
@@ -507,12 +508,13 @@ class GeneralDispatchParamWrap(object):
         
         # fixed parameter calculations
         self.Ec    = self.SSC_dict['startup_frac'] * self.q_pb_design * self.SSC_dict['startup_time']*u.hr      # TODO: this should be an energy, multiplying by min startup time for now
-        self.etap  = 0  # TODO: function needed for this slope
         self.Lc    = (self.SSC_dict['pb_pump_coef']*u.kW/(u.kg/u.s)) * self.dm_pb_design.to('kg/s') / self.q_pb_design.to('kW')
         self.Qb    = self.SSC_dict['q_sby_frac'] * self.q_pb_design
         self.Ql    = self.SSC_dict['cycle_cutoff_frac'] * self.q_pb_design
         self.Qu    = self.SSC_dict['cycle_max_frac'] * self.q_pb_design
         self.Wb    = Wb_frac* self.p_pb_design
+        etap, Wdotl, Wdotu = self.get_linearized_ud_params( ud_array )
+        self.etap  = 0  # TODO: function needed for this slope
         self.Wdotl = 0*u.kW  # TODO: same function as etap
         self.Wdotu = 0*u.kW  # TODO: same function as etap
         self.W_delta_plus  = pc_rampup * self.Wdotu # rampup -> frac/min
@@ -580,6 +582,34 @@ class GeneralDispatchParamWrap(object):
         d = 1.4387*u.J/u.g/u.kelvin
         
         return (a*T**3 + b*T**2 + c*T + d).to('J/g/kelvin')  # J/kg/K
+
+
+    def get_linearized_ud_params(self, ud_array):
+        
+        ud_dict = ssc_util.interpret_user_defined_cycle_data( ud_array )
+        
+        eta_adj_pts = [ud_array[p][3]/ud_array[p][4] for p in range(len(ud_array)) ]
+        
+        xpts = ud_dict['mpts']
+        step = xpts[1] - xpts[0]
+        
+        # Interpolate for cycle performance at specified min/max load points
+        fpts = [self.SSC_dict['cycle_cutoff_frac'], self.SSC_dict['cycle_max_frac']]
+        q, eta = [ [] for v in range(2)]
+        for j in range(2):
+            p = max(0, min(int((fpts[j] - xpts[0]) / step), len(xpts)-2) )  # Find first point in user-defined array of load fractions for interpolation
+            i = 3*ud_dict['nT'] + ud_dict['nm'] + p    # Index of point in full list of udpc points (at design point ambient T)
+            eta_adj = eta_adj_pts[i] + (eta_adj_pts[i+1] - eta_adj_pts[i])/step * (fpts[j] - xpts[p])
+            eta.append(eta_adj * self.SSC_dict['design_eff'])
+            q.append(fpts[j]*self.q_pb_design)
+
+        etap = (q[1]*eta[1]-q[0]*eta[0])/(q[1]-q[0])
+        b = q[1]*(eta[1] - etap)
+        
+        Wdotl = b + self.Ql*etap
+        Wdotu = b + self.Qu*etap
+        
+        return etap, Wdotl, Wdotu
         
     
     

@@ -147,7 +147,7 @@ class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
         e_pb_suinitremain  = self.SSC_dict['pc_startup_energy_remain_initial']*u.kWh
         s_current          = m_hot * cp_tes_init * (T_tes_hot_init - self.T_htf_cold) # TES capacity
         s0                 = min(self.Eu.to('kWh'), s_current.to('kWh')  )
-        wdot0              = 0*u.MW
+        wdot0              = 0*u.MW #TODO: subsequent calls?
         yr0                = (self.SSC_dict['rec_op_mode_initial'] == 2)
         yrsb0              = False   # TODO: try to use Ty's changes to daotk
         yrsu0              = (self.SSC_dict['rec_op_mode_initial'] == 1)

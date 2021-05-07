@@ -243,7 +243,7 @@ class GenericSSCModule(object):
         
         # setting parameters for the first time
         params = DW.set_time_indexed_parameters( params )
-        params = DW.set_power_cycle_parameters( params )
+        params = DW.set_power_cycle_parameters( params, self.ud_array )
         params = DW.set_fixed_cost_parameters( params )
 
         ### Initial Condition Parameters ###
