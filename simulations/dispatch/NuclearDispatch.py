@@ -16,6 +16,7 @@ from dispatch.GeneralDispatch import GeneralDispatch
 from dispatch.GeneralDispatch import GeneralDispatchParamWrap
 import pyomo.environ as pe
 import numpy as np
+from util.FileMethods import FileMethods
 
 class NuclearDispatch(GeneralDispatch):
     
@@ -66,11 +67,11 @@ class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
         # grabbing unit registry set up in GeneralDispatch
         u = self.u 
         
-        time_fix = 1*u.hr                 # TODO: we're missing a time term to fix units
-        dw_rec_pump  = 0*u.MW             # TODO: Pumping parasitic at design point reciever mass flow rate (MWe)
-        tower_piping_ht_loss = 0*u.kW     # TODO: Tower piping heat trace full-load parasitic load (kWe) 
-        q_rec_standby_fraction = 0.05     # TODO: Receiver standby energy consumption (fraction of design point thermal power)
-        q_rec_shutdown_fraction = 0.      # TODO: Receiver shutdown energy consumption (fraction of design point thermal power)
+        time_fix = 1*u.hr                  # TODO: we're missing a time term to fix units
+        dw_rec_pump             = 0*u.MW   # TODO: Pumping parasitic at design point reciever mass flow rate (MWe)
+        tower_piping_ht_loss    = 0*u.kW   # TODO: Tower piping heat trace full-load parasitic load (kWe) 
+        q_rec_standby_fraction  = 0.       # TODO: Receiver standby energy consumption (fraction of design point thermal power)
+        q_rec_shutdown_fraction = 0.       # TODO: Receiver shutdown energy consumption (fraction of design point thermal power)
         
         self.deltal = self.SSC_dict['rec_su_delay']*u.hr
         self.Ehs    = self.SSC_dict['p_start']*u.kWh
@@ -100,26 +101,46 @@ class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
         return param_dict
     
     
-    def set_time_series_nuclear_parameters(self, param_dict, df_array):
+    def set_time_series_nuclear_parameters(self, param_dict, solar_resource_filepath, df_array, ud_array):
         
         #MAKE SURE TO CALL THIS METHOD AFTER THE NUCLEAR PARAMETERS 
         u = self.u
         
-        delta_rs = 0                      # TODO: time loop to get this fraction
-        D = 0                             # TODO: time loop to get this fraction
-        etaamb = 0                        # TODO: function to call ud table to get eta multiplier
-        etac = 0                          # TODO: function to call ud table to get wdot multiplier
-        
-        self.delta_rs   = delta_rs
-        self.D          = D
-        self.etaamb     = etaamb
-        self.etac       = etac
+        # self.delta_rs = np.zeros(n)
+        # self.delta_cs = np.zeros(n)
+        self.Drsu       = 1*u.hr   # Minimum time to start the receiver (hr)
         self.P          = df_array
         self.Qin        = np.array([self.q_rec_design.magnitude]*self.T)*self.q_rec_design.units
         self.Qc         = self.Ec / np.ceil(self.SSC_dict['startup_time'] / np.min(self.Delta)) / np.min(self.Delta) #TODO: make sure Ec is called correctly
         self.Wdotnet    = [1.e10 for j in range(self.T)] 
         self.W_u_plus   = [(self.Wdotl + self.W_delta_plus*0.5*dt).to('kW').magnitude for dt in self.Delta]*u.kW
         self.W_u_minus  = [(self.Wdotl + self.W_delta_minus*0.5*dt).to('kW').magnitude for dt in self.Delta]*u.kW
+        
+        n  = len(self.Delta)
+        wt = 0.999
+        delta_rs = np.zeros(n)
+        D        = np.zeros(n)
+        
+        # grab dry bulb temperature from solar resource file 
+        Tdry = FileMethods.read_solar_resource_file(solar_resource_filepath, u) 
+        t_start = int(0) # TODO: have currentTime tracker
+        t_end   = int(self.pyomo_horizon.to('hr').magnitude)
+        time_slice = slice(t_start,t_end,1)
+        Tdry = Tdry[time_slice] 
+        
+        etamult, wmult = self.get_ambient_T_corrections_from_udpc_inputs( Tdry, ud_array ) # TODO:verify this makes sense
+        self.etaamb = etamult * self.SSC_dict['design_eff']
+        self.etac   = wmult * self.SSC_dict['ud_f_W_dot_cool_des']/100.
+
+        for t in range(n):
+            Ein = self.Qin[t]*self.Delta[t]
+            E_compare = (self.Er / max(1.*u.kWh, Ein.to('kWh'))).to('')
+            delta_rs[t] = min(1., max( E_compare, self.Drsu/self.Delta[t]))
+            D[t]        = wt**(self.Delta_e[t]/u.hr)
+        
+        self.delta_rs   = delta_rs
+        self.D          = D
+        
         
         ### Time series CSP Parameters ###
         param_dict['delta_rs']  = self.delta_rs   #\delta^{rs}_{t}: Estimated fraction of period $t$ required for receiver start-up [-]
@@ -163,10 +184,9 @@ class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
         disp_pc_off0       = 0
         Yu0                = disp_pc_persist0 if y0 else 0.0
         Yd0                = disp_pc_off0 if (not y0) else 0.0
-        Drsu               = 1*u.hr   # Minimum time to start the receiver (hr)
         t_rec_suinitremain = self.SSC_dict['rec_startup_time_remain_init']*u.hr
         e_rec_suinitremain = self.SSC_dict['rec_startup_energy_remain_init']*u.Wh
-        rec_accum_time     = max(0.0, Drsu - t_rec_suinitremain )
+        rec_accum_time     = max(0.0, self.Drsu - t_rec_suinitremain )
         rec_accum_energy   = max(0.0, self.Er - e_rec_suinitremain )
         # yrsd0             = False   # TODO: try to use Ty's changes to daotk
         # disp_rec_persist0 = 0 
