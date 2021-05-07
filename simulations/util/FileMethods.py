@@ -37,6 +37,20 @@ class FileMethods(object):
         return data_array
 
 
+    def read_solar_resource_file(filepath, unit_registry):
+        
+        # setting a standard unit registry
+        u = unit_registry 
+        
+        dataframe = pandas.read_csv(filepath,header=2)
+        
+        data = dataframe['Temperature']
+        
+        t_dry = data.to_numpy() * u.degC
+        
+        return t_dry.to('kelvin')
+
+
     def read_json(json_name):
         """ Method to read json file and return dictionaries
         
