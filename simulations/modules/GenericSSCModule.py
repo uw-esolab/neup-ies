@@ -13,9 +13,8 @@ import PySAM.Grid as Grid
 import PySAM.Singleowner as Singleowner
 import PySAM.PySSC as pssc
 from util.FileMethods import FileMethods
+from util.SSCHelperMethods import SSCHelperMethods
 from dispatch.GeneralDispatch import GeneralDispatchParamWrap as GDP
-import pint
-u = pint.UnitRegistry()
 import numpy as np
 import copy, pandas
 
@@ -27,6 +26,10 @@ class GenericSSCModule(object):
         # grab names, either default here or from child class
         self.json_name  = json_name
         self.plant_name = plant_name
+        
+        # create and save a specific unit registry
+        self.u = SSCHelperMethods.define_unit_registry()
+        u = self.u
         
         # read in dictionaries from json script
         PySAM_dict, SSC_dict, output_keys = FileMethods.read_json( self.json_name )
@@ -53,6 +56,8 @@ class GenericSSCModule(object):
     def run_sim(self, run_loop=False, export=False, filename='temp.csv'):
         """ Method to run single simulation for Generic System
         """
+        
+        u = self.u
         
         self.run_loop = run_loop
         SSC_dict = self.SSC_dict
@@ -138,6 +143,8 @@ class GenericSSCModule(object):
         
         # helper method for hstack-ing arrays
         self.augment_log = lambda X,Y: np.hstack(  [ X, Y ]  )
+        
+        u = self.u
         
         # start and end times for full simulation
         time_start = self.SSC_dict['time_start'] * u.s
