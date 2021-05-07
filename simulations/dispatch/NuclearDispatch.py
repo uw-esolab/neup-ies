@@ -44,14 +44,19 @@ class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
         # set up costs from parent class
         param_dict = GeneralDispatchParamWrap.set_fixed_cost_parameters( self, param_dict )
         
-        C_rec = 0 / u.kWh        
-        C_rsu = 0
-        C_chsp = 0
+        # TODO: for now, scaling everything from LORE files
+        old_Q_ref = 120 * u.MW / 0.409
+        Q_ratio   = (self.q_rec_design / old_Q_ref ).to('')
+        
+        # TODO: old values from LORE files
+        C_rec  = Q_ratio * 0.002  * u.dollar/u.kWh        
+        C_rsu  = Q_ratio * 950    * u.dollar
+        C_rhsp = Q_ratio * 950/5. * u.dollar
 
         ### Cost Parameters ###
-        param_dict['Crec']   = C_rec.to('1/kWh') #C^{rec}: Operating cost of heliostat field and receiver [\$/kWt$\cdot$h]
-        param_dict['Crsu']   = C_rsu             #C^{rsu}: Penalty for receiver cold start-up [\$/start]
-        param_dict['Crhsp']  = C_chsp            #C^{rhsp}: Penalty for receiver hot start-up [\$/start]
+        param_dict['Crec']   = C_rec      #C^{rec}: Operating cost of heliostat field and receiver [\$/kWt$\cdot$h]
+        param_dict['Crsu']   = C_rsu      #C^{rsu}: Penalty for receiver cold start-up [\$/start]
+        param_dict['Crhsp']  = C_rhsp     #C^{rhsp}: Penalty for receiver hot start-up [\$/start]
 
         return param_dict
         

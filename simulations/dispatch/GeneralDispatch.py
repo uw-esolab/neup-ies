@@ -552,7 +552,7 @@ class GeneralDispatchParamWrap(object):
         
         # TODO: for now, scaling everything from LORE files
         old_P_ref = 120 * u.MW
-        P_ratio   = (self.SSC_dict['P_ref'] / old_P_ref ).to('')
+        P_ratio   = (self.p_pb_design / old_P_ref ).to('')
         
         # TODO: old values from LORE files
         alpha     = 1.0 * u.dollar
