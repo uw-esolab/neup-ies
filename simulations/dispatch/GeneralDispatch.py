@@ -514,10 +514,10 @@ class GeneralDispatchParamWrap(object):
         self.Qu    = self.SSC_dict['cycle_max_frac'] * self.q_pb_design
         self.Wb    = Wb_frac* self.p_pb_design
         etap, Wdotl, Wdotu = self.get_linearized_ud_params( ud_array )
-        self.etap  = 0  # TODO: function needed for this slope
-        self.Wdotl = 0*u.kW  # TODO: same function as etap
-        self.Wdotu = 0*u.kW  # TODO: same function as etap
-        self.W_delta_plus  = pc_rampup * self.Wdotu # rampup -> frac/min
+        self.etap  = etap  
+        self.Wdotl = Wdotl.to('kW')
+        self.Wdotu = Wdotu.to('kW')
+        self.W_delta_plus  = pc_rampup * self.Wdotu 
         self.W_delta_minus = pc_rampdown * self.Wdotu
         self.W_v_plus      = pc_rampup_vl * self.Wdotu
         self.W_v_minus     = pc_rampdown_vl * self.Wdotu
@@ -586,8 +586,10 @@ class GeneralDispatchParamWrap(object):
 
     def get_linearized_ud_params(self, ud_array):
         
+        # grabbing a dictionary of useful user-defined data for power cycle
         ud_dict = ssc_util.interpret_user_defined_cycle_data( ud_array )
         
+        # getting relevant eta points
         eta_adj_pts = [ud_array[p][3]/ud_array[p][4] for p in range(len(ud_array)) ]
         
         xpts = ud_dict['mpts']
@@ -602,10 +604,14 @@ class GeneralDispatchParamWrap(object):
             eta_adj = eta_adj_pts[i] + (eta_adj_pts[i+1] - eta_adj_pts[i])/step * (fpts[j] - xpts[p])
             eta.append(eta_adj * self.SSC_dict['design_eff'])
             q.append(fpts[j]*self.q_pb_design)
-
+        
+        # calculating eta_P as linear slope using max and min power/thermal output/input
         etap = (q[1]*eta[1]-q[0]*eta[0])/(q[1]-q[0])
+        
+        # intercept of linearized eta_P
         b = q[1]*(eta[1] - etap)
         
+        # using linearized parameters and combining with max and min thermal power input
         Wdotl = b + self.Ql*etap
         Wdotu = b + self.Qu*etap
         
