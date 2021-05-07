@@ -106,8 +106,8 @@ class GeneralDispatch(object):
         self.model.Yd0 = pe.Param(mutable=True, initialize=params["Yd0"])  #Y^d_0: duration that cycle has not been generating power (i.e., shut down or in standby mode) [h]
         
         #------- Persistence Parameters ---------
-        self.model.wdot_s_prev  = pe.Param(self.model.T, mutable=True, initialize=params["wdot_s_prev"]) #\dot{w}^{s,prev}: previous $\dot{w}$ 
-        self.model.wdot_s_pen  = pe.Param(self.model.T, mutable=True, initialize=params["wdot_s_pen"]) #\dot{w}_{s,pen}: previous $\dot{w}$ 
+        self.model.wdot_s_prev  = pe.Param(self.model.T, mutable=True, initialize=params["wdot_s_prev"]) #\dot{w}^{s,prev}: previous $\dot{w}^s$, or energy sold to grid [kWe]
+        # self.model.wdot_s_pen  = pe.Param(self.model.T, mutable=True, initialize=params["wdot_s_pen"]) #\dot{w}_{s,pen}: previous $\dot{w}$ 
 
         
 
@@ -122,8 +122,8 @@ class GeneralDispatch(object):
         self.model.wdot_delta_minus = pe.Var(self.model.T, domain=pe.NonNegativeReals)	         #\dot{w}^{\Delta-}: Power cycle ramp-down in period $t$ [kWe]
         self.model.wdot_v_plus = pe.Var(self.model.T, domain=pe.NonNegativeReals, bounds = (0,self.model.W_v_plus))      #\dot{w}^{v+}: Power cycle ramp-up beyond designed limit in period $t$ [kWe]
         self.model.wdot_v_minus = pe.Var(self.model.T, domain=pe.NonNegativeReals, bounds = (0,self.model.W_v_minus)) 	 #\dot{w}^{v-}: Power cycle ramp-down beyond designed limit in period $t$ [kWe]
-        self.model.wdot_s = pe.Var(self.model.T, domain=pe.NonNegativeReals)	                     #\dot{w}^s: Energy sold to grid in time t
-        self.model.wdot_p = pe.Var(self.model.T, domain=pe.NonNegativeReals)	                     #\dot{w}^p: Energy purchased from the grid in time t
+        self.model.wdot_s = pe.Var(self.model.T, domain=pe.NonNegativeReals)	                     #\dot{w}^s: Energy sold to grid in time t [kWe]
+        self.model.wdot_p = pe.Var(self.model.T, domain=pe.NonNegativeReals)	                     #\dot{w}^p: Energy purchased from the grid in time t [kWe]
         self.model.x = pe.Var(self.model.T, domain=pe.NonNegativeReals)                            #x: Cycle thermal power utilization at period $t$ [kWt]
         self.model.xr = pe.Var(self.model.T, domain=pe.NonNegativeReals)	                         #x^r: Thermal power delivered by the receiver at period $t$ [kWt]
         self.model.xrsu = pe.Var(self.model.T, domain=pe.NonNegativeReals)                         #x^{rsu}: Receiver start-up power consumption at period $t$ [kWt]
@@ -145,8 +145,8 @@ class GeneralDispatch(object):
         self.model.ycge = pe.Var(self.model.T, domain=pe.NonNegativeReals, bounds=(0,1))      #y^{cge}: 1 if cycle stops electric power generation at period $t$; 0 otherwise
         
         #------- Persistence Variables ---------
-        self.model.wdot_s_prev_delta_plus = pe.Var(self.model.T, domain=pe.NonNegativeReals) #\dot{w}^{\Delta+}_{s,prev}: previous delta+ w
-        self.model.wdot_s_prev_delta_minus = pe.Var(self.model.T, domain=pe.NonNegativeReals) #\dot{w}^{\Delta-}_{s,prev}: previous delta- w           
+        self.model.wdot_s_prev_delta_plus = pe.Var(self.model.T, domain=pe.NonNegativeReals)  #\dot{w}^{\Delta+}_{s,prev}: upper bound on energy sold [kWe]
+        self.model.wdot_s_prev_delta_minus = pe.Var(self.model.T, domain=pe.NonNegativeReals) #\dot{w}^{\Delta-}_{s,prev}: lower bound on energy sold [kWe]
         self.model.ycoff = pe.Var(self.model.T, domain=pe.Binary)     #y^{c,off}: 1 if power cycle is off at period $t$; 0 otherwise
         
 
