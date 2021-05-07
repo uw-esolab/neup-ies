@@ -15,6 +15,7 @@ Modified by Gabriel Soto
 #import pyomo
 import pyomo.environ as pe
 import numpy as np
+from util.FileMethods import FileMethods
 from util.SSCHelperMethods import SSCHelperMethods
 
 class GeneralDispatch(object):
@@ -486,13 +487,14 @@ class GeneralDispatchParamWrap(object):
     def set_time_indexed_parameters(self, param_dict):
         
         u = self.u
-        self.T     = int( self.pyomo_horizon.to('hr').magnitude )
-        self.Delta = np.array([self.dispatch_time_step.to('hr').magnitude]*self.T)*u.hr
+        self.T       = int( self.pyomo_horizon.to('hr').magnitude )
+        self.Delta   = np.array([self.dispatch_time_step.to('hr').magnitude]*self.T)*u.hr
+        self.Delta_e = np.cumsum(self.Delta)
         
         #------- Time indexed parameters ---------
-        param_dict['T']        = self.T                          #T: time periods
-        param_dict['Delta']    = self.Delta.to('hr')             #\Delta_{t}: duration of period t
-        param_dict['Delta_e']  = np.cumsum(self.Delta).to('hr')  #\Delta_{e,t}: cumulative time elapsed at end of period t
+        param_dict['T']        = self.T                    #T: time periods
+        param_dict['Delta']    = self.Delta.to('hr')       #\Delta_{t}: duration of period t
+        param_dict['Delta_e']  = self.Delta_e.to('hr')     #\Delta_{e,t}: cumulative time elapsed at end of period t
         
         return param_dict
 
@@ -575,7 +577,7 @@ class GeneralDispatchParamWrap(object):
         return param_dict
     
 
-    ## Getters
+    ## Getters, modified from LORE files
     def get_cp_htf(self, T):
         
         u = self.u
@@ -626,6 +628,34 @@ class GeneralDispatchParamWrap(object):
         Wdotu = b + self.Qu*etap
         
         return etap, Wdotl, Wdotu
+
+
+    def get_ambient_T_corrections_from_udpc_inputs(self, Tamb, ud_array):
+        
+        
+        u = self.u 
+        
+        # grabbing a dictionary of useful user-defined data for power cycle
+        ud_dict = SSCHelperMethods.interpret_user_defined_cycle_data( ud_array )
+        
+        n = len(Tamb)  # Tamb = set of ambient temperature points for each dispatch time step
+        
+        Tambpts = np.array(ud_dict['Tambpts'])*u.degC
+        i0 = 3*ud_dict['nT']+3*ud_dict['nm']+ud_dict['nTamb']  # first index in udpc data corresponding to performance at design point HTF T, and design point mass flow
+        npts = ud_dict['nTamb']
+        etapts = [ ud_array[j][3]/ud_array[j][4] for j in range(i0, i0+npts)]
+        wpts = [ ud_array[j][5] for j in range(i0, i0+npts)]
+        
+        etamult  = np.ones(n)
+        wmult = np.ones(n) 
+        Tstep = Tambpts[1] - Tambpts[0]
+        for j in range(n):
+            i = max(0, min( int((Tamb[j] - Tambpts[0]) / Tstep), npts-2) )
+            r = (Tamb[j] - Tambpts[i]) / Tstep
+            etamult[j] = etapts[i] + (etapts[i+1] - etapts[i])*r
+            wmult[j] = wpts[i] + (wpts[i+1] - wpts[i])*r
+
+        return etamult, wmult
         
     
     
