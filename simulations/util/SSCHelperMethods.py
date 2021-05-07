@@ -12,7 +12,18 @@ import pint
 class SSCHelperMethods(object):
     
     def define_unit_registry():
-        u = pint.UnitRegistry()
+        
+        # create unique unit registry
+        u = pint.UnitRegistry(autoconvert_offset_to_baseunit = True)
+        
+        # define currency units
+        u.define('cents = [currency]')
+        u.define('dollars = 100 cents')
+        
+        # defining aliases
+        u.define('@alias dollars = dollar')
+        u.define('@alias cents = cent')
+        
         return u
         
 
