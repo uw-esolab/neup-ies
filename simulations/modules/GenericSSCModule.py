@@ -237,7 +237,7 @@ class GenericSSCModule(object):
         
         DispatchParameterClass = GDP
         
-        dispatch_wrap = DispatchParameterClass(self.SSC_dict, PySAM_dict,
+        dispatch_wrap = DispatchParameterClass( self.u, self.SSC_dict, PySAM_dict,
                     self.pyomo_horizon, self.dispatch_time_step)
         
         return dispatch_wrap

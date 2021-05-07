@@ -15,9 +15,7 @@ Modified by Gabriel Soto
 #import pyomo
 import pyomo.environ as pe
 import numpy as np
-import pint
-from util.SSCHelperMethods import SSCHelperMethods as ssc_util
-u = pint.UnitRegistry(autoconvert_offset_to_baseunit = True)
+from util.SSCHelperMethods import SSCHelperMethods
 
 class GeneralDispatch(object):
     def __init__(self, params, include={"pv":False,"battery":False,"persistence":False}):
@@ -443,8 +441,8 @@ class GeneralDispatch(object):
 
 class GeneralDispatchParamWrap(object):
     
-    def __init__(self, SSC_dict=None, PySAM_dict=None, pyomo_horizon=48*u.hr, 
-                       dispatch_time_step=1*u.hr):
+    def __init__(self, unit_registry, SSC_dict, PySAM_dict, pyomo_horizon, 
+                       dispatch_time_step):
         
         self.SSC_dict           = SSC_dict
         self.PySAM_dict         = PySAM_dict
@@ -452,7 +450,7 @@ class GeneralDispatchParamWrap(object):
         self.dispatch_time_step = dispatch_time_step 
         
         # setting a standard unit registry
-        self.u = u # TODO: figure out best place to put this, needs only 1 spot. Probably in util?
+        self.u = unit_registry 
         
         self.set_design()
         
@@ -460,6 +458,7 @@ class GeneralDispatchParamWrap(object):
     ## Setters
     def set_design(self):
         
+        u = self.u
         # design parameters
         self.q_rec_design = self.SSC_dict['q_dot_nuclear_des'] * u.MW      # receiver design thermal power
         self.p_pb_design  = self.SSC_dict['P_ref'] * u.MW                  # power block design electrical power
@@ -486,6 +485,7 @@ class GeneralDispatchParamWrap(object):
         
     def set_time_indexed_parameters(self, param_dict):
         
+        u = self.u
         self.T     = int( self.pyomo_horizon.to('hr').magnitude )
         self.Delta = np.array([self.dispatch_time_step.to('hr').magnitude]*self.T)*u.hr
         
@@ -499,6 +499,7 @@ class GeneralDispatchParamWrap(object):
     
     def set_power_cycle_parameters(self, param_dict, ud_array):
         
+        u = self.u
         # Magic numbers
         Wb_frac = 0.05             # TODO: get a better estimate- cycle standby parasitic load as frac of cycle capacity
         pc_rampup    = 0.6 / u.hr  # TODO: self.SSC_dict['disp_pc_rampup']  in SSC-> Cycle max ramp up (fraction of capacity per minute)
@@ -521,8 +522,8 @@ class GeneralDispatchParamWrap(object):
         self.W_delta_minus = pc_rampdown * self.Wdotu
         self.W_v_plus      = pc_rampup_vl * self.Wdotu
         self.W_v_minus     = pc_rampdown_vl * self.Wdotu
-        self.Yu    = 0*u.hr  # TODO: minimum required power cycle uptime 
-        self.Yd    = 0*u.hr  # TODO: minimum required power cycle downtime 
+        self.Yu    = 3*u.hr  # TODO: get a better estimate - minimum required power cycle uptime 
+        self.Yd    = 1*u.hr  # TODO: get a better estimate - minimum required power cycle downtime 
         
         ### Power Cycle Parameters ###
         param_dict['Ec']      = self.Ec.to('kWh')  #E^c: Required energy expended to start cycle [kWt$\cdot$h]
@@ -546,8 +547,9 @@ class GeneralDispatchParamWrap(object):
 
     
     def set_fixed_cost_parameters(self, param_dict):
-
-        C_pc = 0 / u.kWh        
+        
+        u = self.u
+        C_pc = 0.002 / u.kWh        
         C_csu = 0
         C_chsp = 0
         C_delta_w = 0 / u.kW
@@ -569,6 +571,7 @@ class GeneralDispatchParamWrap(object):
     ## Getters
     def get_cp_htf(self, T):
         
+        u = self.u
         # HTF: 17 = Salt (60% NaNO3, 40% KNO3)
         if self.SSC_dict['rec_htf'] != 17:
             print ('HTF %d not recognized'%self.SSC_dict['rec_htf'])
@@ -587,7 +590,7 @@ class GeneralDispatchParamWrap(object):
     def get_linearized_ud_params(self, ud_array):
         
         # grabbing a dictionary of useful user-defined data for power cycle
-        ud_dict = ssc_util.interpret_user_defined_cycle_data( ud_array )
+        ud_dict = SSCHelperMethods.interpret_user_defined_cycle_data( ud_array )
         
         # getting relevant eta points
         eta_adj_pts = [ud_array[p][3]/ud_array[p][4] for p in range(len(ud_array)) ]

@@ -29,10 +29,10 @@ class NuclearDispatch(GeneralDispatch):
 
 class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
     
-    def __init__(self, SSC_dict=None, PySAM_dict=None, pyomo_horizon=48, 
+    def __init__(self, unit_registry, SSC_dict=None, PySAM_dict=None, pyomo_horizon=48, 
                    dispatch_time_step=1):
         
-        GeneralDispatchParamWrap.__init__( self, SSC_dict, PySAM_dict, 
+        GeneralDispatchParamWrap.__init__( self, unit_registry, SSC_dict, PySAM_dict, 
                             pyomo_horizon, dispatch_time_step )
 
 
