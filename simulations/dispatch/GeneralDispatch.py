@@ -44,7 +44,7 @@ class GeneralDispatch(object):
         self.model.num_periods = pe.Param(initialize=params["T"]) #N_T: number of time periods
         
         #------- Time indexed parameters ---------
-        self.model.Delta = pe.Param(self.model.T, mutable=False, initialize=gm("Delta"), units=gu("Delta"))          #\Delta_{t}: duration of period t
+        self.model.Delta = pe.Param(self.model.T, mutable=False, initialize=gm("Delta").tolist(), units=gu("Delta"))          #\Delta_{t}: duration of period t
         self.model.Delta_e = pe.Param(self.model.T, mutable=False, initialize=gm("Delta_e"), units=gu("Delta_e"))    #\Delta_{e,t}: cumulative time elapsed at end of period t
         
         ### Time series CSP Parameters ###
@@ -251,11 +251,13 @@ class GeneralDispatch(object):
                 return model.yrhsp[t] >= model.yr[t] - (1 - model.yrsb0)
             return model.yrhsp[t] >= model.yr[t] - (1 - model.yrsb[t-1])
         def rec_shutdown_rule(model,t):
-            if model.Delta[t] >= 1 and t == 1:
+            current_Delta = model.Delta[t]
+            # structure of inequality is lb <= model.param <= ub with strict=False by default
+            if  pe.value(pe.inequality(1,model.Delta[t])) and t == 1: #not strict
                 return 0 >= model.yr0 - model.yr[t] +  model.yrsb0 - model.yrsb[t]
-            elif model.Delta[t] >= 1 and t > 1:
+            elif pe.value(pe.inequality(1,model.Delta[t])) and t > 1: # not strict
                 return model.yrsd[t-1] >= model.yr[t-1] - model.yr[t] + model.yrsb[t-1] - model.yrsb[t]
-            elif model.Delta[t] < 1 and t == 1:
+            elif pe.value(pe.inequality(model.Delta[t],1,strict=True)) and t == 1:
                 return model.yrsd[t] >= model.yr0  - model.yr[t] + model.yrsb0 - model.yrsb[t]
             # only case remaining: Delta[t]<1, t>1
             return model.yrsd[t] >= model.yr[t-1] - model.yr[t] + model.yrsb[t-1] - model.yrsb[t]
