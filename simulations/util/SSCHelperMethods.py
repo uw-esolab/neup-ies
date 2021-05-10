@@ -18,8 +18,8 @@ class SSCHelperMethods(object):
         u_pint = pint.UnitRegistry(autoconvert_offset_to_baseunit = True)
         
         # define currency units
-        u_pint.define('cents = [currency]')
-        u_pint.define('USD = 100 cents')
+        u_pint.define('USD = [currency]')
+        u_pint.define('cents = 0.01 USD')
         
         # defining aliases
         u_pint.define('@alias USD = dollar')
