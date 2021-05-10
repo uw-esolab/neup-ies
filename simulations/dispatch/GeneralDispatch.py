@@ -504,8 +504,8 @@ class GeneralDispatchParamWrap(object):
         
         #------- Time indexed parameters ---------
         param_dict['T']        = self.T                    #T: time periods
-        param_dict['Delta']    = self.Delta.to('hr')       #\Delta_{t}: duration of period t
-        param_dict['Delta_e']  = self.Delta_e.to('hr')     #\Delta_{e,t}: cumulative time elapsed at end of period t
+        param_dict['Delta']    = self.Delta.to('hr')       #\Delta_{t}: duration of period t [hr]
+        param_dict['Delta_e']  = self.Delta_e.to('hr')     #\Delta_{e,t}: cumulative time elapsed at end of period t [hr]
         
         return param_dict
 
@@ -577,13 +577,13 @@ class GeneralDispatchParamWrap(object):
         C_csb     = 0.0 * u.USD/u.kWh
 
         ### Cost Parameters ###
-        param_dict['alpha']       = alpha                #\alpha: Conversion factor between unitless and monetary values [\$]
-        param_dict['Cpc']         = P_ratio * C_pc       #C^{pc}: Operating cost of power cycle [\$/kWe$\cdot$h]
-        param_dict['Ccsu']        = P_ratio * C_csu      #C^{csu}: Penalty for power cycle cold start-up [\$/start]
-        param_dict['Cchsp']       = P_ratio * C_chsp     #C^{chsp}: Penalty for power cycle hot start-up [\$/start]
-        param_dict['C_delta_w']   = P_ratio * C_delta_w  #C^{\delta_w}: Penalty for change in power cycle  production [\$/$\Delta\text{kWe}$]
-        param_dict['C_v_w']       = P_ratio * C_v_w      #C^{v_w}: Penalty for change in power cycle  production tcb{beyond designed limits} [\$/$\Delta\text{kWe}$]
-        param_dict['Ccsb']        = P_ratio * C_csb      #C^{csb}: Operating cost of power cycle standby operation [\$/kWt$\cdot$h]
+        param_dict['alpha']       = alpha.to('USD')                    #\alpha: Conversion factor between unitless and monetary values [\$]
+        param_dict['Cpc']         = P_ratio * C_pc.to('USD/kWh')       #C^{pc}: Operating cost of power cycle [\$/kWe$\cdot$h]
+        param_dict['Ccsu']        = P_ratio * C_csu.to('USD')          #C^{csu}: Penalty for power cycle cold start-up [\$/start]
+        param_dict['Cchsp']       = P_ratio * C_chsp.to('USD')         #C^{chsp}: Penalty for power cycle hot start-up [\$/start]
+        param_dict['C_delta_w']   = P_ratio * C_delta_w.to('USD/kW')   #C^{\delta_w}: Penalty for change in power cycle  production [\$/$\Delta\text{kWe}$]
+        param_dict['C_v_w']       = P_ratio * C_v_w.to('USD/kW')       #C^{v_w}: Penalty for change in power cycle  production tcb{beyond designed limits} [\$/$\Delta\text{kWe}$]
+        param_dict['Ccsb']        = P_ratio * C_csb.to('USD/kWh')      #C^{csb}: Operating cost of power cycle standby operation [\$/kWt$\cdot$h]
         
         return param_dict
     
