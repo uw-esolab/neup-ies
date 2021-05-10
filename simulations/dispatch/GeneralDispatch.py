@@ -23,7 +23,6 @@ from pyomo.util.check_units import assert_units_consistent, assert_units_equival
 class GeneralDispatch(object):
     def __init__(self, params, unitRegistry):
         
-        self.upint = unitRegistry
         self.model = pe.ConcreteModel()
         self.generate_params(params)
         self.generate_variables()
@@ -33,23 +32,11 @@ class GeneralDispatch(object):
 
     def generate_params(self,params):
         
-        # this is a method to convert Pint units to Pyomo units
-        def get_pyomo_unit(param_str):
-            
-            Quant = params[param_str] # pint Quantity taken from params dictionary
-            
-            if hasattr(Quant,'u'):
-                Unit  = Quant.u           # Unit object of the previous pint Quantity
-                unit_str = Unit.format_babel()    # retrieving string representation of unit
-                unit_cmd = 'u.' + unit_str        # creating a string command for generating a pyomo unit 
-                return eval(unit_cmd)
-            else:
-                return None
-        
         # this is a lambda function to grab Pint Quantity magntitude if it has
         gm = lambda param_str: params[param_str].m if hasattr(params[param_str],'m') else params[param_str]
+        
         # shortening definition name
-        gu = get_pyomo_unit
+        gu = lambda param_str: SSCHelperMethods.get_pyomo_unit(params, param_str)
         
         ### Sets and Indices ###
         self.model.T = pe.Set(initialize = range(1,params["T"]+1))  #T: time periods

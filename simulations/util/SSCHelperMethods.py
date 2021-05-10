@@ -8,23 +8,108 @@ Created on Fri May  7 10:50:27 2021
 
 import numpy as np
 import pint
+from pyomo.environ import units
 
 class SSCHelperMethods(object):
     
     def define_unit_registry():
         
         # create unique unit registry
-        u = pint.UnitRegistry(autoconvert_offset_to_baseunit = True)
+        u_pint = pint.UnitRegistry(autoconvert_offset_to_baseunit = True)
         
         # define currency units
-        u.define('cents = [currency]')
-        u.define('dollars = 100 cents')
+        u_pint.define('cents = [currency]')
+        u_pint.define('dollars = 100 cents')
         
         # defining aliases
-        u.define('@alias dollars = dollar')
-        u.define('@alias cents = cent')
+        u_pint.define('@alias dollars = dollar')
+        u_pint.define('@alias cents = cent')
         
-        return u
+        return u_pint
+    
+
+    def get_pyomo_unit(params, param_str):
+        
+        u_pyomo = units
+        Quant = params[param_str] # pint Quantity taken from params dictionary
+    
+        if hasattr(Quant,'u'):
+            Unit  = Quant.u                     # Unit object of the previous pint Quantity
+            unit_str   = Unit.format_babel()    # retrieving string representation of unit
+            unit_cmd_start = 'u_pyomo.'         # start of command, calling pyomo unit package
+    
+            # empty list of unit strings
+            clean_str_mult = []           # clean strings for multiplied units
+            clean_str_div  = []           # clean strings for divided units
+            str_contains_multipl  = False # flag for finding multiplication
+            str_contains_division = False # flag for finding division during the multiplicative search
+            unit_str_division = []        # empty, used to log division terms in multiplicative search
+    
+            # are any units multiplied? all multiplicative terms are automatically moved to the first terms
+            if unit_str.find('*') != -1:
+                
+                # flag that multiplication exists
+                str_contains_multipl = True
+                
+                # split unit str between multiplications
+                unit_strs_mult = unit_str.split('*')
+                
+                # cycle through string split by '*'
+                for m in range(len(unit_strs_mult)):
+                    # for each split, making sure we don't grab blank spaces
+                    clean_strs_mult = unit_strs_mult[m].split(' ')
+                    # indeces of parts of string without blank spaces
+                    clean_inds_mult  = [bool(len(clean_strs_mult[x]) != 0) for x in range(len(clean_strs_mult))]
+                    # log necessary unit strings
+                    clean_str_mult.append( np.extract(clean_inds_mult, clean_strs_mult)[0] )
+                    
+                    # checking if any of the strings contain division symbols
+                    if unit_strs_mult[m].find('/') != -1:
+                        str_contains_division = True            # flag for finding division during the multiplicative search
+                        unit_str_division = unit_strs_mult[m]   # log division terms in multiplicative searchs
+    
+            # are any units divided? all divided terms are automatically moved to the last terms
+            if unit_str.find('/') != -1:
+                
+                # use the previously found string with division in it, else just use the input
+                unit_str_div = unit_str_division if str_contains_division else unit_str
+                
+                # flag that division exists
+                str_contains_division = True 
+                    
+                # split unit str between multiplications
+                unit_strs_div = unit_str_div.split('/')
+                
+                # cycle through string split by '/'
+                for n in range(len(unit_strs_div)):
+                    # for each split, making sure we don't grab blank spaces
+                    clean_strs_div = unit_strs_div[n].split(' ')
+                    # indeces of parts of string without blank spaces
+                    clean_inds_div  = [bool(len(clean_strs_div[x]) != 0) for x in range(len(clean_strs_div))]
+                    # grab extracted clean string
+                    possible_str = np.extract(clean_inds_div,clean_strs_div)[0]
+                    # log necessary unit strings
+                    if possible_str in clean_str_mult:
+                        # duplicative term
+                        pass 
+                    else:
+                        # log term
+                        clean_str_div.append( possible_str ) 
+        
+            # collecting all units
+            unit_cmd = ''
+            # multiplication
+            if str_contains_multipl:
+                unit_cmd  +=  unit_cmd_start + ('*'+unit_cmd_start).join(clean_str_mult)
+            # division
+            if str_contains_division:
+                unit_cmd += '/'+unit_cmd_start + ('/'+unit_cmd_start).join(clean_str_div)
+            # neither
+            if str_contains_division is False and str_contains_multipl is False:
+                unit_cmd += unit_cmd_start + unit_str
+            return eval(unit_cmd)
+        else:
+            return None
         
 
     def interpret_user_defined_cycle_data(ud_ind_od):
