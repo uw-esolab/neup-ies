@@ -81,7 +81,7 @@ class NuclearTES(GenericSSCModule):
         
     def run_pyomo(self, params):
         
-        dispatch_model = ND(params)
+        dispatch_model = ND(params, self.u)
         rt_results = dispatch_model.solve_model()
         return rt_results
 

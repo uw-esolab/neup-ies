@@ -20,9 +20,10 @@ from util.FileMethods import FileMethods
 
 class NuclearDispatch(GeneralDispatch):
     
-    def __init__(self, params):
+    def __init__(self, params, unitRegistry):
+        
         # initialize Generic module, csv data arrays should be saved here
-        GeneralDispatch.__init__( self, params )
+        GeneralDispatch.__init__( self, params, unitRegistry )
 
 # =============================================================================
 # Dispatch Wrapper

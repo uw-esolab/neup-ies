@@ -221,7 +221,7 @@ class GenericSSCModule(object):
     
     def run_pyomo(self, params):
         
-        dispatch_model = GD(params)
+        dispatch_model = GD(params, self.u)
         rt_results = dispatch_model.solve_model()
         return rt_results
     
