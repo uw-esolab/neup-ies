@@ -51,9 +51,9 @@ class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
         Q_ratio   = (self.q_rec_design / old_Q_ref ).to('')
         
         # TODO: old values from LORE files
-        C_rec  = Q_ratio * 0.002  * u.dollar/u.kWh        
-        C_rsu  = Q_ratio * 950    * u.dollar
-        C_rhsp = Q_ratio * 950/5. * u.dollar
+        C_rec  = Q_ratio * 0.002  * u.USD/u.kWh        
+        C_rsu  = Q_ratio * 950    * u.USD
+        C_rhsp = Q_ratio * 950/5. * u.USD
 
         ### Cost Parameters ###
         param_dict['Crec']   = C_rec      #C^{rec}: Operating cost of heliostat field and receiver [\$/kWt$\cdot$h]

@@ -17,12 +17,13 @@ import pyomo.environ as pe
 import numpy as np
 from util.FileMethods import FileMethods
 from util.SSCHelperMethods import SSCHelperMethods
-from pyomo.environ import units as u
+from pyomo.environ import units as u_pyomo
 from pyomo.util.check_units import assert_units_consistent, assert_units_equivalent, check_units_equivalent
 
 class GeneralDispatch(object):
     def __init__(self, params, unitRegistry):
         
+        u_pyomo.load_definitions_from_strings(['USD = [currency]'])
         self.model = pe.ConcreteModel()
         self.generate_params(params)
         self.generate_variables()
@@ -567,13 +568,13 @@ class GeneralDispatchParamWrap(object):
         P_ratio   = (self.p_pb_design / old_P_ref ).to('')
         
         # TODO: old values from LORE files
-        alpha     = 1.0 * u.dollar
-        C_pc      = 0.002 * u.dollar/u.kWh        
-        C_csu     = 6250 * u.dollar
-        C_chsp    = 6250/5. * u.dollar
-        C_delta_w = 0.0 * u.dollar/u.kW
-        C_v_w     = 0.4 * u.dollar/u.kW
-        C_csb     = 0.0 * u.dollar/u.kWh
+        alpha     = 1.0 * u.USD
+        C_pc      = 0.002 * u.USD/u.kWh        
+        C_csu     = 6250 * u.USD
+        C_chsp    = 6250/5. * u.USD
+        C_delta_w = 0.0 * u.USD/u.kW
+        C_v_w     = 0.4 * u.USD/u.kW
+        C_csb     = 0.0 * u.USD/u.kWh
 
         ### Cost Parameters ###
         param_dict['alpha']       = alpha                #\alpha: Conversion factor between unitless and monetary values [\$]

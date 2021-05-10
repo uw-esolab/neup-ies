@@ -19,10 +19,10 @@ class SSCHelperMethods(object):
         
         # define currency units
         u_pint.define('cents = [currency]')
-        u_pint.define('dollars = 100 cents')
+        u_pint.define('USD = 100 cents')
         
         # defining aliases
-        u_pint.define('@alias dollars = dollar')
+        u_pint.define('@alias USD = dollar')
         u_pint.define('@alias cents = cent')
         
         return u_pint
