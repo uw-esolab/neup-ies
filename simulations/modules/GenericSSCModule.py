@@ -14,6 +14,7 @@ import PySAM.Singleowner as Singleowner
 import PySAM.PySSC as pssc
 from util.FileMethods import FileMethods
 from util.SSCHelperMethods import SSCHelperMethods
+from dispatch.GeneralDispatch import GeneralDispatch as GD
 from dispatch.GeneralDispatch import GeneralDispatchParamWrap as GDP
 import numpy as np
 import copy, pandas
@@ -163,7 +164,7 @@ class GenericSSCModule(object):
         # creating parameters for dispatch for first time
         if self.is_dispatch:
             disp_params = self.create_dispatch_params()
-            # outputs = self.run_pyomo()
+            outputs = self.run_pyomo(disp_params)
         
         # first execution of Plant through SSC
         self.run_Plant_through_SSC( time_start , time_next )
@@ -183,7 +184,7 @@ class GenericSSCModule(object):
                 disp_vars = self.update_dispatch_vars()
                 
                 # run dispatch
-                outputs = self.run_pyomo()
+                # outputs = self.run_pyomo()
                 
                 # update SSC inputs from dispatch outputs
                 plant_updt = self.update_Plant_with_dispatch()
@@ -216,6 +217,13 @@ class GenericSSCModule(object):
         del self.Plant
         del self.Grid
         del self.SO
+        
+    
+    def run_pyomo(self, params):
+        
+        dispatch_model = GD(params)
+        rt_results = dispatch_model.solve_model()
+        return rt_results
     
     
     def update_Plant(self):

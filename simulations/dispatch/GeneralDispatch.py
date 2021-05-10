@@ -27,6 +27,7 @@ class GeneralDispatch(object):
         self.add_objective()
         self.generate_constraints()
 
+
     def generate_params(self,params):
         ### Sets and Indices ###
         self.model.T = pe.Set(initialize = range(1,params["T"]+1))  #T: time periods

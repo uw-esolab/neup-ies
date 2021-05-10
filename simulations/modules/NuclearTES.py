@@ -10,6 +10,8 @@ import sys
 sys.path.append('..')
 import PySAM.NuclearTes as NuclearTes
 from modules.GenericSSCModule import GenericSSCModule
+from util.SSCHelperMethods import SSCHelperMethods
+from dispatch.NuclearDispatch import NuclearDispatch as ND
 from dispatch.NuclearDispatch import NuclearDispatchParamWrap as NDP
 import PySAM.PySSC as pssc
 from util.FileMethods import FileMethods
@@ -76,6 +78,12 @@ class NuclearTES(GenericSSCModule):
         
         #set curtailment to be really high
         self.Grid.GridLimits.grid_curtailment = self.gc_array  
+        
+    def run_pyomo(self, params):
+        
+        dispatch_model = ND(params)
+        rt_results = dispatch_model.solve_model()
+        return rt_results
 
 
     def create_dispatch_wrapper(self, PySAM_dict):
@@ -97,9 +105,6 @@ class NuclearTES(GenericSSCModule):
         params = DW.set_time_series_nuclear_parameters( params, self.solar_resource_file, 
                                                        self.df_array, self.ud_array )
         params = DW.set_initial_state( params )
-        
-    
-        ### Initial Condition Parameters ###
         
         
         return params

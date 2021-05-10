@@ -188,7 +188,7 @@ class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
         e_rec_suinitremain = self.SSC_dict['rec_startup_energy_remain_init']*u.Wh
         rec_accum_time     = max(0.0, self.Drsu - t_rec_suinitremain )
         rec_accum_energy   = max(0.0, self.Er - e_rec_suinitremain )
-        # yrsd0             = False   # TODO: try to use Ty's changes to daotk
+        # yrsd0             = False 
         # disp_rec_persist0 = 0 
         # drsu0             = disp_rec_persist0 if yrsu0 else 0.0   
         # drsd0             = disp_rec_persist0 if self.SSC_dict['rec_op_mode_initial'] == 0 else 0.0
@@ -206,7 +206,7 @@ class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
         self.Yd0   = Yd0             #Y^d_0: duration that cycle has not been generating power (i.e., shut down or in standby mode) [h]
         # self.yrsd0 = yrsd0  # TODO: do we need this? doesn't exist in current GeneralDispatch
         # self.drsu0 = drsu0  # TODO: need this? Duration that receiver has been starting up before the problem horizon (h)
-        # self.drsd0 = drsd0  # TODO: defining time in shutdown mode as time "off", will this work in the dispatch model?
+        # self.drsd0 = drsd0  
         
         # Initial cycle startup energy accumulated
         tol = 1.e-6
@@ -223,7 +223,7 @@ class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
         if self.ursu0 > (1.0 - 1.e-6)*self.Er:
             self.ursu0 = self.Er
 
-        # self.ursd0 = 0.0   #TODO: How can we track accumulated shut-down energy (not modeled in ssc)
+        # self.ursd0 = 0.0  
         
         param_dict['s0']     = self.s0      #s_0: Initial TES reserve quantity  [kWt$\cdot$h]
         param_dict['ucsu0']  = self.ucsu0   #u^{csu}_0: Initial cycle start-up energy inventory  [kWt$\cdot$h]
