@@ -103,7 +103,8 @@ class SSCHelperMethods(object):
                 unit_cmd  +=  unit_cmd_start + ('*'+unit_cmd_start).join(clean_str_mult)
             # division
             if str_contains_division:
-                unit_cmd += '/'+unit_cmd_start + ('/'+unit_cmd_start).join(clean_str_div)
+                unit_cmd_div_start = '/' if str_contains_multipl else ''
+                unit_cmd += unit_cmd_div_start+unit_cmd_start + ('/'+unit_cmd_start).join(clean_str_div)
             # neither
             if str_contains_division is False and str_contains_multipl is False:
                 unit_cmd += unit_cmd_start + unit_str
