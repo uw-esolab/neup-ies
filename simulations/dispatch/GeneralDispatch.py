@@ -34,7 +34,6 @@ class GeneralDispatch(object):
 
     def generate_params(self,params):
         
-        
         time_range = range(1,params["T"]+1)
         # this is a lambda function to grab Pint Quantity magntitude if it has one
         gm = lambda param_str: params[param_str].m if hasattr(params[param_str],'m') else params[param_str]
@@ -124,7 +123,6 @@ class GeneralDispatch(object):
         self.model.wdot_s_prev  = pe.Param(self.model.T, mutable=True, initialize=gd("wdot_s_prev"), units=gu("wdot_s_prev")) #\dot{w}^{s,prev}: previous $\dot{w}^s$, or energy sold to grid [kWe]
         # self.model.wdot_s_pen  = pe.Param(self.model.T, mutable=True, initialize=gd("wdot_s_pen"), units=gu("delta_rs"))    #\dot{w}_{s,pen}: previous $\dot{w}$ 
 
-        
 
     def generate_variables(self):
         ### Decision Variables ###
@@ -164,7 +162,6 @@ class GeneralDispatch(object):
         self.model.wdot_s_prev_delta_minus = pe.Var(self.model.T, domain=pe.NonNegativeReals) #\dot{w}^{\Delta-}_{s,prev}: lower bound on energy sold [kWe]
         self.model.ycoff = pe.Var(self.model.T, domain=pe.Binary)     #y^{c,off}: 1 if power cycle is off at period $t$; 0 otherwise
         
-
                 
     def add_objective(self):
         def objectiveRule(model):
@@ -188,7 +185,7 @@ class GeneralDispatch(object):
 
     def addPersistenceConstraints(self):
         def wdot_s_persist_pos_rule(model,t):
-            return model.wdot_s_prev_delta_plus[t] >= model.wdot_s[t] - model.wdot_s_prev[t]
+            return self.eval_ineq(model.wdot_s[t] - model.wdot_s_prev[t], model.wdot_s_prev_delta_plus[t])
         def wdot_s_persist_neg_rule(model,t):
             return model.wdot_s_prev_delta_minus[t] >= model.wdot_s_prev[t] - model.wdot_s[t]
         self.model.persist_pos_con = pe.Constraint(self.model.T,rule=wdot_s_persist_pos_rule)
@@ -257,11 +254,11 @@ class GeneralDispatch(object):
         def rec_shutdown_rule(model,t):
             current_Delta = model.Delta[t]
             # structure of inequality is lb <= model.param <= ub with strict=False by default
-            if  pe.value(pe.inequality(1,current_Delta)) and t == 1: #not strict
+            if self.eval_ineq(1,current_Delta) and t == 1: #not strict
                 return 0 >= model.yr0 - model.yr[t] +  model.yrsb0 - model.yrsb[t]
-            elif pe.value(pe.inequality(1,current_Delta)) and t > 1: # not strict
+            elif self.eval_ineq(1,current_Delta) and t > 1: # not strict
                 return model.yrsd[t-1] >= model.yr[t-1] - model.yr[t] + model.yrsb[t-1] - model.yrsb[t]
-            elif pe.value(pe.inequality(current_Delta,1,strict=True)) and t == 1:
+            elif self.eval_ineq(current_Delta,1,strict=True) and t == 1:
                 return model.yrsd[t] >= model.yr0  - model.yr[t] + model.yrsb0 - model.yrsb[t]
             # only case remaining: Delta[t]<1, t>1
             return model.yrsd[t] >= model.yr[t-1] - model.yr[t] + model.yrsb[t-1] - model.yrsb[t]
@@ -302,14 +299,16 @@ class GeneralDispatch(object):
         def pc_inv_nonzero_rule(model, t):
             return model.ucsu[t] <= model.Ec * model.ycsu[t]
         def pc_startup_rule(model, t):
-            if model.Delta[t] >= 1 and t == 1:
-                return model.y[t] <= model.ucsu[t]/model.Ec + model.y0 + model.ycsb0
-            elif model.Delta[t] >= 1 and t > 1:
-                return model.y[t] <= model.ucsu[t]/model.Ec + model.y[t-1] + model.ycsb[t-1]
-            elif model.Delta[t] < 1 and t == 1:
-                return model.y[t] <= model.ucsu0/model.Ec + model.y0 + model.ycsb0
+            current_Delta = model.Delta[t]
+            # structure of inequality is lb <= model.param <= ub with strict=False by default
+            if self.eval_ineq(1,current_Delta) and t == 1:
+                return self.eval_ineq(model.y[t], model.ucsu[t]/model.Ec + model.y0 + model.ycsb0)
+            elif self.eval_ineq(1,current_Delta) and t > 1:
+                return self.eval_ineqy(model.y[t], model.ucsu[t]/model.Ec + model.y[t-1] + model.ycsb[t-1])
+            elif self.eval_ineq(current_Delta,1,strict=True) and t == 1:
+                return self.eval_ineq(model.y[t], model.ucsu0/model.Ec + model.y0 + model.ycsb0)
             # only case remaining: Delta[t]<1, t>1
-            return model.y[t] <= model.ucsu[t-1]/model.Ec + model.y[t-1] + model.ycsb[t-1]
+            return self.eval_ineq(model.y[t], model.ucsu[t-1]/model.Ec + model.y[t-1] + model.ycsb[t-1])
         def pc_production_rule(model, t):
             return model.x[t] + model.Qc[t]*model.ycsu[t] <= model.Qu
         def pc_generation_rule(model, t):
@@ -371,6 +370,7 @@ class GeneralDispatch(object):
         self.model.grid_max_con = pe.Constraint(self.model.T,rule=grid_max_rule)
         self.model.grid_sun_con = pe.Constraint(self.model.T,rule=grid_sun_rule)
         
+        
     def addMinUpAndDowntimeConstraints(self):
         def min_cycle_uptime_rule(model,t):
             if pe.value(model.Delta_e[t] > (model.Yu - model.Yu0) * model.y0):
@@ -385,7 +385,8 @@ class GeneralDispatch(object):
                 return model.ycgb[t] - model.ycge[t] == model.y[t] - model.y0
             return model.ycgb[t] - model.ycge[t] == model.y[t] - model.y[t-1]
         def cycle_min_updown_init_rule(model,t):
-            if model.Delta_e[t] <= max(pe.value(model.y0*(model.Yu-model.Yu0)), pe.value((1-model.y0)*(model.Yd-model.Yd0))):
+            if self.eval_ineq(model.Delta_e[t],
+                              max(pe.value(model.y0*(model.Yu-model.Yu0)), pe.value((1-model.y0)*(model.Yd-model.Yd0)))):
                 return model.y[t] == model.y0
             return pe.Constraint.Feasible
         
@@ -394,13 +395,14 @@ class GeneralDispatch(object):
         self.model.cycle_start_end_gen_con = pe.Constraint(self.model.T,rule=cycle_start_end_gen_rule)
         self.model.cycle_min_updown_init_con = pe.Constraint(self.model.T,rule=cycle_min_updown_init_rule)
         
+        
     def addCycleLogicConstraints(self):
         def pc_su_persist_rule(model, t):
             if t == 1:
                 return model.ycsu[t] + model.y0 <= 1
             return model.ycsu[t] + model.y[t-1] <= 1
         def pc_su_subhourly_rule(model, t):
-            if model.Delta[t] < 1:
+            if self.eval_ineq(model.Delta[t],1,strict=True):
                 return model.y[t] + model.ycsu[t] <= 1
             return pe.Constraint.Feasible  #no analogous constraint for hourly or longer time steps
         def pc_sb_start_rule(model, t):
@@ -444,6 +446,16 @@ class GeneralDispatch(object):
         self.addPiecewiseLinearEfficiencyConstraints()
         self.addMinUpAndDowntimeConstraints()
         self.addCycleLogicConstraints()
+    
+    def eval_ineq(self, lb, expr, ub=None, strict=False, val=True):
+        
+        ineq = pe.inequality(lb, expr, ub, strict=strict)
+        if val:
+            return pe.value(ineq)
+        else:
+            return ineq
+
+        
         
             
     def solve_model(self, mipgap=0.005):
