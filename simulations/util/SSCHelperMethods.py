@@ -28,7 +28,7 @@ class SSCHelperMethods(object):
         return u_pint
     
 
-    def get_pyomo_unit(params, param_str):
+    def convert_to_pyomo_unit(params, param_str):
         
         u_pyomo = units
         Quant = params[param_str] # pint Quantity taken from params dictionary

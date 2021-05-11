@@ -18,7 +18,8 @@ import numpy as np
 from util.FileMethods import FileMethods
 from util.SSCHelperMethods import SSCHelperMethods
 from pyomo.environ import units as u_pyomo
-u_pyomo.load_definitions_from_strings(['USD = [currency]'])
+if not hasattr(u_pyomo,'USD'):
+    u_pyomo.load_definitions_from_strings(['USD = [currency]'])
 from pyomo.util.check_units import assert_units_consistent, assert_units_equivalent, check_units_equivalent
 
 class GeneralDispatch(object):
@@ -33,19 +34,19 @@ class GeneralDispatch(object):
 
     def generate_params(self,params):
         
-        # this is a lambda function to grab Pint Quantity magntitude if it has
+        # this is a lambda function to grab Pint Quantity magntitude if it has one
         gm = lambda param_str: params[param_str].m if hasattr(params[param_str],'m') else params[param_str]
         
         # shortening definition name
-        gu = lambda param_str: SSCHelperMethods.get_pyomo_unit(params, param_str)
+        gu = lambda param_str: SSCHelperMethods.convert_to_pyomo_unit(params, param_str)
         
         ### Sets and Indices ###
         self.model.T = pe.Set(initialize = range(1,params["T"]+1))  #T: time periods
         self.model.num_periods = pe.Param(initialize=params["T"]) #N_T: number of time periods
         
         #------- Time indexed parameters ---------
-        self.model.Delta = pe.Param(self.model.T, mutable=False, initialize=gm("Delta").tolist(), units=gu("Delta"))          #\Delta_{t}: duration of period t
-        self.model.Delta_e = pe.Param(self.model.T, mutable=False, initialize=gm("Delta_e"), units=gu("Delta_e"))    #\Delta_{e,t}: cumulative time elapsed at end of period t
+        self.model.Delta = pe.Param(self.model.T, mutable=True, initialize=gm("Delta"), units=gu("Delta"))          #\Delta_{t}: duration of period t
+        self.model.Delta_e = pe.Param(self.model.T, mutable=True, initialize=gm("Delta_e"), units=gu("Delta_e"))    #\Delta_{e,t}: cumulative time elapsed at end of period t
         
         ### Time series CSP Parameters ###
         self.model.delta_rs = pe.Param(self.model.T, mutable=True, initialize=gm("delta_rs"), units=gu("delta_rs"))     #\delta^{rs}_{t}: Estimated fraction of period $t$ required for receiver start-up [-]
