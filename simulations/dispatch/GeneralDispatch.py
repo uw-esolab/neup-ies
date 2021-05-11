@@ -160,7 +160,7 @@ class GeneralDispatch(object):
         #------- Persistence Variables ---------
         self.model.wdot_s_prev_delta_plus = pe.Var(self.model.T, domain=pe.NonNegativeReals)  #\dot{w}^{\Delta+}_{s,prev}: upper bound on energy sold [kWe]
         self.model.wdot_s_prev_delta_minus = pe.Var(self.model.T, domain=pe.NonNegativeReals) #\dot{w}^{\Delta-}_{s,prev}: lower bound on energy sold [kWe]
-        self.model.ycoff = pe.Var(self.model.T, domain=pe.Binary)     #y^{c,off}: 1 if power cycle is off at period $t$; 0 otherwise
+        # self.model.ycoff = pe.Var(self.model.T, domain=pe.Binary)     #y^{c,off}: 1 if power cycle is off at period $t$; 0 otherwise
         
                 
     def add_objective(self):
@@ -185,7 +185,7 @@ class GeneralDispatch(object):
 
     def addPersistenceConstraints(self):
         def wdot_s_persist_pos_rule(model,t):
-            return self.eval_ineq(model.wdot_s[t] - model.wdot_s_prev[t], model.wdot_s_prev_delta_plus[t])
+            return model.wdot_s_prev_delta_plus[t] >= model.wdot_s[t] - model.wdot_s_prev[t]
         def wdot_s_persist_neg_rule(model,t):
             return model.wdot_s_prev_delta_minus[t] >= model.wdot_s_prev[t] - model.wdot_s[t]
         self.model.persist_pos_con = pe.Constraint(self.model.T,rule=wdot_s_persist_pos_rule)
@@ -302,9 +302,9 @@ class GeneralDispatch(object):
             current_Delta = model.Delta[t]
             # structure of inequality is lb <= model.param <= ub with strict=False by default
             if self.eval_ineq(1,current_Delta) and t == 1:
-                return self.eval_ineq(model.y[t], model.ucsu[t]/model.Ec + model.y0 + model.ycsb0)
+                return model.y[t] <= model.ucsu[t]/model.Ec + model.y0 + model.ycsb0
             elif self.eval_ineq(1,current_Delta) and t > 1:
-                return self.eval_ineqy(model.y[t], model.ucsu[t]/model.Ec + model.y[t-1] + model.ycsb[t-1])
+                return model.y[t] <= model.ucsu[t]/model.Ec + model.y[t-1] + model.ycsb[t-1]
             elif self.eval_ineq(current_Delta,1,strict=True) and t == 1:
                 return self.eval_ineq(model.y[t], model.ucsu0/model.Ec + model.y0 + model.ycsb0)
             # only case remaining: Delta[t]<1, t>1
