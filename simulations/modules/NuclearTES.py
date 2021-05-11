@@ -83,6 +83,8 @@ class NuclearTES(GenericSSCModule):
         
         dispatch_model = ND(params, self.u)
         rt_results = dispatch_model.solve_model()
+        
+        self.rt_results = rt_results
         return rt_results
 
 

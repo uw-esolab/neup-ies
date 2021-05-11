@@ -223,6 +223,8 @@ class GenericSSCModule(object):
         
         dispatch_model = GD(params, self.u)
         rt_results = dispatch_model.solve_model()
+        
+        self.rt_results = rt_results
         return rt_results
     
     
