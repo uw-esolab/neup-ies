@@ -35,10 +35,45 @@ class FileParser(object):
             # found the search string in the file!
             if found:
                 print(fpath, "[", line_number, "] ")
-                print(line_contents)
+                print("Line: ", line_contents)
                 #close file
                 fo.close()
                 return line_number,line_contents
         # close file
         fo.close()
         return None,None
+    
+
+    def grab_lines_between_strings(fpath, str_start, str_end ):
+        """ Method to return all lines between two strings in a file
+        
+        This method parses through a given file found at the input filepath
+        and returns a list of lines in between two book-end strings: str_start
+        and str_end. 
+        
+        Inputs:
+            fpath (str)      : full path to relevant file
+            str_start (str)  : first string to search
+            str_end (str)    : last string to search
+        Outputs:
+            lines (list of str)   : list of lines between book-end strings
+            
+        """
+        
+        fo = open(fpath)
+        # find starting and ending lines
+        i_start, L_start = FileParser.find_first_string_instance(fpath, str_start)
+        i_end,   L_end   = FileParser.find_first_string_instance(fpath, str_end)
+        # create empty list for lines
+        lines = []
+        # if that the start and end strings were actually found, otherwise return empty list
+        if i_start is not None and i_end is not None:
+            # line-by-line search
+            for i,l in enumerate(fo):
+                if i>i_start and i<i_end:
+                    lines.append(l)
+        # close file
+        fo.close()
+        return lines
+    
+    
