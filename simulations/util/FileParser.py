@@ -11,6 +11,14 @@ from util.FileMethods import FileMethods
 
 class FileParser(object):
     
+    # Regex rules for parsing through dispatch files (e.g. GeneralDispatch, NuclearDispatch)
+    param_latex_regex  = r'\s#([\w+\d+\{\}\^\\\,-]+):\s'           # Matches parameter names in LaTeX form
+    param_txt_regex    = r'self.model.(\w+)\s?='                   # Matches parameter names in txt form
+    detail_latex_regex = r':\s([\w+\s+\d+\{\}\[\]\^\\\,\$/-]+)'    # Matches explanation of parameters in LaTeX form
+    section_regex      = r'###\s([\w+\s+]+)\s###'                  # Matches section titles in txt form
+    subsection_regex   = r'#-------\s([\w+\s+]+)\s---------'       # Matches subsection titles in txt form
+
+    
     def find_first_string_instance(fpath, search_str):
         """ Method to parse through file and locate string
         
@@ -44,7 +52,7 @@ class FileParser(object):
         return None,None
     
 
-    def grab_lines_between_strings(fpath, str_start, str_end ):
+    def get_lines_between_strings(fpath, str_start, str_end ):
         """ Method to return all lines between two strings in a file
         
         This method parses through a given file found at the input filepath
@@ -77,3 +85,114 @@ class FileParser(object):
         return lines
     
     
+    #TODO: replace fpath input with the name of the Dispatcher?
+    def get_dispatch_string_properties(fpath,return_case=0):
+        """ Method to return relevant dispatch string properties
+        
+        This method parses through a given file found at the input filepath
+        and returns a dictionary with string values and line numbers for different
+        parameter properties in the dispatcher. For now, it can sort through the 
+        Params and Variables of the Dispatch files. It returns latex+text names for all
+        entries, latex strings containing parameter details, and section+subsection
+        titles.
+        
+        NOTE: this method is tied to the very specific aesthetic format of the Dispatch
+        files, should they change this method will no longer work.
+        
+        Inputs:
+            fpath (str)        : full path to relevant file
+            return_case (int)  : 0=return Param properties, 1=return Var properties
+        Outputs:
+            P (dict)   : dictionary with entries for line number and str contents
+            
+        """
+        
+        # methods to be used as book-ends
+        method_names = ['def generate_params',
+                        'def generate_variables',
+                        'def add_objective']
+        
+        # define book-end strings that define where all parameters are located
+        param_method_start = method_names[0] if return_case == 0 else method_names[1]
+        param_method_end   = method_names[1] if return_case == 0 else method_names[2]
+    
+        # get list of relevant lines to parse through
+        lines_list = FileParser.get_lines_between_strings(fpath, param_method_start, param_method_end)
+        
+        # define regex (regular expression) rules for matching strings
+        params_latex_rule   = re.compile( FileParser.param_latex_regex )
+        params_txt_rule     = re.compile( FileParser.param_txt_regex )
+        detail_latex_rule   = re.compile( FileParser.detail_latex_regex )
+        section_rule        = re.compile( FileParser.section_regex )
+        subsection_rule     = re.compile( FileParser.subsection_regex )
+        
+        # define empty lists for all properties we want
+        params_latex   = []
+        params_txt     = []
+        sections = []
+        ssection = []
+        detail   = []
+        
+        # define empty lists for line nu where all properties are located
+        params_latex_lineNo  = []
+        params_txt_lineNo    = []
+        section_lineNo  = []
+        ssection_lineNo = []
+        detail_lineNo   = []
+        
+        # define empty dict to store and return everything in
+        P = {}
+        
+        # begin search
+        count = 0
+        for line in lines_list:
+            
+            # find strings per the regex rules
+            param_latex_str   = params_latex_rule.findall(line)
+            param_txt_str     = params_txt_rule.findall(line)
+            section_str       = section_rule.findall(line)
+            subsection_str    = subsection_rule.findall(line)
+            detail_str        = detail_latex_rule.findall(line)
+            
+            # append strs and line numbers to lists if found
+            if len(param_latex_str) != 0:
+                params_latex.append(param_latex_str[0])
+                params_latex_lineNo.append(count)
+
+            if len(param_txt_str) != 0:
+                params_txt.append(param_txt_str[0])
+                params_txt_lineNo.append(count)
+            
+            if len(section_str) != 0:        
+                sections.append(section_str[0])
+                section_lineNo.append(count)
+                
+            if len(subsection_str) != 0:        
+                ssection.append(subsection_str[0])
+                ssection_lineNo.append(count)
+            
+            if len(detail_str) != 0:
+                # getting rid of extra \n's at the end of the lines
+                if detail_str[0].endswith('\n'):
+                    detail.append(  detail_str[0].split('\n')[0]  )
+                else:
+                    detail.append(detail_str[0])
+                detail_lineNo.append(count)
+                
+            count += 1
+        
+        P['params_latex'] = params_latex
+        P['params_txt']   = params_txt
+        P['sections']     = sections
+        P['ssection']     = ssection
+        P['detail']       = detail
+
+        P['params_latex_lineNo'] = params_latex_lineNo
+        P['params_txt_lineNo']   = params_txt_lineNo
+        P['section_lineNo']      = section_lineNo
+        P['ssection_lineNo']     = ssection_lineNo
+        P['detail_lineNo']       = detail_lineNo
+        
+        return P
+            
+            
