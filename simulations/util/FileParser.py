@@ -42,8 +42,6 @@ class FileParser(object):
             found = search_str in line_contents
             # found the search string in the file!
             if found:
-                print(fpath, "[", line_number, "] ")
-                print("Line: ", line_contents)
                 #close file
                 fo.close()
                 return line_number,line_contents
@@ -194,5 +192,7 @@ class FileParser(object):
         P['detail_lineNo']       = detail_lineNo
         
         return P
+    
+    #TODO: add file to write LaTeX scripts with all parameter/variable names?
             
             
