@@ -496,8 +496,8 @@ class GeneralDispatchParamWrap(object):
         self.q_pb_design  = (self.p_pb_design / self.eta_design).to('MW')  # power block design thermal rating
         
         # temperature and specific heat values at design point
-        self.T_htf_hot  = (self.SSC_dict['T_htf_cold_des']*u.celsius).to('degK')
-        self.T_htf_cold = (self.SSC_dict['T_htf_hot_des']*u.celsius).to('degK')
+        self.T_htf_hot  = (self.SSC_dict['T_htf_hot_des']*u.celsius).to('degK')
+        self.T_htf_cold = (self.SSC_dict['T_htf_cold_des']*u.celsius).to('degK')
         T_htf  = 0.5*(self.T_htf_hot + self.T_htf_cold)
         cp_des = self.get_cp_htf(T_htf)
         cp_des = cp_des.to('J/g/kelvin')       

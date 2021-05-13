@@ -47,7 +47,7 @@ class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
         param_dict = GeneralDispatchParamWrap.set_fixed_cost_parameters( self, param_dict )
         
         # TODO: for now, scaling everything from LORE files
-        old_Q_ref = 120 * u.MW / 0.409
+        old_Q_ref = 565 * u.MW 
         Q_ratio   = (self.q_rec_design / old_Q_ref ).to('')
         
         # TODO: old values from LORE files
@@ -95,7 +95,7 @@ class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
         param_dict['Qrl']    = self.Qrl.to('kWh')      #Q^{rl}: Minimum operational thermal power delivered by receiver [kWt$\cdot$h]
         param_dict['Qrsb']   = self.Qrsb.to('kWh')     #Q^{rsb}: Required thermal power for receiver standby [kWt$\cdot$h]
         param_dict['Qrsd']   = self.Qrsd.to('kWh')     #Q^{rsd}: Required thermal power for receiver shut down [kWt$\cdot$h] 
-        param_dict['Qru']    = self.Qru.to('kW')      #Q^{ru}: Allowable power per period for receiver start-up [kWt$\cdot$h]
+        param_dict['Qru']    = self.Qru.to('kW')       #Q^{ru}: Allowable power per period for receiver start-up [kWt$\cdot$h]
         param_dict['Wh']     = self.Wh.to('kW')        #W^h: Heliostat field tracking parasitic loss [kWe]
         param_dict['Wht']    = self.Wht.to('kW')       #W^{ht}: Tower piping heat trace parasitic loss [kWe]
         
@@ -214,7 +214,7 @@ class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
         if np.isnan(e_pb_suinitremain): # SSC seems to report NaN when startup is completed
             self.ucsu0 = self.Ec
         else:   
-            self.ucsu0 = max(0.0, self.Ec - e_rec_suinitremain ) 
+            self.ucsu0 = max(0.0, self.Ec - e_pb_suinitremain ) 
             if self.ucsu0 > (1.0 - tol)*self.Ec:
                 self.ucsu0 = self.Ec
         
