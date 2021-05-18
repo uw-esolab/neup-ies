@@ -62,3 +62,20 @@ class FileMethods(object):
         out_dict   = D['PySAM_outputs']
         
         return pysam_dict, ssc_dict, out_dict
+
+    def write_csv(data_list, columns, filename):
+        """ Method to write csv file 
+        
+        Inputs:
+            data_list (list of lists) : list of strings, each list having length n
+            columns (list of str): list of column names with length n
+            filename (str): name of file (without path)
+            
+        """
+        
+        params_dataframe = pandas.DataFrame(data_list,columns=columns)
+        
+        filepath = "../outputs/" + filename
+        params_dataframe.to_csv(filepath,index=False)
+
+        

@@ -16,7 +16,7 @@ from util.FileMethods import FileMethods
 import pint
 u = pint.UnitRegistry()
 import numpy as np
-import copy
+import copy, pandas
 
 class GenericSSCModule(object):
     
@@ -41,7 +41,7 @@ class GenericSSCModule(object):
         self.store_csv_arrays( PySAM_dict )
 
 
-    def run_sim(self, run_loop=False):
+    def run_sim(self, run_loop=False, export=False, filename='temp.csv'):
         """ Method to run single simulation for Generic System
         """
         
@@ -68,6 +68,8 @@ class GenericSSCModule(object):
         self.create_SO( )
         self.SO.execute( )
         
+        if export:
+            self.export_results(filename)
          
     def store_csv_arrays(self, input_dict):
         """ Method to get data from specified csv files and store in class
@@ -199,4 +201,35 @@ class GenericSSCModule(object):
         self.Plant.SystemControl.pc_startup_energy_remain_initial = self.Plant.Outputs.pc_startup_time_remain_final
         self.Plant.SystemControl.pc_startup_time_remain_init      = self.Plant.Outputs.pc_startup_energy_remain_final
         
+    def export_results(self, filename):
         
+        location_list = []
+        key_list      = []
+        value_list    = []
+        
+        for key in self.output_keys['keywords']:
+            if hasattr(self,key):
+                location_list.append('PySAM')
+                value_list.append(getattr(self,key))
+                
+            elif hasattr(self.Plant.Outputs,key):
+                location_list.append('Plant')
+                value_list.append(getattr(self.Plant.Outputs,key))
+                
+            elif hasattr(self.SO.Outputs,key):
+                location_list.append('SingleOwner')
+                value_list.append(getattr(self.SO.Outputs,key))
+                
+            else:
+                location_list.append('Not Found')
+                value_list.append(' ')
+                
+            key_list.append(key)
+
+
+        dataframe_list = [[x,y,z] for x,y,z in zip(location_list,key_list,value_list)]
+        columns=['Object', 'Key', 'Value']
+        
+        FileMethods.write_csv(dataframe_list, columns, filename)
+
+            
