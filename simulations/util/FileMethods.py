@@ -45,6 +45,7 @@ class FileMethods(object):
         Outputs:
             pysam_dict (dict) : dictionary of PySAM inputs + file names
             ssc_dict (dict) : dictionary of SSC inputs needed to run modules
+            out_dict (dict) : dictionary of PySAM output keywords for extraction
         """
         #defining filepath for JSON script (FUTURE: add non-default functionality to input whole path)
         samsim_dir = FileMethods.samsim_dir
@@ -58,5 +59,6 @@ class FileMethods(object):
         #extracting specific dicts nested inside the JSON script
         pysam_dict = D['PySAM_inputs']
         ssc_dict   = D['SSC_inputs']
+        out_dict   = D['PySAM_outputs']
         
-        return pysam_dict, ssc_dict
+        return pysam_dict, ssc_dict, out_dict

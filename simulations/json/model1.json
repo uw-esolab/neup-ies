@@ -13,6 +13,24 @@
         "pyomo_horizon":             48
     },
     
+    "PySAM_outputs": {
+        "keywords": ["annual_energy",
+                     "annual_total_water_use",
+                     "capacity_factor",
+                     "ppa",
+                     "lppa_nom",
+                     "lppa_real",
+                     "lcoe_nom",
+                     "lcoe_real",
+                     "project_return_aftertax_npv",
+                     "flip_actual_irr",
+                     "flip_actual_year",
+                     "project_return_aftertax_irr",
+                     "cost_installed",
+                     "size_of_equity",
+                     "size_of_debt" ]
+    },
+    
     "SSC_inputs": {
     	"compute_module_0" : "nuclear_tes",
     	"field_model_type" :  3,

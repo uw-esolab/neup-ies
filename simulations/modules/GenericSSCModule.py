@@ -27,11 +27,12 @@ class GenericSSCModule(object):
         self.plant_name = plant_name
         
         # read in dictionaries from json script
-        PySAM_dict, SSC_dict = FileMethods.read_json( self.json_name )
+        PySAM_dict, SSC_dict, output_keys = FileMethods.read_json( self.json_name )
         
         # storing SSC and Pyomo time horizons, inputs are in unit of hours
         self.ssc_horizon   = PySAM_dict['ssc_horizon'] * u.hr
         self.pyomo_horizon = PySAM_dict['pyomo_horizon'] * u.hr
+        self.output_keys   = output_keys
         
         # save SSC_dict for usage later
         self.SSC_dict = SSC_dict
