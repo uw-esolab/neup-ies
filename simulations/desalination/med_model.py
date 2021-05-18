@@ -4,49 +4,99 @@ import numpy as np
 from iapws import SeaWater,IAPWS97
 
 class MED:
-    def __init__(self):
-        self.vapor_rate = [ 701.5 ]                      
-        self.brine_conc = .0335                              #Average concentration of salt in seawater
-        self.brine_rate = 50.
-        self.max_brine_conc= .067
-        self.vapor_temp_n = [ 71.5 ]                          #Known starting temp of the MED model - assuming we are starting at the second n-effect
-        self.brine_temp_n = [ 23 ]
-        self.latentheat = 10.
-        self.tempchange = 3.                                #Known temperature change from Sharan paper
-        self.distill = [ 0, 1 ]
-        self.ffrate = [ ]                             #starting value
-        self.pressure = 7.75 #TODO: check this is in MPa
-        # self.vapor_rate = vapor flow rate
-        # self.brine_conc = brine concentration
-        # self.max_brine_conc = maximum brine concentration
-        # self.brine_rate = brine flow rate
-        # self.temp_n_1 = starting temperature, assume to be 40 C
-        # self.latentheat = latent heat 
-        # self.tempchange = temperature change between each n effect
-        for i in range(5):                                           #this is more standard
-            self.brine_rate = self.brine_flow_out(i)                 #Updates brine_rate variable for every n-effect
-            self.vapor_rate.append(self.vapor_flow_out(i))       #Adds the vapor rate from each effect to the vector
-            self.distill.append(sum(self.vapor_rate))                  #Adds the amount of distillate from each n-effect, creating a vector
+    
+    """BL comments:
+        can we include references for values (e.g. latentheat, pressure, brine_conc)
+        can we take latentheat directly form SeaWater and IAPWS, probably has a value for this
+        does brine_conc change at each stage? does this need to be factored in to enth_brine?
         
-        self.total_distill = sum(self.distill) #do this at the end of the loop
+        From Pg 7 (or 26) of Sharan, it appears that we should fix the FINAL stage temperature
+        and then each previous stage increases by 3C from the one after
+        this implies that the temperature of brine and vapor are equal at each stage
+        but the enthalpies are for the vapor and brine components respectively
+        so I think we also need to adjust the temperature and enthalpy of each stage accordingly
+        
+    """
+    def __init__(self):
+        self.vapor_rate = []                          #Flow of the vapor rate for each n-effect
+        self.brine_conc = .0335                       #Average concentration of salt in seawater
+        self.brine_rate = []                         #Brine flow rate 
+        self.max_brine_conc= .067                     #Maximum brine concentration
+        self.k = 6                                    #Number of desired effects + 1 for starting values
+        self.vapor_temp = np.zeros(self.k)            #Vapor temperature vector creation
+        self.brine_temp = np.zeros(self.k)            #Brine temparature vector creation
+        self.enth_vapor = np.zeros(self.k)            #Vapor enthalpy vector creation
+        self.enth_brine = np.zeros(self.k)            #Brine enthalpy vector creation
+        self.water_temp = 68.5                     #Known starting/inlet temp of the DEMINERALIZED WATER [T2] (sCO2 outlet - delta_T_PCHE)
+        self.feed_temp  = 20                       #Known starting/inlet temp of the BRINE [T1]
+        self.latentheat = np.zeros(self.k)            #Latent heat of vapor vector creation
+        self.tempchange = 3.                          #Known temperature change, from Sharan paper (delta_T_NEA)
+        self.water_rate = 701.5                        #Is this the feed flow rate of the DEMINERALIZED WATER? m_dot_w2
+        self.pressure = 7.75                          #Pressure in MPa 
+        
+        self.enth_feed =  SeaWater(T=self.feed_temp+273.15,S=self.brine_conc,P=self.pressure).h
+        self.vapor_temp[0] = self.water_temp-self.tempchange
+        self.brine_temp[0] = self.feed_temp +self.tempchange
+        
+        for i in range(1, self.k):
+            self.vapor_temp[i] = (self.vapor_temp[i-1] - self.tempchange)
+            self.brine_temp[i] = (self.brine_temp[i-1] + self.tempchange)
+            
+        
+        for i in range(self.k):
+            self.enth_brine[i] = SeaWater(T=self.brine_temp[i]+273.15,S=self.brine_conc,P=self.pressure).h
+            self.enth_vapor[i] = IAPWS97(T=self.vapor_temp[i]+273.15,P=self.pressure).h
+            self.latentheat[i] = -2.36985*self.brine_temp[i] + 2500.9
+        
+        ##Finding the vapor_rate for each n-effect
+        C = np.zeros(self.k)
+        A = np.zeros((self.k,self.k))
+        A[0,0] = (-self.max_brine_conc/(self.max_brine_conc-self.brine_conc))*\
+                        (self.enth_feed - self.enth_brine[0])+(self.enth_vapor[0]-self.enth_brine[0])
+        
+        self.cp_water = IAPWS97(T=self.vapor_temp[0]+273.15,P=self.pressure).cp
+        C[0] = self.water_rate*(self.water_temp-(self.feed_temp+self.tempchange))*self.cp_water
+        
+        for j in range(1,self.k):           #Creating the first row of the matrix
+            A[0,j] = (-self.max_brine_conc/(self.max_brine_conc-self.brine_conc))*\
+                        (self.enth_brine[0] - self.enth_brine[1])
+                        
+        for q in range(1,self.k):           #Filling in the rest of the matrix
+            #Below is the diagonal of the matrix
+            A[q,q]= -(self.enth_vapor[q] - self.enth_brine[q]) + \
+                (self.max_brine_conc/(self.max_brine_conc-self.brine_conc))*\
+                    (self.enth_brine[q-1] - self.enth_brine[q])
+            #Below is on column to the left of the diagonal of the matrix
+            A[q,q-1]= self.latentheat[q-1]+((self.max_brine_conc/(self.max_brine_conc-self.brine_conc))-1)*\
+                (self.enth_brine[q-1] - self.enth_brine[q])
+            for j in range(0,q-1):
+                #Below is everything to the left, under the q-1 diagonal. 
+                A[q,j]= (self.max_brine_conc/(self.max_brine_conc-self.brine_conc)-1)*\
+                        (self.enth_brine[q-1] - self.enth_brine[q])
+            for j in range(q+1,self.k):
+                #Below is everything to the right of the q diagonal
+                A[q,j]= (self.max_brine_conc/(self.max_brine_conc-self.brine_conc))*\
+                        (self.enth_brine[q-1] - self.enth_brine[q])
+                        
+            #For eqn 2-n, every term is related to a vapor rate
+            C[q] = 0
+            
+        invA = np.linalg.inv(A) 
+        self.vapor_rate = np.dot(invA,C)
+        self.distill = sum(self.vapor_rate)
+        
+        #Calculate Brine feed flow with Eq 10
+        self.feed_rate = self.distill*self.max_brine_conc/(self.max_brine_conc-self.brine_conc)
+        for i in range(self.k):                          
+            self.brine_rate.append(self.brine_flow_out(i))    #Updates brine_rate variable for every n-effect
+        
         
     def brine_flow_out(self,i):
-        brine_out = (self.brine_rate*self.brine_conc)/(self.brine_rate-self.vapor_rate[i])
+        brine_out = self.feed_rate-sum(self.vapor_rate[:i+1]) #Eq 6
         return brine_out
-        
-    def vapor_flow_out(self, i):
-        self.vapor_temp_n[i] = self.vapor_temp_n[i-1] - self.tempchange
-        self.brine_temp_n[i] = self.brine_temp_n[i-1] + self.tempchange
-        enth_bn = SeaWater(T=self.brine_temp_n[i]+273.15,S=self.brine_conc,P=self.pressure)
-        enth_vn = IAPWS97(T=self.vapor_temp_n[i]+273.15,P=self.pressure)
-        enth_bn_1 = SeaWater(T=self.brine_temp_n[i-1]+273.15,S=self.brine_conc,P=self.pressure)
-        enth_vn_1 = IAPWS97(T=self.vapor_temp_n[i-1]+273.15,P=self.pressure)
-        return enth_bn
-        vapor_out = (1/(np.asarray(enth_vn.h) - np.asarray(enth_bn.h)))*(self.vapor_rate[i]*self.latentheat+(((self.distill*self.max_brine_conc)/(self.max_brine_conc-self.brine_conc))-self.distill)*(np.asarray(enth_bn_1.h)- np.asarray(enth_bn.h)))
-        return vapor_out
-        
 
-    def feedflowrate(self, i):
+    def feedflowrate(self, i):          #Unused function for now, but leaving it to simply exist for this moment. 
         self.ffrate.append((self.max_brine_conc*self.vapor_rate[i])/(self.max_brine_conc-self.brine_conc))
 
-MED()
+x = MED()
+print(x.distill)
