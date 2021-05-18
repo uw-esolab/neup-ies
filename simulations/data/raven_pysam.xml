@@ -1,0 +1,76 @@
+<?xml version="1.0" ?>
+<Simulation verbosity="all">
+  <TestInfo>
+    <name>input.pysam</name>
+    <author>ubaker</author>
+    <created>18-04-2021</created>
+    <classesTested>Models.Code</classesTested>
+    <description>Testing RAVEN coupled to PySAM</description>
+  </TestInfo>
+
+  <RunInfo>
+    <WorkingDir>PySAM_tests/test1</WorkingDir>
+    <Sequence>runGrid,outputResults</Sequence>
+    <batchSize>4</batchSize>
+  </RunInfo>
+
+  <Files>
+    <Input name="dispatch_factors" type="">/home/una/github/postdoc_uw_madison/NE2/sam_dev/neup-ies/simulations/data/dispatch_factors_ts_test.csv</Input>
+  </Files>
+
+  <Models>
+    <Code name="PySAM" subType="GenericCode">
+      <executable>/home/una/github/postdoc_uw_madison/NE2/sam_dev/neup-ies/simulations/data/PySAM_tests/PySAM_model1.py</executable>
+      <clargs arg="/home/una/miniconda3/bin/python" type="prepend"/>
+      <clargs type="input" arg="-i" extension=".csv"/>
+      <clargs type="output" arg="-o" extension=".csv"/>
+      <outputFile>fileOutput.csv</outputFile>
+    </Code>
+  </Models>
+
+  <Distributions>
+    <Uniform name="test_dist">
+      <lowerBound>0.6</lowerBound>
+      <upperBound>1.0</upperBound>
+    </Uniform>
+  </Distributions>
+
+  <Samplers>
+    <Grid name="myGrid">
+      <variable name="dis_fac">
+        <distribution>test_dist</distribution>
+        <grid construction="equal" steps="4" type="CDF">0.0 1.0</grid>
+      </variable>
+    </Grid>
+  </Samplers>
+
+  <Steps>
+    <MultiRun name="runGrid">
+      <Input class="Files" type="">dispatch_factors</Input>
+      <Model class="Models" type="Code">PySAM</Model>
+      <Sampler class="Samplers" type="Grid">myGrid</Sampler>
+      <Output class="DataObjects" type="PointSet">results</Output>
+    </MultiRun>
+    <IOStep name="outputResults">
+      <Input class="DataObjects" type="PointSet">results</Input>
+      <Output class="OutStreams" type="Print">to_file</Output>
+    </IOStep>
+  </Steps>
+
+  <OutStreams>
+    <Print name="to_file">
+      <type>csv</type>
+      <source>results</source>
+    </Print>
+  </OutStreams>
+
+  <DataObjects>
+    <PointSet name="placeholder">
+      <Input>dis_fac</Input>
+    </PointSet>
+    <PointSet name="results">
+      <Input>dis_fac</Input>
+    </PointSet>
+  </DataObjects>
+
+</Simulation>
