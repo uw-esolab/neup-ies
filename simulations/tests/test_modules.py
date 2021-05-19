@@ -6,7 +6,6 @@ Created on Thu Apr  1 14:36:02 2021
 @author: gabrielsoto
 """
 
-from modules.GenericSSCModule import GenericSSCModule
 from modules.NuclearTES import NuclearTES
 import unittest, os, math
 
@@ -15,24 +14,22 @@ class TestPySAMModules(unittest.TestCase):
     """
     Unit tests for PySAM module setup
     
-    This testing suite is meant to test the parent class of all modules,
-    that being GenericSSCModule. All child classes will share common methods
-    and attributes which will be tested here. 
+    This testing suite is meant to test the methods in parent class of all modules,
+    that being GenericSSCModule. Only non-abstract methods will be tested.
+    All child classes will share common methods and attributes which will be tested here. 
+    Dispatch is NOT tested here.
     
     For each individual class, there will be bespoke test classes.
     """
 
-    
-    
     def setUp(self):
         """ Creating instances of modules upon start of each test
         """
-        genmod = GenericSSCModule()
-        nuctes = NuclearTES(json_name='tests/test_nuctes')
+        
+        nuctes = NuclearTES(json_name='tests/test_nuctes',is_dispatch=False)
         
         #saving list of modules
-        self.mod_list = [genmod, nuctes]
-        self.mod_list_CL = [nuctes]
+        self.mod_list = [nuctes]
     
     
     def tearDown(self):
@@ -43,12 +40,8 @@ class TestPySAMModules(unittest.TestCase):
         for mod in self.mod_list:
             del mod
         
-        for mod in self.mod_list_CL:
-            del mod
-        
         # deleting module list. this might be overkill?
         del self.mod_list
-        del self.mod_list_CL
 
 
     def test__init__(self):
@@ -167,22 +160,20 @@ class TestPySAMModules(unittest.TestCase):
                                 "{0} SO doesn't have Output {1}".format(mod.__class__.__name__ , s_attr) )
             
 
-            #---run looped-simulation if module has the ability to do so
-            if mod in self.mod_list_CL:
-                
-                # store results from full simulation
-                annual_energy   = mod.Grid.SystemOutput.annual_energy
-                ppa             = mod.SO.Outputs.ppa
-                
-                # reset submodules
-                mod.reset_all()
-                
-                #---run simulation in a loop
-                mod.run_sim(run_loop=True)
-                
-                # check that results are in the same ballpark
-                self.assertTrue( math.isclose (mod.Grid.SystemOutput.annual_energy, annual_energy, rel_tol=1e-2) )
-                self.assertTrue( math.isclose (mod.SO.Outputs.ppa, ppa  , rel_tol=1e-2) )
+            #---run looped-simulation 
+            # store results from full simulation
+            annual_energy   = mod.Grid.SystemOutput.annual_energy
+            ppa             = mod.SO.Outputs.ppa
+            
+            # reset submodules
+            mod.reset_all()
+            
+            #---run simulation in a loop
+            mod.run_sim(run_loop=True)
+            
+            # check that results are in the same ballpark
+            self.assertTrue( math.isclose (mod.Grid.SystemOutput.annual_energy, annual_energy, rel_tol=1e-2) )
+            self.assertTrue( math.isclose (mod.SO.Outputs.ppa, ppa  , rel_tol=1e-2) )
     
         
 if __name__ == "__main__":
