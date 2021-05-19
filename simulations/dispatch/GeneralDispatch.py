@@ -342,12 +342,12 @@ class GeneralDispatch(object):
         def cycle_ramp_rate_pos_rule(model, t):
             return (
                     model.wdot_delta_plus[t] - model.wdot_v_plus[t] <= model.W_delta_plus*model.Delta[t] 
-                    + ((model.etaamb[t]/model.eta_des)*model.W_u_plus[t] - model.W_delta_plus*model.Delta[t])
+                    + ((model.etaamb[t]/model.eta_des)*model.W_u_plus[t] - model.W_delta_plus*model.Delta[t])*model.ycgb[t]
             )
         def cycle_ramp_rate_neg_rule(model, t):
             return (
                     model.wdot_delta_minus[t] - model.wdot_v_minus[t] <= model.W_delta_minus*model.Delta[t] 
-                    + ((model.etaamb[t]/model.eta_des)*model.W_u_minus[t] - model.W_delta_minus*model.Delta[t])
+                    + ((model.etaamb[t]/model.eta_des)*model.W_u_minus[t] - model.W_delta_minus*model.Delta[t])*model.ycge[t]
             )
         def grid_max_rule(model, t):
             return model.wdot_s[t] <= model.Wdotnet[t]
@@ -458,7 +458,7 @@ class GeneralDispatch(object):
         
         
             
-    def solve_model(self, mipgap=0.005):
+    def solve_model(self, mipgap=0.7):
         opt = pe.SolverFactory('cbc')
         opt.options["ratioGap"] = mipgap
         results = opt.solve(self.model, tee=False, keepfiles=False)
@@ -533,8 +533,8 @@ class GeneralDispatchParamWrap(object):
         u = self.u
         # Magic numbers
         Wb_frac = 0.05             # TODO: get a better estimate- cycle standby parasitic load as frac of cycle capacity
-        pc_rampup    = 0.6 / u.hr  # TODO: self.SSC_dict['disp_pc_rampup']  in SSC-> Cycle max ramp up (fraction of capacity per minute)
-        pc_rampdown  = 12. / u.hr  # TODO: self.SSC_dict['disp_pc_rampdown']   
+        pc_rampup    = 0.05 / u.min  # TODO: self.SSC_dict['disp_pc_rampup']  in SSC-> Cycle max ramp up (fraction of capacity per minute)
+        pc_rampdown  = 0.05 / u.min  # TODO: self.SSC_dict['disp_pc_rampdown']   
         pc_rampup_vl   = 1. / u.hr # TODO: self.SSC_dict['disp_pc_rampup_vl'] in SSC-> Cycle ramp up violation limit (fraction of capacity per minute)
         pc_rampdown_vl = 1. / u.hr # TODO: self.SSC_dict['disp_pc_rampdown_vl'] 
         

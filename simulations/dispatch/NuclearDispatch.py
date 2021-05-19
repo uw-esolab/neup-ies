@@ -107,8 +107,6 @@ class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
         #MAKE SURE TO CALL THIS METHOD AFTER THE NUCLEAR PARAMETERS 
         u = self.u
         
-        # self.delta_rs = np.zeros(n)
-        # self.delta_cs = np.zeros(n)
         self.Drsu       = 1*u.hr   # Minimum time to start the receiver (hr)
         self.P          = df_array*u.USD/u.kWh
         self.Qin        = np.array([self.q_rec_design.magnitude]*self.T)*self.q_rec_design.units
