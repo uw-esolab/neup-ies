@@ -10,7 +10,6 @@ import sys
 sys.path.append('..')
 import PySAM.NuclearTes as NuclearTes
 from modules.GenericSSCModule import GenericSSCModule
-from util.SSCHelperMethods import SSCHelperMethods
 from dispatch.NuclearDispatch import NuclearDispatch as ND
 from dispatch.NuclearDispatch import NuclearDispatchParamWrap as NDP
 import PySAM.PySSC as pssc
@@ -18,10 +17,10 @@ from util.FileMethods import FileMethods
 
 class NuclearTES(GenericSSCModule):
     
-    def __init__(self, plant_name="nuclear_tes", json_name="model1"):
+    def __init__(self, plant_name="nuclear_tes", json_name="model1", is_dispatch=False):
         
         # initialize Generic module, csv data arrays should be saved here
-        GenericSSCModule.__init__( self, plant_name, json_name )
+        GenericSSCModule.__init__( self, plant_name, json_name, is_dispatch )
 
         
     def store_csv_arrays(self, input_dict):
