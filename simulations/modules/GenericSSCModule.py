@@ -17,12 +17,12 @@ from util.SSCHelperMethods import SSCHelperMethods
 from dispatch.GeneralDispatch import GeneralDispatch as GD
 from dispatch.GeneralDispatch import GeneralDispatchParamWrap as GDP
 import numpy as np
-import copy, pandas
+import copy
 
 class GenericSSCModule(object):
     
-    def __init__(self, plant_name="generic_system", json_name="100mW_Generic", 
-                       is_dispatch=True, dispatch_time_step=1):
+    def __init__(self, plant_name="nuclear_tes", json_name="model1", 
+                       is_dispatch=False, dispatch_time_step=1):
         
         # grab names, either default here or from child class
         self.json_name  = json_name
@@ -53,6 +53,7 @@ class GenericSSCModule(object):
         if self.is_dispatch:
             # initialize dispatch wrap class
             self.dispatch_wrap = self.create_dispatch_wrapper( PySAM_dict )
+
 
     def run_sim(self, run_loop=False, export=False, filename='temp.csv'):
         """ Method to run single simulation for Generic System
@@ -195,15 +196,13 @@ class GenericSSCModule(object):
             # run Plant again
             self.run_Plant_through_SSC( time_start , time_next )
             
-
+        
     def run_Plant_through_SSC(self, start_hr, end_hr):
         """ Simulation of Plant through SSC for given times
         """
         
-        # oops, GenericSystem doesn't have 'SystemControl' subclass...
-        if hasattr(self.Plant,'SystemControl'):
-            self.Plant.SystemControl.time_start = start_hr.to('s').magnitude
-            self.Plant.SystemControl.time_stop = end_hr.to('s').magnitude
+        self.Plant.SystemControl.time_start = start_hr.to('s').magnitude
+        self.Plant.SystemControl.time_stop = end_hr.to('s').magnitude
         
         self.Plant.execute()
         
