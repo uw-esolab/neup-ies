@@ -164,16 +164,21 @@ class GenericSSCModule(ABC):
         # setting up empty log array for gen
         self.gen_log = np.ndarray([0])
         
-        # creating parameters for dispatch for first time
+        # run dispatch optimization for the first time
         if self.is_dispatch:
+            
+            # create dispatch parameters for the first time
             disp_params = self.create_dispatch_params()
+            
+            # run pyomo optimization
             outputs = self.run_pyomo(disp_params)
             
-            # setting dispatch targets to True so that SSC can read in Pyomo inputs
-            self.update_Plant_after_Pyomo( outputs )
+            # updating SSC inputs using Pyomo outputs
+            self.update_Plant_after_Pyomo( )
         
         # first execution of Plant through SSC
         self.run_Plant_through_SSC( time_start , time_next )
+        
         
         # this loop should only be entered if run_loop == True
         while (time_next < time_end):
@@ -184,20 +189,23 @@ class GenericSSCModule(ABC):
             time_start += self.ssc_horizon.to('s')
             time_next  += self.ssc_horizon.to('s')
             
-            # run dispatch
-            if self.is_dispatch:
-                # update dispatch variables from SSC outputs
-                disp_vars = self.update_dispatch_vars()
-                
-                # run dispatch
-                # outputs = self.run_pyomo()
-                
-                # update SSC inputs from dispatch outputs
-                # plant_updt = self.update_Plant_after_Pyomo()
-            
             # update Plant parameters after previous run
             self.update_Plant_after_SSC( )
             
+            # run dispatch optimization
+            if self.is_dispatch:
+                
+                # **update** dispatch parameters using previous SSC run
+                # i.e. updating Pyomo inputs using SSC outputs
+                # disp_params = self.create_dispatch_params()
+                
+                # run pyomo optimization again
+                outputs = self.run_pyomo(disp_params)
+            
+                # updating SSC inputs using Pyomo outputs
+                self.update_Plant_after_Pyomo( )
+            
+
             # run Plant again
             self.run_Plant_through_SSC( time_start , time_next )
             
@@ -247,11 +255,16 @@ class GenericSSCModule(ABC):
         self.Plant.SystemControl.pc_startup_energy_remain_initial = self.Plant.Outputs.pc_startup_time_remain_final
         self.Plant.SystemControl.pc_startup_time_remain_init      = self.Plant.Outputs.pc_startup_energy_remain_final
         
-    def update_Plant_after_Pyomo(self, outputs):
         
+    def update_Plant_after_Pyomo(self):
+        
+        
+        # setting dispatch targets to True so that SSC can read in Pyomo inputs
         self.Plant.SystemControl.is_dispatch_targets = True
         
         dm = self.dispatch_model
+        
+        # TODO: I think all of this stuff should live in GeneralDispatch or the Wrapper
         
         t_range = dm.model.T
         N = dm.model.num_periods.value
@@ -262,29 +275,31 @@ class GenericSSCModule(ABC):
         yrsb = np.array([pe.value(dm.model.yrsb[t]) for t in t_range])
         
         # cycle stuff
+        x   = np.array([pe.value(dm.model.x[t]) for t in t_range])/1000. # from kWt -> MWt
         y    = np.array([pe.value(dm.model.y[t]) for t in t_range])
         ycsu = np.array([pe.value(dm.model.ycsu[t]) for t in t_range])
         ycsb = np.array([pe.value(dm.model.ycsb[t]) for t in t_range])
         
-        Qc = np.array([pe.value(dm.model.Qc[t]) for t in t_range])
+        Qc = np.array([pe.value(dm.model.Qc[t]) for t in t_range])/1000. # from kWt -> MWt
+        Qu = dm.model.Qu.value/1000. # from kWt -> MWt
 
         self.Plant.SystemControl.is_rec_su_allowed_in = [ 1 if (yr[t] + yrsu[t] + yrsb[t]) > 0.001 else 0 for t in range(N)]  # Receiver on, startup, or standby
-        self.Plant.SystemControl.is_rec_sb_allowed_in = [ 1 if yrsb[t] > 0.001 else 0 for t in t_range]  # Receiver standby
+        self.Plant.SystemControl.is_rec_sb_allowed_in = [ 1 if yrsb[t] > 0.001 else 0 for t in range(N)]  # Receiver standby
 
-        self.Plant.SystemControl.is_pc_su_allowed_in = [ 1 if (y[t] + ycsu[t]) > 0.001 else 0 for t in t_range]  # Cycle on or startup
-        self.Plant.SystemControl.is_pc_sb_allowed_in = [ 1 if ycsb[t] > 0.001 else 0 for t in t_range]  # Cyle standby
+        self.Plant.SystemControl.is_pc_su_allowed_in = [ 1 if (y[t] + ycsu[t]) > 0.001 else 0 for t in range(N)]  # Cycle on or startup
+        self.Plant.SystemControl.is_pc_sb_allowed_in = [ 1 if ycsb[t] > 0.001 else 0 for t in range(N)]  # Cyle standby
 
         #TODO: Might need to modify q_pc_target_on_in and q_pc_max_in for timesteps split between cycle startup and operation (e.g. 1383 - 1414 of csp_solver_core.cpp in mjwagner2/ssc/daotk-develop)
-        self.Plant.SystemControl.q_pc_target_su_in = [disp_params.Qc/1000. if ycsu[t] > 0.001 else 0.0 for t in t_range]
-        self.Plant.SystemControl.q_pc_target_on_in = [q_pc_target[t]/1000. for t in t_range]
-        self.Plant.SystemControl.q_pc_max_in = [q_pc_max_val for t in t_range]
+        self.Plant.SystemControl.q_pc_target_su_in = [Qc[t] if ycsu[t] > 0.001 else 0.0 for t in range(N)]
+        self.Plant.SystemControl.q_pc_target_on_in = [x[t] for t in range(N)]
+        self.Plant.SystemControl.q_pc_max_in = [Qu for t in range(N)]
 
 
     def create_dispatch_wrapper(self, PySAM_dict):
         
-        DispatchParameterClass = GDP
+        self.DispatchParameterClass = GDP
         
-        dispatch_wrap = DispatchParameterClass( self.u, self.SSC_dict, PySAM_dict,
+        dispatch_wrap = self.DispatchParameterClass( self.u, self.SSC_dict, PySAM_dict,
                     self.pyomo_horizon, self.dispatch_time_step)
         
         return dispatch_wrap
