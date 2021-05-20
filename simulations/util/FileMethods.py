@@ -86,10 +86,11 @@ class FileMethods(object):
             filename (str): name of file (without path)
             
         """
-        
+
         params_dataframe = pandas.DataFrame(data_list,columns=columns)
         
-        filepath = "../outputs/" + filename
+        filepath = os.path.join(FileMethods.samsim_dir, "outputs", filename)
+        
         params_dataframe.to_csv(filepath,index=False)
 
         
