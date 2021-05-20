@@ -10,6 +10,7 @@ Most recently tested against PySAM 2.1.4
 
 import os,sys
 sys.path.append('..')
+sys.path.append('/home/una/github/postdoc_uw_madison/NE2/sam_dev/neup-ies/simulations')
 import modules.NuclearTES as NuclearTES
 import matplotlib.pyplot as plt
 import pint
@@ -98,9 +99,9 @@ op_modes_list = [
     "CR_OFF__PC_OFF__TES_OFF,"
     "CR_SU__PC_OFF__TES_OFF",
     "CR_ON__PC_SU__TES_OFF",
-    "CR_ON__PC_SB__TES_OFF",        
+    "CR_ON__PC_SB__TES_OFF",
     "CR_ON__PC_RM_HI__TES_OFF",
-    "CR_ON__PC_RM_LO__TES_OFF",        
+    "CR_ON__PC_RM_LO__TES_OFF",
     "CR_DF__PC_MAX__TES_OFF",
     "CR_OFF__PC_SU__TES_DC",
     "CR_ON__PC_OFF__TES_CH",
@@ -108,7 +109,7 @@ op_modes_list = [
     "CR_ON__PC_TARGET__TES_CH",
     "CR_ON__PC_TARGET__TES_DC",
     "CR_ON__PC_RM_LO__TES_EMPTY",
-    "CR_DF__PC_OFF__TES_FULL",       
+    "CR_DF__PC_OFF__TES_FULL",
     "CR_OFF__PC_SB__TES_DC",
     "CR_OFF__PC_MIN__TES_EMPTY",
     "CR_OFF__PC_RM_LO__TES_EMPTY",

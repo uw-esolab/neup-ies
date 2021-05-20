@@ -20,11 +20,10 @@
 
   <Models>
     <Code name="PySAM" subType="GenericCode">
-      <executable>/home/una/github/postdoc_uw_madison/NE2/sam_dev/neup-ies/simulations/data/PySAM_tests/PySAM_model1.py</executable>
+      <executable>/home/una/github/postdoc_uw_madison/NE2/sam_dev/neup-ies/simulations/scripts/PySAM_model1.py</executable>
       <clargs arg="/home/una/miniconda3/bin/python" type="prepend"/>
       <clargs type="input" arg="-i" extension=".csv"/>
-      <clargs type="output" arg="-o" extension=".csv"/>
-      <outputFile>fileOutput.csv</outputFile>
+      <outputFile>/home/una/github/postdoc_uw_madison/NE2/sam_dev/neup-ies/simulations/outputs/output.csv</outputFile>
     </Code>
   </Models>
 

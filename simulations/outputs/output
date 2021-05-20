@@ -1,0 +1,19 @@
+PID =  1263160
+Traceback (most recent call last):
+  File "/home/una/github/postdoc_uw_madison/NE2/sam_dev/neup-ies/simulations/scripts/PySAM_model1.py", line 34, in <module>
+    nuctes.run_sim( run_loop=False, export=True, filename=output_file )
+  File "/home/una/github/postdoc_uw_madison/NE2/sam_dev/neup-ies/simulations/modules/GenericSSCModule.py", line 88, in run_sim
+    self.export_results(filename)
+  File "/home/una/github/postdoc_uw_madison/NE2/sam_dev/neup-ies/simulations/modules/GenericSSCModule.py", line 301, in export_results
+    FileMethods.write_csv(dataframe_list, columns, filename)
+  File "/home/una/github/postdoc_uw_madison/NE2/sam_dev/neup-ies/simulations/util/FileMethods.py", line 93, in write_csv
+    params_dataframe.to_csv(filepath,index=False)
+  File "/home/una/miniconda3/lib/python3.8/site-packages/pandas/core/generic.py", line 3387, in to_csv
+    return DataFrameRenderer(formatter).to_csv(
+  File "/home/una/miniconda3/lib/python3.8/site-packages/pandas/io/formats/format.py", line 1083, in to_csv
+    csv_formatter.save()
+  File "/home/una/miniconda3/lib/python3.8/site-packages/pandas/io/formats/csvs.py", line 228, in save
+    with get_handle(
+  File "/home/una/miniconda3/lib/python3.8/site-packages/pandas/io/common.py", line 642, in get_handle
+    handle = open(
+FileNotFoundError: [Errno 2] No such file or directory: '../outputs/output.csv'
