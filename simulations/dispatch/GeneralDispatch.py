@@ -590,7 +590,7 @@ class GeneralDispatchParamWrap(object):
         C_pc      = 0.002 * u.USD/u.kWh        
         C_csu     = 6250 * u.USD
         C_chsp    = 6250/5. * u.USD
-        C_delta_w = 0.0 * u.USD/u.kW
+        C_delta_w = 0.01 * u.USD/u.kW
         C_v_w     = 0.4 * u.USD/u.kW
         C_csb     = 0.0 * u.USD/u.kWh
 

@@ -174,7 +174,7 @@ class GenericSSCModule(ABC):
             outputs = self.run_pyomo(disp_params)
             
             # updating SSC inputs using Pyomo outputs
-            self.update_Plant_after_Pyomo()
+            # self.update_Plant_after_Pyomo()
         
         # first execution of Plant through SSC
         self.run_Plant_through_SSC( time_start , time_next )
