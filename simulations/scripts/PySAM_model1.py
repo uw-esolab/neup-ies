@@ -27,10 +27,19 @@ print("PID = ", pid)
 #     Run Simulation
 # =============================================================================
 
-# defining directories
+# creating Simulation object
 nuctes = NuclearTES.NuclearTES()
-output_file = 'output.csv'
+
+# checking to see if an output file was specified
+is_output_specified = True if '-o' in sys.argv else False 
+
+# define output file name based on user input vs. default
+output_file = sys.argv[sys.argv.index('-o')+1] if is_output_specified else 'output.csv'
+
+# run simulation for Simulation object
 nuctes.run_sim( run_loop=False, export=True, filename=output_file )
+
+# extracting SSC modules saved as object instances in Simulation object
 nt = nuctes.Plant
 so = nuctes.SO
 
