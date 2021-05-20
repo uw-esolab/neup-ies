@@ -90,9 +90,9 @@ class NuclearTES(GenericSSCModule):
 
     def create_dispatch_wrapper(self, PySAM_dict):
         
-        DispatchParameterClass = NDP
+        self.DispatchParameterClass = NDP
         
-        dispatch_wrap = DispatchParameterClass( self.u, self.SSC_dict, PySAM_dict,
+        dispatch_wrap = self.DispatchParameterClass( self.u, self.SSC_dict, PySAM_dict,
                     self.pyomo_horizon, self.dispatch_time_step)
         
         return dispatch_wrap
