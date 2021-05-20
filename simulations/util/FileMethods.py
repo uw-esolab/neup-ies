@@ -89,7 +89,7 @@ class FileMethods(object):
 
         params_dataframe = pandas.DataFrame(data_list,columns=columns)
         
-        filepath = os.path.join(FileMethods.samsim_dir, "outputs", filename)
+        filepath = os.path.join(FileMethods.samsim_dir, "data", filename)
         
         params_dataframe.to_csv(filepath,index=False)
 
