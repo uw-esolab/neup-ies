@@ -16,10 +16,12 @@ from util.FileMethods import FileMethods
 from util.SSCHelperMethods import SSCHelperMethods
 from dispatch.GeneralDispatch import GeneralDispatch as GD
 from dispatch.GeneralDispatch import GeneralDispatchParamWrap as GDP
+import pyomo.environ as pe
 import numpy as np
 import copy
+from abc import ABC
 
-class GenericSSCModule(object):
+class GenericSSCModule(ABC):
     
     def __init__(self, plant_name="nuclear_tes", json_name="model1", 
                        is_dispatch=False, dispatch_time_step=1):
@@ -166,6 +168,9 @@ class GenericSSCModule(object):
         if self.is_dispatch:
             disp_params = self.create_dispatch_params()
             outputs = self.run_pyomo(disp_params)
+            
+            # setting dispatch targets to True so that SSC can read in Pyomo inputs
+            self.update_Plant_after_Pyomo( outputs )
         
         # first execution of Plant through SSC
         self.run_Plant_through_SSC( time_start , time_next )
@@ -188,10 +193,10 @@ class GenericSSCModule(object):
                 # outputs = self.run_pyomo()
                 
                 # update SSC inputs from dispatch outputs
-                plant_updt = self.update_Plant_with_dispatch()
+                # plant_updt = self.update_Plant_after_Pyomo()
             
             # update Plant parameters after previous run
-            self.update_Plant( )
+            self.update_Plant_after_SSC( )
             
             # run Plant again
             self.run_Plant_through_SSC( time_start , time_next )
@@ -228,7 +233,7 @@ class GenericSSCModule(object):
         return rt_results
     
     
-    def update_Plant(self):
+    def update_Plant_after_SSC(self):
         """ Replace key Plant inputs with previous outputs in chainlinked simulations
         """
         
@@ -241,6 +246,38 @@ class GenericSSCModule(object):
         self.Plant.SystemControl.pc_op_mode_initial               = self.Plant.Outputs.pc_op_mode_final
         self.Plant.SystemControl.pc_startup_energy_remain_initial = self.Plant.Outputs.pc_startup_time_remain_final
         self.Plant.SystemControl.pc_startup_time_remain_init      = self.Plant.Outputs.pc_startup_energy_remain_final
+        
+    def update_Plant_after_Pyomo(self, outputs):
+        
+        self.Plant.SystemControl.is_dispatch_targets = True
+        
+        dm = self.dispatch_model
+        
+        t_range = dm.model.T
+        N = dm.model.num_periods.value
+        
+        # rec stuff
+        yr   = np.array([pe.value(dm.model.yr[t]) for t in t_range])
+        yrsu = np.array([pe.value(dm.model.yrsu[t]) for t in t_range])
+        yrsb = np.array([pe.value(dm.model.yrsb[t]) for t in t_range])
+        
+        # cycle stuff
+        y    = np.array([pe.value(dm.model.y[t]) for t in t_range])
+        ycsu = np.array([pe.value(dm.model.ycsu[t]) for t in t_range])
+        ycsb = np.array([pe.value(dm.model.ycsb[t]) for t in t_range])
+        
+        Qc = np.array([pe.value(dm.model.Qc[t]) for t in t_range])
+
+        self.Plant.SystemControl.is_rec_su_allowed_in = [ 1 if (yr[t] + yrsu[t] + yrsb[t]) > 0.001 else 0 for t in range(N)]  # Receiver on, startup, or standby
+        self.Plant.SystemControl.is_rec_sb_allowed_in = [ 1 if yrsb[t] > 0.001 else 0 for t in t_range]  # Receiver standby
+
+        self.Plant.SystemControl.is_pc_su_allowed_in = [ 1 if (y[t] + ycsu[t]) > 0.001 else 0 for t in t_range]  # Cycle on or startup
+        self.Plant.SystemControl.is_pc_sb_allowed_in = [ 1 if ycsb[t] > 0.001 else 0 for t in t_range]  # Cyle standby
+
+        #TODO: Might need to modify q_pc_target_on_in and q_pc_max_in for timesteps split between cycle startup and operation (e.g. 1383 - 1414 of csp_solver_core.cpp in mjwagner2/ssc/daotk-develop)
+        self.Plant.SystemControl.q_pc_target_su_in = [disp_params.Qc/1000. if ycsu[t] > 0.001 else 0.0 for t in t_range]
+        self.Plant.SystemControl.q_pc_target_on_in = [q_pc_target[t]/1000. for t in t_range]
+        self.Plant.SystemControl.q_pc_max_in = [q_pc_max_val for t in t_range]
 
 
     def create_dispatch_wrapper(self, PySAM_dict):
