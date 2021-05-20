@@ -174,7 +174,7 @@ class GenericSSCModule(ABC):
             outputs = self.run_pyomo(disp_params)
             
             # updating SSC inputs using Pyomo outputs
-            self.update_Plant_after_Pyomo( )
+            self.update_Plant_after_Pyomo()
         
         # first execution of Plant through SSC
         self.run_Plant_through_SSC( time_start , time_next )
@@ -194,16 +194,16 @@ class GenericSSCModule(ABC):
             
             # run dispatch optimization
             if self.is_dispatch:
-                
+                pass
                 # **update** dispatch parameters using previous SSC run
                 # i.e. updating Pyomo inputs using SSC outputs
                 # disp_params = self.create_dispatch_params()
                 
                 # run pyomo optimization again
-                outputs = self.run_pyomo(disp_params)
+                # outputs = self.run_pyomo(disp_params)
             
-                # updating SSC inputs using Pyomo outputs
-                self.update_Plant_after_Pyomo( )
+                # # updating SSC inputs using Pyomo outputs
+                # self.update_Plant_after_Pyomo( )
             
 
             # run Plant again
@@ -267,7 +267,11 @@ class GenericSSCModule(ABC):
         # TODO: I think all of this stuff should live in GeneralDispatch or the Wrapper
         
         t_range = dm.model.T
-        N = dm.model.num_periods.value
+        N_dispatch = dm.model.num_periods.value
+        N_full     = int((self.SSC_dict['time_stop']*self.u.s).to('hr').m)
+        empty_array = [0]*N_full
+        horizon = slice(0,self.pyomo_horizon.m,1)
+        # TODO: ^ make full 8760 sized array with front 48 spaces filled and save it to Plant
         
         # rec stuff
         yr   = np.array([pe.value(dm.model.yr[t]) for t in t_range])
@@ -275,7 +279,7 @@ class GenericSSCModule(ABC):
         yrsb = np.array([pe.value(dm.model.yrsb[t]) for t in t_range])
         
         # cycle stuff
-        x   = np.array([pe.value(dm.model.x[t]) for t in t_range])/1000. # from kWt -> MWt
+        x    = np.array([pe.value(dm.model.x[t]) for t in t_range])/1000. # from kWt -> MWt
         y    = np.array([pe.value(dm.model.y[t]) for t in t_range])
         ycsu = np.array([pe.value(dm.model.ycsu[t]) for t in t_range])
         ycsb = np.array([pe.value(dm.model.ycsb[t]) for t in t_range])
@@ -283,16 +287,30 @@ class GenericSSCModule(ABC):
         Qc = np.array([pe.value(dm.model.Qc[t]) for t in t_range])/1000. # from kWt -> MWt
         Qu = dm.model.Qu.value/1000. # from kWt -> MWt
 
-        self.Plant.SystemControl.is_rec_su_allowed_in = [ 1 if (yr[t] + yrsu[t] + yrsb[t]) > 0.001 else 0 for t in range(N)]  # Receiver on, startup, or standby
-        self.Plant.SystemControl.is_rec_sb_allowed_in = [ 1 if yrsb[t] > 0.001 else 0 for t in range(N)]  # Receiver standby
+        # save partial arrays
+        is_rec_su_allowed_in = [ 1 if (yr[t] + yrsu[t] + yrsb[t]) > 0.001 else 0 for t in range(N_dispatch)]  # Receiver on, startup, or standby
+        is_rec_sb_allowed_in = [ 1 if yrsb[t] > 0.001 else 0 for t in range(N_dispatch)]  # Receiver standby
 
-        self.Plant.SystemControl.is_pc_su_allowed_in = [ 1 if (y[t] + ycsu[t]) > 0.001 else 0 for t in range(N)]  # Cycle on or startup
-        self.Plant.SystemControl.is_pc_sb_allowed_in = [ 1 if ycsb[t] > 0.001 else 0 for t in range(N)]  # Cyle standby
+        is_pc_su_allowed_in = [ 1 if (y[t] + ycsu[t]) > 0.001 else 0 for t in range(N_dispatch)]  # Cycle on or startup
+        is_pc_sb_allowed_in = [ 1 if ycsb[t] > 0.001 else 0 for t in range(N_dispatch)]  # Cyle standby
 
         #TODO: Might need to modify q_pc_target_on_in and q_pc_max_in for timesteps split between cycle startup and operation (e.g. 1383 - 1414 of csp_solver_core.cpp in mjwagner2/ssc/daotk-develop)
-        self.Plant.SystemControl.q_pc_target_su_in = [Qc[t] if ycsu[t] > 0.001 else 0.0 for t in range(N)]
-        self.Plant.SystemControl.q_pc_target_on_in = [x[t] for t in range(N)]
-        self.Plant.SystemControl.q_pc_max_in = [Qu for t in range(N)]
+        q_pc_target_su_in = [Qc[t] if ycsu[t] > 0.001 else 0.0 for t in range(N_dispatch)]
+        q_pc_target_on_in = [x[t] for t in range(N_dispatch)]
+        q_pc_max_in = [Qu for t in range(N_dispatch)]
+        
+        
+        # save full arrays
+        self.Plant.SystemControl.is_rec_su_allowed_in = [ 1 if (yr[t] + yrsu[t] + yrsb[t]) > 0.001 else 0 for t in range(N_dispatch)]  # Receiver on, startup, or standby
+        self.Plant.SystemControl.is_rec_sb_allowed_in = [ 1 if yrsb[t] > 0.001 else 0 for t in range(N_dispatch)]  # Receiver standby
+
+        self.Plant.SystemControl.is_pc_su_allowed_in = [ 1 if (y[t] + ycsu[t]) > 0.001 else 0 for t in range(N_dispatch)]  # Cycle on or startup
+        self.Plant.SystemControl.is_pc_sb_allowed_in = [ 1 if ycsb[t] > 0.001 else 0 for t in range(N_dispatch)]  # Cyle standby
+
+        #TODO: Might need to modify q_pc_target_on_in and q_pc_max_in for timesteps split between cycle startup and operation (e.g. 1383 - 1414 of csp_solver_core.cpp in mjwagner2/ssc/daotk-develop)
+        self.Plant.SystemControl.q_pc_target_su_in = [Qc[t] if ycsu[t] > 0.001 else 0.0 for t in range(N_dispatch)]
+        self.Plant.SystemControl.q_pc_target_on_in = [x[t] for t in range(N_dispatch)]
+        self.Plant.SystemControl.q_pc_max_in = [Qu for t in range(N_dispatch)]
 
 
     def create_dispatch_wrapper(self, PySAM_dict):
