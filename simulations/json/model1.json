@@ -326,7 +326,7 @@
         "analysis_period" :  25,
         "enable_interconnection_limit" :  0,
         "grid_interconnection_limit_kwac" :  20000,
-        "compute_module_2" : "single_owner",
+        "compute_module_2" : "singleowner",
         "ppa_soln_mode" :  0,
         "ppa_price_input" :   [ 0.13 ],
         "ppa_escalation" :  1,
