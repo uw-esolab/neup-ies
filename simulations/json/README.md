@@ -32,7 +32,8 @@ Repeat the syntax for `Financial` module data entries.
 
 **Finally**, the last entry of the `SSC_inputs` dictionary in the JSON script should be:
 ```
-"number_compute_modules" : <N>, 
+"number_compute_modules" : <N> 
+}
 ```
 where *N* is the number of compute modules (typically 3).
 This syntax ensures that we can run the `PySSCWrapper` correctly for debugging.
