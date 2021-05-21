@@ -38,14 +38,14 @@ with open('output.csv','w') as f:
     is_output_specified = True if '-o' in sys.argv else False
 
     # define output file name based on user input vs. default
-    output_file = sys.argv[sys.argv.index('-o')+1] if is_output_specified else 'output.csv'
-
+    output_file = sys.argv[sys.argv.index('-o')+1]+'.csv' if is_output_specified else 'output.csv'
     # run simulation for Simulation object
-    nuctes.run_sim( run_loop=False, export=False, filename=output_file )
+    nuctes.run_sim( run_loop=False, export=True, filename=output_file )
 
     # extracting SSC modules saved as object instances in Simulation object
     nt = nuctes.Plant
     so = nuctes.SO
+
 
     print('Made it past execute.')
 
