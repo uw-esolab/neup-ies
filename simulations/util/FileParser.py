@@ -6,8 +6,9 @@ Created on Fri Apr 16 10:15:51 2021
 @author: gabrielsoto
 """
 
-import os, re
+import os, re, pandas, openpyxl
 from util.FileMethods import FileMethods
+import pyomo as pyo
 
 class FileParser(object):
     
@@ -83,8 +84,7 @@ class FileParser(object):
         return lines
     
     
-    #TODO: replace fpath input with the name of the Dispatcher?
-    def get_dispatch_string_properties(fpath,return_case=0):
+    def get_dispatch_string_properties(dispatch_name,return_case=0):
         """ Method to return relevant dispatch string properties
         
         This method parses through a given file found at the input filepath
@@ -98,12 +98,16 @@ class FileParser(object):
         files, should they change this method will no longer work.
         
         Inputs:
-            fpath (str)        : full path to relevant file
-            return_case (int)  : 0=return Param properties, 1=return Var properties
+            dispatch_name (str)  : name of Dispatch class to document
+            return_case (int)    : 0=return Param properties, 1=return Var properties
         Outputs:
             P (dict)   : dictionary with entries for line number and str contents
             
         """
+        
+        #TODO: check that dispatch name exists
+        filepath  = os.path.join( FileMethods.samsim_dir, 'dispatch', dispatch_name)
+        filepath += '.py'
         
         # methods to be used as book-ends
         method_names = ['def generate_params',
@@ -115,7 +119,7 @@ class FileParser(object):
         param_method_end   = method_names[1] if return_case == 0 else method_names[2]
     
         # get list of relevant lines to parse through
-        lines_list = FileParser.get_lines_between_strings(fpath, param_method_start, param_method_end)
+        lines_list = FileParser.get_lines_between_strings(filepath, param_method_start, param_method_end)
         
         # define regex (regular expression) rules for matching strings
         params_latex_rule   = re.compile( FileParser.param_latex_regex )
@@ -194,5 +198,114 @@ class FileParser(object):
         return P
     
     #TODO: add file to write LaTeX scripts with all parameter/variable names?
+    
+    
+    def get_single_pyomo_model_data(model, params_list, ind):
+        
+        OrderedSimpleSet = pyo.core.base.set.OrderedSimpleSet
+        SimpleParam  = pyo.core.base.param.SimpleParam
+        IndexedParam = pyo.core.base.param.IndexedParam
+        
+        if hasattr(model, params_list[ind]):
+            modelParam = getattr(model, params_list[ind])
+        
+            if type(modelParam) is OrderedSimpleSet:
+                modelData = modelParam.data()
+            elif type(modelParam) is SimpleParam:
+                modelData = modelParam.value
+            elif type(modelParam) is IndexedParam:
+                ParamDict = modelParam.extract_values()
+                modelData = [ParamDict[x] for x in ParamDict.keys()]
+            else:
+                modelData = []
+        
+            return modelData  
+    
+        else:
+            return []
+    
+    def get_list_of_pyomo_data(model, params_list):
+        
+        N = len(params_list)
+        data_list = []
+        
+        for n in range(N):
+            single_data_list = FileParser.get_single_pyomo_model_data(model, params_list, n)
+            data_list.append(single_data_list)
+        
+        return data_list
+
+
+    def write_pyomo_params_to_excel(model, dispatch_name, xls_file_name):
+        
+        P = FileParser.get_dispatch_string_properties(dispatch_name,0)
+        
+        params_txt = P['params_txt']
+        param_details = P['detail']
+        
+        get_data = lambda x: FileParser.get_single_pyomo_model_data(model, params_txt, x)
             
+        dataframe_list = [ [params_txt[n], get_data(n), param_details[n+3]] for n in range(len(params_txt))  ]
+    
+        params_dataframe = pandas.DataFrame(dataframe_list,columns=['Parameter', 'Value', 'Description'])
+        
+        xls_path = os.path.join(FileMethods.samsim_dir, 'outputs', xls_file_name)
+        sheetname = 'Raw Data'
+        
+        if not os.path.exists(xls_path):
+            wb = openpyxl.Workbook()
+            wb.save(filename=xls_file_name)
+        
+        with pandas.ExcelWriter(xls_file_name, engine='openpyxl', mode='a') as writer: 
+            workBook = writer.book
+            try:
+                workBook.remove(workBook[sheetname])
+            except:
+                print("Worksheet does not exist")
+            finally:
+                params_dataframe.to_excel(writer, sheet_name=sheetname,index=False)
+            writer.save()
+
+# filepath   = os.path.join( FileMethods.samsim_dir, 'dispatch/GeneralDispatch.py' )
+# P = FileParser.get_dispatch_string_properties(filepath,0)
+
+# params_txt = P['params_txt']
+# param_details = P['detail']
+
+# OrderedSimpleSet = pyo.core.base.set.OrderedSimpleSet
+# SimpleParam  = pyo.core.base.param.SimpleParam
+# IndexedParam = pyo.core.base.param.IndexedParam
+
+# def get_model_data(ind):
+#     modelParam = getattr(dm.model,params_txt[ind])
+
+#     if type(modelParam) is OrderedSimpleSet:
+#         modelData = modelParam.data()
+#     elif type(modelParam) is SimpleParam:
+#         modelData = modelParam.value
+#     elif type(modelParam) is IndexedParam:
+#         ParamDict = modelParam.extract_values()
+#         modelData = [ParamDict[x] for x in ParamDict.keys()]
+#     else:
+#         modelData = []
+    
+#     return modelData
+
+# dataframe_list = [ [params_txt[n], get_model_data(n), param_details[n+3]] for n in range(len(params_txt))  ]
+
+# params_dataframe = pd.DataFrame(dataframe_list,columns=['Parameter', 'Value', 'Description'])
+
+
+# def write_excel(filename,sheetname,dataframe):
+#     with pd.ExcelWriter(filename, engine='openpyxl', mode='a') as writer: 
+#         workBook = writer.book
+#         try:
+#             workBook.remove(workBook[sheetname])
+#         except:
+#             print("Worksheet does not exist")
+#         finally:
+#             dataframe.to_excel(writer, sheet_name=sheetname,index=False)
+#             writer.save()
+
+
             
