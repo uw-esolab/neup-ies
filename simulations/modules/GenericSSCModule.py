@@ -269,8 +269,8 @@ class GenericSSCModule(ABC):
         t_range = dm.model.T
         N_dispatch = dm.model.num_periods.value
         N_full     = int((self.SSC_dict['time_stop']*self.u.s).to('hr').m)
-        empty_array = [0]*N_full
-        horizon = slice(0,self.pyomo_horizon.m,1)
+        empty_array = [0]*(N_full-N_dispatch)
+
         # TODO: ^ make full 8760 sized array with front 48 spaces filled and save it to Plant
         
         # rec stuff
@@ -288,29 +288,29 @@ class GenericSSCModule(ABC):
         Qu = dm.model.Qu.value/1000. # from kWt -> MWt
 
         # save partial arrays
-        is_rec_su_allowed_in = [ 1 if (yr[t] + yrsu[t] + yrsb[t]) > 0.001 else 0 for t in range(N_dispatch)]  # Receiver on, startup, or standby
-        is_rec_sb_allowed_in = [ 1 if yrsb[t] > 0.001 else 0 for t in range(N_dispatch)]  # Receiver standby
+        is_rec_su_allowed_in = [1 if (yr[t] + yrsu[t] + yrsb[t]) > 0.001 else 0 for t in range(N_dispatch)]  # Receiver on, startup, or standby
+        is_rec_sb_allowed_in = [1 if yrsb[t] > 0.001 else 0 for t in range(N_dispatch)]  # Receiver standby
 
-        is_pc_su_allowed_in = [ 1 if (y[t] + ycsu[t]) > 0.001 else 0 for t in range(N_dispatch)]  # Cycle on or startup
-        is_pc_sb_allowed_in = [ 1 if ycsb[t] > 0.001 else 0 for t in range(N_dispatch)]  # Cyle standby
+        is_pc_su_allowed_in  = [1 if (y[t] + ycsu[t]) > 0.001 else 0 for t in range(N_dispatch)]  # Cycle on or startup
+        is_pc_sb_allowed_in  = [1 if ycsb[t] > 0.001 else 0 for t in range(N_dispatch)]  # Cyle standby
 
         #TODO: Might need to modify q_pc_target_on_in and q_pc_max_in for timesteps split between cycle startup and operation (e.g. 1383 - 1414 of csp_solver_core.cpp in mjwagner2/ssc/daotk-develop)
-        q_pc_target_su_in = [Qc[t] if ycsu[t] > 0.001 else 0.0 for t in range(N_dispatch)]
-        q_pc_target_on_in = [x[t] for t in range(N_dispatch)]
-        q_pc_max_in = [Qu for t in range(N_dispatch)]
+        q_pc_target_su_in    = [Qc[t] if ycsu[t] > 0.001 else 0.0 for t in range(N_dispatch)]
+        q_pc_target_on_in    = [x[t] for t in range(N_dispatch)]
+        q_pc_max_in          = [Qu for t in range(N_dispatch)]
         
         
         # save full arrays
-        self.Plant.SystemControl.is_rec_su_allowed_in = [ 1 if (yr[t] + yrsu[t] + yrsb[t]) > 0.001 else 0 for t in range(N_dispatch)]  # Receiver on, startup, or standby
-        self.Plant.SystemControl.is_rec_sb_allowed_in = [ 1 if yrsb[t] > 0.001 else 0 for t in range(N_dispatch)]  # Receiver standby
+        self.Plant.SystemControl.is_rec_su_allowed_in = np.hstack([is_rec_su_allowed_in, empty_array]).tolist()
+        self.Plant.SystemControl.is_rec_sb_allowed_in = np.hstack([is_rec_sb_allowed_in, empty_array]).tolist()
 
-        self.Plant.SystemControl.is_pc_su_allowed_in = [ 1 if (y[t] + ycsu[t]) > 0.001 else 0 for t in range(N_dispatch)]  # Cycle on or startup
-        self.Plant.SystemControl.is_pc_sb_allowed_in = [ 1 if ycsb[t] > 0.001 else 0 for t in range(N_dispatch)]  # Cyle standby
-
+        self.Plant.SystemControl.is_pc_su_allowed_in  = np.hstack([is_pc_su_allowed_in, empty_array]).tolist()
+        self.Plant.SystemControl.is_pc_sb_allowed_in  = np.hstack([is_pc_sb_allowed_in, empty_array]).tolist()
+        
         #TODO: Might need to modify q_pc_target_on_in and q_pc_max_in for timesteps split between cycle startup and operation (e.g. 1383 - 1414 of csp_solver_core.cpp in mjwagner2/ssc/daotk-develop)
-        self.Plant.SystemControl.q_pc_target_su_in = [Qc[t] if ycsu[t] > 0.001 else 0.0 for t in range(N_dispatch)]
-        self.Plant.SystemControl.q_pc_target_on_in = [x[t] for t in range(N_dispatch)]
-        self.Plant.SystemControl.q_pc_max_in = [Qu for t in range(N_dispatch)]
+        self.Plant.SystemControl.q_pc_target_su_in    = np.hstack([q_pc_target_su_in, empty_array]).tolist()
+        self.Plant.SystemControl.q_pc_target_on_in    = np.hstack([q_pc_target_on_in, empty_array]).tolist()
+        self.Plant.SystemControl.q_pc_max_in          = np.hstack([q_pc_max_in, empty_array]).tolist()
 
 
     def create_dispatch_wrapper(self, PySAM_dict):

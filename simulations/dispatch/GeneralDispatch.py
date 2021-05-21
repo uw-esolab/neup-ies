@@ -12,7 +12,7 @@ Model authors:
 Pyomo code by Alex Zolan
 Modified by Gabriel Soto
 """
-#import pyomo
+import pyomo
 import pyomo.environ as pe
 import numpy as np
 from util.FileMethods import FileMethods
