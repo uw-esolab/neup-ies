@@ -9,21 +9,21 @@
   </TestInfo>
 
   <RunInfo>
-    <WorkingDir>PySAM_tests/test1</WorkingDir>
-    <Sequence>runGrid,outputResults</Sequence>
+    <WorkingDir>.</WorkingDir>
+    <Sequence>RAVEN_testing,outputResults</Sequence>
     <batchSize>4</batchSize>
   </RunInfo>
 
   <Files>
-    <Input name="dispatch_factors" type="">/home/una/github/postdoc_uw_madison/NE2/sam_dev/neup-ies/simulations/data/dispatch_factors_ts_test.csv</Input>
+    <Input name="dispatch_factors" type="">dispatch_factors_ts_test.csv</Input>
   </Files>
 
   <Models>
     <Code name="PySAM" subType="GenericCode">
-      <executable>/home/una/github/postdoc_uw_madison/NE2/sam_dev/neup-ies/simulations/scripts/PySAM_model1.py</executable>
+      <executable>/home/una/github/postdoc_uw_madison/NE2/sam_dev/neup-ies/simulations/scripts/PySAM_RAVEN_model1.py</executable>
       <clargs arg="/home/una/miniconda3/bin/python" type="prepend"/>
       <clargs type="input" arg="-i" extension=".csv"/>
-      <outputFile>/home/una/github/postdoc_uw_madison/NE2/sam_dev/neup-ies/simulations/outputs/output.csv</outputFile>
+      <outputFile>output.csv</outputFile>
     </Code>
   </Models>
 
@@ -44,7 +44,7 @@
   </Samplers>
 
   <Steps>
-    <MultiRun name="runGrid">
+    <MultiRun name="RAVEN_testing">
       <Input class="Files" type="">dispatch_factors</Input>
       <Model class="Models" type="Code">PySAM</Model>
       <Sampler class="Samplers" type="Grid">myGrid</Sampler>
