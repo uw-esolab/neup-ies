@@ -1,0 +1,10 @@
+<DataObjectMetadata name="results">
+  <DataSet type="Static">
+    <general>
+      <inputs>dis_fac</inputs>
+      <pointwise_meta>PointProbability,ProbabilityWeight,ProbabilityWeight-dis_fac,prefix</pointwise_meta>
+      <sampleTag>RAVEN_sample_ID</sampleTag>
+    </general>
+  </DataSet>
+  
+</DataObjectMetadata>

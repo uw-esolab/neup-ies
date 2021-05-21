@@ -1,0 +1,16 @@
+Object,Key,Value
+Plant,annual_energy,4166471126.6082335
+Plant,annual_total_water_use,0.0
+PySAM,capacity_factor,1.123638322847498 dimensionless
+SingleOwner,ppa,1.7755053065351667
+SingleOwner,lppa_nom,2.045417423998051
+SingleOwner,lppa_real,1.6240018418290512
+SingleOwner,lcoe_nom,1.927828436141838
+SingleOwner,lcoe_real,1.5306396114027372
+SingleOwner,project_return_aftertax_npv,47890858.54386884
+SingleOwner,flip_actual_irr,10.99997576858874
+SingleOwner,flip_actual_year,20.0
+SingleOwner,project_return_aftertax_irr,12.805045635985449
+SingleOwner,cost_installed,752362117.6499178
+SingleOwner,size_of_equity,328714140.64712244
+SingleOwner,size_of_debt,423647977.0027954
