@@ -254,9 +254,10 @@ class FileParser(object):
         
         if not os.path.exists(xls_path):
             wb = openpyxl.Workbook()
-            wb.save(filename=xls_file_name)
+            wb.save(filename=xls_path)
+            wb.close()
         
-        with pandas.ExcelWriter(xls_file_name, engine='openpyxl', mode='a') as writer: 
+        with pandas.ExcelWriter(xls_path, engine='openpyxl', mode='a') as writer: 
             workBook = writer.book
             try:
                 workBook.remove(workBook[sheetname])
