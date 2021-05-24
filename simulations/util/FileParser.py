@@ -203,14 +203,30 @@ class FileParser(object):
     
     
     def get_single_pyomo_model_data(model, params_list, ind):
+        """ Method to return single parameter data from a Pyomo model
         
+        This method parses through a given Pyomo model and returns a value for
+        a parameter from params_list specified by the index ind. 
+        
+        Inputs:
+            model (PyomoModel) : Pyomo model after execution
+            params_list (str)  : list of strings representing parameter names
+            ind (int)          : index of params_list to return 
+        Outputs:
+            modelData (int or float)   : value of requested Pyomo parameter
+            
+        """
         OrderedSimpleSet = pyo.core.base.set.OrderedSimpleSet
         SimpleParam  = pyo.core.base.param.SimpleParam
         IndexedParam = pyo.core.base.param.IndexedParam
         
+        # check that the model has the Parameter defined
         if hasattr(model, params_list[ind]):
+            # get the model Parameter
             modelParam = getattr(model, params_list[ind])
-        
+            
+            # depending on how each parameter was initialized, there are 
+            #    different ways to retrieve them
             if type(modelParam) is OrderedSimpleSet:
                 modelData = modelParam.data()
             elif type(modelParam) is SimpleParam:
@@ -219,6 +235,8 @@ class FileParser(object):
                 ParamDict = modelParam.extract_values()
                 modelData = [ParamDict[x] for x in ParamDict.keys()]
             else:
+                # Parameter couldn't be found, return None for now
+                #TODO: raise some sort of error here
                 modelData = []
         
             return modelData  
@@ -227,7 +245,20 @@ class FileParser(object):
             return []
     
     def get_list_of_pyomo_data(model, params_list):
+        """ Method to return all parameter data from a Pyomo model
         
+        This method parses through a given Pyomo model and returns a value for
+        each parameter given in the params_list. Typically should parse through
+        the DispatchModel first using self.get_dispatch_string_properties() to
+        get params_list.
+        
+        Inputs:
+            model (PyomoModel) : Pyomo model after execution
+            params_list (str)  : list of strings representing parameter names
+        Outputs:
+            data_list (list of int or float)   : list of data values for each Pyomo parameter
+            
+        """
         N = len(params_list)
         data_list = []
         
@@ -239,39 +270,75 @@ class FileParser(object):
 
 
     def write_pyomo_params_to_excel(model, dispatch_name, xls_file_name):
+        """ Method to write all Pyomo parameters to an Excel sheet
         
+        This method parses through a given Pyomo model and returns a value for
+        each parameter given in the params_list. Then it saves the data to an
+        Excel sheet called "Raw Data" in an xlsx file specified by the user input.
+        Output file will be written in the simulations/outputs folder. Excel sheet 
+        will have three columns: Parameter name, its value, and a txt description.
+        
+        Inputs:
+            model (PyomoModel)  : Pyomo model after execution
+            dispatch_name (str) : name of Dispatch model in the simulations/dispatch folder
+            xls_file_name (str) : name of desired output file (just filename, no directories)
+
+        """
+        
+        # parse through Dispatch class and retrieve string properties of Parameters
         P = FileParser.get_dispatch_string_properties(dispatch_name,0)
         
+        # get the text name for each parameter and details
         params_txt = P['params_txt']
         param_details = P['detail']
         
+        # lambda function to facilitate getting the pyomo parameter data
         get_data = lambda x: FileParser.get_single_pyomo_model_data(model, params_txt, x)
             
+        # create dataframe with parameter text name, data value, and text detail of that parameter
         dataframe_list = [ [params_txt[n], get_data(n), param_details[n+3]] for n in range(len(params_txt))  ]
     
+        # create pandas DataFrame with dataframe list and column names
         params_dataframe = pandas.DataFrame(dataframe_list,columns=['Parameter', 'Value', 'Description'])
         
+        # define the output file destination in the simulation/outputs folder
         xls_path = os.path.join(FileMethods.samsim_dir, 'outputs', xls_file_name)
-        sheetname = 'Raw Data'
+        sheetname = 'Raw Data' # define worksheet name for dumping data
         
+        # if the workbook doesn't already exist with given filename, create it
         if not os.path.exists(xls_path):
             wb = openpyxl.Workbook()
             wb.save(filename=xls_path)
             wb.close()
         
+        # open workbook with openpyxl
         with pandas.ExcelWriter(xls_path, engine='openpyxl', mode='a') as writer: 
             workBook = writer.book
+            # trying here to overwrite sheet if it exists, otherwise create and write data to it
             try:
                 workBook.remove(workBook[sheetname])
             except:
                 print("Worksheet does not exist")
             finally:
                 params_dataframe.to_excel(writer, sheet_name=sheetname,index=False)
+            # save the excel file and we're done!
             writer.save()
 
 
     def write_pyomo_params_to_text(model, dispatch_name, txt_file_name, param_or_var=0):
+        """ Method to write all Pyomo parameters to an text file with LaTeX
         
+        This method parses through a given Pyomo model and returns parameter names 
+        and information. In a text file specified by the user, it writes LaTeX formatted 
+        sections and subsections of the parameter listings. 
+        
+        Inputs:
+            model (PyomoModel)  : Pyomo model after execution
+            dispatch_name (str) : name of Dispatch model in the simulations/dispatch folder
+            txt_file_name (str) : name of desired output file (just filename, no directories)
+            param_or_var (int)  : select either Parameters or Variables to write 
+
+        """
         # get dictionary of parsed parameter string properties
         P = FileParser.get_dispatch_string_properties(dispatch_name,param_or_var)
         
