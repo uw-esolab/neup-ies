@@ -7,3 +7,4 @@ simulations/scripts/**.py
 
 simulations/outputs/**.csv
 simulations/outputs/**.xlsx
+simulations/outputs/**.txt
