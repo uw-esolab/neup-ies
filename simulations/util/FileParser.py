@@ -195,6 +195,8 @@ class FileParser(object):
         P['ssection_lineNo']     = ssection_lineNo
         P['detail_lineNo']       = detail_lineNo
         
+        P['N_lines'] = count
+        
         return P
     
     #TODO: add file to write LaTeX scripts with all parameter/variable names?
@@ -267,46 +269,77 @@ class FileParser(object):
                 params_dataframe.to_excel(writer, sheet_name=sheetname,index=False)
             writer.save()
 
-# filepath   = os.path.join( FileMethods.samsim_dir, 'dispatch/GeneralDispatch.py' )
-# P = FileParser.get_dispatch_string_properties(filepath,0)
 
-# params_txt = P['params_txt']
-# param_details = P['detail']
+    def write_pyomo_params_to_text(model, dispatch_name, txt_file_name, param_or_var=0):
+        
+        # get dictionary of parsed parameter string properties
+        P = FileParser.get_dispatch_string_properties(dispatch_name,param_or_var)
+        
+        # assign line contents for each type of line
+        params_latex = P['params_latex'] 
+        sections = P['sections']
+        subsection = P['ssection'] 
+        detail = P['detail']
+        
+        # assign line numbers where each type of line shows up
+        params_latex_lineNo = P['params_latex_lineNo'] 
+        section_lineNo    = P['section_lineNo']  
+        subsection_lineNo = P['ssection_lineNo']
 
-# OrderedSimpleSet = pyo.core.base.set.OrderedSimpleSet
-# SimpleParam  = pyo.core.base.param.SimpleParam
-# IndexedParam = pyo.core.base.param.IndexedParam
-
-# def get_model_data(ind):
-#     modelParam = getattr(dm.model,params_txt[ind])
-
-#     if type(modelParam) is OrderedSimpleSet:
-#         modelData = modelParam.data()
-#     elif type(modelParam) is SimpleParam:
-#         modelData = modelParam.value
-#     elif type(modelParam) is IndexedParam:
-#         ParamDict = modelParam.extract_values()
-#         modelData = [ParamDict[x] for x in ParamDict.keys()]
-#     else:
-#         modelData = []
-    
-#     return modelData
-
-# dataframe_list = [ [params_txt[n], get_model_data(n), param_details[n+3]] for n in range(len(params_txt))  ]
-
-# params_dataframe = pd.DataFrame(dataframe_list,columns=['Parameter', 'Value', 'Description'])
-
-
-# def write_excel(filename,sheetname,dataframe):
-#     with pd.ExcelWriter(filename, engine='openpyxl', mode='a') as writer: 
-#         workBook = writer.book
-#         try:
-#             workBook.remove(workBook[sheetname])
-#         except:
-#             print("Worksheet does not exist")
-#         finally:
-#             dataframe.to_excel(writer, sheet_name=sheetname,index=False)
-#             writer.save()
-
+        # total amount of lines
+        n_lines = P['N_lines']
+        
+        # defining LaTeX commands for beginning and ending sections/alignings
+        begin_section    = '\subsection{'
+        begin_subsection = '\subsubsection{'
+        begin_align      = '\\begin{flalign}'
+        end_align        = '\end{flalign}'
+        
+        # start counting at 0
+        doc_lines = []
+        count_sec  = 0
+        count_subsec = 0
+        count_params = 0
+        
+        for n in range(n_lines):
+            # writing section titles
+            if n in section_lineNo:
+                tmp_section = begin_section + sections[count_sec] + '}'
+                doc_lines.append(tmp_section)
+                count_sec += 1
+                
+                # if params in next line, write a \begin{align} statement
+                if n+1 in params_latex_lineNo:
+                    doc_lines.append(begin_align)
+            
+            # writing subsection titles
+            if n in subsection_lineNo:
+                tmp_ssection = begin_subsection + subsection[count_subsec] + '}'
+                doc_lines.append(tmp_ssection)
+                count_subsec += 1
+                
+                # write a \begin{align} statement for params next line
+                doc_lines.append(begin_align)
+            
+            # writing LaTeX representation of params with text details
+            if n in params_latex_lineNo:
+                tmp_params = '&' + params_latex[count_params] + ' &&: \\text{' + detail[count_params] + '}'
+                
+                # if there's another parameter next, end the line
+                if n+1 in params_latex_lineNo:
+                    tmp_params += ' \\\\ '
+                    doc_lines.append(tmp_params)
+                # if no parameters up next, end the align brackets
+                else:
+                    doc_lines.append(tmp_params)
+                    doc_lines.append(end_align + '\n')
+           
+                count_params += 1
+        
+        # print and/or save text file
+        txt_path = os.path.join(FileMethods.samsim_dir, 'outputs', txt_file_name)
+        text_file = open(txt_path,'w')
+        text_file.write(' \n'.join(doc_lines))
+        text_file.close()
 
             
