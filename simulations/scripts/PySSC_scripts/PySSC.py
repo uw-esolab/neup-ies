@@ -4,9 +4,12 @@ from util.FileMethods import FileMethods
 from ctypes import *
 c_number = c_double # must be c_double or c_double depending on how defined in sscapi.h
 class PySSC:
-    def __init__(self):
+    def __init__(self, is_debug=False):
         self.parent_dir = FileMethods.parent_dir
-        self.ssc_dir = self.parent_dir + '/build_ssc_export/ssc/libssc.so' # the file can sometimes be named 'sscd.so'
+        if is_debug:
+            self.ssc_dir = self.parent_dir + '/build_debug/ssc/ssc/libsscd.so' # the file can sometimes be named 'sscd.so'
+        else:
+            self.ssc_dir = self.parent_dir + '/build_ssc_export/ssc/libssc.so' # the file can sometimes be named 'sscd.so'
         self.pdll = CDLL(self.ssc_dir)   
 
     INVALID=0
