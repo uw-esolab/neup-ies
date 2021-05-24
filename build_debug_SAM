@@ -1,0 +1,78 @@
+#!/bin/sh
+
+## Held Together by Duct Tape/Written by Gabriel Soto
+
+export DEVDIR=$(dirname "$(dirname "$(realpath $0)")")
+
+export GTEST=$DEVDIR/googletest
+export GTESTD_LIB=$DEVDIR/googletest/build_debug/lib/libgtestd.a
+export GTESTD_DIR=$DEVDIR/googletest/build_debug/lib
+export LKDIR=$DEVDIR/lk
+export WEXDIR=$DEVDIR/wex
+export SSCDIR=$DEVDIR/ssc
+export SAMNTDIR=$DEVDIR/sam
+
+#====================================================#
+#---- building googletest ----------------------------
+#====================================================#
+
+# cd into DEVDIR
+cd $DEVDIR
+
+# First check if googletest actually exists
+if [ -d "$DEVDIR/googletest" ] ; then
+   echo "Googletest directory exists."
+
+   # check if the debug directory exists and build debug version if it doesn't
+   if [ -d "$GTEST" ] && [ "$(ls -A $GTEST)" ] ; then
+   	# assuming that if the directory is not empty, no more needs to be done
+	echo "Googletest debug directory exists and is not empty."
+   elif [ -d "$GTEST" ] ; then
+   	# directory exists but is empty -> rebuild!
+	echo "Googletest debug directory exists but is empty."
+	cd $GTEST
+	cmake -G "CodeLite - Unix Makefiles" -DCMAKE_BUILD_TYPE:STRING=Debug -DCMAKE_SYSTEM_VERSION=10.0 -Dgtest_force_shared_crt=ON ..
+	make -j8
+	cd $DEVDIR
+   else
+   	# need to build the directory from the start
+	echo "Googletest debug directory does NOT exist."
+	cd $DEVDIR/googletest
+	mkdir build_debug
+	cd build_debug
+	cmake -G "CodeLite - Unix Makefiles" -DCMAKE_BUILD_TYPE:STRING=Debug -DCMAKE_SYSTEM_VERSION=10.0 -Dgtest_force_shared_crt=ON ..
+	make -j8
+	cd $DEVDIR
+   fi
+   
+# Googletest directory doesn't exist, build the whole thing
+else
+   echo "Googletest directory does NOT exist."
+   git clone https://github.com/google/googletest.git
+   mkdir googletest/build_debug
+   cd googletest/build_debug
+   cmake -G "CodeLite - Unix Makefiles" -DCMAKE_BUILD_TYPE:STRING=Debug -DCMAKE_SYSTEM_VERSION=10.0 -Dgtest_force_shared_crt=ON ..
+   make -j8
+   cd $DEVDIR
+fi
+
+#====================================================#
+#---- building all projects --------------------------
+#====================================================#
+
+cd $DEVDIR
+
+# First check if build_debug actually exists
+if [ -d "$DEVDIR/build_debug" ] ; then
+   echo "Debug Build directory exists."
+  
+else
+   echo "Debug Build directory does not exist."
+   mkdir build_debug
+   #make a build folder for the whole project and run cmake in Debug mode
+   cd build_debug
+   #had to specify the location of the Googletest debug libraries
+   cmake -G "CodeLite - Unix Makefiles" -DCMAKE_BUILD_TYPE:STRING=Debug -DCMAKE_SYSTEM_VERSION=10.0 -GTESTD_LIB=$GTESTD_LIB ..
+   make -j8
+fi 
+
