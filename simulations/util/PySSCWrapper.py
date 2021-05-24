@@ -9,9 +9,12 @@ Created on Fri May 21 16:00:31 2021
 from util.FileMethods import FileMethods 
 from scripts.PySSC_scripts.PySSC import PySSC
 import os, json
+import numpy as np
 
 class PySSCWrapper(object):
-    def __init__(self, json_name='model1'):
+    def __init__(self, json_name='model1', is_debug=True):
+        
+        self.is_debug = is_debug
         
         # defining useful directories
         self.samsim_dir = FileMethods.samsim_dir.encode("utf-8")
@@ -56,7 +59,7 @@ class PySSCWrapper(object):
     
     def create_API(self):
         
-        self.sscapi = PySSC()
+        self.sscapi = PySSC(self.is_debug)
         self.sscdata = self.sscapi.data_create()
     
     
@@ -211,6 +214,17 @@ class PySSCWrapper(object):
         fin_mod, fin_name = self.set_ssc_data_from_dict(2)
         
         return fin_mod, fin_name 
+
+
+    def get_array(self, out_str):
+        
+        ssc = self.sscapi
+        data = self.sscdata
+        
+        out_array = ssc.data_get_array(data,out_str.encode('utf-8'))
+        out_array = np.asarray(out_array)
+        return out_array
+        
 
     
 if __name__ == "__main__": 
