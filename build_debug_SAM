@@ -56,6 +56,69 @@ else
    cd $DEVDIR
 fi
 
+
+#====================================================#
+#---- cloning projects if not done already -----------
+#====================================================#
+
+# cd into DEVDIR
+cd $DEVDIR
+
+# First check if LK actually exists --------------------------
+if [ -d "$LKDIR" ] ; then
+   echo "LK directory exists."
+else
+   git clone https://github.com/NREL/lk.git
+fi
+
+# First check if WEX actually exists --------------------------
+cd $DEVDIR
+if [ -d "$WEXDIR" ] ; then
+   echo "WEX directory exists."
+else
+   git clone https://github.com/NREL/wex.git
+fi
+
+# First check if SSC actually exists --------------------------
+cd $DEVDIR
+if [ -d "$SSCDIR" ] ; then
+   echo "SSC directory exists."
+else
+   git clone https://github.com/gjsoto/ssc.git
+fi
+
+cd $SSCDIR
+git checkout NE2-model1-v0.1
+
+# First check if SAM actually exists --------------------------
+cd $DEVDIR
+if [ -d "$SAMNTDIR" ] ; then
+   echo "SAM directory exists."
+else
+   git clone https://github.com/NREL/sam.git
+fi
+
+cd $SAMNTDIR
+git checkout pysam-v2.2.2
+
+
+#====================================================#
+#---- move the CMakeLists file to the proper place ---
+#====================================================#
+
+cd $DEVDIR
+# First check if build_debug actually exists
+if [ -d "../CMakeLists.txt" ] ; then
+   echo "CMakeLists file exists in the parent directory."
+else 
+   echo "CMakeLists file does not exist in the parent directory, let's go get it."
+   # copying the CMake file to the directory above the neup-ies repository
+   cp simulations/scripts/debug_cmakeFile.txt ../
+   # renaming the file
+   mv ../debug_cmakeFile.txt ../CMakeLists.txt
+fi
+
+
 #====================================================#
 #---- building all projects --------------------------
 #====================================================#
@@ -64,15 +127,22 @@ cd $DEVDIR
 
 # First check if build_debug actually exists
 if [ -d "$DEVDIR/build_debug" ] ; then
-   echo "Debug Build directory exists."
-  
+   if [ "$(ls -A $DEVDIR/build_debug)" ] ; then
+      echo "Debug Build directory exists and is not empty."
+   else 
+      echo "Debug Build directory exists but is empty."
+      cd build_debug
+      #had to specify the location of the Googletest debug libraries
+      cmake -G "CodeLite - Unix Makefiles" -DCMAKE_BUILD_TYPE:STRING=Debug -DCMAKE_SYSTEM_VERSION=10.0 -DGTESTD_LIB=$GTESTD_LIB ..
+      make -j8
+   fi
 else
    echo "Debug Build directory does not exist."
    mkdir build_debug
    #make a build folder for the whole project and run cmake in Debug mode
    cd build_debug
    #had to specify the location of the Googletest debug libraries
-   cmake -G "CodeLite - Unix Makefiles" -DCMAKE_BUILD_TYPE:STRING=Debug -DCMAKE_SYSTEM_VERSION=10.0 -GTESTD_LIB=$GTESTD_LIB ..
+   cmake -G "CodeLite - Unix Makefiles" -DCMAKE_BUILD_TYPE:STRING=Debug -DCMAKE_SYSTEM_VERSION=10.0 -DGTESTD_LIB=$GTESTD_LIB ..
    make -j8
 fi 
 
