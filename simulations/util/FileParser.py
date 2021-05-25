@@ -244,6 +244,7 @@ class FileParser(object):
         else:
             return []
     
+    
     def get_list_of_pyomo_data(model, params_list):
         """ Method to return all parameter data from a Pyomo model
         
