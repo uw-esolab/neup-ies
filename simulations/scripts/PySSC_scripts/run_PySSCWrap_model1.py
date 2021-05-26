@@ -14,7 +14,7 @@ pid = os.getpid()
 print("PID = ", pid)
 
 # initialize the PySSC Wrapper
-pw = PySSCWrapper(is_debug=True)
+pw = PySSCWrapper(json_name='model1',is_debug=True)
 
 # run SSC through PySSC
 pw.run_sim()
