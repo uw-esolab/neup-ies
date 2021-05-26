@@ -79,7 +79,7 @@
         "rec_ref_area" :  1571,
         "rec_cost_exp" :  0.69999999999999996,
         "is_field_tracking_init" : false,
-        "rec_op_mode_initial" : 0,
+        "rec_op_mode_initial" : 2,
     	"rec_startup_energy_remain_init" : 0,
     	"rec_startup_time_remain_init" : 0,
     	"disp_rec_persist0" : 0,
