@@ -174,7 +174,7 @@ class GenericSSCModule(ABC):
             outputs = self.run_pyomo(disp_params)
             
             # updating SSC inputs using Pyomo outputs
-            # self.update_Plant_after_Pyomo()
+            self.update_Plant_after_Pyomo()
         
         # first execution of Plant through SSC
         self.run_Plant_through_SSC( time_start , time_next )
@@ -258,10 +258,7 @@ class GenericSSCModule(ABC):
         
     def update_Plant_after_Pyomo(self):
         
-        
-        # setting dispatch targets to True so that SSC can read in Pyomo inputs
-        self.Plant.SystemControl.is_dispatch_targets = True
-        
+
         dm = self.dispatch_model
         
         # TODO: I think all of this stuff should live in GeneralDispatch or the Wrapper
@@ -299,6 +296,8 @@ class GenericSSCModule(ABC):
         q_pc_target_on_in    = [x[t] for t in range(N_dispatch)]
         q_pc_max_in          = [Qu for t in range(N_dispatch)]
         
+        # setting dispatch targets to True so that SSC can read in Pyomo inputs
+        self.Plant.SystemControl.is_dispatch_targets = True
         
         # save full arrays
         self.Plant.SystemControl.is_rec_su_allowed_in = np.hstack([is_rec_su_allowed_in, empty_array]).tolist()

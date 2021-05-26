@@ -34,7 +34,6 @@ nuctes.run_sim( run_loop=False, export=True, filename=output_file )
 nt = nuctes.Plant
 so = nuctes.SO
 
-
 print('Made it past execute.')
 
 # =============================================================================
