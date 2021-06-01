@@ -4,7 +4,7 @@
 
 This is a private repository for sharing code and project files.
 
-*Note from Gabriel: If cloning onto a local machine, I recommend that this repository be cloned into a directory alongside the SAM projects (LK, WEX, SSC, SAM). That is, the **neup-ies** folder should be in the same directory as **lk**, **ssc**, **googletest**, etc.*
+*Note from Gabriel: If cloning onto a local machine, I recommend that this repository be cloned into a directory alongside the SAM projects (LK, WEX, SSC, SAM). That is, the **neup-ies** folder should be in the same directory as **lk**, **ssc**, **googletest**, etc. I refer to this directory as `$DEVDIR`.*
 <br/><br/>
 
 # Running simulations in Linux
@@ -24,18 +24,18 @@ where `$DEVDIR` is the parent directory where `neup-ies` is located.
 
 ## Building SAM
 
-1.  To build SSC and all accompanying projects in their debugging versions, run the following in a command line in this directory (`$DEVDIR`):
+1.  To build SSC and all accompanying projects in their debugging versions, run the following in a command line in the directory `$DEVDIR/neup-ies`:
     ```
     source ./build_debug_SAM
     ```
-    - a CodeLite workspace will be created in the directory `../build_debug`.
+    - a CodeLite workspace will be created in the directory `$DEVDIR/build_debug`.
     - for more information on debugging with CodeLite, see [these instructions.](https://github.com/uw-esolab/docs/blob/main/sam/debugSSCwithPySSC_Linux_CodeLiteIDE.md) 
 
-2. To build PySAM, everything will be built in their release versions in `build` folders within their respective directories. Run the following in a command line in this directory (`$DEVDIR`):
+2. To build PySAM, everything will be built in their release versions in `build` folders within their respective directories. Run the following in a command line in the directory `$DEVDIR/neup-ies`:
     ```
     source ./build_pysam
     ```
-    - a CodeLite workspace will be created in the directories `../build_ssc_export` and `../build_sam_export` respectively. 
+    - a CodeLite workspace will be created in the directories `$DEVDIR/build_ssc_export` and `$DEVDIR/build_sam_export` respectively. 
     - for more information on building PySAM, see [these instructions.](https://github.com/uw-esolab/docs/blob/main/sam/building_PySAM_using_modified_SSC.md)
 
 
