@@ -20,33 +20,31 @@ class MED:
     def __init__(self):
         self.vapor_rate = []                          #Flow of the vapor rate for each n-effect
         self.brine_conc = .0335                       #Average concentration of salt in seawater
-        self.brine_rate = []                         #Brine flow rate 
+        self.brine_rate = []                          #Brine flow rate 
         self.max_brine_conc= .067                     #Maximum brine concentration
         self.k = 6                                    #Number of desired effects + 1 for starting values
-        self.vapor_temp = np.zeros(self.k)            #Vapor temperature vector creation
-        self.brine_temp = np.zeros(self.k)            #Brine temparature vector creation
+        self.vbtemp = np.zeros(self.k)                #Vapor and brine temperature vector creation
+        self.vbtemp[self.k-1] = 40                    #Fixing the final temperature of the brine and vapor
         self.enth_vapor = np.zeros(self.k)            #Vapor enthalpy vector creation
         self.enth_brine = np.zeros(self.k)            #Brine enthalpy vector creation
-        self.water_temp = 68.5                     #Known starting/inlet temp of the DEMINERALIZED WATER [T2] (sCO2 outlet - delta_T_PCHE)
-        self.feed_temp  = 20                       #Known starting/inlet temp of the BRINE [T1]
+        self.water_temp = 68.5                        #Known starting/inlet temp of the DEMINERALIZED WATER [T2] (sCO2 outlet - delta_T_PCHE)
+        self.feed_temp  = 20                          #Known starting/inlet temp of the BRINE [T1]
         self.latentheat = np.zeros(self.k)            #Latent heat of vapor vector creation
         self.tempchange = 3.                          #Known temperature change, from Sharan paper (delta_T_NEA)
-        self.water_rate = 701.5                        #Is this the feed flow rate of the DEMINERALIZED WATER? m_dot_w2
+        self.water_rate = 701.5                       #Is this the feed flow rate of the DEMINERALIZED WATER? m_dot_w2
         self.pressure = 7.75                          #Pressure in MPa 
         
         self.enth_feed =  SeaWater(T=self.feed_temp+273.15,S=self.brine_conc,P=self.pressure).h
-        self.vapor_temp[0] = self.water_temp-self.tempchange
-        self.brine_temp[0] = self.feed_temp +self.tempchange
         
-        for i in range(1, self.k):
-            self.vapor_temp[i] = (self.vapor_temp[i-1] - self.tempchange)
-            self.brine_temp[i] = (self.brine_temp[i-1] + self.tempchange)
+        for i in range(self.k-2, 0):
+            self.vbtemp[i] = (self.vbtemp[i+1] + self.tempchange)
             
         
-        for i in range(self.k):
-            self.enth_brine[i] = SeaWater(T=self.brine_temp[i]+273.15,S=self.brine_conc,P=self.pressure).h
-            self.enth_vapor[i] = IAPWS97(T=self.vapor_temp[i]+273.15,P=self.pressure).h
-            self.latentheat[i] = -2.36985*self.brine_temp[i] + 2500.9
+        for i in range(0, self.k):
+            self.enth_brine[i] = SeaWater(T=self.vbtemp[i]+273.15,S=self.brine_conc,P=self.pressure).h
+            self.enth_vapor[i] = IAPWS97(T=self.vbtemp[i]+273.15,P=self.pressure).h
+            self.latentheat[i] = -2.36985*self.vbtemp[i] + 2500.9       #Equation found from a linear relation in EES
+
         
         ##Finding the vapor_rate for each n-effect
         C = np.zeros(self.k)
@@ -54,7 +52,7 @@ class MED:
         A[0,0] = (-self.max_brine_conc/(self.max_brine_conc-self.brine_conc))*\
                         (self.enth_feed - self.enth_brine[0])+(self.enth_vapor[0]-self.enth_brine[0])
         
-        self.cp_water = IAPWS97(T=self.vapor_temp[0]+273.15,P=self.pressure).cp
+        self.cp_water = IAPWS97(T=self.vbtemp[0]+273.15,P=self.pressure).cp
         C[0] = self.water_rate*(self.water_temp-(self.feed_temp+self.tempchange))*self.cp_water
         
         for j in range(1,self.k):           #Creating the first row of the matrix
