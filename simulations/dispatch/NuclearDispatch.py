@@ -51,7 +51,7 @@ class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
         Q_ratio   = (self.q_rec_design / old_Q_ref ).to('')
         
         # TODO: old values from LORE files
-        C_rec  = Q_ratio * 0.002  * u.USD/u.kWh        
+        C_rec  = 20 * u.USD / u.MWh #Q_ratio * 0.002  * u.USD/u.kWh        
         C_rsu  = Q_ratio * 950    * u.USD
         C_rhsp = Q_ratio * 950/5. * u.USD
 
