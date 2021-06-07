@@ -50,11 +50,17 @@ class Plots(object):
         self.p_cycle       = np.asarray( self.mod.Outputs.P_cycle )  *u.MW
         self.gen           = (np.asarray( self.mod.Outputs.gen )      *u.kW).to('MW')
         self.q_dot_rec_in  = np.asarray( self.mod.Outputs.q_dot_rec_inc ) *u.MW
-        self.m_dot         = np.asarray( self.mod.Outputs.m_dot_rec ) *u.kg/u.s
+        self.m_dot_pc      = np.asarray( self.mod.Outputs.m_dot_pc ) *u.kg/u.s
+        self.m_dot_rec     = np.asarray( self.mod.Outputs.m_dot_rec ) *u.kg/u.s
         self.T_pc_in       = np.asarray( self.mod.Outputs.T_pc_in )   *u.degC
         self.T_pc_out      = np.asarray( self.mod.Outputs.T_pc_out )  *u.degC
         self.e_ch_tes      = np.asarray( self.mod.Outputs.e_ch_tes )  *u.MWh
         self.op_mode_1     = np.asarray( self.mod.Outputs.op_mode_1 )
+        self.defocus       = np.asarray( self.mod.Outputs.defocus )
+        
+        # mode orders and re-ordering
+        op_mode_result, modes_order = np.unique(self.op_mode_1,return_index=True)
+        self.op_mode_result = op_mode_result[np.argsort(modes_order)] # re-order modes by first appearance of each
        
         
     def get_array(self, array_str, slicer ):
@@ -74,12 +80,13 @@ class Plots(object):
             ax.plot(x_array, y_array, linewidth = self.lw, label=label)
         else:
             ax.plot(x_array, y_array, color=color, linewidth = self.lw, label=label)
-    
-    
-    def plot_SSC_power_and_energy(self, plot_all_time=True, start_hr=0, end_hr=48 ):
+            
+        
+    def plot_SSC_generic(self, ax, array_list, label_list, y_label, title_label=None, \
+                         plot_all_time=True, start_hr=0, end_hr=48, return_extra=False ):
         
         # extracting full time array and slice 
-        t_plot  = self.t_full
+        t_plot  = self.t_full.to('d')
         d_slice = self.full_slice
         time_label = 'Time (days)'
         
@@ -96,6 +103,31 @@ class Plots(object):
         # lambda function to get arrays from self and slice em
         get_array = lambda array_str: self.get_array( array_str, d_slice )
         
+        #-------------------------#
+        #---- Creating Figure ----#
+        #-------------------------#
+        
+        # plotting power
+        for a,l in zip(array_list, label_list):
+            plot_on_axis( ax, get_array(a), l)
+        
+        # set labels and legend
+        ax.set_ylabel(y_label,  labelpad=self.lp, fontsize=self.fs, fontweight='bold')
+        ax.set_xlabel(time_label, labelpad=self.lp, fontsize=self.fs, fontweight='bold')
+        
+        # set title if given
+        if title_label is not None:
+            ax.set_title(title_label, fontweight='bold')
+        
+        if return_extra:
+            return ax, d_slice, t_plot
+        else:
+            return ax
+    
+    
+    def plot_SSC_power_and_energy(self, plot_all_time=True, start_hr=0, end_hr=48 ):
+        
+
         # list of array strings 
         power_array_list = [ 'p_cycle' , 'q_dot_rec_in', 'gen']
         
@@ -107,22 +139,70 @@ class Plots(object):
         #---- Creating Figure ----#
         #-------------------------#
         
-        fig = plt.figure(figsize=[10,8])
+        fig = plt.figure(figsize=[10,5])
         ax1 = fig.gca()   # this is the power plot
         ax2 = ax1.twinx() # this is the energy plot
         
-        # plotting power
-        for a,l in zip(power_array_list, power_label_list):
-            plot_on_axis( ax1, get_array(a), l)
-        
-        ax1.set_ylabel('Power (MW)',  labelpad=self.lp, fontsize=self.fs, fontweight='bold')
-        ax1.set_xlabel(time_label, labelpad=self.lp, fontsize=self.fs, fontweight='bold')
+        ax1 = self.plot_SSC_generic(ax1, power_array_list, power_label_list, 'Power (MW)', 'SSC_Results', \
+                                            plot_all_time, start_hr, end_hr )
         ax1.legend(loc=self.loc, fontsize=self.fsl)
         
-        # plotting energy
-        plot_on_axis( ax2, get_array('e_ch_tes'), 'Salt Charge Level (Thermal)', 'C3')
-        ax2.set_ylabel('Energy (MWh)',  labelpad=self.lp, fontsize=self.fs, fontweight='bold')
+        ax2 = self.plot_SSC_generic(ax2, ['e_ch_tes'], ['Salt Charge Level (Thermal)'], 'Energy (MWh)', None, \
+                                            plot_all_time, start_hr, end_hr )
+            
+        ax2.get_lines()[0].set_color("C3")
         ax2.legend(loc=self.loc, fontsize=self.fsl)
+        plt.tight_layout()
+
+
+    def plot_SSC_massflow(self, plot_all_time=True, start_hr=0, end_hr=48 ):
+        
+
+        # list of array strings 
+        power_array_list = [ 'm_dot_pc', 'm_dot_rec'  ]
+        
+        power_label_list = [ 'PC HTF mass flow rate', 
+                             'Receiver Mass Flow Rate' ]
+        #-------------------------#
+        #---- Creating Figure ----#
+        #-------------------------#
+        
+        fig = plt.figure(figsize=[10,5])
+        ax1 = fig.gca()   # this is the power plot
+
+        ax1 = self.plot_SSC_generic(ax1, power_array_list, power_label_list, 'Mass Flow (kg/s)', 'SSC_Results', \
+                                            plot_all_time, start_hr, end_hr )
+        ax1.legend(loc=self.loc, fontsize=self.fsl)
+
+        plt.tight_layout()
+
+
+    def plot_SSC_op_modes(self, plot_all_time=True, start_hr=0, end_hr=48 ):
+        
+        #-------------------------#
+        #---- Creating Figure ----#
+        #-------------------------#
+        
+        fig = plt.figure(figsize=[10,5])
+        ax1 = fig.gca()   # this is the main plot
+        
+        ax1, d_slice1, t_plot1 = self.plot_SSC_generic(ax1, ['op_mode_1'], [' '], 'Operating Mode', 'SSC_Results', \
+                                                       plot_all_time, start_hr, end_hr, True )
+        ax1.legend(loc=self.loc, fontsize=self.fsl)
+        ax1.get_lines()[0].set_color("k")
+        op_mode_1 = self.get_array('op_mode_1', d_slice1)
+        
+        # extra bit: labeling unique operating mode values 
+        for op in self.op_mode_result[d_slice1]:
+            inds = (op_mode_1 == op)
+            if np.sum(inds):
+                ax1.plot(t_plot1[inds], op_mode_1[inds], 'o', label=self.operating_modes[int(op)])
+        
+        ax1.legend(loc=self.loc, fontsize=self.fsl)
+        ax1.set_ylim(0,40)
+        ax1.set_yticks(np.arange(0,40,5))
+
+        plt.tight_layout()
         
         
     def set_operating_modes_list(self):
