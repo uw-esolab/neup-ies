@@ -78,93 +78,56 @@ print ('Size of debt                  =  $', size_of_debt, ' M')
 #     Plotting
 # =============================================================================
 
-p_cycle       = np.asarray( nt.Outputs.P_cycle )
-gen           = np.asarray( nt.Outputs.gen ) / 1e3
-p_cool        = np.asarray( nt.Outputs.P_cooling_tower_tot )
-q_dot_rec_in  = np.asarray( nt.Outputs.q_dot_rec_inc )
-m_dot         = np.asarray( nt.Outputs.m_dot_rec )
-T_pc_in       = np.asarray( nt.Outputs.T_pc_in )
-T_pc_out      = np.asarray( nt.Outputs.T_pc_out )
-e_ch_tes      = np.asarray( nt.Outputs.e_ch_tes )
-t_plot        = np.asarray( nt.Outputs.time_hr ) / 24
-op_mode_1     = np.asarray( nt.Outputs.op_mode_1 )
+from util.PostProcessing import Plots
+upl = Plots(nt)
 
-#operating modes, copied from ssc/tcs/csp_solver.cpp
-n_modes, modes_order = np.unique(op_mode_1,return_index=True)
-n_modes = n_modes[np.argsort(modes_order)] # re-order modes by first appearance of each
-op_modes_list = [
-    "ENTRY_MODE",
-    "CR_OFF__PC_OFF__TES_OFF,"
-    "CR_SU__PC_OFF__TES_OFF",
-    "CR_ON__PC_SU__TES_OFF",
-    "CR_ON__PC_SB__TES_OFF",        
-    "CR_ON__PC_RM_HI__TES_OFF",
-    "CR_ON__PC_RM_LO__TES_OFF",        
-    "CR_DF__PC_MAX__TES_OFF",
-    "CR_OFF__PC_SU__TES_DC",
-    "CR_ON__PC_OFF__TES_CH",
-    "SKIP_10",
-    "CR_ON__PC_TARGET__TES_CH",
-    "CR_ON__PC_TARGET__TES_DC",
-    "CR_ON__PC_RM_LO__TES_EMPTY",
-    "CR_DF__PC_OFF__TES_FULL",       
-    "CR_OFF__PC_SB__TES_DC",
-    "CR_OFF__PC_MIN__TES_EMPTY",
-    "CR_OFF__PC_RM_LO__TES_EMPTY",
-    "CR_ON__PC_SB__TES_CH",
-    "CR_SU__PC_MIN__TES_EMPTY",
-    "SKIP_20",
-    "CR_SU__PC_SB__TES_DC",
-    "CR_ON__PC_SB__TES_DC",
-    "CR_OFF__PC_TARGET__TES_DC",
-    "CR_SU__PC_TARGET__TES_DC",
-    "CR_ON__PC_RM_HI__TES_FULL",
-    "CR_ON__PC_MIN__TES_EMPTY",
-    "CR_SU__PC_RM_LO__TES_EMPTY",
-    "CR_DF__PC_MAX__TES_FULL",
-    "CR_ON__PC_SB__TES_FULL",
-    "SKIP_30",
-    "CR_SU__PC_SU__TES_DC",
-    "CR_ON__PC_SU__TES_CH",
-    "CR_DF__PC_SU__TES_FULL",
-    "CR_DF__PC_SU__TES_OFF",
-    "CR_TO_COLD__PC_TARGET__TES_DC",
-    "CR_TO_COLD__PC_RM_LO__TES_EMPTY",
-    "CR_TO_COLD__PC_SB__TES_DC",
-    "CR_TO_COLD__PC_MIN__TES_EMPTY",
-    "CR_TO_COLD__PC_OFF__TES_OFF",
-    "SKIP_40",
-    "CR_TO_COLD__PC_SU__TES_DC" ]
-
-lp = 16 #labelpad
-fs = 12 #fontsize
-lw = 2  #linewidth
-fsl = 'x-small'      #fontsize legend
-loc = 'upper right'  #location of legend
-loc_lr = 'lower right'  #location of legend
-loc_ll = 'lower left'  #location of legend
-loc_cr = 'center right'  #location of legend
-loc_cl = 'center left'  #location of legend
-
-
-plt.figure()
-plt.plot(t_plot,nuctes.df_array)
-
-
+# 48 hour plot
 fig = plt.figure(figsize=[10,8])
-ax1 = fig.gca()
-# ax1 = fig.add_subplot(311)
-# ax2 = fig.add_subplot(312)
-# ax3 = fig.add_subplot(313)
+ax1 = fig.add_subplot(311)
+ax2 = fig.add_subplot(312)
+ax3 = fig.add_subplot(313)
 
-# Energy plot
-ax1.plot(t_plot, e_ch_tes, linewidth = lw, label='Salt Charge Level (MWht)')
-ax1.plot(t_plot, p_cycle, linewidth = lw, label='P_cycle (Electric)')
-ax1.plot(t_plot, q_dot_rec_in, linewidth = lw, label='Q_dot to Salt (Thermal)')
-ax1.plot(t_plot, gen, linewidth = lw, label='Power generated')
-ax1.set_ylabel('Power (MW)', labelpad=lp, fontsize=fs, fontweight='bold')
-ax1.legend(loc=loc,fontsize=fsl)
-ax1.set_xlabel('Time (days)', labelpad=lp, fontsize=fs, fontweight='bold')
+upl.plot_SSC_power_and_energy(ax1, False, title_label='SSC Results - 48 hrs')
+upl.plot_SSC_op_modes(ax2, False)
+upl.plot_SSC_massflow(ax3, False)
+
+# full 1 year plot
+# figF = plt.figure(figsize=[10,8])
+# ax1F = figF.add_subplot(311)
+# ax2F = figF.add_subplot(312)
+# ax3F = figF.add_subplot(313)
+
+# upl.plot_SSC_power_and_energy(ax1F, True, title_label='SSC Results - Full Year')
+# upl.plot_SSC_op_modes(ax2F, True)
+# upl.plot_SSC_massflow(ax3F, True)
+
+
+# upl.plot_SSC_op_modes(False)
+# upl.plot_SSC_op_modes(True)
+# upl.plot_SSC_power_and_energy(False)
+# upl.plot_SSC_power_and_energy(True)
+# upl.plot_SSC_massflow(False)
+# upl.plot_SSC_massflow(True)
+
+
+# plt.figure()
+# plt.plot(t_plot,nuctes.df_array)
+
+
+# fig = plt.figure(figsize=[10,8])
+# ax1 = fig.gca()
+# # ax1 = fig.add_subplot(311)
+# # ax2 = fig.add_subplot(312)
+# # ax3 = fig.add_subplot(313)
+
+# # Energy plot
+# ax1.plot(t_plot, e_ch_tes, linewidth = lw, label='Salt Charge Level (MWht)')
+# ax1.plot(t_plot, p_cycle, linewidth = lw, label='P_cycle (Electric)')
+# ax1.plot(t_plot, q_dot_rec_in, linewidth = lw, label='Q_dot to Salt (Thermal)')
+# ax1.plot(t_plot, gen, linewidth = lw, label='Power generated')
+# ax1.set_ylabel('Power (MW)', labelpad=lp, fontsize=fs, fontweight='bold')
+# ax1.legend(loc=loc,fontsize=fsl)
+# ax1.set_xlabel('Time (days)', labelpad=lp, fontsize=fs, fontweight='bold')
 
 # Mass flow rate plot
 # ax2.plot(t_plot, m_dot, linewidth = lw, label='m_dot_water_pc')
@@ -189,30 +152,33 @@ ax1.set_xlabel('Time (days)', labelpad=lp, fontsize=fs, fontweight='bold')
 # ax2.legend(loc=loc,fontsize=fsl)
 
 
-fig = plt.figure(figsize=[10,4])
-ax1 = fig.gca()
-ax2 = ax1.twinx()
-# ax1 = fig.add_subplot(311)
-# ax2 = fig.add_subplot(312)
-# ax3 = fig.add_subplot(313)
-ind = 48
-rng = slice(ind*0,ind*1,1)
-t_plot = t_plot[rng]
-e_ch_tes = e_ch_tes[rng]
-p_cycle = p_cycle[rng]
-q_dot_rec_in = q_dot_rec_in[rng]
-gen = gen[rng]
-price = nuctes.df_array[rng]*200
-dt = np.diff(t_plot)[0]
+# fig = plt.figure(figsize=[10,4])
+# ax1 = fig.gca()
+# ax2 = ax1.twinx()
+# # ax1 = fig.add_subplot(311)
+# # ax2 = fig.add_subplot(312)
+# # ax3 = fig.add_subplot(313)
+# ind = 48
+# rng = slice(ind*0,ind*1,1)
+# t_plot = t_plot[rng]
+# e_ch_tes = e_ch_tes[rng]
+# p_cycle = p_cycle[rng]
+# q_dot_rec_in = q_dot_rec_in[rng]
+# gen = gen[rng]
+# price = nuctes.df_array[rng]*200
+# dt = np.diff(t_plot)[0]
 
-# Energy plot
-ax1.bar(t_plot,price,dt,alpha=0.5,label="Price Multiplier")
-ax2.plot(t_plot, e_ch_tes, linewidth = lw, color='C3', label='Salt Charge Level (MWh)')
-ax1.plot(t_plot, p_cycle, linewidth = lw, label='P_cycle (Electric)')
-ax1.plot(t_plot, q_dot_rec_in, linewidth = lw, label='Q_dot to Salt (Thermal)')
-ax1.plot(t_plot, gen, linewidth = lw, label='Power generated')
-ax1.set_ylabel('Power (MW)', labelpad=lp, fontsize=fs, fontweight='bold')
-ax2.set_ylabel('Energy (MWh)', labelpad=lp, fontsize=fs, fontweight='bold')
-ax1.legend(loc=loc_cl,fontsize=fsl)
-ax2.legend(loc=loc_cr,fontsize=fsl)
-ax1.set_xlabel('Time (days)', labelpad=lp, fontsize=fs, fontweight='bold')
+# # Energy plot
+# ax1.bar(t_plot,price,dt,alpha=0.5,label="Price Multiplier")
+# ax2.plot(t_plot, e_ch_tes, linewidth = lw, color='C3', label='Salt Charge Level (MWh)')
+# ax1.plot(t_plot, p_cycle, linewidth = lw, label='P_cycle (Electric)')
+# ax1.plot(t_plot, q_dot_rec_in, linewidth = lw, label='Q_dot to Salt (Thermal)')
+# ax1.plot(t_plot, gen, linewidth = lw, label='Power generated')
+# ax1.set_ylabel('Power (MW)', labelpad=lp, fontsize=fs, fontweight='bold')
+# ax2.set_ylabel('Energy (MWh)', labelpad=lp, fontsize=fs, fontweight='bold')
+# ax1.legend(loc='best',fontsize=fsl)
+# ax2.legend(loc=loc_cr,fontsize=fsl)
+# ax1.set_xlabel('Time (days)', labelpad=lp, fontsize=fs, fontweight='bold')
+
+# plt.tight_layout()
+
