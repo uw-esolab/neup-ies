@@ -57,6 +57,7 @@ class Plots(object):
         self.e_ch_tes      = np.asarray( self.mod.Outputs.e_ch_tes )  *u.MWh
         self.op_mode_1     = np.asarray( self.mod.Outputs.op_mode_1 )
         self.defocus       = np.asarray( self.mod.Outputs.defocus )
+        self.price         = np.asarray( self.mod.TimeOfDeliveryFactors.dispatch_factors_ts )
         
         # mode orders and re-ordering
         op_mode_result, modes_order = np.unique(self.op_mode_1,return_index=True)
@@ -85,10 +86,18 @@ class Plots(object):
             ax.plot(x_array, y_array, linewidth = self.lw, label=label)
         else:
             ax.plot(x_array, y_array, color=color, linewidth = self.lw, label=label)
+
+
+    def bar_plot_on_axis(self, ax, x_array, y_array, dx, label, alpha=0.5, color=None ):
+        # generic plotting given x,y, an axis, label, and optional color for line
+        if color is None:
+            ax.bar(x_array, y_array, dx, alpha=0.5, label=label)
+        else:
+            ax.bar(x_array, y_array, dx, color=color, alpha=0.5, label=label)
             
         
     def plot_SSC_generic(self, ax, array_list, label_list, y_label, title_label=None, \
-                         plot_all_time=True, start_hr=0, end_hr=48, return_extra=False ):
+                         plot_all_time=True, start_hr=0, end_hr=48, is_bar_graph=False, return_extra=False ):
         
         # extracting full time array and slice 
         t_plot  = self.t_full.to('d')
@@ -101,9 +110,15 @@ class Plots(object):
             t_plot  = self.t_full[d_slice]
             time_label = 'Time (hrs)'
         
+        dt = np.diff(t_plot)[0].m
+        
         # lambda function to plot arrays to a specific axis
-        plot_on_axis = lambda axis, array, d_label, color=None:  \
-                              self.plot_on_axis(axis, t_plot, array, d_label, color)
+        if is_bar_graph:
+            plot_on_axis = lambda axis, array, d_label, color=None:  \
+                                  self.bar_plot_on_axis(axis, t_plot, array, dt, d_label, color)
+        else:
+            plot_on_axis = lambda axis, array, d_label, color=None:  \
+                                  self.plot_on_axis(axis, t_plot, array, d_label, color)
         
         # lambda function to get arrays from self and slice em
         get_array = lambda array_str: self.get_array( array_str, d_slice )
@@ -131,7 +146,7 @@ class Plots(object):
             return ax
     
     
-    def plot_SSC_power_and_energy(self, ax=None, plot_all_time=True, start_hr=0, end_hr=48 ):
+    def plot_SSC_power_and_energy(self, ax=None, plot_all_time=True, title_label=None, start_hr=0, end_hr=48 ):
         
 
         # list of array strings 
@@ -155,7 +170,7 @@ class Plots(object):
         ax2 = ax.twinx() # this is the energy plot
         
         # plot Power arrays
-        ax = self.plot_SSC_generic(ax, power_array_list, power_label_list, 'Power (MW)', 'SSC_Results', \
+        ax = self.plot_SSC_generic(ax, power_array_list, power_label_list, 'Power (MW)', title_label, \
                                             plot_all_time, start_hr, end_hr )
         # plot legend for Power arrays
         ax.legend(loc=self.loc, fontsize=self.fsl)
@@ -169,7 +184,7 @@ class Plots(object):
         ax2.legend(loc=self.loc, fontsize=self.fsl)
 
 
-    def plot_SSC_massflow(self, ax=None, plot_all_time=True, start_hr=0, end_hr=48 ):
+    def plot_SSC_massflow(self, ax=None, plot_all_time=True, title_label=None, start_hr=0, end_hr=48 ):
         
 
         # list of array strings 
@@ -186,16 +201,31 @@ class Plots(object):
         if ax is None:
             fig = plt.figure(figsize=[10,5])
             ax = fig.gca()   # this is the power plot
+            
+        # twin axis to plot energy on opposite y-axis
+        ax2 = ax.twinx() # this is the defocus plot
         
         # plotting Mass Flow arrays
-        ax = self.plot_SSC_generic(ax, power_array_list, power_label_list, 'Mass Flow (kg/s)', 'SSC_Results', \
+        ax = self.plot_SSC_generic(ax, power_array_list, power_label_list, 'Mass Flow (kg/s)', title_label, \
                                             plot_all_time, start_hr, end_hr )
         
         # plotting legend for Mass Flow arrays
         ax.legend(loc=self.loc, fontsize=self.fsl)
 
+        # plot Defocus array
+        ax2 = self.plot_SSC_generic(ax2, ['defocus'], ['Defocus'], 'Defocus (fraction)', None, \
+                                            plot_all_time, start_hr, end_hr )
+        
+        # plot legend for Energy arrays and also set line color to default C3 (reddish)
+        ax2.get_lines()[0].set_color("C3")
+        ax2.legend(loc=self.loc, fontsize=self.fsl)
+        
+        # custom y limits and ticks to be integers
+        ax2.set_ylim(0,1.3)
+        ax2.set_yticks(np.arange(0,1.1,0.5))
 
-    def plot_SSC_op_modes(self, ax=None, plot_all_time=True, start_hr=0, end_hr=48 ):
+
+    def plot_SSC_op_modes(self, ax=None, plot_all_time=True, title_label=None, start_hr=0, end_hr=48 ):
         
         #-------------------------#
         #---- Creating Figure ----#
@@ -205,10 +235,21 @@ class Plots(object):
         if ax is None:
             fig = plt.figure(figsize=[10,5])
             ax = fig.gca()   # this is the main plot
+
+        # twin axis to plot energy on opposite y-axis
+        ax2 = ax.twinx() # this is the price plot
+    
+        # create plot for OP Mode line
+        ax2 = self.plot_SSC_generic(ax2, ['price'], [' '], 'Price Multiplier ($/kWh)', None, \
+                                                       plot_all_time, start_hr, end_hr, True, False )
+        
+        # custom y limits and ticks to be integers
+        ax2.set_ylim(0,2.5)
+        ax2.set_yticks(np.arange(0,2.5,0.5))
         
         # create plot for OP Mode line
-        ax, d_slice1, t_plot1 = self.plot_SSC_generic(ax, ['op_mode_1'], [' '], 'Operating Mode', 'SSC_Results', \
-                                                       plot_all_time, start_hr, end_hr, True )
+        ax, d_slice1, t_plot1 = self.plot_SSC_generic(ax, ['op_mode_1'], [' '], 'Operating Mode', title_label, \
+                                                       plot_all_time, start_hr, end_hr, False, True )
         
         # plot legend for OP Mode line
         ax.legend(loc=self.loc, fontsize=self.fsl)
@@ -281,7 +322,4 @@ class Plots(object):
             'CR_TO_COLD__PC_SU__TES_DC__AUX_OFF',
             'ITER_END'  ]
 
-        
-                
-                
-            
+    
