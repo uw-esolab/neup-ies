@@ -64,18 +64,23 @@ class Plots(object):
        
         
     def get_array(self, array_str, slicer ):
+        # get array from this class object instance
         array = getattr(self, array_str)
+        # if the array is in Pint units, grab the magnitude only
         if hasattr(array,'m'):
             array = array.m
+        # return the sliced array based on slice input
         return array[slicer]
 
 
     def get_slice(self, start_ind, end_ind ):
+        # define a slice to use on arrays based on given starting and ending times
         slicer = slice(int(start_ind), int(end_ind), 1)
         return slicer
         
 
     def plot_on_axis(self, ax, x_array, y_array, label, color=None ):
+        # generic plotting given x,y, an axis, label, and optional color for line
         if color is None:
             ax.plot(x_array, y_array, linewidth = self.lw, label=label)
         else:
@@ -119,18 +124,20 @@ class Plots(object):
         if title_label is not None:
             ax.set_title(title_label, fontweight='bold')
         
+        # optional to return the slicer and x-inputs (plotting times)
         if return_extra:
             return ax, d_slice, t_plot
         else:
             return ax
     
     
-    def plot_SSC_power_and_energy(self, plot_all_time=True, start_hr=0, end_hr=48 ):
+    def plot_SSC_power_and_energy(self, ax=None, plot_all_time=True, start_hr=0, end_hr=48 ):
         
 
         # list of array strings 
         power_array_list = [ 'p_cycle' , 'q_dot_rec_in', 'gen']
         
+        # list of labels for each array string to extract from Outputs
         power_label_list = [ 'P_cycle (Electric)',
                              'Q_dot to Salt (Thermal)',
                              'Power generated (Electric)' ]
@@ -139,71 +146,94 @@ class Plots(object):
         #---- Creating Figure ----#
         #-------------------------#
         
-        fig = plt.figure(figsize=[10,5])
-        ax1 = fig.gca()   # this is the power plot
-        ax2 = ax1.twinx() # this is the energy plot
+        # if no axis object specified, create a figure and axis from it
+        if ax is None:
+            fig = plt.figure(figsize=[10,5])
+            ax = fig.gca()   # this is the power plot
+            
+        # twin axis to plot energy on opposite y-axis
+        ax2 = ax.twinx() # this is the energy plot
         
-        ax1 = self.plot_SSC_generic(ax1, power_array_list, power_label_list, 'Power (MW)', 'SSC_Results', \
+        # plot Power arrays
+        ax = self.plot_SSC_generic(ax, power_array_list, power_label_list, 'Power (MW)', 'SSC_Results', \
                                             plot_all_time, start_hr, end_hr )
-        ax1.legend(loc=self.loc, fontsize=self.fsl)
+        # plot legend for Power arrays
+        ax.legend(loc=self.loc, fontsize=self.fsl)
         
+        # plot Energy array(s)
         ax2 = self.plot_SSC_generic(ax2, ['e_ch_tes'], ['Salt Charge Level (Thermal)'], 'Energy (MWh)', None, \
                                             plot_all_time, start_hr, end_hr )
-            
+        
+        # plot legend for Energy arrays and also set line color to default C3 (reddish)
         ax2.get_lines()[0].set_color("C3")
         ax2.legend(loc=self.loc, fontsize=self.fsl)
-        plt.tight_layout()
 
 
-    def plot_SSC_massflow(self, plot_all_time=True, start_hr=0, end_hr=48 ):
+    def plot_SSC_massflow(self, ax=None, plot_all_time=True, start_hr=0, end_hr=48 ):
         
 
         # list of array strings 
         power_array_list = [ 'm_dot_pc', 'm_dot_rec'  ]
         
+        # list of labels for each array string to extract from Outputs
         power_label_list = [ 'PC HTF mass flow rate', 
                              'Receiver Mass Flow Rate' ]
         #-------------------------#
         #---- Creating Figure ----#
         #-------------------------#
         
-        fig = plt.figure(figsize=[10,5])
-        ax1 = fig.gca()   # this is the power plot
-
-        ax1 = self.plot_SSC_generic(ax1, power_array_list, power_label_list, 'Mass Flow (kg/s)', 'SSC_Results', \
+        # if no axis object specified, create a figure and axis from it
+        if ax is None:
+            fig = plt.figure(figsize=[10,5])
+            ax = fig.gca()   # this is the power plot
+        
+        # plotting Mass Flow arrays
+        ax = self.plot_SSC_generic(ax, power_array_list, power_label_list, 'Mass Flow (kg/s)', 'SSC_Results', \
                                             plot_all_time, start_hr, end_hr )
-        ax1.legend(loc=self.loc, fontsize=self.fsl)
+        
+        # plotting legend for Mass Flow arrays
+        ax.legend(loc=self.loc, fontsize=self.fsl)
 
-        plt.tight_layout()
 
-
-    def plot_SSC_op_modes(self, plot_all_time=True, start_hr=0, end_hr=48 ):
+    def plot_SSC_op_modes(self, ax=None, plot_all_time=True, start_hr=0, end_hr=48 ):
         
         #-------------------------#
         #---- Creating Figure ----#
         #-------------------------#
         
-        fig = plt.figure(figsize=[10,5])
-        ax1 = fig.gca()   # this is the main plot
+        # if no axis object specified, create a figure and axis from it
+        if ax is None:
+            fig = plt.figure(figsize=[10,5])
+            ax = fig.gca()   # this is the main plot
         
-        ax1, d_slice1, t_plot1 = self.plot_SSC_generic(ax1, ['op_mode_1'], [' '], 'Operating Mode', 'SSC_Results', \
+        # create plot for OP Mode line
+        ax, d_slice1, t_plot1 = self.plot_SSC_generic(ax, ['op_mode_1'], [' '], 'Operating Mode', 'SSC_Results', \
                                                        plot_all_time, start_hr, end_hr, True )
-        ax1.legend(loc=self.loc, fontsize=self.fsl)
-        ax1.get_lines()[0].set_color("k")
+        
+        # plot legend for OP Mode line
+        ax.legend(loc=self.loc, fontsize=self.fsl)
+        
+        # set OP Mode line color to black
+        ax.get_lines()[0].set_color("k")
+        
+        # extract operating modes to designated array
         op_mode_1 = self.get_array('op_mode_1', d_slice1)
         
-        # extra bit: labeling unique operating mode values 
+        # Plotting data points over the OP mode line with different colors and labels
         for op in self.op_mode_result[d_slice1]:
+            # getting unique operating modes
             inds = (op_mode_1 == op)
+            # individual index getting plotted with unique color and label
             if np.sum(inds):
-                ax1.plot(t_plot1[inds], op_mode_1[inds], 'o', label=self.operating_modes[int(op)])
+                ax.plot(t_plot1[inds], op_mode_1[inds], 'o', label=self.operating_modes[int(op)])
         
-        ax1.legend(loc=self.loc, fontsize=self.fsl)
-        ax1.set_ylim(0,40)
-        ax1.set_yticks(np.arange(0,40,5))
+        # plotting legend for OP modes
+        ax.legend(loc=self.loc, fontsize=self.fsl)
+        
+        # custom y limits and ticks to be integers
+        ax.set_ylim(0,40)
+        ax.set_yticks(np.arange(0,40,5))
 
-        plt.tight_layout()
-        
         
     def set_operating_modes_list(self):
         
