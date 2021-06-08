@@ -83,17 +83,17 @@ class Plots(object):
     def plot_on_axis(self, ax, x_array, y_array, label, color=None ):
         # generic plotting given x,y, an axis, label, and optional color for line
         if color is None:
-            ax.plot(x_array, y_array, linewidth = self.lw, label=label)
+            ax.plot(x_array.m, y_array, linewidth = self.lw, label=label)
         else:
-            ax.plot(x_array, y_array, color=color, linewidth = self.lw, label=label)
+            ax.plot(x_array.m, y_array, color=color, linewidth = self.lw, label=label)
 
 
     def bar_plot_on_axis(self, ax, x_array, y_array, dx, label, alpha=0.5, color=None ):
         # generic plotting given x,y, an axis, label, and optional color for line
         if color is None:
-            ax.bar(x_array, y_array, dx, alpha=0.5, label=label)
+            ax.bar(x_array.m, y_array, dx, alpha=0.5, label=label)
         else:
-            ax.bar(x_array, y_array, dx, color=color, alpha=0.5, label=label)
+            ax.bar(x_array.m, y_array, dx, color=color, alpha=0.5, label=label)
             
         
     def plot_SSC_generic(self, ax, array_list, label_list, y_label, title_label=None, \
@@ -174,6 +174,15 @@ class Plots(object):
                                             plot_all_time, start_hr, end_hr )
         # plot legend for Power arrays
         ax.legend(loc=self.loc, fontsize=self.fsl)
+        
+        # custom y limits and ticks to be integers
+        ax.set_ylim(0,1100)
+        ax.set_yticks([0, 250, 500, 750, 1000])
+        
+        # custom y limits and ticks to be integers
+        ax2.set_ylim(0,1100)
+        ax2.set_yticks([0, 250, 500, 750, 1000])
+
         
         # plot Energy array(s)
         ax2 = self.plot_SSC_generic(ax2, ['e_ch_tes'], ['Salt Charge Level (Thermal)'], 'Energy (MWh)', None, \
@@ -266,7 +275,7 @@ class Plots(object):
             inds = (op_mode_1 == op)
             # individual index getting plotted with unique color and label
             if np.sum(inds):
-                ax.plot(t_plot1[inds], op_mode_1[inds], 'o', label=self.operating_modes[int(op)])
+                ax.plot(t_plot1[inds].m, op_mode_1[inds], 'o', label=self.operating_modes[int(op)])
         
         # plotting legend for OP modes
         ax.legend(loc=self.loc, fontsize=self.fsl)
