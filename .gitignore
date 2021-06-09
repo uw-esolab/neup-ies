@@ -5,6 +5,13 @@ simulations/scripts/**.py
 !simulations/scripts/PySAM_example.py
 !simulations/scripts/PySAM_generic_mspt.py
 
+simulations/scripts/PySSC_scripts/**.py
+!simulations/scripts/PySSC_scripts/PySSC.py
+!simulations/scripts/PySSC_scripts/sscapi.h
+!simulations/scripts/PySSC_scripts/PySSC_model1.py
+!simulations/scripts/PySSC_scripts/PySSC_generic_mspt.py
+!simulations/scripts/PySSC_scripts/run_PySSCWrap_model1.py
+
 simulations/outputs/**.csv
 simulations/outputs/**.xlsx
 simulations/outputs/**.txt
