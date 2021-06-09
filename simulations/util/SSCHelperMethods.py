@@ -13,7 +13,16 @@ from pyomo.environ import units
 class SSCHelperMethods(object):
     
     def define_unit_registry():
+        """ Method to define unique unit registry from Pint
         
+        This method creates a unique unit registry from the Pint Python package.
+        This unit registry object is passed through classes to ensure that all
+        use the same units.
+        
+        Outputs:
+            u_pint (obj) : pint UnitRegistry object
+            
+        """
         # create unique unit registry
         u_pint = pint.UnitRegistry(autoconvert_offset_to_baseunit = True)
         
@@ -29,8 +38,33 @@ class SSCHelperMethods(object):
     
 
     def convert_to_pyomo_unit(params, param_str):
+        """ Method to evaluate a Pyomo unit from a given Pint unit
         
-        u_pyomo = units
+        This method was created because Pyomo Environment units and the Pint 
+        UnitRegistry use units in different ways and syntax. Pint seemed to have
+        more functionality and use so I defaulted to using those in the generation
+        and checking of Pyomo Parameters. Essentially what happens:
+            (1) The entire `params` dictionary is taken as input as well as a single
+               string for a specific parameter. 
+            (2) A string representation of the unit(s) are created from the input
+               e.g. u.m/u.s -> 'meter / second'
+            (3) The algorithm below checks for any weirdness -e.g. are there multiple
+               units, are they being multiplied/divided? etc.
+            (4) The algorithm then converts the string representation of the Pint unit
+               into the syntax for a Pyomo Environment unit.
+            (5) If all goes well, it will return the evaluation of the Pyomo unit string,
+               so on the Return end of the function call it will return a Pyomo unit. 
+        
+        Inputs:
+            params (dict)    : dictionary of all Pyomo parameters to be used in optimization
+            param_str (str)  : single string to be extracted from params dictionary
+        Outputs:
+            cmd (evaluated string)  : evaluation of a string called `unit_cmd` representing
+                                      Pyomo unit syntax. If failed, return None.
+            
+        """
+        
+        u_pyomo = units # this line is necessary to carry out final evaluation
         Quant = params[param_str] # pint Quantity taken from params dictionary
     
         if hasattr(Quant,'u'):
@@ -113,11 +147,16 @@ class SSCHelperMethods(object):
             return None
         
 
-    def interpret_user_defined_cycle_data(ud_ind_od):
+    def interpret_user_defined_cycle_data(ud_array):
+        """ Method to return user defined cycle data (written by LORE team)
+        
+        Inputs:
+            ud_array (list of list) : table of user defined data as nested lists
+        Outputs:
+            output_dict (dict) : dictionary of useful values from table
+            
         """
-        Method written by NREL Lore team
-        """
-        data = np.array(ud_ind_od)
+        data = np.array(ud_array)
             
         i0 = 0
         nT = np.where(np.diff(data[i0::,0])<0)[0][0] + 1 
@@ -139,3 +178,107 @@ class SSCHelperMethods(object):
                        'nTamb':nTamb, 'Tambpts':Tambpts, 'Tamblevels':Tamblevels}
         
         return output_dict
+
+
+    def get_cp_htf( u, T, rec_htf):
+        """ Method to calculate specific heat of some heat transfer fluid (written by LORE team)
+        
+        Inputs:
+            u (unitRegistry) : Pint unit registry
+            T (float Quant)  : Temperature at which to find specific heat of HTF, in units of Kelvin
+            rec_htf (int)    : integer value representing HTF in SSC table
+        Outputs:
+            cp (float Quant) : specific heat value in J/g/K
+            
+        """
+        
+        # HTF: 17 = Salt (60% NaNO3, 40% KNO3)
+        if rec_htf != 17:
+            print ('HTF %d not recognized'%rec_htf)
+            return 0.0
+        
+        T = T.to('kelvin')
+        
+        a = -1.0e-10*u.J/u.g/u.kelvin**4
+        b = 2.0e-7*u.J/u.g/u.kelvin**3
+        c = 5.0e-6*u.J/u.g/u.kelvin**2
+        d = 1.4387*u.J/u.g/u.kelvin
+        
+        cp = (a*T**3 + b*T**2 + c*T + d).to('J/g/kelvin')
+        
+        return cp 
+
+
+    def get_ambient_T_corrections_from_udpc_inputs( u, Tamb, ud_array):
+        """ Method to calculate specific heat of some heat transfer fluid (written by LORE team)
+        
+        Inputs:
+            u (unitRegistry)         : Pint unit registry
+            Tamb (float)             : ambient temperature, not units (intended to be C)
+            ud_array (list of lists) : table of user defined data as nested lists
+        Outputs:
+            etamult (float) : multiplication correction factor for eta
+            wmult (float)   : multiplication correction factor for w
+            
+        """
+        # grabbing a dictionary of useful user-defined data for power cycle
+        ud_dict = SSCHelperMethods.interpret_user_defined_cycle_data( ud_array )
+        
+        n = len(Tamb)  # Tamb = set of ambient temperature points for each dispatch time step
+        
+        Tambpts = np.array(ud_dict['Tambpts'])*u.degC
+        i0 = 3*ud_dict['nT']+3*ud_dict['nm']+ud_dict['nTamb']  # first index in udpc data corresponding to performance at design point HTF T, and design point mass flow
+        npts = ud_dict['nTamb']
+        etapts = [ ud_array[j][3]/ud_array[j][4] for j in range(i0, i0+npts)]
+        wpts = [ ud_array[j][5] for j in range(i0, i0+npts)]
+        
+        etamult  = np.ones(n)
+        wmult = np.ones(n) 
+        Tstep = Tambpts[1] - Tambpts[0]
+        for j in range(n):
+            i = max(0, min( int((Tamb[j] - Tambpts[0]) / Tstep), npts-2) )
+            r = (Tamb[j] - Tambpts[i]) / Tstep
+            etamult[j] = etapts[i] + (etapts[i+1] - etapts[i])*r
+            wmult[j] = wpts[i] + (wpts[i+1] - wpts[i])*r
+
+        return etamult, wmult
+
+
+    def get_linearized_ud_params( ud_array, q_pb_design, SSC_dict):
+        """ Method to calculate linearized user defined params (written by LORE team)
+        
+        Inputs:
+            ud_array (list of lists)  : table of user defined data as nested lists
+            q_pb_design (float Quant) : power block thermal power input rating, units of MW
+            SSC_dict (dict)           : dictionary of SSC inputs
+        Outputs:
+            etap (float) : slope of linearized eta_p
+            b (float)    : intercept of linearized eta_p
+            
+        """
+        # grabbing a dictionary of useful user-defined data for power cycle
+        ud_dict = SSCHelperMethods.interpret_user_defined_cycle_data( ud_array )
+        
+        # getting relevant eta points
+        eta_adj_pts = [ud_array[p][3]/ud_array[p][4] for p in range(len(ud_array)) ]
+        
+        xpts = ud_dict['mpts']
+        step = xpts[1] - xpts[0]
+        
+        # Interpolate for cycle performance at specified min/max load points
+        fpts = [SSC_dict['cycle_cutoff_frac'], SSC_dict['cycle_max_frac']]
+        q, eta = [ [] for v in range(2)]
+        for j in range(2):
+            p = max(0, min(int((fpts[j] - xpts[0]) / step), len(xpts)-2) )  # Find first point in user-defined array of load fractions for interpolation
+            i = 3*ud_dict['nT'] + ud_dict['nm'] + p    # Index of point in full list of udpc points (at design point ambient T)
+            eta_adj = eta_adj_pts[i] + (eta_adj_pts[i+1] - eta_adj_pts[i])/step * (fpts[j] - xpts[p])
+            eta.append(eta_adj * SSC_dict['design_eff'])
+            q.append(fpts[j]*q_pb_design)
+        
+        # calculating eta_P as linear slope using max and min power/thermal output/input
+        etap = (q[1]*eta[1]-q[0]*eta[0])/(q[1]-q[0])
+        
+        # intercept of linearized eta_P
+        b = q[1]*(eta[1] - etap)
+        
+        return etap, b
