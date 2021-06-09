@@ -447,6 +447,7 @@ class GeneralDispatch(object):
         self.addMinUpAndDowntimeConstraints()
         self.addCycleLogicConstraints()
     
+    
     def eval_ineq(self, lb, expr, ub=None, strict=False, val=True):
         
         ineq = pe.inequality(lb, expr, ub, strict=strict)
@@ -455,9 +456,7 @@ class GeneralDispatch(object):
         else:
             return ineq
 
-        
-        
-            
+
     def solve_model(self, mipgap=0.7):
         opt = pe.SolverFactory('cbc')
         opt.options["ratioGap"] = mipgap
@@ -660,7 +659,6 @@ class GeneralDispatchParamWrap(object):
 
 
     def get_ambient_T_corrections_from_udpc_inputs(self, Tamb, ud_array):
-        
         
         u = self.u 
         
