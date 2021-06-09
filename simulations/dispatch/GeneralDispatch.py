@@ -22,6 +22,7 @@ if not hasattr(u_pyomo,'USD'):
     u_pyomo.load_definitions_from_strings(['USD = [currency]'])
 from pyomo.util.check_units import assert_units_consistent, assert_units_equivalent, check_units_equivalent
 
+
 class GeneralDispatch(object):
     def __init__(self, params, unitRegistry):
         
@@ -611,7 +612,97 @@ class GeneralDispatchParamWrap(object):
         param_dict['Ccsb']        = P_ratio * C_csb.to('USD/kWh')      #C^{csb}: Operating cost of power cycle standby operation [\$/kWt$\cdot$h]
         
         return param_dict
+
+
+# =============================================================================
+# Dispatch Outputs
+# =============================================================================
+  
+class GeneralDispatchOutputs(object):
+    
+   def get_dispatch_targets_from_Pyomo(dispatch_model, ssc_horizon, N_full, run_loop=False):
         
+        dm = dispatch_model
+        
+        # range of pyomo and SSC horizon times
+        t_pyomo = dm.model.T
+        f_ind   = int( ssc_horizon.to('hr').m ) # index in hours of final horizon (e.g. 24)
+        t_horizon = range(f_ind)
+        
+        # if we're running a loop, define a list of 0s to pad the output so it matches full array size
+        if run_loop:
+            N_leftover = N_full - f_ind
+            empty_array = [0]*N_leftover
+        
+        #----Receiver Binary Outputs----
+        yr   = np.array([pe.value(dm.model.yr[t])   for t in t_pyomo])
+        yrsu = np.array([pe.value(dm.model.yrsu[t]) for t in t_pyomo])
+        yrsb = np.array([pe.value(dm.model.yrsb[t]) for t in t_pyomo])
+        
+        # updating with initial values from optimization
+        yr   = np.hstack([ dm.model.yr0.value   , yr ])
+        yrsu = np.hstack([ dm.model.yrsu0.value , yrsu ])
+        yrsb = np.hstack([ dm.model.yrsb0.value , yrsb ])
+        
+        #----Cycle Binary Outputs----
+        y    = np.array([pe.value(dm.model.y[t])    for t in t_pyomo])
+        ycsu = np.array([pe.value(dm.model.ycsu[t]) for t in t_pyomo])
+        ycsb = np.array([pe.value(dm.model.ycsb[t]) for t in t_pyomo])
+        
+        # updating with initial values from optimization
+        y    = np.hstack([ dm.model.y0.value    , y ])
+        ycsu = np.hstack([ dm.model.ycsu0.value , ycsu ])
+        ycsb = np.hstack([ dm.model.ycsb0.value , ycsb ])
+        
+        #----Cycle Thermal Power Utilization----
+        #TODO: seems that x doesn't have an initial value within Pyomo. get it from SSC? because as it stands, there is a missing timestep value for x
+        x = np.array([pe.value(dm.model.x[t])   for t in t_pyomo])/1000. # from kWt -> MWt
+        x = np.hstack([ x[0]  , x ])
+        
+        #----Thermal Capacity for Cycle Startup and Operation----
+        Qc = np.array([pe.value(dm.model.Qc[t]) for t in t_pyomo])/1000. # from kWt -> MWt
+        Qu = dm.model.Qu.value/1000. # from kWt -> MWt
+        
+        # these are both constant, don't need to hstack the initial value because it's the same (because of same timesteps Delta_t)
+        Qc = np.hstack([ Qc[0], Qc ])
+
+        # dispatch target -- receiver startup/standby binaries
+        is_rec_su_allowed_in = [1 if (yr[t] + yrsu[t] + yrsb[t]) > 0.001 else 0 for t in t_horizon]  # Receiver on, startup, or standby
+        is_rec_sb_allowed_in = [1 if yrsb[t] > 0.001                     else 0 for t in t_horizon]  # Receiver standby
+        
+        # dispatch target -- cycle startup/standby binaries
+        is_pc_su_allowed_in  = [1 if (y[t] + ycsu[t]) > 0.001 else 0 for t in t_horizon]  # Cycle on or startup
+        is_pc_sb_allowed_in  = [1 if ycsb[t] > 0.001          else 0 for t in t_horizon]  # Cycle standby
+
+        # dispatch target -- cycle thermal inputs and capacities
+        q_pc_target_su_in    = [Qc[t] if ycsu[t] > 0.001 else 0.0 for t in t_horizon]
+        q_pc_target_on_in    = [x[t]                              for t in t_horizon]
+        q_pc_max_in          = [Qu                                for t in t_horizon]
+        
+        # empty dictionary for output
+        disp_targs = {}
+        
+        # if we're running full simulation in steps, save SSC horizon portion of Pyomo horizon results
+        if run_loop:
+            disp_targs['is_rec_su_allowed_in'] = is_rec_su_allowed_in 
+            disp_targs['is_rec_sb_allowed_in'] = is_rec_sb_allowed_in
+            disp_targs['is_pc_su_allowed_in']  = is_pc_su_allowed_in 
+            disp_targs['is_pc_sb_allowed_in']  = is_pc_sb_allowed_in  
+            disp_targs['q_pc_target_su_in']    = q_pc_target_su_in  
+            disp_targs['q_pc_target_on_in']    = q_pc_target_on_in
+            disp_targs['q_pc_max_in']          = q_pc_max_in
+        # if we're running full simulation all at once, need arrays to match size of full sim
+        else:
+            disp_targs['is_rec_su_allowed_in'] = np.hstack( [is_rec_su_allowed_in , empty_array] ).tolist()
+            disp_targs['is_rec_sb_allowed_in'] = np.hstack( [is_rec_sb_allowed_in , empty_array] ).tolist()
+            disp_targs['is_pc_su_allowed_in']  = np.hstack( [is_pc_su_allowed_in  , empty_array] ).tolist()
+            disp_targs['is_pc_sb_allowed_in']  = np.hstack( [is_pc_sb_allowed_in  , empty_array] ).tolist()
+            disp_targs['q_pc_target_su_in']    = np.hstack( [q_pc_target_su_in    , empty_array] ).tolist()
+            disp_targs['q_pc_target_on_in']    = np.hstack( [q_pc_target_on_in    , empty_array] ).tolist()
+            disp_targs['q_pc_max_in']          = np.hstack( [q_pc_max_in          , empty_array] ).tolist()
+            
+        return disp_targs
+    
     
 if __name__ == "__main__": 
     import dispatch_params
