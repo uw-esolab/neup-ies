@@ -7,7 +7,7 @@ Created on Tue Jun  1 13:11:44 2021
 """
 
 import pint
-u = pint.UnitRegistry()
+u = pint.UnitRegistry(autoconvert_offset_to_baseunit = True)
 import numpy as np
 import matplotlib.pyplot as plt
 from pylab import rc
@@ -58,6 +58,15 @@ class Plots(object):
         self.op_mode_1     = np.asarray( self.mod.Outputs.op_mode_1 )
         self.defocus       = np.asarray( self.mod.Outputs.defocus )
         self.price         = np.asarray( self.mod.TimeOfDeliveryFactors.dispatch_factors_ts )
+        
+        # static inputs
+        self.q_rec_design = self.mod.SystemDesign.q_dot_nuclear_des * u.MW      # receiver design thermal power
+        self.p_pb_design  = self.mod.SystemDesign.P_ref * u.MW                  # power block design electrical power
+        self.eta_design   = self.mod.SystemDesign.design_eff                   # power block design efficiency
+        self.q_pb_design  = (self.p_pb_design / self.eta_design).to('MW')  # power block design thermal rating
+        self.T_htf_hot  = (self.mod.SystemDesign.T_htf_hot_des*u.celsius).to('degK')
+        self.T_htf_cold = (self.mod.SystemDesign.T_htf_cold_des*u.celsius).to('degK')
+        self.e_tes_design = (self.q_pb_design * self.mod.SystemDesign.tshours*u.hr).to('MWh') # TES storage capacity (kWht)
         
         # mode orders and re-ordering
         op_mode_result, modes_order = np.unique(self.op_mode_1,return_index=True)
@@ -176,14 +185,13 @@ class Plots(object):
         ax.legend(loc=self.loc, fontsize=self.fsl)
         
         # custom y limits and ticks to be integers
-        ax.set_ylim(0,1100)
+        ax.set_ylim(-100,1100)
         ax.set_yticks([0, 250, 500, 750, 1000])
         
         # custom y limits and ticks to be integers
-        ax2.set_ylim(0,1100)
-        ax2.set_yticks([0, 250, 500, 750, 1000])
+        ax2.set_ylim(-0.05*self.e_tes_design.m,self.e_tes_design.m)
+        ax2.set_yticks( np.round( np.linspace(0,self.e_tes_design.m, 5), -4 ) )
 
-        
         # plot Energy array(s)
         ax2 = self.plot_SSC_generic(ax2, ['e_ch_tes'], ['Salt Charge Level (Thermal)'], 'Energy (MWh)', None, \
                                             plot_all_time, start_hr, end_hr )
