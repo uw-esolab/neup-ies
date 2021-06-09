@@ -494,11 +494,13 @@ class GeneralDispatchParamWrap(object):
         self.eta_design   = self.SSC_dict['design_eff']                    # power block design efficiency
         self.q_pb_design  = (self.p_pb_design / self.eta_design).to('MW')  # power block design thermal rating
         
-        # temperature and specific heat values at design point
+        # temperature values at design point
         self.T_htf_hot  = (self.SSC_dict['T_htf_hot_des']*u.celsius).to('degK')
         self.T_htf_cold = (self.SSC_dict['T_htf_cold_des']*u.celsius).to('degK')
         T_htf  = 0.5*(self.T_htf_hot + self.T_htf_cold)
-        cp_des = self.get_cp_htf(T_htf)
+        
+        # specific heat values at design point
+        cp_des = SSCHelperMethods.get_cp_htf(self.u, T_htf, self.SSC_dict['rec_htf'] )
         cp_des = cp_des.to('J/g/kelvin')       
         
         # mass flow rate
@@ -544,10 +546,16 @@ class GeneralDispatchParamWrap(object):
         self.Ql    = self.SSC_dict['cycle_cutoff_frac'] * self.q_pb_design
         self.Qu    = self.SSC_dict['cycle_max_frac'] * self.q_pb_design
         self.Wb    = Wb_frac* self.p_pb_design
-        etap, Wdotl, Wdotu = self.get_linearized_ud_params( ud_array )
+        
+        #linearized eta calculations
+        etap, b = SSCHelperMethods.get_linearized_ud_params( ud_array, self.q_pb_design, self.SSC_dict )
+        Wdotl = b + self.Ql*etap
+        Wdotu = b + self.Qu*etap
         self.etap  = etap  
         self.Wdotl = Wdotl.to('kW')
         self.Wdotu = Wdotu.to('kW')
+        
+        # fixed parameter calculations (ctd)
         self.W_delta_plus  = pc_rampup * self.Wdotu 
         self.W_delta_minus = pc_rampdown * self.Wdotu
         self.W_v_plus      = pc_rampup_vl * self.Wdotu
@@ -603,88 +611,7 @@ class GeneralDispatchParamWrap(object):
         param_dict['Ccsb']        = P_ratio * C_csb.to('USD/kWh')      #C^{csb}: Operating cost of power cycle standby operation [\$/kWt$\cdot$h]
         
         return param_dict
-    
-
-    ## Getters, modified from LORE files
-    def get_cp_htf(self, T):
         
-        u = self.u
-        # HTF: 17 = Salt (60% NaNO3, 40% KNO3)
-        if self.SSC_dict['rec_htf'] != 17:
-            print ('HTF %d not recognized'%self.SSC_dict['rec_htf'])
-            return 0.0
-        
-        T = T.to('kelvin')
-        
-        a = -1.0e-10*u.J/u.g/u.kelvin**4
-        b = 2.0e-7*u.J/u.g/u.kelvin**3
-        c = 5.0e-6*u.J/u.g/u.kelvin**2
-        d = 1.4387*u.J/u.g/u.kelvin
-        
-        return (a*T**3 + b*T**2 + c*T + d).to('J/g/kelvin')  # J/kg/K
-
-
-    def get_linearized_ud_params(self, ud_array):
-        
-        # grabbing a dictionary of useful user-defined data for power cycle
-        ud_dict = SSCHelperMethods.interpret_user_defined_cycle_data( ud_array )
-        
-        # getting relevant eta points
-        eta_adj_pts = [ud_array[p][3]/ud_array[p][4] for p in range(len(ud_array)) ]
-        
-        xpts = ud_dict['mpts']
-        step = xpts[1] - xpts[0]
-        
-        # Interpolate for cycle performance at specified min/max load points
-        fpts = [self.SSC_dict['cycle_cutoff_frac'], self.SSC_dict['cycle_max_frac']]
-        q, eta = [ [] for v in range(2)]
-        for j in range(2):
-            p = max(0, min(int((fpts[j] - xpts[0]) / step), len(xpts)-2) )  # Find first point in user-defined array of load fractions for interpolation
-            i = 3*ud_dict['nT'] + ud_dict['nm'] + p    # Index of point in full list of udpc points (at design point ambient T)
-            eta_adj = eta_adj_pts[i] + (eta_adj_pts[i+1] - eta_adj_pts[i])/step * (fpts[j] - xpts[p])
-            eta.append(eta_adj * self.SSC_dict['design_eff'])
-            q.append(fpts[j]*self.q_pb_design)
-        
-        # calculating eta_P as linear slope using max and min power/thermal output/input
-        etap = (q[1]*eta[1]-q[0]*eta[0])/(q[1]-q[0])
-        
-        # intercept of linearized eta_P
-        b = q[1]*(eta[1] - etap)
-        
-        # using linearized parameters and combining with max and min thermal power input
-        Wdotl = b + self.Ql*etap
-        Wdotu = b + self.Qu*etap
-        
-        return etap, Wdotl, Wdotu
-
-
-    def get_ambient_T_corrections_from_udpc_inputs(self, Tamb, ud_array):
-        
-        u = self.u 
-        
-        # grabbing a dictionary of useful user-defined data for power cycle
-        ud_dict = SSCHelperMethods.interpret_user_defined_cycle_data( ud_array )
-        
-        n = len(Tamb)  # Tamb = set of ambient temperature points for each dispatch time step
-        
-        Tambpts = np.array(ud_dict['Tambpts'])*u.degC
-        i0 = 3*ud_dict['nT']+3*ud_dict['nm']+ud_dict['nTamb']  # first index in udpc data corresponding to performance at design point HTF T, and design point mass flow
-        npts = ud_dict['nTamb']
-        etapts = [ ud_array[j][3]/ud_array[j][4] for j in range(i0, i0+npts)]
-        wpts = [ ud_array[j][5] for j in range(i0, i0+npts)]
-        
-        etamult  = np.ones(n)
-        wmult = np.ones(n) 
-        Tstep = Tambpts[1] - Tambpts[0]
-        for j in range(n):
-            i = max(0, min( int((Tamb[j] - Tambpts[0]) / Tstep), npts-2) )
-            r = (Tamb[j] - Tambpts[i]) / Tstep
-            etamult[j] = etapts[i] + (etapts[i+1] - etapts[i])*r
-            wmult[j] = wpts[i] + (wpts[i+1] - wpts[i])*r
-
-        return etamult, wmult
-        
-    
     
 if __name__ == "__main__": 
     import dispatch_params

@@ -14,9 +14,9 @@ Modified by Gabriel Soto
 """
 from dispatch.GeneralDispatch import GeneralDispatch
 from dispatch.GeneralDispatch import GeneralDispatchParamWrap
-import pyomo.environ as pe
 import numpy as np
 from util.FileMethods import FileMethods
+from util.SSCHelperMethods import SSCHelperMethods
 
 class NuclearDispatch(GeneralDispatch):
     
@@ -127,7 +127,7 @@ class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
         time_slice = slice(t_start,t_end,1)
         Tdry = Tdry[time_slice] 
         
-        etamult, wmult = self.get_ambient_T_corrections_from_udpc_inputs( Tdry, ud_array ) # TODO:verify this makes sense
+        etamult, wmult = SSCHelperMethods.get_ambient_T_corrections_from_udpc_inputs( self.u, Tdry, ud_array ) # TODO:verify this makes sense
         self.etaamb = etamult * self.SSC_dict['design_eff']
         self.etac   = wmult * self.SSC_dict['ud_f_W_dot_cool_des']/100.
 
@@ -166,7 +166,7 @@ class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
         m_hot  = self.m_tes_design * (self.SSC_dict['csp.pt.tes.init_hot_htf_percent']/100)        # Available active mass in hot tank
         T_tes_hot_init  = (self.SSC_dict['T_tank_hot_init']*u.celsius).to('degK')
         T_tes_init  = 0.5*(T_tes_hot_init + self.T_htf_cold)
-        cp_tes_init = self.get_cp_htf(T_tes_init) 
+        cp_tes_init = SSCHelperMethods.get_cp_htf(self.u, T_tes_init, self.SSC_dict['rec_htf'] )
         
         # important parameters
         e_pb_suinitremain  = self.SSC_dict['pc_startup_energy_remain_initial']*u.kWh
