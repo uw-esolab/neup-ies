@@ -82,9 +82,14 @@ class NuclearTES(GenericSSCModule):
         
         dispatch_model = ND(params, self.u)
         rt_results = dispatch_model.solve_model()
+                
+        self.current_disp_model = dispatch_model
         
-        self.dispatch_model = dispatch_model
-        self.rt_results = rt_results
+        count = str(self.disp_count)
+        self.disp_models[count]  = dispatch_model    
+        self.disp_results[count] = rt_results
+        
+        self.disp_count += 1
 
 
     def create_dispatch_wrapper(self, PySAM_dict):

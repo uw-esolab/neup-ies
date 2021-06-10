@@ -53,7 +53,16 @@ class GenericSSCModule(ABC):
         # save flag for dispatch 
         self.is_dispatch = is_dispatch
         
+        # initialize dispatch-specific parameters and loggers
         if self.is_dispatch:
+            
+            # initialize dispatch counter
+            self.disp_count = 0
+            
+            # empty dictionaries to store each dispatch run
+            self.disp_models  = {}
+            self.disp_results = {}
+            
             # initialize dispatch wrap class
             self.dispatch_wrap = self.create_dispatch_wrapper( PySAM_dict )
 
@@ -245,8 +254,13 @@ class GenericSSCModule(ABC):
         dispatch_model = GD(params, self.u)
         rt_results = dispatch_model.solve_model()
         
-        self.dispatch_model = dispatch_model
-        self.rt_results = rt_results
+        self.current_disp_model = dispatch_model
+        
+        count = str(self.disp_count)
+        self.disp_models[count]  = dispatch_model    
+        self.disp_results[count] = rt_results
+        
+        self.disp_count += 1
     
     
     def update_Plant_after_SSC(self):
@@ -270,7 +284,7 @@ class GenericSSCModule(ABC):
         N_full     = int((self.SSC_dict['time_stop']*self.u.s).to('hr').m)
         
         # the heavy-lifting happens here -> return a dictionary of dispatch target arrays from Pyomo optimization results
-        dispatch_targets = GDO.get_dispatch_targets_from_Pyomo(self.dispatch_model, self.ssc_horizon, N_full, self.run_loop)
+        dispatch_targets = GDO.get_dispatch_targets_from_Pyomo(self.current_disp_model, self.ssc_horizon, N_full, self.run_loop)
         
         ### Set Dispatch Targets ### 
         # setting dispatch targets to True so that SSC can read in Pyomo inputs
