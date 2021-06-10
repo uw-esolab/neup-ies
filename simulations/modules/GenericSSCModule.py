@@ -206,16 +206,15 @@ class GenericSSCModule(ABC):
             
             # run dispatch optimization
             if self.is_dispatch:
-                pass
-                # **update** dispatch parameters using previous SSC run
+                
                 # i.e. updating Pyomo inputs using SSC outputs
-                # disp_params = self.create_dispatch_params()
+                disp_params = self.update_Pyomo_after_SSC(disp_params)
                 
                 # run pyomo optimization again
-                # outputs = self.run_pyomo(disp_params)
+                self.run_pyomo(disp_params)
             
-                # # updating SSC inputs using Pyomo outputs
-                # self.update_Plant_after_Pyomo( )
+                # updating SSC inputs using Pyomo outputs
+                self.update_Plant_after_Pyomo( )
             
             # run Plant again
             self.run_Plant_through_SSC( time_start , time_next )

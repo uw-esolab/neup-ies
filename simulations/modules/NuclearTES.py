@@ -134,6 +134,9 @@ class NuclearTES(GenericSSCModule):
         
         updated_SSC_dict['wdot0'] = self.Plant.Outputs.P_cycle[self.t_ind-1]
         
+        # TODO: removing w_dot_s_prev references in all of Dispatch for now, might need to revisit later
+        # updated_SSC_dict['wdot_s_prev'] = 0 #np.array([pe.value(dm.model.wdot_s_prev[t]) for t in dm.model.T])[-1]
+        
         DW = self.dispatch_wrap
         params = DW.set_initial_state( params, updated_SSC_dict )
         
