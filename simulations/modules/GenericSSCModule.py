@@ -71,6 +71,9 @@ class GenericSSCModule(ABC):
         self.create_Plant( )
         self.simulate_Plant( )
         
+        if self.run_loop:
+            self.log_SSC_arrays(log_final=True)
+        
         #logging annual energy and capacity factor
         annual_energy = np.sum(self.gen_log)*u.kWh
         if 'P_ref' in SSC_dict.keys():
@@ -91,6 +94,7 @@ class GenericSSCModule(ABC):
         if export:
             self.export_results(filename)
          
+            
     def store_csv_arrays(self, input_dict):
         """ Method to get data from specified csv files and store in class
         
@@ -163,23 +167,21 @@ class GenericSSCModule(ABC):
         self.t_ind = int(time_next.to('hr').m)
         
         # setting up empty log array for gen
-        self.gen_log = np.ndarray([0])
+        self.initialize_arrays()
         
         # run dispatch optimization for the first time
         if self.is_dispatch:
-            
             # create dispatch parameters for the first time
             disp_params = self.create_dispatch_params()
             
             # run pyomo optimization
-            outputs = self.run_pyomo(disp_params)
+            self.run_pyomo(disp_params)
             
             # updating SSC inputs using Pyomo outputs
             self.update_Plant_after_Pyomo()
         
         # first execution of Plant through SSC
         self.run_Plant_through_SSC( time_start , time_next )
-        
         
         # this loop should only be entered if run_loop == True
         while (time_next < time_end):
@@ -206,7 +208,6 @@ class GenericSSCModule(ABC):
                 # # updating SSC inputs using Pyomo outputs
                 # self.update_Plant_after_Pyomo( )
             
-
             # run Plant again
             self.run_Plant_through_SSC( time_start , time_next )
             
@@ -215,13 +216,20 @@ class GenericSSCModule(ABC):
         """ Simulation of Plant through SSC for given times
         """
         
+        # start and end times for full simulation
+        i_start = int( start_hr.to('hr').m )
+        i_end   = int( end_hr.to('hr').m )
+        
         self.Plant.SystemControl.time_start = start_hr.to('s').magnitude
         self.Plant.SystemControl.time_stop = end_hr.to('s').magnitude
         
         self.Plant.execute()
         
-        # logging values of gen
-        self.gen_log = self.augment_log( self.gen_log, self.Plant.Outputs.gen[0:self.t_ind ] )
+        # logging SSC outputs to arrays that have already been initialized
+        if self.run_loop:
+            self.log_SSC_arrays(i_start, i_end)
+        else:
+            self.gen_log[i_start:i_end] = self.Plant.Outputs.gen[0:self.t_ind ]
         
         
     def reset_all(self):
@@ -239,7 +247,6 @@ class GenericSSCModule(ABC):
         
         self.dispatch_model = dispatch_model
         self.rt_results = rt_results
-        return rt_results
     
     
     def update_Plant_after_SSC(self):
@@ -303,11 +310,70 @@ class GenericSSCModule(ABC):
         params = DW.set_power_cycle_parameters( params, self.ud_array )
         params = DW.set_fixed_cost_parameters( params )
 
-        ### Initial Condition Parameters ###
-        
-        
         return params
+
+    def initialize_arrays(self):
         
+        u = self.u
+        
+        # start and end times for full simulation
+        i_start = (self.SSC_dict['time_start'] * u.s).to('hr').m
+        i_end   = (self.SSC_dict['time_stop'] * u.s).to('hr').m
+        
+        # size of simulation arrays
+        N_sim = int( i_end - i_start )
+        
+        # setting each logging array to zero
+        self.time_log          = np.zeros(N_sim)
+        self.gen_log           = np.zeros(N_sim)
+        self.p_cycle_log       = np.zeros(N_sim)
+        self.q_dot_rec_inc_log = np.zeros(N_sim)
+        self.m_dot_pc_log      = np.zeros(N_sim)
+        self.m_dot_rec_log     = np.zeros(N_sim)
+        self.T_pc_in_log       = np.zeros(N_sim)
+        self.T_pc_out_log      = np.zeros(N_sim)
+        self.e_ch_tes_log      = np.zeros(N_sim)
+        self.op_mode_1_log     = np.zeros(N_sim)
+        self.defocus_log       = np.zeros(N_sim)
+
+
+    def log_SSC_arrays(self, i_start=0, i_end=1, log_final=False):
+        
+        ssch   = slice(i_start,i_end,1)
+        firsth = slice(0,self.t_ind,1)
+        
+        if not log_final:
+            self.time_log[ssch]          = self.Plant.Outputs.time_hr[firsth]
+            self.gen_log[ssch]           = self.Plant.Outputs.gen[firsth]
+            self.p_cycle_log[ssch]       = self.Plant.Outputs.P_cycle[firsth]
+            self.q_dot_rec_inc_log[ssch] = self.Plant.Outputs.q_dot_rec_inc[firsth]
+            self.m_dot_pc_log[ssch]      = self.Plant.Outputs.m_dot_pc[firsth]
+            self.m_dot_rec_log[ssch]     = self.Plant.Outputs.m_dot_rec[firsth]
+            self.T_pc_in_log[ssch]       = self.Plant.Outputs.T_pc_in[firsth]
+            self.T_pc_out_log[ssch]      = self.Plant.Outputs.T_pc_out[firsth]
+            self.e_ch_tes_log[ssch]      = self.Plant.Outputs.e_ch_tes[firsth]
+            self.op_mode_1_log[ssch]     = self.Plant.Outputs.op_mode_1[firsth]
+            self.defocus_log[ssch]       = self.Plant.Outputs.defocus[firsth]
+
+        else:
+            # wanted to create a quick subclass that where I can extract things during PostProcessing steps...
+            self.Plant.PySAM_Outputs = lambda: None # don't try this at home
+            
+            convert_output = lambda arr: tuple( arr.tolist() )
+            
+            self.Plant.PySAM_Outputs.time_hr       = convert_output( self.time_log )
+            self.Plant.PySAM_Outputs.gen           = convert_output( self.gen_log )
+            self.Plant.PySAM_Outputs.P_cycle       = convert_output( self.p_cycle_log )
+            self.Plant.PySAM_Outputs.q_dot_rec_inc = convert_output( self.q_dot_rec_inc_log )
+            self.Plant.PySAM_Outputs.m_dot_pc      = convert_output( self.m_dot_pc_log )
+            self.Plant.PySAM_Outputs.m_dot_rec     = convert_output( self.m_dot_rec_log )
+            self.Plant.PySAM_Outputs.T_pc_in       = convert_output( self.T_pc_in_log )
+            self.Plant.PySAM_Outputs.T_pc_out      = convert_output( self.T_pc_out_log )
+            self.Plant.PySAM_Outputs.e_ch_tes      = convert_output( self.e_ch_tes_log )
+            self.Plant.PySAM_Outputs.op_mode_1     = convert_output( self.op_mode_1_log )
+            self.Plant.PySAM_Outputs.defocus       = convert_output( self.defocus_log )
+
+    
     def export_results(self, filename):
         
         location_list = []

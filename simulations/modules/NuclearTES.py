@@ -85,7 +85,6 @@ class NuclearTES(GenericSSCModule):
         
         self.dispatch_model = dispatch_model
         self.rt_results = rt_results
-        return rt_results
 
 
     def create_dispatch_wrapper(self, PySAM_dict):
