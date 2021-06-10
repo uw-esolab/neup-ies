@@ -46,14 +46,10 @@ class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
         # set up costs from parent class
         param_dict = GeneralDispatchParamWrap.set_fixed_cost_parameters( self, param_dict )
         
-        # TODO: for now, scaling everything from LORE files
-        old_Q_ref = 565 * u.MW 
-        Q_ratio   = (self.q_rec_design / old_Q_ref ).to('')
-        
         # TODO: old values from LORE files
-        C_rec  = 20 * u.USD / u.MWh #Q_ratio * 0.002  * u.USD/u.kWh        
-        C_rsu  = Q_ratio * 950    * u.USD
-        C_rhsp = Q_ratio * 950/5. * u.USD
+        C_rec  = self.PySAM_dict['nuc_op_cost'] * u.USD / u.MWh #Q_ratio * 0.002  * u.USD/u.kWh        
+        C_rsu  = self.PySAM_dict['nuc_cold_su'] * u.USD
+        C_rhsp = self.PySAM_dict['nuc_hot_su'] * u.USD
 
         ### Cost Parameters ###
         param_dict['Crec']   = C_rec.to('USD/kWh')  #C^{rec}: Operating cost of heliostat field and receiver [\$/kWt$\cdot$h]
@@ -69,10 +65,10 @@ class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
         u = self.u 
         
         time_fix = 1*u.hr                  # TODO: we're missing a time term to fix units
-        dw_rec_pump             = 0*u.MW   # TODO: Pumping parasitic at design point reciever mass flow rate (MWe)
-        tower_piping_ht_loss    = 0*u.kW   # TODO: Tower piping heat trace full-load parasitic load (kWe) 
-        q_rec_standby_fraction  = 0.       # TODO: Receiver standby energy consumption (fraction of design point thermal power)
-        q_rec_shutdown_fraction = 0.       # TODO: Receiver shutdown energy consumption (fraction of design point thermal power)
+        dw_rec_pump             = self.PySAM_dict['dw_nuc_pump']*u.MW   # TODO: Pumping parasitic at design point reciever mass flow rate (MWe)
+        tower_piping_ht_loss    = self.PySAM_dict['nuc_piping_ht_loss']*u.kW   # TODO: Tower piping heat trace full-load parasitic load (kWe) 
+        q_rec_standby_fraction  = self.PySAM_dict['q_nuc_standby_frac']        # TODO: Receiver standby energy consumption (fraction of design point thermal power)
+        q_rec_shutdown_fraction = self.PySAM_dict['q_nuc_shutdown_frac']        # TODO: Receiver shutdown energy consumption (fraction of design point thermal power)
         
         self.deltal = self.SSC_dict['rec_su_delay']*u.hr
         self.Ehs    = self.SSC_dict['p_start']*u.kWh
@@ -107,7 +103,7 @@ class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
         #MAKE SURE TO CALL THIS METHOD AFTER THE NUCLEAR PARAMETERS 
         u = self.u
         
-        self.Drsu       = 1*u.hr   # Minimum time to start the receiver (hr)
+        self.Drsu       = self.PySAM_dict['Dnsu']*u.hr   # Minimum time to start the receiver (hr)
         self.P          = df_array*u.USD/u.kWh
         self.Qin        = np.array([self.q_rec_design.magnitude]*self.T)*self.q_rec_design.units
         self.Qc         = self.Ec / np.ceil(self.SSC_dict['startup_time']*u.hr / np.min(self.Delta)) / np.min(self.Delta) #TODO: make sure Ec is called correctly
@@ -116,7 +112,7 @@ class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
         self.W_u_minus  = [(self.Wdotl + self.W_delta_minus*0.5*dt).to('kW').magnitude for dt in self.Delta]*u.kW
         
         n  = len(self.Delta)
-        wt = 0.999
+        wt = self.PySAM_dict['nuc_wt']
         delta_rs = np.zeros(n)
         D        = np.zeros(n)
         

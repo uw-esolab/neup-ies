@@ -489,6 +489,10 @@ class GeneralDispatchParamWrap(object):
     def set_design(self):
         
         u = self.u
+        
+        # alpha init
+        self.alpha = 1.0
+        
         # design parameters
         self.q_rec_design = self.SSC_dict['q_dot_nuclear_des'] * u.MW      # receiver design thermal power
         self.p_pb_design  = self.SSC_dict['P_ref'] * u.MW                  # power block design electrical power
@@ -518,6 +522,7 @@ class GeneralDispatchParamWrap(object):
     def set_time_indexed_parameters(self, param_dict):
         
         u = self.u
+        
         self.T       = int( self.pyomo_horizon.to('hr').magnitude )
         self.Delta   = np.array([self.dispatch_time_step.to('hr').magnitude]*self.T)*u.hr
         self.Delta_e = np.cumsum(self.Delta)
@@ -534,11 +539,11 @@ class GeneralDispatchParamWrap(object):
         
         u = self.u
         # Magic numbers
-        Wb_frac = 0.05             # TODO: get a better estimate- cycle standby parasitic load as frac of cycle capacity
-        pc_rampup    = 0.05 / u.min  # TODO: self.SSC_dict['disp_pc_rampup']  in SSC-> Cycle max ramp up (fraction of capacity per minute)
-        pc_rampdown  = 0.05 / u.min  # TODO: self.SSC_dict['disp_pc_rampdown']   
-        pc_rampup_vl   = 1. / u.hr # TODO: self.SSC_dict['disp_pc_rampup_vl'] in SSC-> Cycle ramp up violation limit (fraction of capacity per minute)
-        pc_rampdown_vl = 1. / u.hr # TODO: self.SSC_dict['disp_pc_rampdown_vl'] 
+        Wb_frac = self.PySAM_dict['Wb_frac']             # TODO: get a better estimate- cycle standby parasitic load as frac of cycle capacity
+        pc_rampup      = self.PySAM_dict['pc_rampup']      / u.min  # Cycle max ramp up (fraction of capacity per minute)
+        pc_rampdown    = self.PySAM_dict['pc_rampdown']    / u.min    
+        pc_rampup_vl   = self.PySAM_dict['pc_rampup_vl']   / u.hr   # Cycle ramp up violation limit (fraction of capacity per minute)
+        pc_rampdown_vl = self.PySAM_dict['pc_rampdown_vl'] / u.hr 
         
         # fixed parameter calculations
         self.Ec    = self.SSC_dict['startup_frac'] * self.q_pb_design * self.SSC_dict['startup_time']*u.hr      # TODO: this should be an energy, multiplying by min startup time for now
@@ -561,8 +566,8 @@ class GeneralDispatchParamWrap(object):
         self.W_delta_minus = pc_rampdown * self.Wdotu
         self.W_v_plus      = pc_rampup_vl * self.Wdotu
         self.W_v_minus     = pc_rampdown_vl * self.Wdotu
-        self.Yu    = 3*u.hr  # TODO: get a better estimate - minimum required power cycle uptime 
-        self.Yd    = 1*u.hr  # TODO: get a better estimate - minimum required power cycle downtime 
+        self.Yu    = self.PySAM_dict['Yu']*u.hr  # TODO: get a better estimate - minimum required power cycle uptime 
+        self.Yd    = self.PySAM_dict['Yd']*u.hr  # TODO: get a better estimate - minimum required power cycle downtime 
         
         ### Power Cycle Parameters ###
         param_dict['Ec']      = self.Ec.to('kWh')  #E^c: Required energy expended to start cycle [kWt$\cdot$h]
@@ -590,17 +595,17 @@ class GeneralDispatchParamWrap(object):
         u = self.u
         
         # TODO: for now, scaling everything from LORE files
-        old_P_ref = 120 * u.MW
+        old_P_ref = self.PySAM_dict['P_ref_baseline'] * u.MW
         P_ratio   = (self.p_pb_design / old_P_ref ).to('')
         
         # TODO: old values from LORE files
-        alpha     = 1.0 * u.USD
-        C_pc      = 0.002 * u.USD/u.kWh        
-        C_csu     = 6250 * u.USD
-        C_chsp    = 6250/5. * u.USD
-        C_delta_w = 0.01 * u.USD/u.kW
-        C_v_w     = 0.4 * u.USD/u.kW
-        C_csb     = 0.0 * u.USD/u.kWh
+        alpha     = self.alpha * u.USD
+        C_pc      = self.PySAM_dict['pc_op_cost'] * u.USD/u.kWh        
+        C_csu     = self.PySAM_dict['pc_cold_su'] * u.USD
+        C_chsp    = self.PySAM_dict['pc_hot_su'] * u.USD
+        C_delta_w = self.PySAM_dict['pc_delta_w'] * u.USD/u.kW
+        C_v_w     = self.PySAM_dict['pc_delta_w_v'] * u.USD/u.kW
+        C_csb     = self.PySAM_dict['pc_sb'] * u.USD/u.kWh
 
         ### Cost Parameters ###
         param_dict['alpha']       = alpha.to('USD')                    #\alpha: Conversion factor between unitless and monetary values [\$]

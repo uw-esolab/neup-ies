@@ -284,6 +284,7 @@ class GenericSSCModule(ABC):
         N_full     = int((self.SSC_dict['time_stop']*self.u.s).to('hr').m)
         
         # the heavy-lifting happens here -> return a dictionary of dispatch target arrays from Pyomo optimization results
+        # NOTE: will need to overload GDO if this somehow gets overloaded by Nuclear Dispatch Outputs class
         dispatch_targets = GDO.get_dispatch_targets_from_Pyomo(self.current_disp_model, self.ssc_horizon, N_full, self.run_loop)
         
         ### Set Dispatch Targets ### 
