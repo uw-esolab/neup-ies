@@ -237,6 +237,6 @@ class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
         param_dict['ycsu0']  = self.ycsu0       #y^{csu}_0: 1 if cycle is in starting up initially, 0 otherwise
         param_dict['Yu0']    = self.Yu0.to('hr')      #Y^u_0: duration that cycle has been generating electric power [h]
         param_dict['Yd0']    = self.Yd0.to('hr')      #Y^d_0: duration that cycle has not been generating power (i.e., shut down or in standby mode) [h]
-        param_dict['wdot_s_prev']    = 0*u.hr         #\dot{w}^{s,prev}: previous $\dot{w}^s$, or energy sold to grid [kWe]
-        # ^ this should be gen[-1] from previous SSC run
+        # param_dict['wdot_s_prev']    = 0*u.hr         #\dot{w}^{s,prev}: previous $\dot{w}^s$, or energy sold to grid [kWe]
+        # ^ this should be gen[-1] from previous SSC run, 0 if first_run == True
         return param_dict

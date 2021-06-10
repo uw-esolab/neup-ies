@@ -121,7 +121,8 @@ class GeneralDispatch(object):
         self.model.Yd0 = pe.Param(mutable=True, initialize=gd("Yd0"), units=gu("delta_rs"))  #Y^d_0: duration that cycle has not been generating power (i.e., shut down or in standby mode) [h]
         
         #------- Persistence Parameters ---------
-        self.model.wdot_s_prev  = pe.Param(self.model.T, mutable=True, initialize=gd("wdot_s_prev"), units=gu("wdot_s_prev")) #\dot{w}^{s,prev}: previous $\dot{w}^s$, or energy sold to grid [kWe]
+        # TODO: removing references to wdot_s_prev, they only exist as Constraints and should later be added to Objective somehow
+        # self.model.wdot_s_prev  = pe.Param(self.model.T, mutable=True, initialize=gd("wdot_s_prev"), units=gu("wdot_s_prev")) #\dot{w}^{s,prev}: previous $\dot{w}^s$, or energy sold to grid [kWe]
         # self.model.wdot_s_pen  = pe.Param(self.model.T, mutable=True, initialize=gd("wdot_s_pen"), units=gu("delta_rs"))    #\dot{w}_{s,pen}: previous $\dot{w}$ 
 
 
@@ -159,8 +160,9 @@ class GeneralDispatch(object):
         self.model.ycge = pe.Var(self.model.T, domain=pe.NonNegativeReals, bounds=(0,1))      #y^{cge}: 1 if cycle stops electric power generation at period $t$; 0 otherwise
         
         #------- Persistence Variables ---------
-        self.model.wdot_s_prev_delta_plus = pe.Var(self.model.T, domain=pe.NonNegativeReals)  #\dot{w}^{\Delta+}_{s,prev}: upper bound on energy sold [kWe]
-        self.model.wdot_s_prev_delta_minus = pe.Var(self.model.T, domain=pe.NonNegativeReals) #\dot{w}^{\Delta-}_{s,prev}: lower bound on energy sold [kWe]
+        # TODO: revisit wdot_s_prev references later
+        # self.model.wdot_s_prev_delta_plus = pe.Var(self.model.T, domain=pe.NonNegativeReals)  #\dot{w}^{\Delta+}_{s,prev}: upper bound on energy sold [kWe]
+        # self.model.wdot_s_prev_delta_minus = pe.Var(self.model.T, domain=pe.NonNegativeReals) #\dot{w}^{\Delta-}_{s,prev}: lower bound on energy sold [kWe]
         # self.model.ycoff = pe.Var(self.model.T, domain=pe.Binary)     #y^{c,off}: 1 if power cycle is off at period $t$; 0 otherwise
         
                 
@@ -185,7 +187,9 @@ class GeneralDispatch(object):
 
 
     def addPersistenceConstraints(self):
-        def wdot_s_persist_pos_rule(model,t): # add an if t==1 statement
+        # TODO: wdot_s_prev should be a single float, there should be an {if t==1} statement for wdot_s_prev
+        #              and for all other t, we compare wdot_s[t] - wdot_s[t-1]
+        def wdot_s_persist_pos_rule(model,t):
             return model.wdot_s_prev_delta_plus[t] >= model.wdot_s[t] - model.wdot_s_prev[t]
         def wdot_s_persist_neg_rule(model,t):
             return model.wdot_s_prev_delta_minus[t] >= model.wdot_s_prev[t] - model.wdot_s[t]
@@ -438,7 +442,7 @@ class GeneralDispatch(object):
 
 
     def generate_constraints(self):
-        self.addPersistenceConstraints()
+        # self.addPersistenceConstraints() # TODO: revisit these constraints later when we know how to add a term to Objective
         self.addReceiverStartupConstraints()
         self.addReceiverSupplyAndDemandConstraints()
         self.addReceiverNodeLogicConstraints()
