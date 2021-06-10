@@ -180,8 +180,8 @@ class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
         y0                 = (self.current_Plant['pc_op_mode_initial'] == 1) 
         ycsb0              = (self.current_Plant['pc_op_mode_initial'] == 2) 
         ycsu0              = (self.current_Plant['pc_op_mode_initial'] == 0 or self.current_Plant['pc_op_mode_initial'] == 4) 
-        disp_pc_persist0   = 0
-        disp_pc_off0       = 0
+        disp_pc_persist0   = 48 # TODO: need to calculate this every run
+        disp_pc_off0       = 48
         Yu0                = disp_pc_persist0 if y0 else 0.0
         Yd0                = disp_pc_off0 if (not y0) else 0.0
         t_rec_suinitremain = self.current_Plant['rec_startup_time_remain_init']*u.hr
@@ -238,5 +238,5 @@ class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
         param_dict['Yu0']    = self.Yu0.to('hr')      #Y^u_0: duration that cycle has been generating electric power [h]
         param_dict['Yd0']    = self.Yd0.to('hr')      #Y^d_0: duration that cycle has not been generating power (i.e., shut down or in standby mode) [h]
         param_dict['wdot_s_prev']    = 0*u.hr         #\dot{w}^{s,prev}: previous $\dot{w}^s$, or energy sold to grid [kWe]
-        
+        # ^ this should be gen[-1] from previous SSC run
         return param_dict

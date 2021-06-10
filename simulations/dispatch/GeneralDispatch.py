@@ -139,7 +139,7 @@ class GeneralDispatch(object):
         self.model.wdot_s = pe.Var(self.model.T, domain=pe.NonNegativeReals)	                     #\dot{w}^s: Energy sold to grid in time t [kWe]
         self.model.wdot_p = pe.Var(self.model.T, domain=pe.NonNegativeReals)	                     #\dot{w}^p: Energy purchased from the grid in time t [kWe]
         self.model.x = pe.Var(self.model.T, domain=pe.NonNegativeReals)                            #x: Cycle thermal power utilization at period $t$ [kWt]
-        self.model.xr = pe.Var(self.model.T, domain=pe.NonNegativeReals)	                         #x^r: Thermal power delivered by the receiver at period $t$ [kWt]
+        self.model.xr = pe.Var(self.model.T, domain=pe.NonNegativeReals)	                          #x^r: Thermal power delivered by the receiver at period $t$ [kWt]
         self.model.xrsu = pe.Var(self.model.T, domain=pe.NonNegativeReals)                         #x^{rsu}: Receiver start-up power consumption at period $t$ [kWt]
         
         #------- Binary Variables ---------
@@ -185,7 +185,7 @@ class GeneralDispatch(object):
 
 
     def addPersistenceConstraints(self):
-        def wdot_s_persist_pos_rule(model,t):
+        def wdot_s_persist_pos_rule(model,t): # add an if t==1 statement
             return model.wdot_s_prev_delta_plus[t] >= model.wdot_s[t] - model.wdot_s_prev[t]
         def wdot_s_persist_neg_rule(model,t):
             return model.wdot_s_prev_delta_minus[t] >= model.wdot_s_prev[t] - model.wdot_s[t]
