@@ -644,32 +644,17 @@ class GeneralDispatchOutputs(object):
         yrsu = np.array([pe.value(dm.model.yrsu[t]) for t in t_pyomo])
         yrsb = np.array([pe.value(dm.model.yrsb[t]) for t in t_pyomo])
         
-        # updating with initial values from optimization
-        yr   = np.hstack([ dm.model.yr0.value   , yr ])
-        yrsu = np.hstack([ dm.model.yrsu0.value , yrsu ])
-        yrsb = np.hstack([ dm.model.yrsb0.value , yrsb ])
-        
         #----Cycle Binary Outputs----
         y    = np.array([pe.value(dm.model.y[t])    for t in t_pyomo])
         ycsu = np.array([pe.value(dm.model.ycsu[t]) for t in t_pyomo])
         ycsb = np.array([pe.value(dm.model.ycsb[t]) for t in t_pyomo])
-        
-        # updating with initial values from optimization
-        y    = np.hstack([ dm.model.y0.value    , y ])
-        ycsu = np.hstack([ dm.model.ycsu0.value , ycsu ])
-        ycsb = np.hstack([ dm.model.ycsb0.value , ycsb ])
-        
+
         #----Cycle Thermal Power Utilization----
-        #TODO: seems that x doesn't have an initial value within Pyomo. get it from SSC? because as it stands, there is a missing timestep value for x
         x = np.array([pe.value(dm.model.x[t])   for t in t_pyomo])/1000. # from kWt -> MWt
-        x = np.hstack([ x[0]  , x ])
         
         #----Thermal Capacity for Cycle Startup and Operation----
         Qc = np.array([pe.value(dm.model.Qc[t]) for t in t_pyomo])/1000. # from kWt -> MWt
         Qu = dm.model.Qu.value/1000. # from kWt -> MWt
-        
-        # these are both constant, don't need to hstack the initial value because it's the same (because of same timesteps Delta_t)
-        Qc = np.hstack([ Qc[0], Qc ])
 
         # dispatch target -- receiver startup/standby binaries
         is_rec_su_allowed_in = [1 if (yr[t] + yrsu[t] + yrsb[t]) > 0.001 else 0 for t in t_horizon]  # Receiver on, startup, or standby
@@ -697,6 +682,7 @@ class GeneralDispatchOutputs(object):
             disp_targs['q_pc_target_on_in']    = q_pc_target_on_in
             disp_targs['q_pc_max_in']          = q_pc_max_in
         # if we're running full simulation all at once, need arrays to match size of full sim
+        # TODO: is this a feature we want in the long term? Or just for debugging the first Pyomo call?
         else:
             disp_targs['is_rec_su_allowed_in'] = np.hstack( [is_rec_su_allowed_in , empty_array] ).tolist()
             disp_targs['is_rec_sb_allowed_in'] = np.hstack( [is_rec_sb_allowed_in , empty_array] ).tolist()
