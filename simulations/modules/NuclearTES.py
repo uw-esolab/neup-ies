@@ -14,6 +14,7 @@ from dispatch.NuclearDispatch import NuclearDispatch as ND
 from dispatch.NuclearDispatch import NuclearDispatchParamWrap as NDP
 import PySAM.PySSC as pssc
 from util.FileMethods import FileMethods
+import copy
 
 class NuclearTES(GenericSSCModule):
     
@@ -78,6 +79,7 @@ class NuclearTES(GenericSSCModule):
         #set curtailment to be really high
         self.Grid.GridLimits.grid_curtailment = self.gc_array  
         
+        
     def run_pyomo(self, params):
         
         dispatch_model = ND(params, self.u)
@@ -90,6 +92,7 @@ class NuclearTES(GenericSSCModule):
         self.disp_results[count] = rt_results
         
         self.disp_count += 1
+
 
 
     def create_dispatch_wrapper(self, PySAM_dict):
@@ -112,5 +115,28 @@ class NuclearTES(GenericSSCModule):
                                                        self.df_array, self.ud_array )
         params = DW.set_initial_state( params )
         
+        return params
+
+
+    def update_Pyomo_after_SSC(self, params):
+        
+        updated_SSC_dict = copy.deepcopy(self.SSC_dict)
+        
+        updated_SSC_dict['rec_op_mode_initial']              = self.Plant.Outputs.rec_op_mode_final
+        updated_SSC_dict['rec_startup_time_remain_init']     = self.Plant.Outputs.rec_startup_time_remain_final
+        updated_SSC_dict['rec_startup_energy_remain_init']   = self.Plant.Outputs.rec_startup_energy_remain_final
+        updated_SSC_dict['T_tank_cold_init']                 = self.Plant.Outputs.T_tes_cold[self.t_ind-1]
+        updated_SSC_dict['T_tank_hot_init']                  = self.Plant.Outputs.T_tes_hot[self.t_ind-1]
+        updated_SSC_dict['csp.pt.tes.init_hot_htf_percent']  = self.Plant.Outputs.hot_tank_htf_percent_final
+        updated_SSC_dict['pc_op_mode_initial']               = self.Plant.Outputs.pc_op_mode_final
+        updated_SSC_dict['pc_startup_energy_remain_initial'] = self.Plant.Outputs.pc_startup_time_remain_final
+        updated_SSC_dict['pc_startup_time_remain_init']      = self.Plant.Outputs.pc_startup_energy_remain_final
+        
+        updated_SSC_dict['wdot0'] = self.Plant.Outputs.P_cycle[self.t_ind-1]
+        
+        DW = self.dispatch_wrap
+        params = DW.set_initial_state( params, updated_SSC_dict )
         
         return params
+    
+    
