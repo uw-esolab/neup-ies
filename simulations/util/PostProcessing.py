@@ -22,10 +22,13 @@ class Plots(object):
                   fsl='x-small', loc='best'):
         
         # full PySAM module
-        self.mod = module
+        self.mod = module.Plant
+        
+        # define an Output object to extract information from
+        Outputs = self.mod.PySAM_Outputs if module.run_loop else self.mod.Outputs
         
         # saving full time logs
-        self.t_full = np.asarray( self.mod.Outputs.time_hr )*u.hr
+        self.t_full = np.asarray( Outputs.time_hr )*u.hr
         self.full_slice = slice(0, len(self.t_full), 1)
         
         # setting operating modes, kept it way at the bottom because it's ugly
@@ -47,16 +50,16 @@ class Plots(object):
         self.loc_cl = 'center left'   #location of legend
         
         # saving some outputs for plotting
-        self.p_cycle       = np.asarray( self.mod.Outputs.P_cycle )  *u.MW
-        self.gen           = (np.asarray( self.mod.Outputs.gen )      *u.kW).to('MW')
-        self.q_dot_rec_in  = np.asarray( self.mod.Outputs.q_dot_rec_inc ) *u.MW
-        self.m_dot_pc      = np.asarray( self.mod.Outputs.m_dot_pc ) *u.kg/u.s
-        self.m_dot_rec     = np.asarray( self.mod.Outputs.m_dot_rec ) *u.kg/u.s
-        self.T_pc_in       = np.asarray( self.mod.Outputs.T_pc_in )   *u.degC
-        self.T_pc_out      = np.asarray( self.mod.Outputs.T_pc_out )  *u.degC
-        self.e_ch_tes      = np.asarray( self.mod.Outputs.e_ch_tes )  *u.MWh
-        self.op_mode_1     = np.asarray( self.mod.Outputs.op_mode_1 )
-        self.defocus       = np.asarray( self.mod.Outputs.defocus )
+        self.p_cycle       = np.asarray( Outputs.P_cycle )  *u.MW
+        self.gen           = (np.asarray( Outputs.gen )      *u.kW).to('MW')
+        self.q_dot_rec_in  = np.asarray( Outputs.q_dot_rec_inc ) *u.MW
+        self.m_dot_pc      = np.asarray( Outputs.m_dot_pc ) *u.kg/u.s
+        self.m_dot_rec     = np.asarray( Outputs.m_dot_rec ) *u.kg/u.s
+        self.T_pc_in       = np.asarray( Outputs.T_pc_in )   *u.degC
+        self.T_pc_out      = np.asarray( Outputs.T_pc_out )  *u.degC
+        self.e_ch_tes      = np.asarray( Outputs.e_ch_tes )  *u.MWh
+        self.op_mode_1     = np.asarray( Outputs.op_mode_1 )
+        self.defocus       = np.asarray( Outputs.defocus )
         self.price         = np.asarray( self.mod.TimeOfDeliveryFactors.dispatch_factors_ts )
         
         # static inputs
@@ -189,8 +192,10 @@ class Plots(object):
         ax.set_yticks([0, 250, 500, 750, 1000])
         
         # custom y limits and ticks to be integers
-        ax2.set_ylim(-0.05*self.e_tes_design.m,self.e_tes_design.m)
-        ax2.set_yticks( np.round( np.linspace(0,self.e_tes_design.m, 5), -4 ) )
+        ax2.set_ylim(0,5000)
+        ax2.set_yticks(np.linspace(0,5000,5) )
+        # ax2.set_ylim(-0.05*self.e_tes_design.m,self.e_tes_design.m)
+        # ax2.set_yticks( np.round( np.linspace(0,self.e_tes_design.m, 5), -4 ) )
 
         # plot Energy array(s)
         ax2 = self.plot_SSC_generic(ax2, ['e_ch_tes'], ['Salt Charge Level (Thermal)'], 'Energy (MWh)', None, \
