@@ -17,6 +17,7 @@ from dispatch.GeneralDispatch import GeneralDispatchParamWrap
 import numpy as np
 from util.FileMethods import FileMethods
 from util.SSCHelperMethods import SSCHelperMethods
+import copy
 
 class NuclearDispatch(GeneralDispatch):
     
@@ -136,7 +137,6 @@ class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
         self.delta_rs   = delta_rs
         self.D          = D
         
-        
         ### Time series CSP Parameters ###
         param_dict['delta_rs']  = self.delta_rs   #\delta^{rs}_{t}: Estimated fraction of period $t$ required for receiver start-up [-]
         param_dict['D']         = self.D          #D_{t}: Time-weighted discount factor in period $t$ [-]
@@ -152,35 +152,40 @@ class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
         return param_dict
 
 
-    def set_initial_state(self, param_dict):
+    def set_initial_state(self, param_dict, updated_dict=None):
         
         u = self.u
-        # can re-use this method by choosing self.SSC_dict if t ==0
-        #       or some input dict otherwise
         
+        if updated_dict is None:
+            self.current_Plant = copy.deepcopy(self.SSC_dict)
+            self.first_run = True
+        else:
+            self.current_Plant = updated_dict
+            self.first_run = False
+            
         # TES masses, temperatures, specific heat
-        m_hot  = self.m_tes_design * (self.SSC_dict['csp.pt.tes.init_hot_htf_percent']/100)        # Available active mass in hot tank
-        T_tes_hot_init  = (self.SSC_dict['T_tank_hot_init']*u.celsius).to('degK')
+        m_hot  = self.m_tes_design * (self.current_Plant['csp.pt.tes.init_hot_htf_percent']/100)        # Available active mass in hot tank
+        T_tes_hot_init  = (self.current_Plant['T_tank_hot_init']*u.celsius).to('degK')
         T_tes_init  = 0.5*(T_tes_hot_init + self.T_htf_cold)
         cp_tes_init = SSCHelperMethods.get_cp_htf(self.u, T_tes_init, self.SSC_dict['rec_htf'] )
         
         # important parameters
-        e_pb_suinitremain  = self.SSC_dict['pc_startup_energy_remain_initial']*u.kWh
+        e_pb_suinitremain  = self.current_Plant['pc_startup_energy_remain_initial']*u.kWh
         s_current          = m_hot * cp_tes_init * (T_tes_hot_init - self.T_htf_cold) # TES capacity
         s0                 = min(self.Eu.to('kWh'), s_current.to('kWh')  )
-        wdot0              = 0*u.MW #TODO: subsequent calls?
-        yr0                = (self.SSC_dict['rec_op_mode_initial'] == 2)
-        yrsb0              = False   # TODO: try to use Ty's changes to daotk
-        yrsu0              = (self.SSC_dict['rec_op_mode_initial'] == 1)
-        y0                 = (self.SSC_dict['pc_op_mode_initial'] == 1) 
-        ycsb0              = (self.SSC_dict['pc_op_mode_initial'] == 2) 
-        ycsu0              = (self.SSC_dict['pc_op_mode_initial'] == 0 or self.SSC_dict['pc_op_mode_initial'] == 4) 
+        wdot0              = (0 if self.first_run else self.current_Plant['wdot0'])*u.MW 
+        yr0                = (self.current_Plant['rec_op_mode_initial'] == 2)
+        yrsb0              = False   # We don't have standby mode for either Nuclear or CSP
+        yrsu0              = (self.current_Plant['rec_op_mode_initial'] == 1)
+        y0                 = (self.current_Plant['pc_op_mode_initial'] == 1) 
+        ycsb0              = (self.current_Plant['pc_op_mode_initial'] == 2) 
+        ycsu0              = (self.current_Plant['pc_op_mode_initial'] == 0 or self.current_Plant['pc_op_mode_initial'] == 4) 
         disp_pc_persist0   = 0
         disp_pc_off0       = 0
         Yu0                = disp_pc_persist0 if y0 else 0.0
         Yd0                = disp_pc_off0 if (not y0) else 0.0
-        t_rec_suinitremain = self.SSC_dict['rec_startup_time_remain_init']*u.hr
-        e_rec_suinitremain = self.SSC_dict['rec_startup_energy_remain_init']*u.Wh
+        t_rec_suinitremain = self.current_Plant['rec_startup_time_remain_init']*u.hr
+        e_rec_suinitremain = self.current_Plant['rec_startup_energy_remain_init']*u.Wh
         rec_accum_time     = max(0.0, self.Drsu - t_rec_suinitremain )
         rec_accum_energy   = max(0.0, self.Er - e_rec_suinitremain )
         # yrsd0             = False 
