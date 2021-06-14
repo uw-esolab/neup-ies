@@ -186,8 +186,8 @@ class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
         Yd0                = disp_pc_off0 if (not y0) else 0.0
         t_rec_suinitremain = self.current_Plant['rec_startup_time_remain_init']*u.hr
         e_rec_suinitremain = self.current_Plant['rec_startup_energy_remain_init']*u.Wh
-        rec_accum_time     = max(0.0, self.Drsu - t_rec_suinitremain )
-        rec_accum_energy   = max(0.0, self.Er - e_rec_suinitremain )
+        rec_accum_time     = max(0.0*u.hr, self.Drsu - t_rec_suinitremain )
+        rec_accum_energy   = max(0.0*u.Wh, self.Er - e_rec_suinitremain )
         # yrsd0             = False 
         # disp_rec_persist0 = 0 
         # drsu0             = disp_rec_persist0 if yrsu0 else 0.0   
@@ -239,4 +239,9 @@ class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
         param_dict['Yd0']    = self.Yd0.to('hr')      #Y^d_0: duration that cycle has not been generating power (i.e., shut down or in standby mode) [h]
         # param_dict['wdot_s_prev']    = 0*u.hr         #\dot{w}^{s,prev}: previous $\dot{w}^s$, or energy sold to grid [kWe]
         # ^ this should be gen[-1] from previous SSC run, 0 if first_run == True
+        
+        print('      y_r    ', self.yr0)
+        print('      ursu_0 ', self.ursu0.to('kWh') )
+        print('      y      ', self.y0)
+        print('      ucsu_0 ', self.ucsu0.to('kWh') )
         return param_dict
