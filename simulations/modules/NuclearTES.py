@@ -129,8 +129,8 @@ class NuclearTES(GenericSSCModule):
         updated_SSC_dict['T_tank_hot_init']                  = self.Plant.Outputs.T_tes_hot[self.t_ind-1]
         updated_SSC_dict['csp.pt.tes.init_hot_htf_percent']  = self.Plant.Outputs.hot_tank_htf_percent_final
         updated_SSC_dict['pc_op_mode_initial']               = self.Plant.Outputs.pc_op_mode_final
-        updated_SSC_dict['pc_startup_energy_remain_initial'] = self.Plant.Outputs.pc_startup_time_remain_final
-        updated_SSC_dict['pc_startup_time_remain_init']      = self.Plant.Outputs.pc_startup_energy_remain_final
+        updated_SSC_dict['pc_startup_time_remain_init']      = self.Plant.Outputs.pc_startup_time_remain_final
+        updated_SSC_dict['pc_startup_energy_remain_initial'] = self.Plant.Outputs.pc_startup_energy_remain_final
         
         updated_SSC_dict['wdot0'] = self.Plant.Outputs.P_cycle[self.t_ind-1]
         
