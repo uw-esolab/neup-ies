@@ -79,7 +79,7 @@ print ('Size of debt                  =  $', size_of_debt, ' M')
 # =============================================================================
 
 from util.PostProcessing import Plots
-upl = Plots(nt)
+upl = Plots(nuctes)
 
 # 48 hour plot
 fig = plt.figure(figsize=[10,8])
@@ -87,9 +87,11 @@ ax1 = fig.add_subplot(311)
 ax2 = fig.add_subplot(312)
 ax3 = fig.add_subplot(313)
 
-upl.plot_SSC_power_and_energy(ax1, False, title_label='SSC Results - 48 hrs')
-upl.plot_SSC_op_modes(ax2, False)
-upl.plot_SSC_massflow(ax3, False)
+plot_full_time = True
+
+upl.plot_SSC_power_and_energy(ax1, plot_full_time, title_label='SSC Results - 48 hrs')
+upl.plot_SSC_op_modes(ax2, plot_full_time)
+upl.plot_SSC_massflow(ax3, plot_full_time)
 
 # full 1 year plot
 # figF = plt.figure(figsize=[10,8])

@@ -9,6 +9,7 @@ Created on Tue Jun  1 13:11:44 2021
 import pint
 u = pint.UnitRegistry(autoconvert_offset_to_baseunit = True)
 import numpy as np
+import pyomo.environ as pe
 import matplotlib.pyplot as plt
 from pylab import rc
 rc('axes', linewidth=2)
@@ -296,6 +297,221 @@ class Plots(object):
         # custom y limits and ticks to be integers
         ax.set_ylim(0,40)
         ax.set_yticks(np.arange(0,40,5))
+
+    def plot_pyomo(self, dm):
+        
+        lw = self.lw
+        lp = self.lp
+        lps = self.lps
+        fs = self.fs
+        fsl = self.fsl
+        loc = 'best'
+        loc_cr = self.loc_cr
+        
+        #___Time Array
+        t_array = np.array([pe.value(dm.model.Delta_e[t]) for t in dm.model.T])
+        
+        #__Price Array
+        p_array = np.array([pe.value(dm.model.P[t]) for t in dm.model.T])
+        d_array = np.array([pe.value(dm.model.D[t]) for t in dm.model.T])
+        
+        #__Costs
+        Ccsu      = pe.value(dm.model.Ccsu)
+        Cchsp     = pe.value(dm.model.Cchsp)
+        C_delta_w = pe.value(dm.model.C_delta_w)
+        C_v_w     = pe.value(dm.model.C_v_w)
+        Crsu      = pe.value(dm.model.Crsu)
+        Crhsp     = pe.value(dm.model.Cchsp)
+        Cpc       = pe.value(dm.model.Cpc)
+        Ccsb      = pe.value(dm.model.Ccsb)
+        Crec      = pe.value(dm.model.Crec)
+        Qb        = pe.value(dm.model.Qb)
+        
+        #___Energy Arrays
+        s_array = ( np.array([pe.value(dm.model.s[t]) for t in dm.model.T])*u.kWh ).to('MWh')
+        ucsu_array = ( np.array([pe.value(dm.model.ucsu[t]) for t in dm.model.T])*u.kWh ).to('MWh')
+        ursu_array = ( np.array([pe.value(dm.model.ursu[t]) for t in dm.model.T])*u.kWh ).to('MWh')
+        
+        #___Power Arrays
+        wdot_array = ( np.array([pe.value(dm.model.wdot[t]) for t in dm.model.T])*u.kW ).to('MW')
+        wdot_delta_plus_array = ( np.array([pe.value(dm.model.wdot_delta_plus[t]) for t in dm.model.T])*u.kW ).to('MW')
+        wdot_delta_minus_array = ( np.array([pe.value(dm.model.wdot_delta_minus[t]) for t in dm.model.T])*u.kW ).to('MW')
+        wdot_v_plus_array = ( np.array([pe.value(dm.model.wdot_v_plus[t]) for t in dm.model.T])*u.kW ).to('MW')
+        wdot_v_minus_array = ( np.array([pe.value(dm.model.wdot_v_minus[t]) for t in dm.model.T])*u.kW ).to('MW')
+        wdot_s_array = ( np.array([pe.value(dm.model.wdot_s[t]) for t in dm.model.T])*u.kW ).to('MW')
+        wdot_p_array = ( np.array([pe.value(dm.model.wdot_p[t]) for t in dm.model.T])*u.kW ).to('MW')
+        x_array = ( np.array([pe.value(dm.model.x[t]) for t in dm.model.T])*u.kW ).to('MW')
+        xr_array = ( np.array([pe.value(dm.model.xr[t]) for t in dm.model.T])*u.kW ).to('MW')
+        xrsu_array = ( np.array([pe.value(dm.model.xrsu[t]) for t in dm.model.T])*u.kW ).to('MW')
+        # wdot_s_prev_delta_plus_array = ( np.array([pe.value(dm.model.wdot_s_prev_delta_plus[t]) for t in dm.model.T])*u.kW ).to('MW')
+        # wdot_s_prev_delta_minus_array = ( np.array([pe.value(dm.model.wdot_s_prev_delta_minus[t]) for t in dm.model.T])*u.kW ).to('MW')
+        
+        #___Binary Arrays
+        yr_array = np.array([pe.value(dm.model.yr[t]) for t in dm.model.T])
+        yrhsp_array = np.array([pe.value(dm.model.yrhsp[t]) for t in dm.model.T])
+        yrsb_array = np.array([pe.value(dm.model.yrsb[t]) for t in dm.model.T])
+        yrsd_array = np.array([pe.value(dm.model.yrsd[t]) for t in dm.model.T])
+        yrsu_array = np.array([pe.value(dm.model.yrsu[t]) for t in dm.model.T])
+        yrsup_array = np.array([pe.value(dm.model.yrsup[t]) for t in dm.model.T])
+        y_array = np.array([pe.value(dm.model.y[t]) for t in dm.model.T])+2
+        ychsp_array = np.array([pe.value(dm.model.ychsp[t]) for t in dm.model.T])+2
+        ycsb_array = np.array([pe.value(dm.model.ycsb[t]) for t in dm.model.T])+2
+        ycsd_array = np.array([pe.value(dm.model.ycsd[t]) for t in dm.model.T])+2
+        ycsu_array = np.array([pe.value(dm.model.ycsu[t]) for t in dm.model.T])+2
+        ycsup_array = np.array([pe.value(dm.model.ycsup[t]) for t in dm.model.T])+2
+        ycgb_array = np.array([pe.value(dm.model.ycgb[t]) for t in dm.model.T])+2
+        ycge_array = np.array([pe.value(dm.model.ycge[t]) for t in dm.model.T])+2
+        
+        #___Marking 24 hour lines
+        time_24hr   = np.ones([len(t_array)])*24
+        energy_24hr = np.linspace( np.min( s_array.m ),
+                                   np.max( s_array.m, )*1.1, len(t_array) )
+        power_24hr  = np.linspace( np.min( [wdot_array.m, x_array.m] ),
+                                   np.max( [wdot_array.m, x_array.m] )*1.3, len(t_array) )
+        binary_24hr = np.linspace(0,3.1,len(t_array))
+        binary_div  = 1.5*np.ones(len(t_array))
+        
+        # ======= Plotting ========== #
+        fig1 = plt.figure(figsize=[12,10])
+        ax1 = fig1.add_subplot(411)
+        ax2 = fig1.add_subplot(412)
+        ax3 = fig1.add_subplot(413)
+        ax4 = fig1.add_subplot(414)
+        ax5 = ax2.twinx()
+        
+        #___Shrinking x-axis to allow room for legends off-plot
+        shrink = 0.75
+        box = ax1.get_position()
+        ax1.set_position([box.x0, box.y0, box.width * shrink, box.height])
+        
+        box = ax2.get_position()
+        ax2.set_position([box.x0, box.y0, box.width * shrink, box.height])
+        
+        box = ax3.get_position()
+        ax3.set_position([box.x0, box.y0, box.width * shrink, box.height])
+        
+        box = ax4.get_position()
+        ax4.set_position([box.x0, box.y0, box.width * shrink, box.height])
+        
+        #___Energy Plots ___________________________________________________________________
+        wts = np.linspace(4,2,3)
+        ax1.plot(t_array,s_array.m,    linewidth = wts[0], label='TES Reserve Quantity')
+        ax1.plot(t_array,ucsu_array.m, linewidth = wts[1], label='Cycle Startup Energy Inventory')
+        ax1.plot(t_array,ursu_array.m, linewidth = wts[2], label='Nuclear Startup Energy Inventory')
+        
+        #-Line marking the 24 hour line
+        ax1.plot(time_24hr, energy_24hr, 'k--', linewidth=lw )
+        
+        #-Labels
+        ax1.set_ylabel('Energy (MWh)', labelpad=lp, fontsize=fs, fontweight='bold')
+        ax1.legend(loc=loc,fontsize=fsl,bbox_to_anchor=(1.4, 1.0)) #bbox stuff places legend off-plot
+        
+        #___Power Plots ___________________________________________________________________
+        wts = np.linspace(6,2,6)
+        ax2.plot(t_array,wdot_array.m, linewidth = wts[0], label='Cycle Out (E)')
+        ax2.plot(t_array,x_array.m,    linewidth = wts[1], label='Cycle In (T)')
+        ax2.plot(t_array,xr_array.m,   linewidth = wts[2], label='Nuclear Out (T)')
+        ax2.plot(t_array,xrsu_array.m, linewidth = wts[3], label='Nuclear Startup (T)')
+        ax2.plot(t_array,wdot_s_array.m, linewidth = wts[4], label='Energy Sold to Grid (E)')
+        ax2.plot(t_array,wdot_p_array.m, linewidth = wts[5], label='Energy Purchased (E)')
+        
+        #-Line marking the 24 hour line
+        ax2.plot(time_24hr, power_24hr, 'k--', linewidth=lw )
+        
+        #-Labels
+        ax2.set_ylabel('Power (MW)', labelpad=lp, fontsize=fs, fontweight='bold')
+        ax2.legend(loc=loc,fontsize=fsl,bbox_to_anchor=(1.42, 1.0))
+        
+        #___Power Plots x2 ___________________________________________________________________
+        wts = np.linspace(6,2,6)
+        ax3.plot(t_array,wdot_delta_plus_array.m,  linewidth = wts[0], label='PC Ramp Up (E)')
+        ax3.plot(t_array,wdot_delta_minus_array.m, linewidth = wts[1], label='PC Ramp Down (E)')
+        ax3.plot(t_array,wdot_v_plus_array.m,      linewidth = wts[2], label='PC Ramp Up Beyond (E')
+        ax3.plot(t_array,wdot_v_minus_array.m,     linewidth = wts[3], label='PC Ramp Down Beyond(E')
+        # ax3.plot(t_array,wdot_s_prev_delta_plus_array.m,  linewidth = wts[4], label='UB on Delta w (E')
+        # ax3.plot(t_array,wdot_s_prev_delta_minus_array.m, linewidth = wts[5], label='LB on Delta w (E')
+        
+        #-Line marking the 24 hour line
+        ax3.plot(time_24hr, power_24hr, 'k--', linewidth=lw )
+        
+        #-Labels
+        ax3.set_ylabel('Power (MW)', labelpad=lp, fontsize=fs, fontweight='bold')
+        ax3.legend(loc=loc,fontsize=fsl,bbox_to_anchor=(1.34, 1.0))
+        
+        #___Price Plot ________________________________________________________________
+        ax5.bar(t_array, p_array, np.diff(t_array)[0], alpha=0.35, label="Price")
+        
+        wts = np.linspace(10,1,14)
+        #___Binary Plots ______________________________________________________________
+        ax4.plot(t_array, yr_array,    linewidth = wts[0], label='Receiver On?')
+        ax4.plot(t_array, yrhsp_array, linewidth = wts[1], label='Receiver HSU Pen?')
+        ax4.plot(t_array, yrsb_array,  linewidth = wts[2], label='Receiver SB?')
+        ax4.plot(t_array, yrsd_array,  linewidth = wts[3], label='Receiver SD?')
+        ax4.plot(t_array, yrsu_array,  linewidth = wts[4], label='Receiver SU?')
+        ax4.plot(t_array, yrsup_array, linewidth = wts[5], label='Receiver CSU Pen?')
+        ax4.plot(t_array, y_array,     linewidth = wts[6], label='Cycle Generating Power?')
+        ax4.plot(t_array, ychsp_array, linewidth = wts[7], label='Cycle HSU Pen?')
+        ax4.plot(t_array, ycsb_array,  linewidth = wts[8], label='Cycle SB?')
+        ax4.plot(t_array, ycsd_array,  linewidth = wts[9], label='Cycle SD?')
+        ax4.plot(t_array, ycsu_array,  color='k', linewidth = wts[10], label='Cycle SU?')
+        ax4.plot(t_array, ycsup_array, linewidth = wts[11], label='Cycle CSU Pen?')
+        ax4.plot(t_array, ycgb_array,  linewidth = wts[12], label='Cycle Began Gen?')
+        ax4.plot(t_array, ycge_array,  linewidth = wts[13], label='Cycle Stopped Gen?')
+        ax4.plot(t_array, binary_div, 'k--', linewidth=2)
+        
+        #-Line marking the 24 hour line
+        ax4.plot(time_24hr, binary_24hr, 'k--', linewidth=lw )
+        
+        #-Labels
+        ax4.set_xlabel('Time (hrs)', labelpad=lp, fontsize=fs, fontweight='bold')
+        ax4.set_ylabel('Binary Vars', labelpad=lp, fontsize=fs, fontweight='bold')
+        ax4.legend(loc=loc,fontsize=fsl,bbox_to_anchor=(1.35, 1.3) )
+        ax5.set_ylabel('Price ($/kWh)', labelpad=lps, fontsize=fs, fontweight='bold')
+        ax5.legend(loc=loc_cr,fontsize=fsl)
+        
+        #-Axis limits and tickmarks
+        ax4.set_ylim(-0.2,3.4)
+        ax4.set_yticks([0,1,2,3])
+        ax4.set_yticklabels([0,1,0,1])
+        ax5.set_ylim(0.4,2.5)
+        ax5.set_yticks([0.50,0.75, 1])
+        
+        
+        # set full title 
+        ax1.set_title('Pyomo Results - Normal',fontweight='bold')
+        
+        
+        # plt.tight_layout()
+        
+        
+        # =============================================================================
+        # objective function
+        # =============================================================================
+        
+        # fig = plt.figure()
+        # ax1o = fig.add_subplot(211)
+        # # ax1o = fig.add_subplot(111)
+        # ax2o = fig.add_subplot(212)
+        
+        # #profit
+        # Obj_profit      = 0.1 * d_array * p_array * ( wdot_s_array - wdot_p_array ) 
+        # Obj_cycle_susd  = (Ccsu * ycsup_array + 0.1*Cchsp*ychsp_array + ycsd_array)
+        # Obj_cycle_ramp  = C_delta_w*(wdot_delta_plus_array + wdot_delta_minus_array) + C_v_w*(wdot_v_plus_array + wdot_v_minus_array)
+        # Obj_rec_susd    = Crsu*yrsup_array + Crhsp*yrhsp_array + yrsd_array
+        # Obj_ops         = d_array*(Cpc*wdot_array + Ccsb*Qb*ycsb_array + Crec*xr_array)
+        
+        # ax1o.plot(t_array, Obj_profit, linewidth=lw, label='Profit Term')
+        # ax2o.plot(t_array, -Obj_cycle_susd, linewidth=lw, label='Cycle Startup/Shutdown Term')
+        # ax1o.plot(t_array, -Obj_cycle_ramp, linewidth=lw, label='Cycle Ramping Term')
+        # ax1o.plot(t_array, -Obj_rec_susd, linewidth=lw, label='Receiver Startup/Shutdown Term')
+        # ax1o.plot(t_array, -Obj_ops, linewidth=lw, label='Cycle and Rec Ops Term')
+        
+        # ax1o.legend(loc='best')
+        # ax2o.legend(loc='best')
+        
+        # ax1o.set_title('Pyomo Obj Fun - Normal', fontweight='bold')
+        
+        # plt.tight_layout()
 
         
     def set_operating_modes_list(self):
