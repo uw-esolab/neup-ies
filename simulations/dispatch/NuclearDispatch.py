@@ -184,10 +184,12 @@ class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
         disp_pc_off0       = 48
         Yu0                = disp_pc_persist0 if y0 else 0.0
         Yd0                = disp_pc_off0 if (not y0) else 0.0
-        t_rec_suinitremain = self.current_Plant['rec_startup_time_remain_init']*u.hr
-        e_rec_suinitremain = self.current_Plant['rec_startup_energy_remain_init']*u.Wh
-        rec_accum_time     = max(0.0*u.hr, self.Drsu - t_rec_suinitremain )
-        rec_accum_energy   = max(0.0*u.Wh, self.Er - e_rec_suinitremain )
+        t_rec              = self.current_Plant['rec_startup_time_remain_init']
+        t_rec_suinitremain = t_rec if not np.isnan( t_rec ) else 0.0
+        e_rec              = self.current_Plant['rec_startup_energy_remain_init']
+        e_rec_suinitremain = e_rec if not np.isnan( e_rec ) else 0.0
+        rec_accum_time     = max(0.0*u.hr, self.Drsu - t_rec_suinitremain*u.hr )
+        rec_accum_energy   = max(0.0*u.Wh, self.Er   - e_rec_suinitremain*u.Wh )
         # yrsd0             = False 
         # disp_rec_persist0 = 0 
         # drsu0             = disp_rec_persist0 if yrsu0 else 0.0   
@@ -240,8 +242,14 @@ class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
         # param_dict['wdot_s_prev']    = 0*u.hr         #\dot{w}^{s,prev}: previous $\dot{w}^s$, or energy sold to grid [kWe]
         # ^ this should be gen[-1] from previous SSC run, 0 if first_run == True
         
-        print('      y_r    ', self.yr0)
-        print('      ursu_0 ', self.ursu0.to('kWh') )
-        print('      y      ', self.y0)
-        print('      ucsu_0 ', self.ucsu0.to('kWh') )
+        print('      y_r     - Receiver On?            ', self.yr0)
+        print('      yrsb0   - Receiver Standby?       ', self.yrsb0)
+        print('      yrsu0   - Receiver Startup?       ', self.yrsu0)
+        print('      ursu_0  - Receiver Startup Energy ', self.ursu0.to('kWh') )
+        print(' ')
+        print('      y       - Cycle On?               ', self.y0)
+        print('      ycsb0   - Cycle Standby?          ', self.ycsb0)
+        print('      ycsu0   - Cycle Startup?          ', self.ycsu0)
+        print('      ucsu_0  - Cycle Startup Energy    ', self.ucsu0.to('kWh') )
+        print(' ')
         return param_dict

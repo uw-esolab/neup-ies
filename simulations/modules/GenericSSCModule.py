@@ -194,8 +194,10 @@ class GenericSSCModule(ABC):
         
         # this loop should only be entered if run_loop == True
         while (time_next < time_end):
+            
+            # time-printer
             print_time = int(time_next.to('d').magnitude)
-            if not print_time % 50: print('   [%s / %s] completed.' % (print_time,time_end.to('d').magnitude))
+            if not print_time % 1: print('   [%s / %s] completed.' % (print_time, np.round(time_end.to('d').m)) )
             
             # update time
             time_start += self.ssc_horizon.to('s')
