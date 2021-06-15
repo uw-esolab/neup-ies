@@ -138,7 +138,7 @@ class NuclearTES(GenericSSCModule):
         # updated_SSC_dict['wdot_s_prev'] = 0 #np.array([pe.value(dm.model.wdot_s_prev[t]) for t in dm.model.T])[-1]
         
         DW = self.dispatch_wrap
-        params = DW.set_initial_state( params, updated_SSC_dict )
+        params = DW.set_initial_state( params, updated_SSC_dict, self.Plant, self.t_ind )
         
         return params
     
