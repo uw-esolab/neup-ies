@@ -194,10 +194,10 @@ class Plots(object):
                                             plot_all_time, start_hr, end_hr )
         
         # custom y limits and ticks to be integers
-        ax2.set_ylim(0,5000)
-        ax2.set_yticks(np.linspace(0,5000,5) )
-        # ax2.set_ylim(-0.05*self.e_tes_design.m,self.e_tes_design.m)
-        # ax2.set_yticks( np.round( np.linspace(0,self.e_tes_design.m, 5), -4 ) )
+        # ax2.set_ylim(0,5000)
+        # ax2.set_yticks(np.linspace(0,5000,5) )
+        ax2.set_ylim(-0.05*self.e_tes_design.m,self.e_tes_design.m)
+        ax2.set_yticks( np.round( np.linspace(0,self.e_tes_design.m, 5), -4 ) )
 
         # plot Energy array(s)
         ax2 = self.plot_SSC_generic(ax2, ['e_ch_tes'], ['Salt Charge Level (Thermal)'], 'Energy (MWh)', None, \
@@ -211,7 +211,7 @@ class Plots(object):
         ax.set_yticks([0, 250, 500, 750, 1000])
         
         # plot legend for Energy arrays and also set line color to default C3 (reddish)
-        ax2.get_lines()[0].set_color("C3")
+        ax2.get_lines()[0].set_color("C4")
         ax2.legend(loc=self.loc_ur, fontsize=self.fsl)
 
 

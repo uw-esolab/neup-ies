@@ -197,7 +197,7 @@ class GenericSSCModule(ABC):
             
             # time-printer
             print_time = int(time_next.to('d').magnitude)
-            if not print_time % 1: print('   [%s / %s] completed.' % (print_time, np.round(time_end.to('d').m)) )
+            if not print_time % 10: print('   [%s / %s] completed.' % (print_time, np.round(time_end.to('d').m)) )
             
             # update time
             time_start += self.ssc_horizon.to('s')

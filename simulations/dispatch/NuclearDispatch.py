@@ -241,16 +241,16 @@ class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
         # param_dict['wdot_s_prev']    = 0*u.hr         #\dot{w}^{s,prev}: previous $\dot{w}^s$, or energy sold to grid [kWe]
         # ^ this should be gen[-1] from previous SSC run, 0 if first_run == True
         
-        print('      y_r     - Receiver On?            ', self.yr0)
-        print('      yrsb0   - Receiver Standby?       ', self.yrsb0)
-        print('      yrsu0   - Receiver Startup?       ', self.yrsu0)
-        print('      ursu_0  - Receiver Startup Energy ', self.ursu0.to('kWh') )
-        print(' ')
-        print('      y       - Cycle On?               ', self.y0)
-        print('      ycsb0   - Cycle Standby?          ', self.ycsb0)
-        print('      ycsu0   - Cycle Startup?          ', self.ycsu0)
-        print('      ucsu_0  - Cycle Startup Energy    ', self.ucsu0.to('kWh') )
-        print(' ')
+        # print('      y_r     - Receiver On?            ', self.yr0)
+        # print('      yrsb0   - Receiver Standby?       ', self.yrsb0)
+        # print('      yrsu0   - Receiver Startup?       ', self.yrsu0)
+        # print('      ursu_0  - Receiver Startup Energy ', self.ursu0.to('kWh') )
+        # print(' ')
+        # print('      y       - Cycle On?               ', self.y0)
+        # print('      ycsb0   - Cycle Standby?          ', self.ycsb0)
+        # print('      ycsu0   - Cycle Startup?          ', self.ycsu0)
+        # print('      ucsu_0  - Cycle Startup Energy    ', self.ucsu0.to('kWh') )
+        # print(' ')
         return param_dict
     
     
@@ -296,7 +296,7 @@ class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
         if current_pc_state == 1: 
             # returning 0 for OFF log
             disp_pc_off0 = 0.0
-            
+        
         # if PC is OFF for full simulation
         elif is_pc_not_on.min() == 1:  
             # add all OFF positions in this current horizon to existing OFF log
