@@ -344,17 +344,23 @@ class GenericSSCModule(ABC):
         N_sim = int( i_end - i_start )
         
         # setting each logging array to zero
-        self.time_log          = np.zeros(N_sim)
-        self.gen_log           = np.zeros(N_sim)
-        self.p_cycle_log       = np.zeros(N_sim)
-        self.q_dot_rec_inc_log = np.zeros(N_sim)
-        self.m_dot_pc_log      = np.zeros(N_sim)
-        self.m_dot_rec_log     = np.zeros(N_sim)
-        self.T_pc_in_log       = np.zeros(N_sim)
-        self.T_pc_out_log      = np.zeros(N_sim)
-        self.e_ch_tes_log      = np.zeros(N_sim)
-        self.op_mode_1_log     = np.zeros(N_sim)
-        self.defocus_log       = np.zeros(N_sim)
+        self.time_log          = np.zeros(N_sim)   # logging time
+        self.gen_log           = np.zeros(N_sim)   # electricity generation log
+        self.q_thermal_log     = np.zeros(N_sim)   # thermal power from nuclear to HTF log
+        self.p_cycle_log       = np.zeros(N_sim)   # PC electrical power output (gross)
+        self.q_dot_rec_inc_log = np.zeros(N_sim)   # Nuclear incident thermal power
+        self.q_pb_log          = np.zeros(N_sim)   # PC input energy
+        self.q_dot_pc_su_log   = np.zeros(N_sim)   # PC startup thermal power
+        self.m_dot_pc_log      = np.zeros(N_sim)   # PC HTF mass flow rate
+        self.m_dot_rec_log     = np.zeros(N_sim)   # Nuc mass flow rate
+        self.T_pc_in_log       = np.zeros(N_sim)   # PC HTF inlet temperature 
+        self.T_pc_out_log      = np.zeros(N_sim)   # PC HTF outlet temperature
+        self.T_tes_cold_log    = np.zeros(N_sim)   # TES cold temperature
+        self.T_tes_hot_log     = np.zeros(N_sim)   # TES hot temperature
+        self.T_cond_out_log    = np.zeros(N_sim)   # PC condenser water outlet temperature
+        self.e_ch_tes_log      = np.zeros(N_sim)   # TES charge state
+        self.op_mode_1_log     = np.zeros(N_sim)   # Operating Mode
+        self.defocus_log       = np.zeros(N_sim)   # Nuclear "Defocus" fraction
 
 
     def log_SSC_arrays(self, i_start=0, i_end=1, log_final=False):
@@ -365,12 +371,18 @@ class GenericSSCModule(ABC):
         if not log_final:
             self.time_log[ssch]          = self.Plant.Outputs.time_hr[firsth]
             self.gen_log[ssch]           = self.Plant.Outputs.gen[firsth]
+            self.q_thermal_log[ssch]     = self.Plant.Outputs.Q_thermal[firsth]
             self.p_cycle_log[ssch]       = self.Plant.Outputs.P_cycle[firsth]
             self.q_dot_rec_inc_log[ssch] = self.Plant.Outputs.q_dot_rec_inc[firsth]
+            self.q_pb_log[ssch]          = self.Plant.Outputs.q_pb[firsth]
+            self.q_dot_pc_su_log[ssch]   = self.Plant.Outputs.q_dot_pc_startup[firsth]
             self.m_dot_pc_log[ssch]      = self.Plant.Outputs.m_dot_pc[firsth]
             self.m_dot_rec_log[ssch]     = self.Plant.Outputs.m_dot_rec[firsth]
             self.T_pc_in_log[ssch]       = self.Plant.Outputs.T_pc_in[firsth]
             self.T_pc_out_log[ssch]      = self.Plant.Outputs.T_pc_out[firsth]
+            self.T_tes_cold_log[ssch]    = self.Plant.Outputs.T_tes_cold[firsth]
+            self.T_tes_hot_log[ssch]     = self.Plant.Outputs.T_tes_hot[firsth]
+            self.T_cond_out_log[ssch]    = self.Plant.Outputs.T_cond_out[firsth]
             self.e_ch_tes_log[ssch]      = self.Plant.Outputs.e_ch_tes[firsth]
             self.op_mode_1_log[ssch]     = self.Plant.Outputs.op_mode_1[firsth]
             self.defocus_log[ssch]       = self.Plant.Outputs.defocus[firsth]
@@ -381,17 +393,23 @@ class GenericSSCModule(ABC):
             
             convert_output = lambda arr: tuple( arr.tolist() )
             
-            self.Plant.PySAM_Outputs.time_hr       = convert_output( self.time_log )
-            self.Plant.PySAM_Outputs.gen           = convert_output( self.gen_log )
-            self.Plant.PySAM_Outputs.P_cycle       = convert_output( self.p_cycle_log )
-            self.Plant.PySAM_Outputs.q_dot_rec_inc = convert_output( self.q_dot_rec_inc_log )
-            self.Plant.PySAM_Outputs.m_dot_pc      = convert_output( self.m_dot_pc_log )
-            self.Plant.PySAM_Outputs.m_dot_rec     = convert_output( self.m_dot_rec_log )
-            self.Plant.PySAM_Outputs.T_pc_in       = convert_output( self.T_pc_in_log )
-            self.Plant.PySAM_Outputs.T_pc_out      = convert_output( self.T_pc_out_log )
-            self.Plant.PySAM_Outputs.e_ch_tes      = convert_output( self.e_ch_tes_log )
-            self.Plant.PySAM_Outputs.op_mode_1     = convert_output( self.op_mode_1_log )
-            self.Plant.PySAM_Outputs.defocus       = convert_output( self.defocus_log )
+            self.Plant.PySAM_Outputs.time_hr           = convert_output( self.time_log )
+            self.Plant.PySAM_Outputs.gen               = convert_output( self.gen_log )
+            self.Plant.PySAM_Outputs.Q_thermal         = convert_output( self.q_thermal_log )
+            self.Plant.PySAM_Outputs.P_cycle           = convert_output( self.p_cycle_log )
+            self.Plant.PySAM_Outputs.q_dot_rec_inc     = convert_output( self.q_dot_rec_inc_log )
+            self.Plant.PySAM_Outputs.q_pb              = convert_output( self.q_pb_log )
+            self.Plant.PySAM_Outputs.q_dot_pc_startup  = convert_output( self.q_dot_pc_su_log )
+            self.Plant.PySAM_Outputs.m_dot_pc          = convert_output( self.m_dot_pc_log )
+            self.Plant.PySAM_Outputs.m_dot_rec         = convert_output( self.m_dot_rec_log )
+            self.Plant.PySAM_Outputs.T_pc_in           = convert_output( self.T_pc_in_log )
+            self.Plant.PySAM_Outputs.T_pc_out          = convert_output( self.T_pc_out_log )
+            self.Plant.PySAM_Outputs.T_tes_cold        = convert_output( self.T_tes_cold_log )
+            self.Plant.PySAM_Outputs.T_tes_hot         = convert_output( self.T_tes_hot_log )
+            self.Plant.PySAM_Outputs.T_cond_out        = convert_output( self.T_cond_out_log )
+            self.Plant.PySAM_Outputs.e_ch_tes          = convert_output( self.e_ch_tes_log )
+            self.Plant.PySAM_Outputs.op_mode_1         = convert_output( self.op_mode_1_log )
+            self.Plant.PySAM_Outputs.defocus           = convert_output( self.defocus_log )
 
     
     def export_results(self, filename):

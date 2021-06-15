@@ -44,7 +44,8 @@ class Plots(object):
         self.loc = loc  #location of legend
         
         # alternate legend locations
-        self.loc_up = 'upper_right'
+        self.loc_ur = 'upper right'
+        self.loc_ul = 'upper left'
         self.loc_lr = 'lower right'   #location of legend
         self.loc_ll = 'lower left'    #location of legend
         self.loc_cr = 'center right'  #location of legend
@@ -54,11 +55,16 @@ class Plots(object):
         self.p_cycle       = np.asarray( Outputs.P_cycle )  *u.MW
         self.gen           = (np.asarray( Outputs.gen )      *u.kW).to('MW')
         self.q_dot_rec_in  = np.asarray( Outputs.q_dot_rec_inc ) *u.MW
-        self.m_dot_pc      = np.asarray( Outputs.m_dot_pc ) *u.kg/u.s
-        self.m_dot_rec     = np.asarray( Outputs.m_dot_rec ) *u.kg/u.s
-        self.T_pc_in       = np.asarray( Outputs.T_pc_in )   *u.degC
-        self.T_pc_out      = np.asarray( Outputs.T_pc_out )  *u.degC
-        self.e_ch_tes      = np.asarray( Outputs.e_ch_tes )  *u.MWh
+        self.q_pb          = np.asarray( Outputs.q_pb ) *u.MW
+        self.q_dot_pc_su   = np.asarray( Outputs.q_dot_pc_startup ) *u.MW
+        self.m_dot_pc      = np.asarray( Outputs.m_dot_pc )   *u.kg/u.s
+        self.m_dot_rec     = np.asarray( Outputs.m_dot_rec )  *u.kg/u.s
+        self.T_pc_in       = np.asarray( Outputs.T_pc_in )    *u.degC  
+        self.T_pc_out      = np.asarray( Outputs.T_pc_out )   *u.degC
+        self.T_tes_cold    = np.asarray( Outputs.T_tes_cold ) *u.degC
+        self.T_tes_hot     = np.asarray( Outputs.T_tes_hot )  *u.degC
+        self.T_cond_out    = np.asarray( Outputs.T_cond_out )  *u.degC
+        self.e_ch_tes      = np.asarray( Outputs.e_ch_tes )   *u.MWh
         self.op_mode_1     = np.asarray( Outputs.op_mode_1 )
         self.defocus       = np.asarray( Outputs.defocus )
         self.price         = np.asarray( self.mod.TimeOfDeliveryFactors.dispatch_factors_ts )
@@ -163,12 +169,13 @@ class Plots(object):
         
 
         # list of array strings 
-        power_array_list = [ 'p_cycle' , 'q_dot_rec_in', 'gen']
+        power_array_list = [ 'p_cycle' , 'q_dot_rec_in', 'gen', 'q_dot_pc_su']
         
         # list of labels for each array string to extract from Outputs
         power_label_list = [ 'P_cycle (Electric)',
                              'Q_dot to Salt (Thermal)',
-                             'Power generated (Electric)' ]
+                             'Power generated (Electric)',
+                             'PC startup thermal power (Thermal)']
         
         #-------------------------#
         #---- Creating Figure ----#
@@ -185,12 +192,6 @@ class Plots(object):
         # plot Power arrays
         ax = self.plot_SSC_generic(ax, power_array_list, power_label_list, 'Power (MW)', title_label, \
                                             plot_all_time, start_hr, end_hr )
-        # plot legend for Power arrays
-        ax.legend(loc=self.loc, fontsize=self.fsl)
-        
-        # custom y limits and ticks to be integers
-        ax.set_ylim(-100,1100)
-        ax.set_yticks([0, 250, 500, 750, 1000])
         
         # custom y limits and ticks to be integers
         ax2.set_ylim(0,5000)
@@ -202,9 +203,16 @@ class Plots(object):
         ax2 = self.plot_SSC_generic(ax2, ['e_ch_tes'], ['Salt Charge Level (Thermal)'], 'Energy (MWh)', None, \
                                             plot_all_time, start_hr, end_hr )
         
+        # plot legend for Power arrays
+        ax.legend(loc=self.loc_ul, fontsize=self.fsl)
+        
+        # custom y limits and ticks to be integers
+        ax.set_ylim(-100,1100)
+        ax.set_yticks([0, 250, 500, 750, 1000])
+        
         # plot legend for Energy arrays and also set line color to default C3 (reddish)
         ax2.get_lines()[0].set_color("C3")
-        ax2.legend(loc=self.loc, fontsize=self.fsl)
+        ax2.legend(loc=self.loc_ur, fontsize=self.fsl)
 
 
     def plot_SSC_massflow(self, ax=None, plot_all_time=True, title_label=None, start_hr=0, end_hr=48 ):
@@ -297,6 +305,36 @@ class Plots(object):
         # custom y limits and ticks to be integers
         ax.set_ylim(0,40)
         ax.set_yticks(np.arange(0,40,5))
+
+
+    def plot_SSC_temperatures(self, ax=None, plot_all_time=True, title_label=None, start_hr=0, end_hr=48 ):
+        
+        # list of array strings 
+        power_array_list = [ 'T_pc_in', 'T_pc_out', 'T_tes_cold', 'T_tes_hot'  ]
+        
+        # list of labels for each array string to extract from Outputs
+        power_label_list = [ 'PC HTF (hot) inlet temperature', 
+                             'PC HTF (cold) outlet temperature',
+                             'TES cold temperature',
+                             'TES hot temperature']
+        
+        #-------------------------#
+        #---- Creating Figure ----#
+        #-------------------------#
+        
+        # if no axis object specified, create a figure and axis from it
+        if ax is None:
+            fig = plt.figure(figsize=[10,5])
+            ax = fig.gca()   # this is the power plot
+            
+        # plotting Mass Flow arrays
+        ax = self.plot_SSC_generic(ax, power_array_list, power_label_list, 'Temperature (C)', title_label, \
+                                            plot_all_time, start_hr, end_hr )
+        
+        # plotting legend for Mass Flow arrays
+        ax.legend(loc=self.loc, fontsize=self.fsl)
+
+        
 
     def plot_pyomo(self, dm):
         
