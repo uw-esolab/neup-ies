@@ -87,9 +87,9 @@ class FileMethods(object):
             
         """
         
-        params_dataframe = pandas.DataFrame(data_list,columns=columns)
+        params_dataframe = pandas.DataFrame(data_list, columns=columns)
         
         filepath = "../outputs/" + filename
-        params_dataframe.to_csv(filepath,index=False)
+        params_dataframe.to_csv(filepath, index=False)
 
         
