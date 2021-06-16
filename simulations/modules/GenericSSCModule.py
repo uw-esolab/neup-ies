@@ -521,24 +521,35 @@ class GenericSSCModule(ABC):
         # size of simulation arrays
         N_sim = int( i_end - i_start )
         
-        # setting each logging array to zero
-        self.time_log          = np.zeros(N_sim)   # logging time
-        self.gen_log           = np.zeros(N_sim)   # electricity generation log
-        self.q_thermal_log     = np.zeros(N_sim)   # thermal power from nuclear to HTF log
-        self.p_cycle_log       = np.zeros(N_sim)   # PC electrical power output (gross)
-        self.q_dot_rec_inc_log = np.zeros(N_sim)   # Nuclear incident thermal power
-        self.q_pb_log          = np.zeros(N_sim)   # PC input energy
-        self.q_dot_pc_su_log   = np.zeros(N_sim)   # PC startup thermal power
-        self.m_dot_pc_log      = np.zeros(N_sim)   # PC HTF mass flow rate
-        self.m_dot_rec_log     = np.zeros(N_sim)   # Nuc mass flow rate
-        self.T_pc_in_log       = np.zeros(N_sim)   # PC HTF inlet temperature 
-        self.T_pc_out_log      = np.zeros(N_sim)   # PC HTF outlet temperature
-        self.T_tes_cold_log    = np.zeros(N_sim)   # TES cold temperature
-        self.T_tes_hot_log     = np.zeros(N_sim)   # TES hot temperature
-        self.T_cond_out_log    = np.zeros(N_sim)   # PC condenser water outlet temperature
-        self.e_ch_tes_log      = np.zeros(N_sim)   # TES charge state
-        self.op_mode_1_log     = np.zeros(N_sim)   # Operating Mode
-        self.defocus_log       = np.zeros(N_sim)   # Nuclear "Defocus" fraction
+        # dictionary of output variable names to log after each segment simulation
+        self.Log_Arrays = {
+        #    name of NE2 variable || name of SSC module variable
+                'time_log':          'time_hr',          # logging time
+                'gen_log':           'gen',              # electricity generation log
+                'q_thermal_log':     'Q_thermal',        # thermal power from nuclear to HTF 
+                'p_cycle_log' :      'P_cycle',          # PC electrical power output (gross)
+                'q_dot_rec_inc_log': 'q_dot_rec_inc',    # Nuclear incident thermal power
+                'q_pb_log':          'q_pb',             # PC input energy
+                'q_dot_pc_su_log' :  'q_dot_pc_startup', # PC startup thermal power
+                'm_dot_pc_log' :     'm_dot_pc',         # PC HTF mass flow rate
+                'm_dot_rec_log'  :   'm_dot_rec',        # Nuc mass flow rate
+                'T_pc_in_log' :      'T_pc_in',          # PC HTF inlet temperature 
+                'T_pc_out_log'   :   'T_pc_out',         # PC HTF outlet temperature
+                'T_tes_cold_log':    'T_tes_cold',       # TES cold temperature
+                'T_tes_hot_log'  :   'T_tes_hot',        # TES hot temperature
+                'T_cond_out_log':    'T_cond_out',       # PC condenser water outlet temperature
+                'e_ch_tes_log'  :    'e_ch_tes',         # TES charge state
+                'op_mode_1_log' :    'op_mode_1',        # Operating Mode
+                'defocus_log'   :    'defocus'           # Nuclear "Defocus" fraction
+            }
+        
+        # empty array to initalize log arrays
+        empty_array = np.zeros(N_sim)
+        
+        # loop through keys in ^ dictionary, save the KEY name to NE2 module as empty array
+        for key in self.Log_Arrays.keys():
+            # meta: if we don't grab the copy of empty_array, it'll assign a pointer to the array!!
+            setattr( self, key, empty_array.copy() ) 
 
 
     def log_SSC_arrays(self, i_start=0, i_end=1, log_final=False):
@@ -558,51 +569,36 @@ class GenericSSCModule(ABC):
             log_final (bool) : if true, save full outputs to Plant. else, log to member arrays of Plant
         """
         
-        ssch   = slice(i_start,i_end,1)
-        firsth = slice(0,self.t_ind,1)
+        ssch   = slice(i_start,i_end,1)  # current segment indeces
+        firsth = slice(0,self.t_ind,1)   # SSC Horizon
         
-        if not log_final:
-            self.time_log[ssch]          = self.Plant.Outputs.time_hr[firsth]
-            self.gen_log[ssch]           = self.Plant.Outputs.gen[firsth]
-            self.q_thermal_log[ssch]     = self.Plant.Outputs.Q_thermal[firsth]
-            self.p_cycle_log[ssch]       = self.Plant.Outputs.P_cycle[firsth]
-            self.q_dot_rec_inc_log[ssch] = self.Plant.Outputs.q_dot_rec_inc[firsth]
-            self.q_pb_log[ssch]          = self.Plant.Outputs.q_pb[firsth]
-            self.q_dot_pc_su_log[ssch]   = self.Plant.Outputs.q_dot_pc_startup[firsth]
-            self.m_dot_pc_log[ssch]      = self.Plant.Outputs.m_dot_pc[firsth]
-            self.m_dot_rec_log[ssch]     = self.Plant.Outputs.m_dot_rec[firsth]
-            self.T_pc_in_log[ssch]       = self.Plant.Outputs.T_pc_in[firsth]
-            self.T_pc_out_log[ssch]      = self.Plant.Outputs.T_pc_out[firsth]
-            self.T_tes_cold_log[ssch]    = self.Plant.Outputs.T_tes_cold[firsth]
-            self.T_tes_hot_log[ssch]     = self.Plant.Outputs.T_tes_hot[firsth]
-            self.T_cond_out_log[ssch]    = self.Plant.Outputs.T_cond_out[firsth]
-            self.e_ch_tes_log[ssch]      = self.Plant.Outputs.e_ch_tes[firsth]
-            self.op_mode_1_log[ssch]     = self.Plant.Outputs.op_mode_1[firsth]
-            self.defocus_log[ssch]       = self.Plant.Outputs.defocus[firsth]
-
-        else:
-            # wanted to create a quick subclass that where I can extract things during PostProcessing steps...
-            self.Plant.PySAM_Outputs = lambda: None # don't try this at home
-            
+        # wanted to create a quick subclass that where I can extract things during PostProcessing steps
+        if log_final:
+            # don't try this at home...
+            self.Plant.PySAM_Outputs = lambda: None
+            # quick lambda to make things look pretty
             convert_output = lambda arr: tuple( arr.tolist() )
+        
+        # Main Loop -- we're working with pointer magic here, tread carefully
+        #     Log_Arrays['key'] -> keyword for PySAM_Outputs
+        #                'key'  -> keyword for self
+        for key in self.Log_Arrays.keys():
+            # get current key's value from NE2 module
+            self_output  = getattr(self, key )
             
-            self.Plant.PySAM_Outputs.time_hr           = convert_output( self.time_log )
-            self.Plant.PySAM_Outputs.gen               = convert_output( self.gen_log )
-            self.Plant.PySAM_Outputs.Q_thermal         = convert_output( self.q_thermal_log )
-            self.Plant.PySAM_Outputs.P_cycle           = convert_output( self.p_cycle_log )
-            self.Plant.PySAM_Outputs.q_dot_rec_inc     = convert_output( self.q_dot_rec_inc_log )
-            self.Plant.PySAM_Outputs.q_pb              = convert_output( self.q_pb_log )
-            self.Plant.PySAM_Outputs.q_dot_pc_startup  = convert_output( self.q_dot_pc_su_log )
-            self.Plant.PySAM_Outputs.m_dot_pc          = convert_output( self.m_dot_pc_log )
-            self.Plant.PySAM_Outputs.m_dot_rec         = convert_output( self.m_dot_rec_log )
-            self.Plant.PySAM_Outputs.T_pc_in           = convert_output( self.T_pc_in_log )
-            self.Plant.PySAM_Outputs.T_pc_out          = convert_output( self.T_pc_out_log )
-            self.Plant.PySAM_Outputs.T_tes_cold        = convert_output( self.T_tes_cold_log )
-            self.Plant.PySAM_Outputs.T_tes_hot         = convert_output( self.T_tes_hot_log )
-            self.Plant.PySAM_Outputs.T_cond_out        = convert_output( self.T_cond_out_log )
-            self.Plant.PySAM_Outputs.e_ch_tes          = convert_output( self.e_ch_tes_log )
-            self.Plant.PySAM_Outputs.op_mode_1         = convert_output( self.op_mode_1_log )
-            self.Plant.PySAM_Outputs.defocus           = convert_output( self.defocus_log )
+            # if we're still running segmented simulations work
+            if not log_final:
+                # get what we have logged so far
+                plant_output = getattr(self.Plant.Outputs,  self.Log_Arrays[key] )
+                # grab and save corresponding slices to self (this should be some sort of pointer, so should)
+                self_output[ssch] = plant_output[firsth]
+            
+            # we're done with the full simulation
+            else:
+                # convert output array to a tuple
+                self_output_tuple = convert_output( self_output )
+                # save array to the new PySAM_Outputs "subclass"
+                setattr( self.Plant.PySAM_Outputs, self.Log_Arrays[key], self_output_tuple )
 
     
     def export_results(self, filename):
