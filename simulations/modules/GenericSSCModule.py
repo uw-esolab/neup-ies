@@ -246,6 +246,10 @@ class GenericSSCModule(ABC):
         # setting index for subsequent calls, it's just a static index for log arrays
         self.t_ind = int(time_next.to('hr').m)
         
+        # slice for the first indeces of the SSC Horizon, also initializing current Horizon (updated in loop)
+        self.sscFirstHorizon   = slice( 0, self.t_ind,1)
+        self.sscCurrentHorizon = slice( int( time_start.to('hr').m ), self.t_ind, 1)  
+        
         # setting up empty log array for log arrays
         self.initialize_arrays()
         
@@ -266,13 +270,17 @@ class GenericSSCModule(ABC):
         # this loop should only be entered if run_loop == True
         while (time_next < time_end):
             
-            # time-printer
-            print_time = int(time_next.to('d').magnitude)
-            if not print_time % 10: print('   [%s / %s] completed.' % (print_time, np.round(time_end.to('d').m)) )
-            
             # update time
             time_start += self.ssc_horizon.to('s')
             time_next  += self.ssc_horizon.to('s')
+            
+            # update the current slice of SSC Horizon relative to full simulation
+            self.sscCurrentHorizon = slice( int( time_start.to('hr').m ), 
+                                            int( time_next.to('hr').m  ), 1)  
+        
+            # time-printer
+            print_time = int(time_next.to('d').magnitude)
+            if not print_time % 10: print('   [%s / %s] completed.' % (print_time, np.round(time_end.to('d').m)) )
             
             # update Plant parameters after previous run
             self.update_Plant_after_SSC( )
@@ -309,18 +317,19 @@ class GenericSSCModule(ABC):
             end_hr (float Quant)   : ending time for next simulation (hours)
         """
         
-        # start and end times for full simulation
+        
         i_start = int( start_hr.to('hr').m )
         i_end   = int( end_hr.to('hr').m )
         
+        # start and end times for full simulation
         self.Plant.SystemControl.time_start = start_hr.to('s').magnitude
-        self.Plant.SystemControl.time_stop = end_hr.to('s').magnitude
+        self.Plant.SystemControl.time_stop  = end_hr.to('s').magnitude
         
         self.Plant.execute()
         
         # logging SSC outputs to arrays that have already been initialized
         if self.run_loop:
-            self.log_SSC_arrays(i_start, i_end)
+            self.log_SSC_arrays()
         else:
             self.gen_log[i_start:i_end] = self.Plant.Outputs.gen[0:self.t_ind ]
         
@@ -554,7 +563,7 @@ class GenericSSCModule(ABC):
             setattr( self, key, empty_array.copy() ) 
 
 
-    def log_SSC_arrays(self, i_start=0, i_end=1, log_final=False):
+    def log_SSC_arrays(self, log_final=False):
         """ Creating a wrapper object for calling a class that creates dispatch parameters
         
         This method logs SSC outputs if we choose to run a segmented simulation in a loop. 
@@ -570,10 +579,7 @@ class GenericSSCModule(ABC):
             i_end (int)      : ending index for current segment slice
             log_final (bool) : if true, save full outputs to Plant. else, log to member arrays of Plant
         """
-        
-        ssch   = slice(i_start,i_end,1)  # current segment indeces
-        firsth = slice(0,self.t_ind,1)   # SSC Horizon
-        
+
         # wanted to create a quick subclass that where I can extract things during PostProcessing steps
         if log_final:
             # don't try this at home...
@@ -593,7 +599,7 @@ class GenericSSCModule(ABC):
                 # get what we have logged so far
                 plant_output = getattr(self.Plant.Outputs,  self.Log_Arrays[key] )
                 # grab and save corresponding slices to self (this should be some sort of pointer, so should)
-                self_output[ssch] = plant_output[firsth]
+                self_output[self.sscCurrentHorizon] = plant_output[self.sscFirstHorizon]
             
             # we're done with the full simulation
             else:
