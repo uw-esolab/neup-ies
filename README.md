@@ -7,7 +7,7 @@ This is a private repository for sharing code and project files.
 *Note from Gabriel: If cloning onto a local machine, I recommend that this repository be cloned into a directory alongside the SAM projects (LK, WEX, SSC, SAM). That is, the **neup-ies** folder should be in the same directory as **lk**, **ssc**, **googletest**, etc. I refer to this directory as `$DEVDIR`.*
 <br/><br/>
 
-# Running simulations in Linux
+# Running SSC simulations in Linux
 Everything in the bash scripts has been tested on Ubuntu Focal 20.04.2 LTS.
 
 ## Add repository to your PYTHONPATH
