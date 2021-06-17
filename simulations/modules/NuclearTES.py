@@ -166,31 +166,32 @@ class NuclearTES(GenericSSCModule):
         return dispatch_wrap
 
     
-    def create_dispatch_params(self):
+    def create_dispatch_params(self, current_pyomo_slice):
         """ Populating a dictionary with dispatch parameters before optimization
         
         ** self.is_dispatch == True 
         (Called within simulation)
-
-        Outputs:
-            dispatch_wrap (obj) : wrapper object for the class that creates dispatch parameters
         
         This method is creates the Dispatch Parameter dictionary that will be 
         populated with static inputs from SSC_dict as well as initial conditions
         for Dispatch optimization. The initial conditions are continuously updated
         if simulation is segmented.
+
+        Inputs:
+            current_pyomo_slice (slice) : range of current pyomo horizon (ints representing hours)
+        Outputs:
+            dispatch_wrap (obj) : wrapper object for the class that creates dispatch parameters
         """
         
         # get the object
         DW = self.dispatch_wrap
         
         # run the setters from the GenericSSCModule parent class
-        params = GenericSSCModule.create_dispatch_params(self)
+        params = GenericSSCModule.create_dispatch_params(self, current_pyomo_slice)
         
         # these are NuclearTES-specific setters
         params = DW.set_nuclear_parameters( params )
-        params = DW.set_time_series_nuclear_parameters( params, self.solar_resource_file, 
-                                                       self.df_array, self.ud_array )
+        params = DW.set_time_series_nuclear_parameters( params, self.df_array, self.ud_array, current_pyomo_slice )
         
         # this sets the initial set for the NuclearTES
         params = DW.set_initial_state( params )
@@ -198,7 +199,7 @@ class NuclearTES(GenericSSCModule):
         return params
 
 
-    def update_Pyomo_after_SSC(self, params):
+    def update_Pyomo_after_SSC(self, params, current_pyomo_slice):
         """ Update Pyomo inputs with SSC outputs from previous segment simulation
         
         ** self.run_loop    == True
@@ -210,7 +211,8 @@ class NuclearTES(GenericSSCModule):
         of the Dispatch parameter dictionary. 
         
         Inputs:
-            params (dict) : dictionary of Pyomo dispatch parameters
+            params (dict)               : dictionary of Pyomo dispatch parameters
+            current_pyomo_slice (slice) : range of current pyomo horizon (ints representing hours)
         Outputs:
             params (dict) : updated dictionary of Pyomo dispatch parameters
         """
@@ -228,7 +230,7 @@ class NuclearTES(GenericSSCModule):
         updated_SSC_dict['pc_startup_time_remain_init']      = self.Plant.Outputs.pc_startup_time_remain_final
         updated_SSC_dict['pc_startup_energy_remain_initial'] = self.Plant.Outputs.pc_startup_energy_remain_final
         
-        # this one is Pyomo specific, doesn't get updated in SSC
+        # these are specific to the initial states
         updated_SSC_dict['wdot0'] = self.Plant.Outputs.P_cycle[self.t_ind-1]
         
         # TODO: removing w_dot_s_prev references in all of Dispatch for now, might need to revisit later
@@ -236,8 +238,9 @@ class NuclearTES(GenericSSCModule):
         
         DW = self.dispatch_wrap
         
-        # updating the initial state
+        # updating the initial state and time series Nuclear params
         params = DW.set_initial_state( params, updated_SSC_dict, self.Plant, self.t_ind )
+        params = DW.set_time_series_nuclear_parameters( params, self.df_array, self.ud_array, current_pyomo_slice )
         
         return params
     

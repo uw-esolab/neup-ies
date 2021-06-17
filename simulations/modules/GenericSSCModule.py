@@ -247,8 +247,9 @@ class GenericSSCModule(ABC):
         self.t_ind = int(time_next.to('hr').m)
         
         # slice for the first indeces of the SSC Horizon, also initializing current Horizon (updated in loop)
-        self.sscFirstHorizon   = slice( 0, self.t_ind,1)
-        self.sscCurrentHorizon = slice( int( time_start.to('hr').m ), self.t_ind, 1)  
+        self.slice_ssc_firstH   = slice( 0, self.t_ind,1)
+        self.slice_ssc_currentH = slice( int( time_start.to('hr').m ), self.t_ind, 1)  
+        self.slice_pyo_currentH = slice( int( time_start.to('hr').m ), int( self.pyomo_horizon.to('hr').m ), 1) 
         
         # setting up empty log array for log arrays
         self.initialize_arrays()
@@ -256,12 +257,12 @@ class GenericSSCModule(ABC):
         # run dispatch optimization for the first time
         if self.is_dispatch:
             # create dispatch parameters for the first time
-            disp_params = self.create_dispatch_params()
+            disp_params = self.create_dispatch_params( self.slice_pyo_currentH )
             
             # run pyomo optimization
             self.run_pyomo(disp_params)
             
-            # updating SSC inputs using Pyomo outputs
+            # update: Pyomo(t) -> Plant(t) 
             self.update_Plant_after_Pyomo()
         
         # first execution of Plant through SSC
@@ -275,30 +276,33 @@ class GenericSSCModule(ABC):
             time_next  += self.ssc_horizon.to('s')
             
             # update the current slice of SSC Horizon relative to full simulation
-            self.sscCurrentHorizon = slice( int( time_start.to('hr').m ), 
-                                            int( time_next.to('hr').m  ), 1)  
-        
+            self.slice_ssc_currentH = slice( int( time_start.to('hr').m ), 
+                                             int( time_next.to('hr').m  ), 1)  
+            # update the current slice of Pyomo Horizon relative to full simulation
+            self.slice_pyo_currentH = slice( int( time_start.to('hr').m ), 
+                                             int( (time_start + self.pyomo_horizon).to('hr').m  ), 1)  
+            
             # time-printer
             print_time = int(time_next.to('d').magnitude)
             if not print_time % 10: print('   [%s / %s] completed.' % (print_time, np.round(time_end.to('d').m)) )
             
-            # update Plant parameters after previous run
+            # update: SSC(t) -> Plant(t+1)
             self.update_Plant_after_SSC( )
             
             # run dispatch optimization
             if self.is_dispatch:
                 
-                # i.e. updating Pyomo inputs using SSC outputs
-                disp_params = self.update_Pyomo_after_SSC(disp_params)
+                # update: SSC(t) -> Pyomo(t+1)
+                disp_params = self.update_Pyomo_after_SSC(disp_params, self.slice_pyo_currentH)
                 
                 # run pyomo optimization again
                 self.run_pyomo(disp_params)
             
-                # updating SSC inputs using Pyomo outputs
+                # update: Pyomo(t+1) -> Plant(t+1)
                 self.update_Plant_after_Pyomo( )
             
             # run Plant again
-            self.run_Plant_through_SSC( time_start , time_next )
+            self.run_Plant_through_SSC( time_start, time_next )
         
         print(' Plant Simulation successfully completed.')
         
@@ -403,7 +407,7 @@ class GenericSSCModule(ABC):
         self.Plant.SystemControl.pc_startup_time_remain_init      = self.Plant.Outputs.pc_startup_energy_remain_final
       
         
-    def update_Pyomo_after_SSC(self, params):
+    def update_Pyomo_after_SSC(self, params, current_pyomo_slice):
         """ Update Pyomo inputs with SSC outputs from previous segment simulation
         
         ** self.run_loop    == True
@@ -415,7 +419,8 @@ class GenericSSCModule(ABC):
         of the Dispatch parameter dictionary. 
         
         Inputs:
-            params (dict) : dictionary of Pyomo dispatch parameters
+            params (dict)               : dictionary of Pyomo dispatch parameters
+            current_pyomo_slice (slice) : range of current pyomo horizon (ints representing hours)
         Outputs:
             params (dict) : updated dictionary of Pyomo dispatch parameters
         """
@@ -490,19 +495,21 @@ class GenericSSCModule(ABC):
         return dispatch_wrap
 
 
-    def create_dispatch_params(self):
+    def create_dispatch_params(self, current_pyomo_slice):
         """ Populating a dictionary with dispatch parameters before optimization
         
         ** self.is_dispatch == True 
         (Called within simulation)
         
-        Outputs:
-            dispatch_wrap (obj) : wrapper object for the class that creates dispatch parameters
-        
         This method is creates the Dispatch Parameter dictionary that will be 
         populated with static inputs from SSC_dict as well as initial conditions
         for Dispatch optimization. The initial conditions are continuously updated
         if simulation is segmented.
+
+        Inputs:
+            current_pyomo_slice (slice) : range of current pyomo horizon (ints representing hours)
+        Outputs:
+            dispatch_wrap (obj) : wrapper object for the class that creates dispatch parameters
         """
         
         params = {}
@@ -599,7 +606,7 @@ class GenericSSCModule(ABC):
                 # get what we have logged so far
                 plant_output = getattr(self.Plant.Outputs,  self.Log_Arrays[key] )
                 # grab and save corresponding slices to self (this should be some sort of pointer, so should)
-                self_output[self.sscCurrentHorizon] = plant_output[self.sscFirstHorizon]
+                self_output[self.slice_ssc_currentH] = plant_output[self.slice_ssc_firstH]
             
             # we're done with the full simulation
             else:
