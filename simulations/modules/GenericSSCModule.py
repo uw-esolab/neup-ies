@@ -22,7 +22,6 @@ import copy
 from abc import ABC
 
 class GenericSSCModule(ABC):
-    
     """
     The GenericSSCModule class works as a way to intialize, update, and
     run SSC simulations through PySAM. 
@@ -487,6 +486,9 @@ class GenericSSCModule(ABC):
         
         ** self.is_dispatch == True 
         (Called within simulation)
+        
+        Outputs:
+            dispatch_wrap (obj) : wrapper object for the class that creates dispatch parameters
         
         This method is creates the Dispatch Parameter dictionary that will be 
         populated with static inputs from SSC_dict as well as initial conditions

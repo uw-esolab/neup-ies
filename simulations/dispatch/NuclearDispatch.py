@@ -20,8 +20,19 @@ from util.SSCHelperMethods import SSCHelperMethods
 import copy
 
 class NuclearDispatch(GeneralDispatch):
+    """
+    The NuclearDispatch class is meant to set up and run Dispatch
+    optimization as a mixed integer linear program problem using Pyomo,
+    specifically for the NuclearTES NE2+SSC module.
+    """
     
     def __init__(self, params, unitRegistry):
+        """ Initializes the NuclearDispatch module
+        
+        Inputs:
+            params (dict)                : dictionary of Pyomo dispatch parameters
+            unitRegistry (pint.registry) : unique unit Pint unit registry
+        """
         
         # initialize Generic module, csv data arrays should be saved here
         GeneralDispatch.__init__( self, params, unitRegistry )
@@ -31,15 +42,41 @@ class NuclearDispatch(GeneralDispatch):
 # =============================================================================
 
 class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
+    """
+    The NuclearDispatchParamWrap class is meant to be the staging area for the 
+    creation of Parameters ONLY for the NuclearDispatch class. It communicates 
+    with the NE2 modules, receiving SSC and PySAM input dictionaries to calculate 
+    both static parameters used for every simulation segment AND initial conditions 
+    that can be updated.
+    """
     
     def __init__(self, unit_registry, SSC_dict=None, PySAM_dict=None, pyomo_horizon=48, 
                    dispatch_time_step=1):
+        """ Initializes the NuclearDispatchParamWrap module
+        
+        Inputs:
+            unitRegistry (pint.registry)   : unique unit Pint unit registry
+            SSC_dict (dict)                : dictionary of SSC inputs needed to run modules
+            PySAM_dict (dict)              : dictionary of PySAM inputs + file names
+            pyomo_horizon (int Quant)      : length of Pyomo simulation segment (hours)
+            dispatch_time_step (int Quant) : length of each Pyomo time step (hours)
+        """
         
         GeneralDispatchParamWrap.__init__( self, unit_registry, SSC_dict, PySAM_dict, 
                             pyomo_horizon, dispatch_time_step )
 
 
     def set_fixed_cost_parameters(self, param_dict):
+        """ Method to set fixed costs of the Plant
+        
+        This method calculates some fixed costs for the Plant operations, startup,
+        standby, etc. 
+        
+        Inputs:
+            param_dict (dict) : dictionary of Pyomo dispatch parameters
+        Outputs:
+            param_dict (dict) : updated dictionary of Pyomo dispatch parameters
+        """
         
         # grabbing unit registry set up in GeneralDispatch
         u = self.u
@@ -61,6 +98,16 @@ class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
         
 
     def set_nuclear_parameters(self, param_dict):
+        """ Method to set parameters specific to the Nuclear Plant for Dispatch optimization
+        
+        This method calculates some parameters specific to the NuclearTES plant
+        which are meant to be fixed throughout the simulation. 
+        
+        Inputs:
+            param_dict (dict) : dictionary of Pyomo dispatch parameters
+        Outputs:
+            param_dict (dict) : updated dictionary of Pyomo dispatch parameters
+        """
         
         # grabbing unit registry set up in GeneralDispatch
         u = self.u 
@@ -100,6 +147,21 @@ class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
     
     
     def set_time_series_nuclear_parameters(self, param_dict, solar_resource_filepath, df_array, ud_array):
+        """ Method to set fixed costs of the Plant for Dispatch optimization
+        
+        This method calculates some time series parameters for the Plant operations, startup,
+        standby, etc. These are NOT meant to be fixed, but updated at the beginning
+        of every segment using the latest SSC outputs or to extract the next relevant
+        segment of pricing arrays, efficiencies, etc. 
+        
+        Inputs:
+            param_dict (dict)             : dictionary of Pyomo dispatch parameters
+            solar_resource_filepath (str) : filepath to the solar resource file (typically in SAM)
+            df_array (array)              : array of user defined dispatch factors over simulation time
+            ud_array (list of list)       : table of user defined data as nested lists
+        Outputs:
+            param_dict (dict) : updated dictionary of Pyomo dispatch parameters
+        """
         
         #MAKE SURE TO CALL THIS METHOD AFTER THE NUCLEAR PARAMETERS 
         u = self.u
@@ -153,7 +215,25 @@ class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
 
 
     def set_initial_state(self, param_dict, updated_dict=None, plant=None, npts=None ):
+        """ Method to set the initial state of the Plant before Dispatch optimization
         
+        This method uses SSC data to set the initial state of the Plant before Dispatch
+        optimization in Pyomo. This method is called in two ways: once before starting 
+        the simulation loop, in which case it only uses values from the SSC_dict portion
+        of the given JSON script. The method is also called within the simulation loop
+        to update the initial state parameters based on the ending conditions of the 
+        previous simulation segment (provided by SSC). 
+        
+        TODO: can we just input another dictionary instead of passing the full Plant?
+        
+        Inputs:
+            param_dict (dict)    : dictionary of Pyomo dispatch parameters
+            updated_dict (dict)  : dictionary with updated SSC initial conditions from previous run
+            plant (obj)          : the full PySAM Plant object. 
+            npts (int)           : length of the SSC horizon
+        Outputs:
+            param_dict (dict) : updated dictionary of Pyomo dispatch parameters
+        """
         u = self.u
         
         if updated_dict is None:
@@ -255,6 +335,23 @@ class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
     
     
     def get_pc_persist_and_off_logs( self, param_dict, plant, npts ):
+        """ Method to log the amount of time Power Cycle has been ON and OFF
+        
+        This method uses SSC output data from the previous run to log how long
+        the Power Cycle has been both ON and OFF. One of the two outputs will be
+        populated in this method, and there are a bunch of logic statements to
+        correctly log the respective length of time. Method adapted from LORE Team. 
+        
+        TODO: can we just input another dictionary instead of passing the full Plant?
+        
+        Inputs:
+            param_dict (dict)    : dictionary of Pyomo dispatch parameters
+            plant (obj)          : the full PySAM Plant object. 
+            npts (int)           : length of the SSC horizon
+        Outputs:
+            disp_pc_persist0 (int) : length of time PC has been ON in the past segment
+            disp_pc_off0 (int)     : length of time PC has been OFF in the past segment
+        """
         
         # cycle state before start of most recent set of simulation calls
         previous_pc_state = plant.SystemControl.pc_op_mode_initial

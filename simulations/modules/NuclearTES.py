@@ -16,9 +16,20 @@ import PySAM.PySSC as pssc
 from util.FileMethods import FileMethods
 import copy
 
-class NuclearTES(GenericSSCModule):
+class NuclearTES(GenericSSCModule): 
+    """
+    The NuclearTES class intializes, updates, and runs SSC simulations through PySAM,
+    specifically for the SSC NuclearTES module. 
+    """
     
     def __init__(self, plant_name="nuclear_tes", json_name="model1", is_dispatch=False):
+        """ Initializes the NuclearTES module
+        
+        Inputs:
+            plant_name (str)         : name of SSC module to run 
+            json_name (str)          : name of JSON script with input data for module
+            is_dispatch (bool)       : boolean, if True runs Pyomo dispatch optimization
+        """
         
         # initialize Generic module, csv data arrays should be saved here
         GenericSSCModule.__init__( self, plant_name, json_name, is_dispatch )
@@ -27,8 +38,14 @@ class NuclearTES(GenericSSCModule):
     def store_csv_arrays(self, input_dict):
         """ Method to get data from specified csv files and store in class
         
+        This method uses the designated PySAM inputs from a JSON script to extract
+        csv arrays for use in SSC. The PySAM inputs used here are relative filepaths
+        to find the respective csv files. We then either save the filepath as a variable
+        or extract the data from the named csv file and save it to as a member attribute
+        of this NE2 module class.
+        
         Inputs:
-            input_dict (dict) : dictionary with csv file names
+            input_dict (dict) : dictionary with csc relative filepaths
         """
         
         # saving location of solar resource file for SSC input using parent class def
@@ -47,6 +64,12 @@ class NuclearTES(GenericSSCModule):
         
     def create_Plant(self):
         """ Method to create Plant object for the first time
+        
+        This method creates a Plant object using built-in PySAM functionalities
+        (including some former PySSC structures). Essentially, it creates some
+        sort of data structure (pointer?) from SSC inputs found in the SSC_dict
+        and the specified SSC module. That data structure is then used to create
+        a PySAM module for the specified SSC Plant module (TCSMolten_Salt, etc.). 
         """
         
         # create plant data encoding for generic system
@@ -69,8 +92,11 @@ class NuclearTES(GenericSSCModule):
     def create_Grid(self):
         """ Method to create Grid object for the first time
         
-        Inputs:
-            plant (obj) : object representing Plant
+        This method creates a Grid object again using built-in PySAM functions.
+        The Grid object is created similarly to the Plant object, from SSC inputs
+        listed in the SSC_dict. The Grid object, however, is first created
+        from the existing Plant object and then the grid-specific input data
+        is added to create a wrapper for the SSC Grid module.
         """
         
         # create grid data using parent class
@@ -81,21 +107,56 @@ class NuclearTES(GenericSSCModule):
         
         
     def run_pyomo(self, params):
+        """ Running Pyomo dispatch optimization
         
+        ** self.is_dispatch == True
+        
+        This method strictly runs the Pyomo optimization before execution of an
+        SSC segment. It creates a new Dispatch model for the segment, solves it,
+        then returns results. Results are stored in a dictionary. 
+        
+        Inputs:
+            params (dict) : dictionary of Pyomo dispatch parameters
+        """
+        
+        # Creation of Dispatch model (could be overloaded)
         dispatch_model = ND(params, self.u)
+        
+        # Solving Dispatch optimization model
         rt_results = dispatch_model.solve_model()
-                
+        
+        # saving current model to self
         self.current_disp_model = dispatch_model
         
+        # retrieving current dispatch counter
         count = str(self.disp_count)
+        
+        # saving model and results to dictionaries with entries being the current counter value
         self.disp_models[count]  = dispatch_model    
         self.disp_results[count] = rt_results
         
+        # increasing dispatch counter value by 1
         self.disp_count += 1
 
 
 
     def create_dispatch_wrapper(self, PySAM_dict):
+        """ Creating a wrapper object for calling a class that creates dispatch parameters
+        
+        ** self.is_dispatch == True 
+        (Called in __init__ of NE2 module)
+        
+        This method creates an object whose class ultimately calculates and creates 
+        parameters for Dispatch optimization. The reason this class exists separately
+        is that it gets overlaoded based on the PySAM module we are running. Depending on
+        the PySAM module, this method calls on a different Dispatch Parameter class that 
+        is specific to the module.
+
+        Inputs:
+            PySAM_dict (dict)   : dictionary of PySAM inputs from a script in /json directory
+        Outputs:
+            dispatch_wrap (obj) : wrapper object for the class that creates dispatch parameters
+        """
         
         self.DispatchParameterClass = NDP
         
@@ -106,22 +167,57 @@ class NuclearTES(GenericSSCModule):
 
     
     def create_dispatch_params(self):
+        """ Populating a dictionary with dispatch parameters before optimization
         
+        ** self.is_dispatch == True 
+        (Called within simulation)
+
+        Outputs:
+            dispatch_wrap (obj) : wrapper object for the class that creates dispatch parameters
+        
+        This method is creates the Dispatch Parameter dictionary that will be 
+        populated with static inputs from SSC_dict as well as initial conditions
+        for Dispatch optimization. The initial conditions are continuously updated
+        if simulation is segmented.
+        """
+        
+        # get the object
         DW = self.dispatch_wrap
         
+        # run the setters from the GenericSSCModule parent class
         params = GenericSSCModule.create_dispatch_params(self)
+        
+        # these are NuclearTES-specific setters
         params = DW.set_nuclear_parameters( params )
         params = DW.set_time_series_nuclear_parameters( params, self.solar_resource_file, 
                                                        self.df_array, self.ud_array )
+        
+        # this sets the initial set for the NuclearTES
         params = DW.set_initial_state( params )
         
         return params
 
 
     def update_Pyomo_after_SSC(self, params):
+        """ Update Pyomo inputs with SSC outputs from previous segment simulation
+        
+        ** self.run_loop    == True
+        ** self.is_dispatch == True 
+                          
+        This method uses the SSC end results from the previous simulation segment
+        and uses them to update the existing Dispatch parameter dictionary that
+        is ultimately sent to Pyomo. Essentially just updates the initial conditions
+        of the Dispatch parameter dictionary. 
+        
+        Inputs:
+            params (dict) : dictionary of Pyomo dispatch parameters
+        Outputs:
+            params (dict) : updated dictionary of Pyomo dispatch parameters
+        """
         
         updated_SSC_dict = copy.deepcopy(self.SSC_dict)
         
+        # saving relevant end-of-sim outputs from the last simulation segment
         updated_SSC_dict['rec_op_mode_initial']              = self.Plant.Outputs.rec_op_mode_final
         updated_SSC_dict['rec_startup_time_remain_init']     = self.Plant.Outputs.rec_startup_time_remain_final
         updated_SSC_dict['rec_startup_energy_remain_init']   = self.Plant.Outputs.rec_startup_energy_remain_final
@@ -132,12 +228,15 @@ class NuclearTES(GenericSSCModule):
         updated_SSC_dict['pc_startup_time_remain_init']      = self.Plant.Outputs.pc_startup_time_remain_final
         updated_SSC_dict['pc_startup_energy_remain_initial'] = self.Plant.Outputs.pc_startup_energy_remain_final
         
+        # this one is Pyomo specific, doesn't get updated in SSC
         updated_SSC_dict['wdot0'] = self.Plant.Outputs.P_cycle[self.t_ind-1]
         
         # TODO: removing w_dot_s_prev references in all of Dispatch for now, might need to revisit later
         # updated_SSC_dict['wdot_s_prev'] = 0 #np.array([pe.value(dm.model.wdot_s_prev[t]) for t in dm.model.T])[-1]
         
         DW = self.dispatch_wrap
+        
+        # updating the initial state
         params = DW.set_initial_state( params, updated_SSC_dict, self.Plant, self.t_ind )
         
         return params
