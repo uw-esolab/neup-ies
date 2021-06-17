@@ -1,0 +1,24 @@
+<DataObjectMetadata name="romMeta">
+  <DataSet type="Static">
+    <dims>
+      <DHI_gaussianed>Time</DHI_gaussianed>
+      <DHI_original>Time</DHI_original>
+    </dims>
+    <general>
+      <pointwise_meta>DHI_gaussianed,DHI_original</pointwise_meta>
+      <sampleTag>RAVEN_sample_ID</sampleTag>
+    </general>
+  </DataSet>
+  
+  <arma type="Static">
+    <ROM>
+      <type>ARMA</type>
+    </ROM>
+    <DHI>
+      <ARMA_params>
+        <std>1.60958721987</std>
+      </ARMA_params>
+    </DHI>
+  </arma>
+  
+</DataObjectMetadata>
