@@ -17,7 +17,7 @@ from dispatch.GeneralDispatch import GeneralDispatchParamWrap
 import numpy as np
 from util.FileMethods import FileMethods
 from util.SSCHelperMethods import SSCHelperMethods
-import copy
+import os, copy
 
 class NuclearDispatch(GeneralDispatch):
     """
@@ -146,7 +146,7 @@ class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
         return param_dict
     
     
-    def set_time_series_nuclear_parameters(self, param_dict, solar_resource_filepath, df_array, ud_array):
+    def set_time_series_nuclear_parameters(self, param_dict, df_array, ud_array, current_pyomo_slice):
         """ Method to set fixed costs of the Plant for Dispatch optimization
         
         This method calculates some time series parameters for the Plant operations, startup,
@@ -156,9 +156,9 @@ class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
         
         Inputs:
             param_dict (dict)             : dictionary of Pyomo dispatch parameters
-            solar_resource_filepath (str) : filepath to the solar resource file (typically in SAM)
             df_array (array)              : array of user defined dispatch factors over simulation time
             ud_array (list of list)       : table of user defined data as nested lists
+            current_pyomo_slice (slice)   : range of current pyomo horizon (ints representing hours)
         Outputs:
             param_dict (dict) : updated dictionary of Pyomo dispatch parameters
         """
@@ -167,8 +167,7 @@ class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
         u = self.u
         
         self.Drsu       = self.PySAM_dict['Dnsu']*u.hr   # Minimum time to start the receiver (hr)
-        self.P          = df_array*u.USD/u.kWh
-        self.Qin        = np.array([self.q_rec_design.magnitude]*self.T)*self.q_rec_design.units
+        self.Qin        = np.array([self.q_rec_design.magnitude]*self.T)*self.q_rec_design.units #TODO: update at each segment
         self.Qc         = self.Ec / np.ceil(self.SSC_dict['startup_time']*u.hr / np.min(self.Delta)) / np.min(self.Delta) #TODO: make sure Ec is called correctly
         self.Wdotnet    = [1.e10 for j in range(self.T)] *u.kW
         self.W_u_plus   = [(self.Wdotl + self.W_delta_plus*0.5*dt).to('kW').magnitude for dt in self.Delta]*u.kW
@@ -179,12 +178,16 @@ class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
         delta_rs = np.zeros(n)
         D        = np.zeros(n)
         
-        # grab dry bulb temperature from solar resource file 
-        Tdry = FileMethods.read_solar_resource_file(solar_resource_filepath, u) 
-        t_start = int(0) # TODO: have currentTime tracker
-        t_end   = int(self.pyomo_horizon.to('hr').magnitude)
-        time_slice = slice(t_start,t_end,1)
-        Tdry = Tdry[time_slice] 
+        # grab time series data that we have to index
+        Tdry  = self.Tdry # dry bulb temperature from solar resource file 
+        Price = df_array  # pricing multipliers
+        # if we're at the last segment, we won't have 48 hour data for the sim. here is a quick fix
+        if current_pyomo_slice.stop > len(Tdry):
+            Tdry  = np.hstack([Tdry,  Tdry])
+            Price = np.hstack([Price, Price])
+        # grabbing relevant dry temperatures
+        Tdry   = Tdry[current_pyomo_slice]
+        self.P = Price[current_pyomo_slice]*u.USD/u.kWh
         
         etamult, wmult = SSCHelperMethods.get_ambient_T_corrections_from_udpc_inputs( self.u, Tdry, ud_array ) # TODO:verify this makes sense
         self.etaamb = etamult * self.SSC_dict['design_eff']

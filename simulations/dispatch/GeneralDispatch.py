@@ -12,7 +12,7 @@ Model authors:
 Pyomo code by Alex Zolan
 Modified by Gabriel Soto
 """
-import pyomo
+import os
 import pyomo.environ as pe
 import numpy as np
 from util.FileMethods import FileMethods
@@ -517,6 +517,11 @@ class GeneralDispatchParamWrap(object):
         
         # setting a standard unit registry
         self.u = unit_registry 
+        
+        # retrieving the dry bulb temperature values in the SAM directory
+        parent_dir = FileMethods.parent_dir
+        self.solar_resource_file = os.path.join(parent_dir, self.PySAM_dict['solar_resource_rel_parent']) 
+        self.Tdry = FileMethods.read_solar_resource_file(self.solar_resource_file, self.u) 
         
         self.set_design()
         
