@@ -14,13 +14,25 @@ Modified by Gabriel Soto
 """
 from dispatch.GeneralDispatch import GeneralDispatch
 from dispatch.GeneralDispatch import GeneralDispatchParamWrap
-import pyomo.environ as pe
 import numpy as np
 from util.FileMethods import FileMethods
+from util.SSCHelperMethods import SSCHelperMethods
+import os, copy
 
 class NuclearDispatch(GeneralDispatch):
+    """
+    The NuclearDispatch class is meant to set up and run Dispatch
+    optimization as a mixed integer linear program problem using Pyomo,
+    specifically for the NuclearTES NE2+SSC module.
+    """
     
     def __init__(self, params, unitRegistry):
+        """ Initializes the NuclearDispatch module
+        
+        Inputs:
+            params (dict)                : dictionary of Pyomo dispatch parameters
+            unitRegistry (pint.registry) : unique unit Pint unit registry
+        """
         
         # initialize Generic module, csv data arrays should be saved here
         GeneralDispatch.__init__( self, params, unitRegistry )
@@ -30,15 +42,41 @@ class NuclearDispatch(GeneralDispatch):
 # =============================================================================
 
 class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
+    """
+    The NuclearDispatchParamWrap class is meant to be the staging area for the 
+    creation of Parameters ONLY for the NuclearDispatch class. It communicates 
+    with the NE2 modules, receiving SSC and PySAM input dictionaries to calculate 
+    both static parameters used for every simulation segment AND initial conditions 
+    that can be updated.
+    """
     
     def __init__(self, unit_registry, SSC_dict=None, PySAM_dict=None, pyomo_horizon=48, 
                    dispatch_time_step=1):
+        """ Initializes the NuclearDispatchParamWrap module
+        
+        Inputs:
+            unitRegistry (pint.registry)   : unique unit Pint unit registry
+            SSC_dict (dict)                : dictionary of SSC inputs needed to run modules
+            PySAM_dict (dict)              : dictionary of PySAM inputs + file names
+            pyomo_horizon (int Quant)      : length of Pyomo simulation segment (hours)
+            dispatch_time_step (int Quant) : length of each Pyomo time step (hours)
+        """
         
         GeneralDispatchParamWrap.__init__( self, unit_registry, SSC_dict, PySAM_dict, 
                             pyomo_horizon, dispatch_time_step )
 
 
     def set_fixed_cost_parameters(self, param_dict):
+        """ Method to set fixed costs of the Plant
+        
+        This method calculates some fixed costs for the Plant operations, startup,
+        standby, etc. 
+        
+        Inputs:
+            param_dict (dict) : dictionary of Pyomo dispatch parameters
+        Outputs:
+            param_dict (dict) : updated dictionary of Pyomo dispatch parameters
+        """
         
         # grabbing unit registry set up in GeneralDispatch
         u = self.u
@@ -46,14 +84,10 @@ class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
         # set up costs from parent class
         param_dict = GeneralDispatchParamWrap.set_fixed_cost_parameters( self, param_dict )
         
-        # TODO: for now, scaling everything from LORE files
-        old_Q_ref = 565 * u.MW 
-        Q_ratio   = (self.q_rec_design / old_Q_ref ).to('')
-        
         # TODO: old values from LORE files
-        C_rec  = Q_ratio * 0.002  * u.USD/u.kWh        
-        C_rsu  = Q_ratio * 950    * u.USD
-        C_rhsp = Q_ratio * 950/5. * u.USD
+        C_rec  = self.PySAM_dict['nuc_op_cost'] * u.USD / u.MWh #Q_ratio * 0.002  * u.USD/u.kWh        
+        C_rsu  = self.PySAM_dict['nuc_cold_su'] * u.USD
+        C_rhsp = self.PySAM_dict['nuc_hot_su'] * u.USD
 
         ### Cost Parameters ###
         param_dict['Crec']   = C_rec.to('USD/kWh')  #C^{rec}: Operating cost of heliostat field and receiver [\$/kWt$\cdot$h]
@@ -64,15 +98,25 @@ class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
         
 
     def set_nuclear_parameters(self, param_dict):
+        """ Method to set parameters specific to the Nuclear Plant for Dispatch optimization
+        
+        This method calculates some parameters specific to the NuclearTES plant
+        which are meant to be fixed throughout the simulation. 
+        
+        Inputs:
+            param_dict (dict) : dictionary of Pyomo dispatch parameters
+        Outputs:
+            param_dict (dict) : updated dictionary of Pyomo dispatch parameters
+        """
         
         # grabbing unit registry set up in GeneralDispatch
         u = self.u 
         
         time_fix = 1*u.hr                  # TODO: we're missing a time term to fix units
-        dw_rec_pump             = 0*u.MW   # TODO: Pumping parasitic at design point reciever mass flow rate (MWe)
-        tower_piping_ht_loss    = 0*u.kW   # TODO: Tower piping heat trace full-load parasitic load (kWe) 
-        q_rec_standby_fraction  = 0.       # TODO: Receiver standby energy consumption (fraction of design point thermal power)
-        q_rec_shutdown_fraction = 0.       # TODO: Receiver shutdown energy consumption (fraction of design point thermal power)
+        dw_rec_pump             = self.PySAM_dict['dw_nuc_pump']*u.MW   # TODO: Pumping parasitic at design point reciever mass flow rate (MWe)
+        tower_piping_ht_loss    = self.PySAM_dict['nuc_piping_ht_loss']*u.kW   # TODO: Tower piping heat trace full-load parasitic load (kWe) 
+        q_rec_standby_fraction  = self.PySAM_dict['q_nuc_standby_frac']        # TODO: Receiver standby energy consumption (fraction of design point thermal power)
+        q_rec_shutdown_fraction = self.PySAM_dict['q_nuc_shutdown_frac']        # TODO: Receiver shutdown energy consumption (fraction of design point thermal power)
         
         self.deltal = self.SSC_dict['rec_su_delay']*u.hr
         self.Ehs    = self.SSC_dict['p_start']*u.kWh
@@ -102,34 +146,50 @@ class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
         return param_dict
     
     
-    def set_time_series_nuclear_parameters(self, param_dict, solar_resource_filepath, df_array, ud_array):
+    def set_time_series_nuclear_parameters(self, param_dict, df_array, ud_array, current_pyomo_slice):
+        """ Method to set fixed costs of the Plant for Dispatch optimization
+        
+        This method calculates some time series parameters for the Plant operations, startup,
+        standby, etc. These are NOT meant to be fixed, but updated at the beginning
+        of every segment using the latest SSC outputs or to extract the next relevant
+        segment of pricing arrays, efficiencies, etc. 
+        
+        Inputs:
+            param_dict (dict)             : dictionary of Pyomo dispatch parameters
+            df_array (array)              : array of user defined dispatch factors over simulation time
+            ud_array (list of list)       : table of user defined data as nested lists
+            current_pyomo_slice (slice)   : range of current pyomo horizon (ints representing hours)
+        Outputs:
+            param_dict (dict) : updated dictionary of Pyomo dispatch parameters
+        """
         
         #MAKE SURE TO CALL THIS METHOD AFTER THE NUCLEAR PARAMETERS 
         u = self.u
         
-        # self.delta_rs = np.zeros(n)
-        # self.delta_cs = np.zeros(n)
-        self.Drsu       = 1*u.hr   # Minimum time to start the receiver (hr)
-        self.P          = df_array*u.USD/u.kWh
-        self.Qin        = np.array([self.q_rec_design.magnitude]*self.T)*self.q_rec_design.units
+        self.Drsu       = self.PySAM_dict['Dnsu']*u.hr   # Minimum time to start the receiver (hr)
+        self.Qin        = np.array([self.q_rec_design.magnitude]*self.T)*self.q_rec_design.units #TODO: update at each segment
         self.Qc         = self.Ec / np.ceil(self.SSC_dict['startup_time']*u.hr / np.min(self.Delta)) / np.min(self.Delta) #TODO: make sure Ec is called correctly
         self.Wdotnet    = [1.e10 for j in range(self.T)] *u.kW
         self.W_u_plus   = [(self.Wdotl + self.W_delta_plus*0.5*dt).to('kW').magnitude for dt in self.Delta]*u.kW
         self.W_u_minus  = [(self.Wdotl + self.W_delta_minus*0.5*dt).to('kW').magnitude for dt in self.Delta]*u.kW
         
         n  = len(self.Delta)
-        wt = 0.999
+        wt = self.PySAM_dict['nuc_wt']
         delta_rs = np.zeros(n)
         D        = np.zeros(n)
         
-        # grab dry bulb temperature from solar resource file 
-        Tdry = FileMethods.read_solar_resource_file(solar_resource_filepath, u) 
-        t_start = int(0) # TODO: have currentTime tracker
-        t_end   = int(self.pyomo_horizon.to('hr').magnitude)
-        time_slice = slice(t_start,t_end,1)
-        Tdry = Tdry[time_slice] 
+        # grab time series data that we have to index
+        Tdry  = self.Tdry # dry bulb temperature from solar resource file 
+        Price = df_array  # pricing multipliers
+        # if we're at the last segment, we won't have 48 hour data for the sim. here is a quick fix
+        if current_pyomo_slice.stop > len(Tdry):
+            Tdry  = np.hstack([Tdry,  Tdry])
+            Price = np.hstack([Price, Price])
+        # grabbing relevant dry temperatures
+        Tdry   = Tdry[current_pyomo_slice]
+        self.P = Price[current_pyomo_slice]*u.USD/u.kWh
         
-        etamult, wmult = self.get_ambient_T_corrections_from_udpc_inputs( Tdry, ud_array ) # TODO:verify this makes sense
+        etamult, wmult = SSCHelperMethods.get_ambient_T_corrections_from_udpc_inputs( self.u, Tdry, ud_array ) # TODO:verify this makes sense
         self.etaamb = etamult * self.SSC_dict['design_eff']
         self.etac   = wmult * self.SSC_dict['ud_f_W_dot_cool_des']/100.
 
@@ -141,7 +201,6 @@ class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
         
         self.delta_rs   = delta_rs
         self.D          = D
-        
         
         ### Time series CSP Parameters ###
         param_dict['delta_rs']  = self.delta_rs   #\delta^{rs}_{t}: Estimated fraction of period $t$ required for receiver start-up [-]
@@ -158,37 +217,61 @@ class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
         return param_dict
 
 
-    def set_initial_state(self, param_dict):
+    def set_initial_state(self, param_dict, updated_dict=None, plant=None, npts=None ):
+        """ Method to set the initial state of the Plant before Dispatch optimization
         
+        This method uses SSC data to set the initial state of the Plant before Dispatch
+        optimization in Pyomo. This method is called in two ways: once before starting 
+        the simulation loop, in which case it only uses values from the SSC_dict portion
+        of the given JSON script. The method is also called within the simulation loop
+        to update the initial state parameters based on the ending conditions of the 
+        previous simulation segment (provided by SSC). 
+        
+        TODO: can we just input another dictionary instead of passing the full Plant?
+        
+        Inputs:
+            param_dict (dict)    : dictionary of Pyomo dispatch parameters
+            updated_dict (dict)  : dictionary with updated SSC initial conditions from previous run
+            plant (obj)          : the full PySAM Plant object. 
+            npts (int)           : length of the SSC horizon
+        Outputs:
+            param_dict (dict) : updated dictionary of Pyomo dispatch parameters
+        """
         u = self.u
-        # can re-use this method by choosing self.SSC_dict if t ==0
-        #       or some input dict otherwise
         
+        if updated_dict is None:
+            self.current_Plant = copy.deepcopy(self.SSC_dict)
+            self.first_run = True
+        else:
+            self.current_Plant = updated_dict
+            self.first_run = False
+            
         # TES masses, temperatures, specific heat
-        m_hot  = self.m_tes_design * (self.SSC_dict['csp.pt.tes.init_hot_htf_percent']/100)        # Available active mass in hot tank
-        T_tes_hot_init  = (self.SSC_dict['T_tank_hot_init']*u.celsius).to('degK')
+        m_hot  = self.m_tes_design * (self.current_Plant['csp.pt.tes.init_hot_htf_percent']/100)        # Available active mass in hot tank
+        T_tes_hot_init  = (self.current_Plant['T_tank_hot_init']*u.celsius).to('degK')
         T_tes_init  = 0.5*(T_tes_hot_init + self.T_htf_cold)
-        cp_tes_init = self.get_cp_htf(T_tes_init) 
+        cp_tes_init = SSCHelperMethods.get_cp_htf(self.u, T_tes_init, self.SSC_dict['rec_htf'] )
         
         # important parameters
-        e_pb_suinitremain  = self.SSC_dict['pc_startup_energy_remain_initial']*u.kWh
+        e_pb_suinitremain  = self.current_Plant['pc_startup_energy_remain_initial']*u.kWh
         s_current          = m_hot * cp_tes_init * (T_tes_hot_init - self.T_htf_cold) # TES capacity
         s0                 = min(self.Eu.to('kWh'), s_current.to('kWh')  )
-        wdot0              = 0*u.MW #TODO: subsequent calls?
-        yr0                = (self.SSC_dict['rec_op_mode_initial'] == 2)
-        yrsb0              = False   # TODO: try to use Ty's changes to daotk
-        yrsu0              = (self.SSC_dict['rec_op_mode_initial'] == 1)
-        y0                 = (self.SSC_dict['pc_op_mode_initial'] == 1) 
-        ycsb0              = (self.SSC_dict['pc_op_mode_initial'] == 2) 
-        ycsu0              = (self.SSC_dict['pc_op_mode_initial'] == 0 or self.SSC_dict['pc_op_mode_initial'] == 4) 
-        disp_pc_persist0   = 0
-        disp_pc_off0       = 0
-        Yu0                = disp_pc_persist0 if y0 else 0.0
-        Yd0                = disp_pc_off0 if (not y0) else 0.0
-        t_rec_suinitremain = self.SSC_dict['rec_startup_time_remain_init']*u.hr
-        e_rec_suinitremain = self.SSC_dict['rec_startup_energy_remain_init']*u.Wh
-        rec_accum_time     = max(0.0, self.Drsu - t_rec_suinitremain )
-        rec_accum_energy   = max(0.0, self.Er - e_rec_suinitremain )
+        wdot0              = (0 if self.first_run else self.current_Plant['wdot0'])*u.MW 
+        yr0                = (self.current_Plant['rec_op_mode_initial'] == 2)
+        yrsb0              = False   # We don't have standby mode for either Nuclear or CSP
+        yrsu0              = (self.current_Plant['rec_op_mode_initial'] == 1)
+        y0                 = (self.current_Plant['pc_op_mode_initial'] == 1) 
+        ycsb0              = (self.current_Plant['pc_op_mode_initial'] == 2) 
+        ycsu0              = (self.current_Plant['pc_op_mode_initial'] == 0 or self.current_Plant['pc_op_mode_initial'] == 4) 
+        pc_persist, pc_off = self.get_pc_persist_and_off_logs( param_dict, plant, npts ) if plant is not None else [48,48]
+        Yu0                = pc_persist if y0       else 0.0
+        Yd0                = pc_off     if (not y0) else 0.0
+        t_rec              = self.current_Plant['rec_startup_time_remain_init']
+        t_rec_suinitremain = t_rec if not np.isnan( t_rec ) else 0.0
+        e_rec              = self.current_Plant['rec_startup_energy_remain_init']
+        e_rec_suinitremain = e_rec if not np.isnan( e_rec ) else 0.0
+        rec_accum_time     = max(0.0*u.hr, self.Drsu - t_rec_suinitremain*u.hr )
+        rec_accum_energy   = max(0.0*u.Wh, self.Er   - e_rec_suinitremain*u.Wh )
         # yrsd0             = False 
         # disp_rec_persist0 = 0 
         # drsu0             = disp_rec_persist0 if yrsu0 else 0.0   
@@ -238,6 +321,106 @@ class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
         param_dict['ycsu0']  = self.ycsu0       #y^{csu}_0: 1 if cycle is in starting up initially, 0 otherwise
         param_dict['Yu0']    = self.Yu0.to('hr')      #Y^u_0: duration that cycle has been generating electric power [h]
         param_dict['Yd0']    = self.Yd0.to('hr')      #Y^d_0: duration that cycle has not been generating power (i.e., shut down or in standby mode) [h]
-        param_dict['wdot_s_prev']    = 0*u.hr         #\dot{w}^{s,prev}: previous $\dot{w}^s$, or energy sold to grid [kWe]
+        # param_dict['wdot_s_prev']    = 0*u.hr         #\dot{w}^{s,prev}: previous $\dot{w}^s$, or energy sold to grid [kWe]
+        # ^ this should be gen[-1] from previous SSC run, 0 if first_run == True
         
+        # print('      y_r     - Receiver On?            ', self.yr0)
+        # print('      yrsb0   - Receiver Standby?       ', self.yrsb0)
+        # print('      yrsu0   - Receiver Startup?       ', self.yrsu0)
+        # print('      ursu_0  - Receiver Startup Energy ', self.ursu0.to('kWh') )
+        # print(' ')
+        # print('      y       - Cycle On?               ', self.y0)
+        # print('      ycsb0   - Cycle Standby?          ', self.ycsb0)
+        # print('      ycsu0   - Cycle Startup?          ', self.ycsu0)
+        # print('      ucsu_0  - Cycle Startup Energy    ', self.ucsu0.to('kWh') )
+        # print(' ')
         return param_dict
+    
+    
+    def get_pc_persist_and_off_logs( self, param_dict, plant, npts ):
+        """ Method to log the amount of time Power Cycle has been ON and OFF
+        
+        This method uses SSC output data from the previous run to log how long
+        the Power Cycle has been both ON and OFF. One of the two outputs will be
+        populated in this method, and there are a bunch of logic statements to
+        correctly log the respective length of time. Method adapted from LORE Team. 
+        
+        TODO: can we just input another dictionary instead of passing the full Plant?
+        
+        Inputs:
+            param_dict (dict)    : dictionary of Pyomo dispatch parameters
+            plant (obj)          : the full PySAM Plant object. 
+            npts (int)           : length of the SSC horizon
+        Outputs:
+            disp_pc_persist0 (int) : length of time PC has been ON in the past segment
+            disp_pc_off0 (int)     : length of time PC has been OFF in the past segment
+        """
+        
+        # cycle state before start of most recent set of simulation calls
+        previous_pc_state = plant.SystemControl.pc_op_mode_initial
+        # cycle state after most recent set of simulation calls
+        current_pc_state  = plant.Outputs.pc_op_mode_final
+        # times when cycle is not generating power
+        is_pc_not_on = np.array( plant.Outputs.P_cycle[0:npts-1] ) <= 1.e-3
+        
+        ###=== Persist Log ===### 
+        # if PC is ON
+        if current_pc_state == 1:
+            # array of times (PC was generating power == True)
+            is_pc_current = np.array( plant.Outputs.P_cycle[0:npts-1] ) > 1.e-3 
+            
+        # if PC is STANDBY
+        elif current_pc_state == 2:
+            # array of times (PC was generating power == False) + (PC getting input energy == True) + (PC using startup power == False)
+            is_pc_current = np.logical_and( \
+                                np.logical_and( \
+                                    np.array( plant.Outputs.P_cycle[0:npts-1] ) <= 1.e-3, np.array( plant.Outputs.q_pb[0:npts-1] ) >= 1.e-3 ), \
+                                    np.array( plant.Outputs.q_dot_pc_startup[0:npts-1] ) <= 1.e-3 )
+        
+        # if PC is STARTUP
+        elif current_pc_state == 0:
+            # array of times (PC using startup power == True)
+            is_pc_current = np.array( plant.Outputs.q_dot_pc_startup[0:npts-1] ) > 1.e-3
+        
+        # if PC is OFF
+        elif current_pc_state == 3:
+            # array of times (PC getting input energy + PC using startup power == False)
+            is_pc_current = (np.array( plant.Outputs.q_dot_pc_startup[0:npts-1] ) + np.array( plant.Outputs.q_pb[0:npts-1] ) ) <= 1.e-3
+        
+        ###=== Indexing ===###
+        ssc_time_step = 1   # 1 hour per time step
+        n = npts            # length of ssc horizon
+        
+        ###=== OFF Log ===###
+        # if PC is ON
+        if current_pc_state == 1: 
+            # returning 0 for OFF log
+            disp_pc_off0 = 0.0
+        
+        # if PC is OFF for full simulation
+        elif is_pc_not_on.min() == 1:  
+            # add all OFF positions in this current horizon to existing OFF log
+            disp_pc_off0 = param_dict['Yd0'].to('hr').m + n*ssc_time_step  
+        
+        # if PC is OFF for some portion of current horizon
+        else:
+            # find indeces of changed OFF state
+            i = np.where(np.abs(np.diff(is_pc_not_on)) == 1)[0][-1]
+            # use index to find length of times PC was oFF
+            disp_pc_off0 = int(n-1-i)*ssc_time_step          
+        
+        ###=== Final Indexing and Logging ===###
+        # Plant has not changed state over this simulation window:
+        if n == 1 or np.abs(np.diff(is_pc_current)).max() == 0:  
+            # adding to existing persist array from Dispatch Params dictionary if state continued
+            disp_pc_persist0 = n*ssc_time_step if previous_pc_state != current_pc_state else param_dict['Yu0'].to('hr').m + n*ssc_time_step
+        # Plant *has* changed state over this simulation window:
+        else:
+            # find indeces of changed state
+            i = np.where(np.abs(np.diff(is_pc_current)) == 1)[0][-1]
+            # use index to find length of times PC was ON
+            disp_pc_persist0 = int(n-1-i)*ssc_time_step
+        
+        return disp_pc_persist0, disp_pc_off0
+    
+

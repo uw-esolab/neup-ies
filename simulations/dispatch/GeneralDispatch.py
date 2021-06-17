@@ -12,7 +12,7 @@ Model authors:
 Pyomo code by Alex Zolan
 Modified by Gabriel Soto
 """
-#import pyomo
+import os
 import pyomo.environ as pe
 import numpy as np
 from util.FileMethods import FileMethods
@@ -22,8 +22,26 @@ if not hasattr(u_pyomo,'USD'):
     u_pyomo.load_definitions_from_strings(['USD = [currency]'])
 from pyomo.util.check_units import assert_units_consistent, assert_units_equivalent, check_units_equivalent
 
+
 class GeneralDispatch(object):
+    """
+    The GeneralDispatch class is meant to set up and run Dispatch
+    optimization as a mixed integer linear program problem using Pyomo.
+    It creates a ConcreteModel in Pyomo with Parameters, Variables,
+    Objectives, and Constraints. The ConcreteModel can then be solved. 
+    
+    This is the base/parent class and should not be run by itself.
+    
+    TODO: can we convert this to an abstract class in Python?
+    """
+    
     def __init__(self, params, unitRegistry):
+        """ Initializes the GeneralDispatch module
+        
+        Inputs:
+            params (dict)                : dictionary of Pyomo dispatch parameters
+            unitRegistry (pint.registry) : unique unit Pint unit registry
+        """
         
         self.model = pe.ConcreteModel()
         self.generate_params(params)
@@ -35,11 +53,11 @@ class GeneralDispatch(object):
     def generate_params(self,params):
         
         time_range = range(1,params["T"]+1)
-        # this is a lambda function to grab Pint Quantity magntitude if it has one
+        # this is a lambda function to grab Pint Quantity magntitude if it has one (gm = get magnitude)
         gm = lambda param_str: params[param_str].m if hasattr(params[param_str],'m') else params[param_str]
-        # creates dictionary if parameter happens to be a time-indexed parameter
+        # creates dictionary if parameter happens to be a time-indexed parameter (gd = get dictionary)
         gd = lambda param_str: {ind:val for (ind,val) in zip(time_range, gm(param_str))} if type(gm(param_str)) is np.ndarray else gm(param_str)
-        # shortening definition name for converting Pint units to pyomo units
+        # shortening definition name for converting Pint units to pyomo units (gu = get unit)
         gu = lambda param_str: SSCHelperMethods.convert_to_pyomo_unit(params, param_str)
         
         ### Sets and Indices ###
@@ -120,7 +138,8 @@ class GeneralDispatch(object):
         self.model.Yd0 = pe.Param(mutable=True, initialize=gd("Yd0"), units=gu("delta_rs"))  #Y^d_0: duration that cycle has not been generating power (i.e., shut down or in standby mode) [h]
         
         #------- Persistence Parameters ---------
-        self.model.wdot_s_prev  = pe.Param(self.model.T, mutable=True, initialize=gd("wdot_s_prev"), units=gu("wdot_s_prev")) #\dot{w}^{s,prev}: previous $\dot{w}^s$, or energy sold to grid [kWe]
+        # TODO: removing references to wdot_s_prev, they only exist as Constraints and should later be added to Objective somehow
+        # self.model.wdot_s_prev  = pe.Param(self.model.T, mutable=True, initialize=gd("wdot_s_prev"), units=gu("wdot_s_prev")) #\dot{w}^{s,prev}: previous $\dot{w}^s$, or energy sold to grid [kWe]
         # self.model.wdot_s_pen  = pe.Param(self.model.T, mutable=True, initialize=gd("wdot_s_pen"), units=gu("delta_rs"))    #\dot{w}_{s,pen}: previous $\dot{w}$ 
 
 
@@ -138,7 +157,7 @@ class GeneralDispatch(object):
         self.model.wdot_s = pe.Var(self.model.T, domain=pe.NonNegativeReals)	                     #\dot{w}^s: Energy sold to grid in time t [kWe]
         self.model.wdot_p = pe.Var(self.model.T, domain=pe.NonNegativeReals)	                     #\dot{w}^p: Energy purchased from the grid in time t [kWe]
         self.model.x = pe.Var(self.model.T, domain=pe.NonNegativeReals)                            #x: Cycle thermal power utilization at period $t$ [kWt]
-        self.model.xr = pe.Var(self.model.T, domain=pe.NonNegativeReals)	                         #x^r: Thermal power delivered by the receiver at period $t$ [kWt]
+        self.model.xr = pe.Var(self.model.T, domain=pe.NonNegativeReals)	                          #x^r: Thermal power delivered by the receiver at period $t$ [kWt]
         self.model.xrsu = pe.Var(self.model.T, domain=pe.NonNegativeReals)                         #x^{rsu}: Receiver start-up power consumption at period $t$ [kWt]
         
         #------- Binary Variables ---------
@@ -158,8 +177,9 @@ class GeneralDispatch(object):
         self.model.ycge = pe.Var(self.model.T, domain=pe.NonNegativeReals, bounds=(0,1))      #y^{cge}: 1 if cycle stops electric power generation at period $t$; 0 otherwise
         
         #------- Persistence Variables ---------
-        self.model.wdot_s_prev_delta_plus = pe.Var(self.model.T, domain=pe.NonNegativeReals)  #\dot{w}^{\Delta+}_{s,prev}: upper bound on energy sold [kWe]
-        self.model.wdot_s_prev_delta_minus = pe.Var(self.model.T, domain=pe.NonNegativeReals) #\dot{w}^{\Delta-}_{s,prev}: lower bound on energy sold [kWe]
+        # TODO: revisit wdot_s_prev references later
+        # self.model.wdot_s_prev_delta_plus = pe.Var(self.model.T, domain=pe.NonNegativeReals)  #\dot{w}^{\Delta+}_{s,prev}: upper bound on energy sold [kWe]
+        # self.model.wdot_s_prev_delta_minus = pe.Var(self.model.T, domain=pe.NonNegativeReals) #\dot{w}^{\Delta-}_{s,prev}: lower bound on energy sold [kWe]
         # self.model.ycoff = pe.Var(self.model.T, domain=pe.Binary)     #y^{c,off}: 1 if power cycle is off at period $t$; 0 otherwise
         
                 
@@ -184,6 +204,8 @@ class GeneralDispatch(object):
 
 
     def addPersistenceConstraints(self):
+        # TODO: wdot_s_prev should be a single float, there should be an {if t==1} statement for wdot_s_prev
+        #              and for all other t, we compare wdot_s[t] - wdot_s[t-1]
         def wdot_s_persist_pos_rule(model,t):
             return model.wdot_s_prev_delta_plus[t] >= model.wdot_s[t] - model.wdot_s_prev[t]
         def wdot_s_persist_neg_rule(model,t):
@@ -342,12 +364,12 @@ class GeneralDispatch(object):
         def cycle_ramp_rate_pos_rule(model, t):
             return (
                     model.wdot_delta_plus[t] - model.wdot_v_plus[t] <= model.W_delta_plus*model.Delta[t] 
-                    + ((model.etaamb[t]/model.eta_des)*model.W_u_plus[t] - model.W_delta_plus*model.Delta[t])
+                    + ((model.etaamb[t]/model.eta_des)*model.W_u_plus[t] - model.W_delta_plus*model.Delta[t])*model.ycgb[t]
             )
         def cycle_ramp_rate_neg_rule(model, t):
             return (
                     model.wdot_delta_minus[t] - model.wdot_v_minus[t] <= model.W_delta_minus*model.Delta[t] 
-                    + ((model.etaamb[t]/model.eta_des)*model.W_u_minus[t] - model.W_delta_minus*model.Delta[t])
+                    + ((model.etaamb[t]/model.eta_des)*model.W_u_minus[t] - model.W_delta_minus*model.Delta[t])*model.ycge[t]
             )
         def grid_max_rule(model, t):
             return model.wdot_s[t] <= model.Wdotnet[t]
@@ -437,7 +459,7 @@ class GeneralDispatch(object):
 
 
     def generate_constraints(self):
-        self.addPersistenceConstraints()
+        # self.addPersistenceConstraints() # TODO: revisit these constraints later when we know how to add a term to Objective
         self.addReceiverStartupConstraints()
         self.addReceiverSupplyAndDemandConstraints()
         self.addReceiverNodeLogicConstraints()
@@ -447,6 +469,7 @@ class GeneralDispatch(object):
         self.addMinUpAndDowntimeConstraints()
         self.addCycleLogicConstraints()
     
+    
     def eval_ineq(self, lb, expr, ub=None, strict=False, val=True):
         
         ineq = pe.inequality(lb, expr, ub, strict=strict)
@@ -455,10 +478,8 @@ class GeneralDispatch(object):
         else:
             return ineq
 
-        
-        
-            
-    def solve_model(self, mipgap=0.005):
+
+    def solve_model(self, mipgap=0.7):
         opt = pe.SolverFactory('cbc')
         opt.options["ratioGap"] = mipgap
         results = opt.solve(self.model, tee=False, keepfiles=False)
@@ -470,9 +491,24 @@ class GeneralDispatch(object):
 # =============================================================================
 
 class GeneralDispatchParamWrap(object):
+    """
+    The GeneralDispatchParamWrap class is meant to be the staging area for the 
+    creation of Parameters ONLY. It communicates with the NE2 modules, receiving
+    SSC and PySAM input dictionaries to calculate both static parameters used 
+    for every simulation segment AND initial conditions that can be updated.
+    """
     
     def __init__(self, unit_registry, SSC_dict, PySAM_dict, pyomo_horizon, 
                        dispatch_time_step):
+        """ Initializes the GeneralDispatchParamWrap module
+        
+        Inputs:
+            unitRegistry (pint.registry)   : unique unit Pint unit registry
+            SSC_dict (dict)                : dictionary of SSC inputs needed to run modules
+            PySAM_dict (dict)              : dictionary of PySAM inputs + file names
+            pyomo_horizon (int Quant)      : length of Pyomo simulation segment (hours)
+            dispatch_time_step (int Quant) : length of each Pyomo time step (hours)
+        """
         
         self.SSC_dict           = SSC_dict
         self.PySAM_dict         = PySAM_dict
@@ -482,24 +518,41 @@ class GeneralDispatchParamWrap(object):
         # setting a standard unit registry
         self.u = unit_registry 
         
+        # retrieving the dry bulb temperature values in the SAM directory
+        parent_dir = FileMethods.parent_dir
+        self.solar_resource_file = os.path.join(parent_dir, self.PySAM_dict['solar_resource_rel_parent']) 
+        self.Tdry = FileMethods.read_solar_resource_file(self.solar_resource_file, self.u) 
+        
         self.set_design()
         
 
     ## Setters
     def set_design(self):
+        """ Method to calculate and save design point values of Plant operation
+        
+        This method extracts values and calculates for design point parameters 
+        of our Plant (e.g., nuclear thermal power output, power cycle efficiency,
+        inlet and outlet temperatures, etc.). 
+        """
         
         u = self.u
+        
+        # alpha init
+        self.alpha = 1.0
+        
         # design parameters
         self.q_rec_design = self.SSC_dict['q_dot_nuclear_des'] * u.MW      # receiver design thermal power
         self.p_pb_design  = self.SSC_dict['P_ref'] * u.MW                  # power block design electrical power
         self.eta_design   = self.SSC_dict['design_eff']                    # power block design efficiency
         self.q_pb_design  = (self.p_pb_design / self.eta_design).to('MW')  # power block design thermal rating
         
-        # temperature and specific heat values at design point
+        # temperature values at design point
         self.T_htf_hot  = (self.SSC_dict['T_htf_hot_des']*u.celsius).to('degK')
         self.T_htf_cold = (self.SSC_dict['T_htf_cold_des']*u.celsius).to('degK')
         T_htf  = 0.5*(self.T_htf_hot + self.T_htf_cold)
-        cp_des = self.get_cp_htf(T_htf)
+        
+        # specific heat values at design point
+        cp_des = SSCHelperMethods.get_cp_htf(self.u, T_htf, self.SSC_dict['rec_htf'] )
         cp_des = cp_des.to('J/g/kelvin')       
         
         # mass flow rate
@@ -514,8 +567,20 @@ class GeneralDispatchParamWrap(object):
         
         
     def set_time_indexed_parameters(self, param_dict):
+        """ Method to set time-indexed parameters for Dispatch optimization
+        
+        This method calculates time parameters for Pyomo Dispatch optimization.
+        This includes time-step parameters, which by default are set to 1 hr
+        so shouldn't cause problems.
+        
+        Inputs:
+            param_dict (dict) : dictionary of Pyomo dispatch parameters
+        Outputs:
+            param_dict (dict) : updated dictionary of Pyomo dispatch parameters
+        """
         
         u = self.u
+        
         self.T       = int( self.pyomo_horizon.to('hr').magnitude )
         self.Delta   = np.array([self.dispatch_time_step.to('hr').magnitude]*self.T)*u.hr
         self.Delta_e = np.cumsum(self.Delta)
@@ -529,14 +594,27 @@ class GeneralDispatchParamWrap(object):
 
     
     def set_power_cycle_parameters(self, param_dict, ud_array):
+        """ Method to set parameters specific to Power Cycle for Dispatch optimization
+        
+        This method calculates some steady-state parameters specific to the 
+        power cycle (PC) for use in Dispatch optimization. These parameters 
+        generally have to do with thermal ratings, and upper/lower bounds
+        on capacities. 
+        
+        Inputs:
+            param_dict (dict)       : dictionary of Pyomo dispatch parameters
+            ud_array (list of list) : table of user defined data as nested lists
+        Outputs:
+            param_dict (dict) : updated dictionary of Pyomo dispatch parameters
+        """
         
         u = self.u
         # Magic numbers
-        Wb_frac = 0.05             # TODO: get a better estimate- cycle standby parasitic load as frac of cycle capacity
-        pc_rampup    = 0.6 / u.hr  # TODO: self.SSC_dict['disp_pc_rampup']  in SSC-> Cycle max ramp up (fraction of capacity per minute)
-        pc_rampdown  = 12. / u.hr  # TODO: self.SSC_dict['disp_pc_rampdown']   
-        pc_rampup_vl   = 1. / u.hr # TODO: self.SSC_dict['disp_pc_rampup_vl'] in SSC-> Cycle ramp up violation limit (fraction of capacity per minute)
-        pc_rampdown_vl = 1. / u.hr # TODO: self.SSC_dict['disp_pc_rampdown_vl'] 
+        Wb_frac = self.PySAM_dict['Wb_frac']             # TODO: get a better estimate- cycle standby parasitic load as frac of cycle capacity
+        pc_rampup      = self.PySAM_dict['pc_rampup']      / u.min  # Cycle max ramp up (fraction of capacity per minute)
+        pc_rampdown    = self.PySAM_dict['pc_rampdown']    / u.min    
+        pc_rampup_vl   = self.PySAM_dict['pc_rampup_vl']   / u.hr   # Cycle ramp up violation limit (fraction of capacity per minute)
+        pc_rampdown_vl = self.PySAM_dict['pc_rampdown_vl'] / u.hr 
         
         # fixed parameter calculations
         self.Ec    = self.SSC_dict['startup_frac'] * self.q_pb_design * self.SSC_dict['startup_time']*u.hr      # TODO: this should be an energy, multiplying by min startup time for now
@@ -545,16 +623,22 @@ class GeneralDispatchParamWrap(object):
         self.Ql    = self.SSC_dict['cycle_cutoff_frac'] * self.q_pb_design
         self.Qu    = self.SSC_dict['cycle_max_frac'] * self.q_pb_design
         self.Wb    = Wb_frac* self.p_pb_design
-        etap, Wdotl, Wdotu = self.get_linearized_ud_params( ud_array )
+        
+        #linearized eta calculations
+        etap, b = SSCHelperMethods.get_linearized_ud_params( ud_array, self.q_pb_design, self.SSC_dict )
+        Wdotl = b + self.Ql*etap
+        Wdotu = b + self.Qu*etap
         self.etap  = etap  
         self.Wdotl = Wdotl.to('kW')
         self.Wdotu = Wdotu.to('kW')
+        
+        # fixed parameter calculations (ctd)
         self.W_delta_plus  = pc_rampup * self.Wdotu 
         self.W_delta_minus = pc_rampdown * self.Wdotu
         self.W_v_plus      = pc_rampup_vl * self.Wdotu
         self.W_v_minus     = pc_rampdown_vl * self.Wdotu
-        self.Yu    = 3*u.hr  # TODO: get a better estimate - minimum required power cycle uptime 
-        self.Yd    = 1*u.hr  # TODO: get a better estimate - minimum required power cycle downtime 
+        self.Yu    = self.PySAM_dict['Yu']*u.hr  # TODO: get a better estimate - minimum required power cycle uptime 
+        self.Yd    = self.PySAM_dict['Yd']*u.hr  # TODO: get a better estimate - minimum required power cycle downtime 
         
         ### Power Cycle Parameters ###
         param_dict['Ec']      = self.Ec.to('kWh')  #E^c: Required energy expended to start cycle [kWt$\cdot$h]
@@ -578,21 +662,30 @@ class GeneralDispatchParamWrap(object):
 
     
     def set_fixed_cost_parameters(self, param_dict):
+        """ Method to set fixed costs of the Plant
         
+        This method calculates some fixed costs for the Plant operations, startup,
+        standby, etc. 
+        
+        Inputs:
+            param_dict (dict) : dictionary of Pyomo dispatch parameters
+        Outputs:
+            param_dict (dict) : updated dictionary of Pyomo dispatch parameters
+        """
         u = self.u
         
         # TODO: for now, scaling everything from LORE files
-        old_P_ref = 120 * u.MW
+        old_P_ref = self.PySAM_dict['P_ref_baseline'] * u.MW
         P_ratio   = (self.p_pb_design / old_P_ref ).to('')
         
         # TODO: old values from LORE files
-        alpha     = 1.0 * u.USD
-        C_pc      = 0.002 * u.USD/u.kWh        
-        C_csu     = 6250 * u.USD
-        C_chsp    = 6250/5. * u.USD
-        C_delta_w = 0.0 * u.USD/u.kW
-        C_v_w     = 0.4 * u.USD/u.kW
-        C_csb     = 0.0 * u.USD/u.kWh
+        alpha     = self.alpha * u.USD
+        C_pc      = self.PySAM_dict['pc_op_cost'] * u.USD/u.kWh        
+        C_csu     = self.PySAM_dict['pc_cold_su'] * u.USD
+        C_chsp    = self.PySAM_dict['pc_hot_su'] * u.USD
+        C_delta_w = self.PySAM_dict['pc_delta_w'] * u.USD/u.kW
+        C_v_w     = self.PySAM_dict['pc_delta_w_v'] * u.USD/u.kW
+        C_csb     = self.PySAM_dict['pc_sb'] * u.USD/u.kWh
 
         ### Cost Parameters ###
         param_dict['alpha']       = alpha.to('USD')                    #\alpha: Conversion factor between unitless and monetary values [\$]
@@ -604,96 +697,103 @@ class GeneralDispatchParamWrap(object):
         param_dict['Ccsb']        = P_ratio * C_csb.to('USD/kWh')      #C^{csb}: Operating cost of power cycle standby operation [\$/kWt$\cdot$h]
         
         return param_dict
+
+
+# =============================================================================
+# Dispatch Outputs
+# =============================================================================
+  
+class GeneralDispatchOutputs(object):
+    """
+    The GeneralDispatchOutputs class is meant to handle outputs from a given,
+    solved Pyomo Dispatch model. It returns desired outputs in appropriate formats
+    and syntaxes for PostProcessing and linking simulation segments between Pyomo
+    and SSC calls. 
+    """
     
-
-    ## Getters, modified from LORE files
-    def get_cp_htf(self, T):
+    def get_dispatch_targets_from_Pyomo(dispatch_model, ssc_horizon, N_full, run_loop=False):
+        """ Method to set fixed costs of the Plant
         
-        u = self.u
-        # HTF: 17 = Salt (60% NaNO3, 40% KNO3)
-        if self.SSC_dict['rec_htf'] != 17:
-            print ('HTF %d not recognized'%self.SSC_dict['rec_htf'])
-            return 0.0
+        This method parses through the solved Pyomo model for Dispatch optimization
+        and extracts results that are used as Dispatch Targets in the *SAME* simulation
+        segment but in SSC rather than Pyomo. If we're not running a loop, we can
+        still update SSC only I guess this happens once for whatever Pyomo horizon
+        is defined (this might not be a feature we keep long-term, perhaps only for
+                    debugging). 
         
-        T = T.to('kelvin')
+        Inputs:
+            dispatch_model (Pyomo model) : solved Pyomo Dispatch model (ConcreteModel)
+            ssc_horizon (float Quant)    : length of time of SSC horizon (in hours)
+            N_full (int)                 : length of full simulation time (in hours, no Quant)
+            run_loop (bool)              : flag to determine if simulation is segmented
+        Outputs:
+            disp_targs (dict) : dictionary of dispatch target arrays for use in SSC 
+        """
         
-        a = -1.0e-10*u.J/u.g/u.kelvin**4
-        b = 2.0e-7*u.J/u.g/u.kelvin**3
-        c = 5.0e-6*u.J/u.g/u.kelvin**2
-        d = 1.4387*u.J/u.g/u.kelvin
+        dm = dispatch_model
         
-        return (a*T**3 + b*T**2 + c*T + d).to('J/g/kelvin')  # J/kg/K
-
-
-    def get_linearized_ud_params(self, ud_array):
+        # range of pyomo and SSC horizon times
+        t_pyomo = dm.model.T
+        f_ind   = int( ssc_horizon.to('hr').m ) # index in hours of final horizon (e.g. 24)
+        t_horizon = range(f_ind)
         
-        # grabbing a dictionary of useful user-defined data for power cycle
-        ud_dict = SSCHelperMethods.interpret_user_defined_cycle_data( ud_array )
+        # if we're not running a loop, define a list of 0s to pad the output so it matches full array size
+        if not run_loop:
+            N_leftover = N_full - f_ind
+            empty_array = [0]*N_leftover
         
-        # getting relevant eta points
-        eta_adj_pts = [ud_array[p][3]/ud_array[p][4] for p in range(len(ud_array)) ]
+        #----Receiver Binary Outputs----
+        yr   = np.array([pe.value(dm.model.yr[t])   for t in t_pyomo])
+        yrsu = np.array([pe.value(dm.model.yrsu[t]) for t in t_pyomo])
+        yrsb = np.array([pe.value(dm.model.yrsb[t]) for t in t_pyomo])
         
-        xpts = ud_dict['mpts']
-        step = xpts[1] - xpts[0]
-        
-        # Interpolate for cycle performance at specified min/max load points
-        fpts = [self.SSC_dict['cycle_cutoff_frac'], self.SSC_dict['cycle_max_frac']]
-        q, eta = [ [] for v in range(2)]
-        for j in range(2):
-            p = max(0, min(int((fpts[j] - xpts[0]) / step), len(xpts)-2) )  # Find first point in user-defined array of load fractions for interpolation
-            i = 3*ud_dict['nT'] + ud_dict['nm'] + p    # Index of point in full list of udpc points (at design point ambient T)
-            eta_adj = eta_adj_pts[i] + (eta_adj_pts[i+1] - eta_adj_pts[i])/step * (fpts[j] - xpts[p])
-            eta.append(eta_adj * self.SSC_dict['design_eff'])
-            q.append(fpts[j]*self.q_pb_design)
-        
-        # calculating eta_P as linear slope using max and min power/thermal output/input
-        etap = (q[1]*eta[1]-q[0]*eta[0])/(q[1]-q[0])
-        
-        # intercept of linearized eta_P
-        b = q[1]*(eta[1] - etap)
-        
-        # using linearized parameters and combining with max and min thermal power input
-        Wdotl = b + self.Ql*etap
-        Wdotu = b + self.Qu*etap
-        
-        return etap, Wdotl, Wdotu
-
-
-    def get_ambient_T_corrections_from_udpc_inputs(self, Tamb, ud_array):
-        
-        
-        u = self.u 
-        
-        # grabbing a dictionary of useful user-defined data for power cycle
-        ud_dict = SSCHelperMethods.interpret_user_defined_cycle_data( ud_array )
-        
-        n = len(Tamb)  # Tamb = set of ambient temperature points for each dispatch time step
-        
-        Tambpts = np.array(ud_dict['Tambpts'])*u.degC
-        i0 = 3*ud_dict['nT']+3*ud_dict['nm']+ud_dict['nTamb']  # first index in udpc data corresponding to performance at design point HTF T, and design point mass flow
-        npts = ud_dict['nTamb']
-        etapts = [ ud_array[j][3]/ud_array[j][4] for j in range(i0, i0+npts)]
-        wpts = [ ud_array[j][5] for j in range(i0, i0+npts)]
-        
-        etamult  = np.ones(n)
-        wmult = np.ones(n) 
-        Tstep = Tambpts[1] - Tambpts[0]
-        for j in range(n):
-            i = max(0, min( int((Tamb[j] - Tambpts[0]) / Tstep), npts-2) )
-            r = (Tamb[j] - Tambpts[i]) / Tstep
-            etamult[j] = etapts[i] + (etapts[i+1] - etapts[i])*r
-            wmult[j] = wpts[i] + (wpts[i+1] - wpts[i])*r
-
-        return etamult, wmult
-        
+        #----Cycle Binary Outputs----
+        y    = np.array([pe.value(dm.model.y[t])    for t in t_pyomo])
+        ycsu = np.array([pe.value(dm.model.ycsu[t]) for t in t_pyomo])
+        ycsb = np.array([pe.value(dm.model.ycsb[t]) for t in t_pyomo])
     
+        #----Cycle Thermal Power Utilization----
+        x = np.array([pe.value(dm.model.x[t])   for t in t_pyomo])/1000. # from kWt -> MWt
+        
+        #----Thermal Capacity for Cycle Startup and Operation----
+        Qc = np.array([pe.value(dm.model.Qc[t]) for t in t_pyomo])/1000. # from kWt -> MWt
+        Qu = dm.model.Qu.value/1000. # from kWt -> MWt
     
-if __name__ == "__main__": 
-    import dispatch_params
-    # import dispatch_outputs
-    params = dispatch_params.buildParamsFromAMPLFile("./input_files/data_energy.dat")
-    rt = GeneralDispatch(params)
-    rt_results = rt.solve_model()
-    # outputs = dispatch_outputs.RTDispatchOutputs(rt.model)
-    # outputs.print_outputs()
+        # dispatch target -- receiver startup/standby binaries
+        is_rec_su_allowed_in = [1 if (yr[t] + yrsu[t] + yrsb[t]) > 0.001 else 0 for t in t_horizon]  # Receiver on, startup, or standby
+        is_rec_sb_allowed_in = [1 if yrsb[t] > 0.001                     else 0 for t in t_horizon]  # Receiver standby
+        
+        # dispatch target -- cycle startup/standby binaries
+        is_pc_su_allowed_in  = [1 if (y[t] + ycsu[t]) > 0.001 else 0 for t in t_horizon]  # Cycle on or startup
+        is_pc_sb_allowed_in  = [1 if ycsb[t] > 0.001          else 0 for t in t_horizon]  # Cycle standby
+    
+        # dispatch target -- cycle thermal inputs and capacities
+        q_pc_target_su_in    = [Qc[t] if ycsu[t] > 0.001 else 0.0 for t in t_horizon]
+        q_pc_target_on_in    = [x[t]                              for t in t_horizon]
+        q_pc_max_in          = [Qu                                for t in t_horizon]
+        
+        # empty dictionary for output
+        disp_targs = {}
+        
+        # if we're running full simulation in steps, save SSC horizon portion of Pyomo horizon results
+        if run_loop:
+            disp_targs['is_rec_su_allowed_in'] = is_rec_su_allowed_in 
+            disp_targs['is_rec_sb_allowed_in'] = is_rec_sb_allowed_in
+            disp_targs['is_pc_su_allowed_in']  = is_pc_su_allowed_in 
+            disp_targs['is_pc_sb_allowed_in']  = is_pc_sb_allowed_in  
+            disp_targs['q_pc_target_su_in']    = q_pc_target_su_in  
+            disp_targs['q_pc_target_on_in']    = q_pc_target_on_in
+            disp_targs['q_pc_max_in']          = q_pc_max_in
+        # if we're running full simulation all at once, need arrays to match size of full sim
+        # TODO: is this a feature we want in the long term? Or just for debugging the first Pyomo call?
+        else:
+            disp_targs['is_rec_su_allowed_in'] = np.hstack( [is_rec_su_allowed_in , empty_array] ).tolist()
+            disp_targs['is_rec_sb_allowed_in'] = np.hstack( [is_rec_sb_allowed_in , empty_array] ).tolist()
+            disp_targs['is_pc_su_allowed_in']  = np.hstack( [is_pc_su_allowed_in  , empty_array] ).tolist()
+            disp_targs['is_pc_sb_allowed_in']  = np.hstack( [is_pc_sb_allowed_in  , empty_array] ).tolist()
+            disp_targs['q_pc_target_su_in']    = np.hstack( [q_pc_target_su_in    , empty_array] ).tolist()
+            disp_targs['q_pc_target_on_in']    = np.hstack( [q_pc_target_on_in    , empty_array] ).tolist()
+            disp_targs['q_pc_max_in']          = np.hstack( [q_pc_max_in          , empty_array] ).tolist()
+            
+        return disp_targs
     
