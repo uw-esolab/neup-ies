@@ -11,6 +11,12 @@ import pint
 from pyomo.environ import units
 
 class SSCHelperMethods(object):
+    """
+    The SSCHelperMethods class is a util class for any auxilliary methods that 
+    help us link up better with SSC or create better inputs for SSC. Typically
+    for methods that can be used across all modules and dispatchers, so better
+    to keep in one designated area. 
+    """
     
     def define_unit_registry():
         """ Method to define unique unit registry from Pint

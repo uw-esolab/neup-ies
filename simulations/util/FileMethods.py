@@ -9,6 +9,10 @@ Created on Fri Apr  2 09:23:58 2021
 import pandas, os, json
 
 class FileMethods(object):
+    """
+    The FileMethods class is a util class used generally to read and write data
+    from and to files. This can be csv, text, maybe LaTeX files in the future. 
+    """
     
     #defining directory where this particular file is located and other useful directories
     util_dir     = os.path.dirname(os.path.realpath(__file__))
@@ -25,6 +29,7 @@ class FileMethods(object):
         Outputs:
             data_array (list) : data in either list (SSC_ARRAY) or nested list (SSC_MATRIX) form
         """
+        
         dataframe = pandas.read_csv(filepath,header=None) #important: No Header assumed
         
         #recasting dataframe to a 1D numpy array if there is only 1 columnn in csv (SSC ARRAY)
@@ -38,14 +43,25 @@ class FileMethods(object):
 
 
     def read_solar_resource_file(filepath, unit_registry):
+        """ Method to read csv file and return data array
+        
+        Inputs:
+            filepath (str)               : full path to file
+            unitRegistry (pint.registry) : unique unit Pint unit registry
+        Outputs:
+            t_dry (float Quant) : dry bulb temperature (in deg K)
+        """
         
         # setting a standard unit registry
         u = unit_registry 
         
+        # import csv dataframe
         dataframe = pandas.read_csv(filepath,header=2)
         
+        # extract Temperature from dataframe
         data = dataframe['Temperature']
         
+        # convert to proper data structure with units in deg C
         t_dry = data.to_numpy() * u.degC
         
         return t_dry.to('kelvin')
@@ -61,6 +77,7 @@ class FileMethods(object):
             ssc_dict (dict) : dictionary of SSC inputs needed to run modules
             out_dict (dict) : dictionary of PySAM output keywords for extraction
         """
+        
         #defining filepath for JSON script (FUTURE: add non-default functionality to input whole path)
         samsim_dir = FileMethods.samsim_dir
         json_filepath = os.path.join( samsim_dir, "json", json_name)
@@ -76,6 +93,7 @@ class FileMethods(object):
         out_dict   = D['PySAM_outputs']
         
         return pysam_dict, ssc_dict, out_dict
+
 
     def write_csv(data_list, columns, filename):
         """ Method to write csv file 

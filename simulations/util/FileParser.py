@@ -11,6 +11,12 @@ from util.FileMethods import FileMethods
 import pyomo as pyo
 
 class FileParser(object):
+    """
+    The FileParser class is a util class used generally to manipulate text data
+    in files. Some main features is the ability to search existing Python class
+    files for particular strings. Currently using regex to search for complex
+    strings, don't yell at me please.
+    """
     
     # Regex rules for parsing through dispatch files (e.g. GeneralDispatch, NuclearDispatch)
     param_latex_regex  = r'\s#([\w+\d+\{\}\^\\\,-]+):\s'           # Matches parameter names in LaTeX form
@@ -278,6 +284,8 @@ class FileParser(object):
         Excel sheet called "Raw Data" in an xlsx file specified by the user input.
         Output file will be written in the simulations/outputs folder. Excel sheet 
         will have three columns: Parameter name, its value, and a txt description.
+        
+        TODO: perhaps this method belongs in FileMethods?
         
         Inputs:
             model (PyomoModel)  : Pyomo model after execution
