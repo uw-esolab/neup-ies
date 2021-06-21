@@ -690,9 +690,9 @@ class GeneralDispatchOutputs(object):
             empty_array = [0]*N_leftover
         
         #----Receiver Binary Outputs----
-        yr   = np.array([pe.value(dm.model.yr[t])   for t in t_pyomo])
-        yrsu = np.array([pe.value(dm.model.yrsu[t]) for t in t_pyomo])
-        yrsb = np.array([pe.value(dm.model.yrsb[t]) for t in t_pyomo])
+        yn   = np.array([pe.value(dm.model.yn[t])   for t in t_pyomo])
+        ynsu = np.array([pe.value(dm.model.ynsu[t]) for t in t_pyomo])
+        ynsb = np.array([pe.value(dm.model.ynsb[t]) for t in t_pyomo])
         
         #----Cycle Binary Outputs----
         y    = np.array([pe.value(dm.model.y[t])    for t in t_pyomo])
@@ -706,9 +706,9 @@ class GeneralDispatchOutputs(object):
         Qc = np.array([pe.value(dm.model.Qc[t]) for t in t_pyomo])/1000. # from kWt -> MWt
         Qu = dm.model.Qu.value/1000. # from kWt -> MWt
     
-        # dispatch target -- receiver startup/standby binaries
-        is_rec_su_allowed_in = [1 if (yr[t] + yrsu[t] + yrsb[t]) > 0.001 else 0 for t in t_horizon]  # Receiver on, startup, or standby
-        is_rec_sb_allowed_in = [1 if yrsb[t] > 0.001                     else 0 for t in t_horizon]  # Receiver standby
+        # dispatch target -- nuclear startup/standby binaries
+        is_nuc_su_allowed_in = [1 if (yn[t] + ynsu[t] + ynsb[t]) > 0.001 else 0 for t in t_horizon]  # Nuclear on, startup, or standby
+        is_nuc_sb_allowed_in = [1 if ynsb[t] > 0.001                     else 0 for t in t_horizon]  # Nuclear standby
         
         # dispatch target -- cycle startup/standby binaries
         is_pc_su_allowed_in  = [1 if (y[t] + ycsu[t]) > 0.001 else 0 for t in t_horizon]  # Cycle on or startup
@@ -724,8 +724,8 @@ class GeneralDispatchOutputs(object):
         
         # if we're running full simulation in steps, save SSC horizon portion of Pyomo horizon results
         if run_loop:
-            disp_targs['is_rec_su_allowed_in'] = is_rec_su_allowed_in 
-            disp_targs['is_rec_sb_allowed_in'] = is_rec_sb_allowed_in
+            disp_targs['is_rec_su_allowed_in'] = is_nuc_su_allowed_in 
+            disp_targs['is_rec_sb_allowed_in'] = is_nuc_sb_allowed_in
             disp_targs['is_pc_su_allowed_in']  = is_pc_su_allowed_in 
             disp_targs['is_pc_sb_allowed_in']  = is_pc_sb_allowed_in  
             disp_targs['q_pc_target_su_in']    = q_pc_target_su_in  
@@ -734,8 +734,8 @@ class GeneralDispatchOutputs(object):
         # if we're running full simulation all at once, need arrays to match size of full sim
         # TODO: is this a feature we want in the long term? Or just for debugging the first Pyomo call?
         else:
-            disp_targs['is_rec_su_allowed_in'] = np.hstack( [is_rec_su_allowed_in , empty_array] ).tolist()
-            disp_targs['is_rec_sb_allowed_in'] = np.hstack( [is_rec_sb_allowed_in , empty_array] ).tolist()
+            disp_targs['is_rec_su_allowed_in'] = np.hstack( [is_nuc_su_allowed_in , empty_array] ).tolist()
+            disp_targs['is_rec_sb_allowed_in'] = np.hstack( [is_nuc_sb_allowed_in , empty_array] ).tolist()
             disp_targs['is_pc_su_allowed_in']  = np.hstack( [is_pc_su_allowed_in  , empty_array] ).tolist()
             disp_targs['is_pc_sb_allowed_in']  = np.hstack( [is_pc_sb_allowed_in  , empty_array] ).tolist()
             disp_targs['q_pc_target_su_in']    = np.hstack( [q_pc_target_su_in    , empty_array] ).tolist()

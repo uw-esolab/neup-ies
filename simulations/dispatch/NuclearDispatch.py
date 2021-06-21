@@ -72,10 +72,10 @@ class NuclearDispatch(GeneralDispatch):
         
         ### Initial Condition Parameters ###
         self.model.s0 = pe.Param(mutable=True, initialize=gd("s0"), units=gu("s0"))          #s_0: Initial TES reserve quantity  [kWt$\cdot$h]
-        self.model.ursu0 = pe.Param(mutable=True, initialize=gd("ursu0"), units=gu("ursu0"))  #u^{rsu}_0: Initial receiver start-up energy inventory [kWt$\cdot$h]
-        self.model.yr0 = pe.Param(mutable=True, initialize=gd("yr0"), units=gu("yr0"))        #y^r_0: 1 if receiver is generating ``usable'' thermal power initially, 0 otherwise  [az] this is new.
-        self.model.yrsb0 = pe.Param(mutable=True, initialize=gd("yrsb0"), units=gu("yrsb0"))  #y^{rsb}_0: 1 if receiver is in standby mode initially, 0 otherwise [az] this is new.
-        self.model.yrsu0 = pe.Param(mutable=True, initialize=gd("yrsu0"), units=gu("yrsu0"))  #y^{rsu}_0: 1 if receiver is in starting up initially, 0 otherwise [az] this is new.
+        self.model.unsu0 = pe.Param(mutable=True, initialize=gd("unsu0"), units=gu("unsu0"))  #u^{nsu}_0: Initial nuclear start-up energy inventory [kWt$\cdot$h]
+        self.model.yn0 = pe.Param(mutable=True, initialize=gd("yn0"), units=gu("yn0"))        #y^n_0: 1 if nuclear is generating ``usable'' thermal power initially, 0 otherwise  [az] this is new.
+        self.model.ynsb0 = pe.Param(mutable=True, initialize=gd("ynsb0"), units=gu("ynsb0"))  #y^{nsb}_0: 1 if nuclear is in standby mode initially, 0 otherwise [az] this is new.
+        self.model.ynsu0 = pe.Param(mutable=True, initialize=gd("ynsu0"), units=gu("ynsu0"))  #y^{nsu}_0: 1 if nuclear is in starting up initially, 0 otherwise [az] this is new.
         
 
     def generate_variables(self):
@@ -85,17 +85,17 @@ class NuclearDispatch(GeneralDispatch):
         
         ### Decision Variables ###
         #------- Variables ---------
-        self.model.ursu = pe.Var(self.model.T, domain=pe.NonNegativeReals)                             #u^{rsu}: Receiver start-up energy inventory at period $t$ [kWt$\cdot$h]
-        self.model.xr = pe.Var(self.model.T, domain=pe.NonNegativeReals)	                           #x^r: Thermal power delivered by the receiver at period $t$ [kWt]
-        self.model.xrsu = pe.Var(self.model.T, domain=pe.NonNegativeReals)                             #x^{rsu}: Receiver start-up power consumption at period $t$ [kWt]
+        self.model.unsu = pe.Var(self.model.T, domain=pe.NonNegativeReals)     #u^{nsu}: Nuclear start-up energy inventory at period $t$ [kWt$\cdot$h]
+        self.model.xn = pe.Var(self.model.T, domain=pe.NonNegativeReals)	   #x^n: Thermal power delivered by the nuclear at period $t$ [kWt]
+        self.model.xnsu = pe.Var(self.model.T, domain=pe.NonNegativeReals)     #x^{nsu}: Nuclear start-up power consumption at period $t$ [kWt]
          
         #------- Binary Variables ---------
-        self.model.yr = pe.Var(self.model.T, domain=pe.Binary)        #y^r: 1 if receiver is generating ``usable'' thermal power at period $t$; 0 otherwise
-        self.model.yrhsp = pe.Var(self.model.T, domain=pe.Binary)	    #y^{rhsp}: 1 if receiver hot start-up penalty is incurred at period $t$ (from standby); 0 otherwise
-        self.model.yrsb = pe.Var(self.model.T, domain=pe.Binary)	    #y^{rsb}: 1 if receiver is in standby mode at period $t$; 0 otherwise
-        self.model.yrsd = pe.Var(self.model.T, domain=pe.Binary)	    #y^{rsd}: 1 if receiver is shut down at period $t$; 0 otherwise
-        self.model.yrsu = pe.Var(self.model.T, domain=pe.Binary)      #y^{rsu}: 1 if receiver is starting up at period $t$; 0 otherwise
-        self.model.yrsup = pe.Var(self.model.T, domain=pe.Binary)     #y^{rsup}: 1 if receiver cold start-up penalty is incurred at period $t$ (from off); 0 otherwise
+        self.model.yn = pe.Var(self.model.T, domain=pe.Binary)        #y^r: 1 if nuclear is generating ``usable'' thermal power at period $t$; 0 otherwise
+        self.model.ynhsp = pe.Var(self.model.T, domain=pe.Binary)	  #y^{nhsp}: 1 if nuclear hot start-up penalty is incurred at period $t$ (from standby); 0 otherwise
+        self.model.ynsb = pe.Var(self.model.T, domain=pe.Binary)	  #y^{nsb}: 1 if nuclear is in standby mode at period $t$; 0 otherwise
+        self.model.ynsd = pe.Var(self.model.T, domain=pe.Binary)	  #y^{nsd}: 1 if nuclear is shut down at period $t$; 0 otherwise
+        self.model.ynsu = pe.Var(self.model.T, domain=pe.Binary)      #y^{nsu}: 1 if nuclear is starting up at period $t$; 0 otherwise
+        self.model.ynsup = pe.Var(self.model.T, domain=pe.Binary)     #y^{nsup}: 1 if nuclear cold start-up penalty is incurred at period $t$ (from off); 0 otherwise
 
 
     def add_objective(self):
@@ -109,9 +109,9 @@ class NuclearDispatch(GeneralDispatch):
                     #obj_cost_cycle_ramping
                     - (model.C_delta_w*(model.wdot_delta_plus[t]+model.wdot_delta_minus[t])+model.C_v_w*(model.wdot_v_plus[t] + model.wdot_v_minus[t]))
                     #obj_cost_rec_su_hs_sd
-                    - (model.Cnuc*model.yrsup[t] + model.Cnhsp*model.yrhsp[t] + model.alpha*model.yrsd[t])
+                    - (model.Cnuc*model.ynsup[t] + model.Cnhsp*model.ynhsp[t] + model.alpha*model.ynsd[t])
                     #obj_cost_ops
-                    - model.Delta[t]*(model.Cpc*model.wdot[t] + model.Ccsb*model.Qb*model.ycsb[t] + model.Cnuc*model.xr[t] )
+                    - model.Delta[t]*(model.Cpc*model.wdot[t] + model.Ccsb*model.Qb*model.ycsb[t] + model.Cnuc*model.xn[t] )
                     for t in model.T) 
                     )
         
@@ -121,22 +121,22 @@ class NuclearDispatch(GeneralDispatch):
     def addReceiverStartupConstraints(self):
         def rec_inventory_rule(model,t):
             if t == 1:
-                return model.ursu[t] <= model.ursu0 + model.Delta[t]*model.xrsu[t]
-            return model.ursu[t] <= model.ursu[t-1] + model.Delta[t]*model.xrsu[t]
+                return model.unsu[t] <= model.unsu0 + model.Delta[t]*model.xnsu[t]
+            return model.unsu[t] <= model.unsu[t-1] + model.Delta[t]*model.xnsu[t]
         def rec_inv_nonzero_rule(model,t):
-            return model.ursu[t] <= model.En * model.yrsu[t]
+            return model.unsu[t] <= model.En * model.ynsu[t]
         def rec_startup_rule(model,t):
             if t == 1:
-                return model.yr[t] <= model.ursu[t]/model.En + model.yr0 + model.yrsb0
-            return model.yr[t] <= model.ursu[t]/model.En + model.yr[t-1] + model.yrsb[t-1]
+                return model.yn[t] <= model.unsu[t]/model.En + model.yn0 + model.ynsb0
+            return model.yn[t] <= model.unsu[t]/model.En + model.yn[t-1] + model.ynsb[t-1]
         def rec_su_persist_rule(model,t):
             if t == 1: 
-                return model.yrsu[t] + model.yr0 <= 1
-            return model.yrsu[t] +  model.yr[t-1] <= 1
+                return model.ynsu[t] + model.yn0 <= 1
+            return model.ynsu[t] +  model.yn[t-1] <= 1
         def ramp_limit_rule(model,t):
-            return model.xrsu[t] <= model.Qnu*model.yrsu[t]
+            return model.xnsu[t] <= model.Qnu*model.ynsu[t]
         def nontrivial_solar_rule(model,t):
-            return model.yrsu[t] <= model.Qin_nuc[t]
+            return model.ynsu[t] <= model.Qin_nuc[t]
         self.model.rec_inventory_con = pe.Constraint(self.model.T,rule=rec_inventory_rule)
         self.model.rec_inv_nonzero_con = pe.Constraint(self.model.T,rule=rec_inv_nonzero_rule)
         self.model.rec_startup_con = pe.Constraint(self.model.T,rule=rec_startup_rule)
@@ -147,13 +147,13 @@ class NuclearDispatch(GeneralDispatch):
         
     def addReceiverSupplyAndDemandConstraints(self):
         def rec_production_rule(model,t):
-            return model.xr[t] + model.xrsu[t] + model.Qnsd*model.yrsd[t] <= model.Qin_nuc[t]
+            return model.xn[t] + model.xnsu[t] + model.Qnsd*model.ynsd[t] <= model.Qin_nuc[t]
         def rec_generation_rule(model,t):
-            return model.xr[t] <= model.Qin_nuc[t] * model.yr[t]
+            return model.xn[t] <= model.Qin_nuc[t] * model.yn[t]
         def min_generation_rule(model,t):
-            return model.xr[t] >= model.Qnl * model.yr[t]
+            return model.xn[t] >= model.Qnl * model.yn[t]
         def rec_gen_persist_rule(model,t):
-            return model.yr[t] <= model.Qin_nuc[t]/model.Qnl
+            return model.yn[t] <= model.Qin_nuc[t]/model.Qnl
         self.model.rec_production_con = pe.Constraint(self.model.T,rule=rec_production_rule)
         self.model.rec_generation_con = pe.Constraint(self.model.T,rule=rec_generation_rule)
         self.model.min_generation_con = pe.Constraint(self.model.T,rule=min_generation_rule)
@@ -162,32 +162,32 @@ class NuclearDispatch(GeneralDispatch):
         
     def addReceiverNodeLogicConstraints(self):
         def rec_su_sb_persist_rule(model,t):
-            return model.yrsu[t] + model.yrsb[t] <= 1
+            return model.ynsu[t] + model.ynsb[t] <= 1
         def rec_sb_persist_rule(model,t):
-            return model.yr[t] + model.yrsb[t] <= 1
+            return model.yn[t] + model.ynsb[t] <= 1
         def rsb_persist_rule(model,t):
             if t == 1:
-                return model.yrsb[t] <= (model.yr0 + model.yrsb0) 
-            return model.yrsb[t] <= model.yr[t-1] + model.yrsb[t-1]
+                return model.ynsb[t] <= (model.yn0 + model.ynsb0) 
+            return model.ynsb[t] <= model.yn[t-1] + model.ynsb[t-1]
         def rec_su_pen_rule(model,t):
             if t == 1:
-                return model.yrsup[t] >= model.yrsu[t] - model.yrsu0 
-            return model.yrsup[t] >= model.yrsu[t] - model.yrsu[t-1]
+                return model.ynsup[t] >= model.ynsu[t] - model.ynsu0 
+            return model.ynsup[t] >= model.ynsu[t] - model.ynsu[t-1]
         def rec_hs_pen_rule(model,t):
             if t == 1:
-                return model.yrhsp[t] >= model.yr[t] - (1 - model.yrsb0)
-            return model.yrhsp[t] >= model.yr[t] - (1 - model.yrsb[t-1])
+                return model.ynhsp[t] >= model.yn[t] - (1 - model.ynsb0)
+            return model.ynhsp[t] >= model.yn[t] - (1 - model.ynsb[t-1])
         def rec_shutdown_rule(model,t):
             current_Delta = model.Delta[t]
             # structure of inequality is lb <= model.param <= ub with strict=False by default
             if self.eval_ineq(1,current_Delta) and t == 1: #not strict
-                return 0 >= model.yr0 - model.yr[t] +  model.yrsb0 - model.yrsb[t]
+                return 0 >= model.yn0 - model.yn[t] +  model.ynsb0 - model.ynsb[t]
             elif self.eval_ineq(1,current_Delta) and t > 1: # not strict
-                return model.yrsd[t-1] >= model.yr[t-1] - model.yr[t] + model.yrsb[t-1] - model.yrsb[t]
+                return model.ynsd[t-1] >= model.yn[t-1] - model.yn[t] + model.ynsb[t-1] - model.ynsb[t]
             elif self.eval_ineq(current_Delta,1,strict=True) and t == 1:
-                return model.yrsd[t] >= model.yr0  - model.yr[t] + model.yrsb0 - model.yrsb[t]
+                return model.ynsd[t] >= model.yn0  - model.yn[t] + model.ynsb0 - model.ynsb[t]
             # only case remaining: Delta[t]<1, t>1
-            return model.yrsd[t] >= model.yr[t-1] - model.yr[t] + model.yrsb[t-1] - model.yrsb[t]
+            return model.ynsd[t] >= model.yn[t-1] - model.yn[t] + model.ynsb[t-1] - model.ynsb[t]
         
         self.model.rec_su_sb_persist_con = pe.Constraint(self.model.T,rule=rec_su_sb_persist_rule)
         self.model.rec_sb_persist_con = pe.Constraint(self.model.T,rule=rec_sb_persist_rule)
@@ -200,14 +200,14 @@ class NuclearDispatch(GeneralDispatch):
     def addTESEnergyBalanceConstraints(self):
         def tes_balance_rule(model, t):
             if t == 1:
-                return model.s[t] - model.s0 == model.Delta[t] * (model.xr[t] - (model.Qc[t]*model.ycsu[t] + model.Qb*model.ycsb[t] + model.x[t] + model.Qnsb*model.yrsb[t]))
-            return model.s[t] - model.s[t-1] == model.Delta[t] * (model.xr[t] - (model.Qc[t]*model.ycsu[t] + model.Qb*model.ycsb[t] + model.x[t] + model.Qnsb*model.yrsb[t]))
+                return model.s[t] - model.s0 == model.Delta[t] * (model.xn[t] - (model.Qc[t]*model.ycsu[t] + model.Qb*model.ycsb[t] + model.x[t] + model.Qnsb*model.ynsb[t]))
+            return model.s[t] - model.s[t-1] == model.Delta[t] * (model.xn[t] - (model.Qc[t]*model.ycsu[t] + model.Qb*model.ycsb[t] + model.x[t] + model.Qnsb*model.ynsb[t]))
         def tes_upper_rule(model, t):
             return model.s[t] <= model.Eu
         def tes_start_up_rule(model, t):
             if t == 1:
-                return model.s0 >= model.Delta[t]*model.delta_ns[t]*( (model.Qu + model.Qb)*( -3 + model.yrsu[t] + model.y0 + model.y[t] + model.ycsb0 + model.ycsb[t] ) + model.x[t] + model.Qb*model.ycsb[t] )
-            return model.s[t-1] >= model.Delta[t]*model.delta_ns[t]*( (model.Qu + model.Qb)*( -3 + model.yrsu[t] + model.y[t-1] + model.y[t] + model.ycsb[t-1] + model.ycsb[t] ) + model.x[t] + model.Qb*model.ycsb[t] )
+                return model.s0 >= model.Delta[t]*model.delta_ns[t]*( (model.Qu + model.Qb)*( -3 + model.ynsu[t] + model.y0 + model.y[t] + model.ycsb0 + model.ycsb[t] ) + model.x[t] + model.Qb*model.ycsb[t] )
+            return model.s[t-1] >= model.Delta[t]*model.delta_ns[t]*( (model.Qu + model.Qb)*( -3 + model.ynsu[t] + model.y[t-1] + model.y[t] + model.ycsb[t-1] + model.ycsb[t] ) + model.x[t] + model.Qb*model.ycsb[t] )
         def maintain_tes_rule(model):
             return model.s[model.num_periods] <= model.s0
         
@@ -221,10 +221,10 @@ class NuclearDispatch(GeneralDispatch):
         def grid_sun_rule(model, t):
             return (
                     model.wdot_s[t] - model.wdot_p[t] == (1-model.etac[t])*model.wdot[t]
-                		- model.Ln*(model.xr[t] + model.xrsu[t] + model.Qnl*model.yrsb[t])
+                		- model.Ln*(model.xn[t] + model.xnsu[t] + model.Qnl*model.ynsb[t])
                 		- model.Lc*model.x[t] 
-                        - model.Wh*model.yr[t] - model.Wb*model.ycsb[t] - model.Wnht*(model.yrsb[t]+model.yrsu[t])		#Is Wrsb energy [kWh] or power [kW]?  [az] Wrsb = Wht in the math?
-                		- (model.Ehs/model.Delta[t])*(model.yrsu[t] + model.yrsb[t] + model.yrsd[t])
+                        - model.Wh*model.yn[t] - model.Wb*model.ycsb[t] - model.Wnht*(model.ynsb[t]+model.ynsu[t])		#Is Wrsb energy [kWh] or power [kW]?  [az] Wrsb = Wht in the math?
+                		- (model.Ehs/model.Delta[t])*(model.ynsu[t] + model.ynsb[t] + model.ynsd[t])
             )
         
         # call the parent version of this method
@@ -466,32 +466,32 @@ class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
         # important parameters
         s_current          = m_hot * cp_tes_init * (T_tes_hot_init - self.T_htf_cold) # TES capacity
         s0                 = min(self.Eu.to('kWh'), s_current.to('kWh')  )
-        yr0                = (self.current_Plant['rec_op_mode_initial'] == 2)
-        yrsb0              = False   # We don't have standby mode for either Nuclear or CSP
-        yrsu0              = (self.current_Plant['rec_op_mode_initial'] == 1)
-        t_rec              = self.current_Plant['rec_startup_time_remain_init']
-        t_rec_suinitremain = t_rec if not np.isnan( t_rec ) else 0.0
-        e_rec              = self.current_Plant['rec_startup_energy_remain_init']
-        e_rec_suinitremain = e_rec if not np.isnan( e_rec ) else 0.0
-        rec_accum_time     = max(0.0*u.hr, self.Dnsu - t_rec_suinitremain*u.hr )
-        rec_accum_energy   = max(0.0*u.Wh, self.En   - e_rec_suinitremain*u.Wh )
+        yn0                = (self.current_Plant['rec_op_mode_initial'] == 2)
+        ynsb0              = False   # We don't have standby mode for either Nuclear or CSP
+        ynsu0              = (self.current_Plant['rec_op_mode_initial'] == 1)
+        t_nuc              = self.current_Plant['rec_startup_time_remain_init']
+        t_nuc_suinitremain = t_nuc if not np.isnan( t_nuc ) else 0.0
+        e_nuc              = self.current_Plant['rec_startup_energy_remain_init']
+        e_nuc_suinitremain = e_nuc if not np.isnan( e_nuc ) else 0.0
+        nuc_accum_time     = max(0.0*u.hr, self.Dnsu - t_nuc_suinitremain*u.hr )
+        nuc_accum_energy   = max(0.0*u.Wh, self.En   - e_nuc_suinitremain*u.Wh )
 
         # defining parameters
         self.s0    = s0              #s_0: Initial TES reserve quantity  [kWt$\cdot$h]
-        self.yr0   = yr0             #y^r_0: 1 if receiver is generating ``usable'' thermal power initially, 0 otherwise 
-        self.yrsb0 = yrsb0           #y^{rsb}_0: 1 if receiver is in standby mode initially, 0 otherwise
-        self.yrsu0 = yrsu0           #y^{rsu}_0: 1 if receiver is in starting up initially, 0 otherwise
+        self.yn0   = yn0             #y^r_0: 1 if nuclear is generating ``usable'' thermal power initially, 0 otherwise 
+        self.ynsb0 = ynsb0           #y^{nsb}_0: 1 if nuclear is in standby mode initially, 0 otherwise
+        self.ynsu0 = ynsu0           #y^{nsu}_0: 1 if nuclear is in starting up initially, 0 otherwise
         
-        # Initial receiver startup energy inventory
-        self.ursu0 = min(rec_accum_energy, rec_accum_time * self.Qnu)  # Note, SS receiver model in ssc assumes full available power is used for startup (even if, time requirement is binding)
-        if self.ursu0 > (1.0 - 1.e-6)*self.En:
-            self.ursu0 = self.En
+        # Initial nuclear startup energy inventory
+        self.unsu0 = min(nuc_accum_energy, nuc_accum_time * self.Qnu)  # Note, SS receiver model in ssc assumes full available power is used for startup (even if, time requirement is binding)
+        if self.unsu0 > (1.0 - 1.e-6)*self.En:
+            self.unsu0 = self.En
 
         param_dict['s0']     = self.s0.to('kWh')    #s_0: Initial TES reserve quantity  [kWt$\cdot$h]
-        param_dict['ursu0']  = self.ursu0.to('kWh') #u^{rsu}_0: Initial receiver start-up energy inventory [kWt$\cdot$h]
-        param_dict['yr0']    = self.yr0             #y^r_0: 1 if receiver is generating ``usable'' thermal power initially, 0 otherwise
-        param_dict['yrsb0']  = self.yrsb0           #y^{rsb}_0: 1 if receiver is in standby mode initially, 0 otherwise
-        param_dict['yrsu0']  = self.yrsu0           #y^{rsu}_0: 1 if receiver is in starting up initially, 0 otherwise
+        param_dict['unsu0']  = self.unsu0.to('kWh') #u^{nsu}_0: Initial nuclear start-up energy inventory [kWt$\cdot$h]
+        param_dict['yn0']    = self.yn0             #y^n_0: 1 if nuclear is generating ``usable'' thermal power initially, 0 otherwise
+        param_dict['ynsb0']  = self.ynsb0           #y^{nsb}_0: 1 if nuclear is in standby mode initially, 0 otherwise
+        param_dict['ynsu0']  = self.ynsu0           #y^{nsu}_0: 1 if nuclear is in starting up initially, 0 otherwise
         
         return param_dict
     
