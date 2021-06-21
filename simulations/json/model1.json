@@ -219,7 +219,7 @@
         "pb_pump_coef" :  0.55000000000000004,
         "startup_time" :  0.5,
         "startup_frac" :  0.5,
-        "cycle_max_frac" :     1.05,
+        "cycle_max_frac" :     1.15,
         "cycle_cutoff_frac" :  0.20000000000000001,
         "q_sby_frac" :  0.20000000000000001,
         "dT_cw_ref" :   10,
