@@ -19,7 +19,7 @@ from dispatch.GeneralDispatch import GeneralDispatchParamWrap as GDP
 from dispatch.GeneralDispatch import GeneralDispatchOutputs as GDO
 import numpy as np
 import copy
-from abc import ABC
+from abc import ABC, abstractmethod
 
 class GenericSSCModule(ABC):
     """
@@ -39,7 +39,8 @@ class GenericSSCModule(ABC):
     
     """
     
-    def __init__(self, plant_name="nuclear_tes", json_name="model1", 
+    @abstractmethod
+    def __init__(self, plant_name="abstract", json_name="abstract", 
                        is_dispatch=False, dispatch_time_step=1):
         """ Initializes the GenericSSCModules
         
@@ -136,7 +137,7 @@ class GenericSSCModule(ABC):
         if export:
             self.export_results(filename)
          
-            
+    @abstractmethod
     def store_csv_arrays(self, input_dict):
         """ Method to get data from specified csv files and store in class
         
@@ -154,7 +155,7 @@ class GenericSSCModule(ABC):
         parent_dir = FileMethods.parent_dir
         self.solar_resource_file = os.path.join(parent_dir, input_dict['solar_resource_rel_parent']) #os.path.join
         
-        
+    @abstractmethod    
     def create_Plant(self):
         """ Method to create Plant object for the first time
         
@@ -171,7 +172,7 @@ class GenericSSCModule(ABC):
         # create new Plant object
         self.Plant = GenericSystem.wrap(plant_dat)
 
-    
+    @abstractmethod
     def create_Grid(self):
         """ Method to create Grid object for the first time
         
@@ -338,19 +339,7 @@ class GenericSSCModule(ABC):
             self.gen_log[i_start:i_end] = self.Plant.Outputs.gen[0:self.t_ind ]
         
         
-    def reset_all(self):
-        """ Reset SSC submodules
-        
-        This method resets all PySAM wrappers, deleting them from this NE2 class.
-        Primarily done for unit testing, but could also have use if running 
-        simulations in parallel. 
-        """
-        
-        del self.Plant
-        del self.Grid
-        del self.SO
-        
-    
+    @abstractmethod
     def run_pyomo(self, params):
         """ Running Pyomo dispatch optimization
         
@@ -406,7 +395,7 @@ class GenericSSCModule(ABC):
         self.Plant.SystemControl.pc_startup_energy_remain_initial = self.Plant.Outputs.pc_startup_time_remain_final
         self.Plant.SystemControl.pc_startup_time_remain_init      = self.Plant.Outputs.pc_startup_energy_remain_final
       
-        
+    @abstractmethod    
     def update_Pyomo_after_SSC(self, params, current_pyomo_slice):
         """ Update Pyomo inputs with SSC outputs from previous segment simulation
         
@@ -468,7 +457,7 @@ class GenericSSCModule(ABC):
         self.Plant.SystemControl.q_pc_target_on_in    = dispatch_targets['q_pc_target_on_in']
         self.Plant.SystemControl.q_pc_max_in          = dispatch_targets['q_pc_max_in']
         
-
+    @abstractmethod
     def create_dispatch_wrapper(self, PySAM_dict):
         """ Creating a wrapper object for calling a class that creates dispatch parameters
         
@@ -494,7 +483,7 @@ class GenericSSCModule(ABC):
         
         return dispatch_wrap
 
-
+    @abstractmethod
     def create_dispatch_params(self, current_pyomo_slice):
         """ Populating a dictionary with dispatch parameters before optimization
         
@@ -664,4 +653,16 @@ class GenericSSCModule(ABC):
         # call the util method to write data to csv/xlsx file
         FileMethods.write_csv(dataframe_list, columns, filename)
 
-            
+
+    def reset_all(self):
+        """ Reset SSC submodules
+        
+        This method resets all PySAM wrappers, deleting them from this NE2 class.
+        Primarily done for unit testing, but could also have use if running 
+        simulations in parallel. 
+        """
+        
+        del self.Plant
+        del self.Grid
+        del self.SO
+        
