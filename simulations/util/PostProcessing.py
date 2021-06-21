@@ -352,7 +352,7 @@ class Plots(object):
         #___Energy Arrays
         s_array = ( np.array([pe.value(dm.model.s[t]) for t in dm.model.T])*u.kWh ).to('MWh')
         ucsu_array = ( np.array([pe.value(dm.model.ucsu[t]) for t in dm.model.T])*u.kWh ).to('MWh')
-        ursu_array = ( np.array([pe.value(dm.model.ursu[t]) for t in dm.model.T])*u.kWh ).to('MWh')
+        unsu_array = ( np.array([pe.value(dm.model.unsu[t]) for t in dm.model.T])*u.kWh ).to('MWh')
         
         #___Power Arrays
         wdot_array = ( np.array([pe.value(dm.model.wdot[t]) for t in dm.model.T])*u.kW ).to('MW')
@@ -363,18 +363,18 @@ class Plots(object):
         wdot_s_array = ( np.array([pe.value(dm.model.wdot_s[t]) for t in dm.model.T])*u.kW ).to('MW')
         wdot_p_array = ( np.array([pe.value(dm.model.wdot_p[t]) for t in dm.model.T])*u.kW ).to('MW')
         x_array = ( np.array([pe.value(dm.model.x[t]) for t in dm.model.T])*u.kW ).to('MW')
-        xr_array = ( np.array([pe.value(dm.model.xr[t]) for t in dm.model.T])*u.kW ).to('MW')
-        xrsu_array = ( np.array([pe.value(dm.model.xrsu[t]) for t in dm.model.T])*u.kW ).to('MW')
+        xn_array = ( np.array([pe.value(dm.model.xn[t]) for t in dm.model.T])*u.kW ).to('MW')
+        xnsu_array = ( np.array([pe.value(dm.model.xnsu[t]) for t in dm.model.T])*u.kW ).to('MW')
         # wdot_s_prev_delta_plus_array = ( np.array([pe.value(dm.model.wdot_s_prev_delta_plus[t]) for t in dm.model.T])*u.kW ).to('MW')
         # wdot_s_prev_delta_minus_array = ( np.array([pe.value(dm.model.wdot_s_prev_delta_minus[t]) for t in dm.model.T])*u.kW ).to('MW')
         
         #___Binary Arrays
-        yr_array = np.array([pe.value(dm.model.yr[t]) for t in dm.model.T])
-        yrhsp_array = np.array([pe.value(dm.model.yrhsp[t]) for t in dm.model.T])
-        yrsb_array = np.array([pe.value(dm.model.yrsb[t]) for t in dm.model.T])
-        yrsd_array = np.array([pe.value(dm.model.yrsd[t]) for t in dm.model.T])
-        yrsu_array = np.array([pe.value(dm.model.yrsu[t]) for t in dm.model.T])
-        yrsup_array = np.array([pe.value(dm.model.yrsup[t]) for t in dm.model.T])
+        yn_array = np.array([pe.value(dm.model.yn[t]) for t in dm.model.T])
+        ynhsp_array = np.array([pe.value(dm.model.ynhsp[t]) for t in dm.model.T])
+        ynsb_array = np.array([pe.value(dm.model.ynsb[t]) for t in dm.model.T])
+        ynsd_array = np.array([pe.value(dm.model.ynsd[t]) for t in dm.model.T])
+        ynsu_array = np.array([pe.value(dm.model.ynsu[t]) for t in dm.model.T])
+        ynsup_array = np.array([pe.value(dm.model.ynsup[t]) for t in dm.model.T])
         y_array = np.array([pe.value(dm.model.y[t]) for t in dm.model.T])+2
         ychsp_array = np.array([pe.value(dm.model.ychsp[t]) for t in dm.model.T])+2
         ycsb_array = np.array([pe.value(dm.model.ycsb[t]) for t in dm.model.T])+2
@@ -419,7 +419,7 @@ class Plots(object):
         wts = np.linspace(4,2,3)
         ax1.plot(t_array,s_array.m,    linewidth = wts[0], label='TES Reserve Quantity')
         ax1.plot(t_array,ucsu_array.m, linewidth = wts[1], label='Cycle Startup Energy Inventory')
-        ax1.plot(t_array,ursu_array.m, linewidth = wts[2], label='Nuclear Startup Energy Inventory')
+        ax1.plot(t_array,unsu_array.m, linewidth = wts[2], label='Nuclear Startup Energy Inventory')
         
         #-Line marking the 24 hour line
         ax1.plot(time_24hr, energy_24hr, 'k--', linewidth=lw )
@@ -432,8 +432,8 @@ class Plots(object):
         wts = np.linspace(6,2,6)
         ax2.plot(t_array,wdot_array.m, linewidth = wts[0], label='Cycle Out (E)')
         ax2.plot(t_array,x_array.m,    linewidth = wts[1], label='Cycle In (T)')
-        ax2.plot(t_array,xr_array.m,   linewidth = wts[2], label='Nuclear Out (T)')
-        ax2.plot(t_array,xrsu_array.m, linewidth = wts[3], label='Nuclear Startup (T)')
+        ax2.plot(t_array,xn_array.m,   linewidth = wts[2], label='Nuclear Out (T)')
+        ax2.plot(t_array,xnsu_array.m, linewidth = wts[3], label='Nuclear Startup (T)')
         ax2.plot(t_array,wdot_s_array.m, linewidth = wts[4], label='Energy Sold to Grid (E)')
         ax2.plot(t_array,wdot_p_array.m, linewidth = wts[5], label='Energy Purchased (E)')
         
@@ -465,12 +465,12 @@ class Plots(object):
         
         wts = np.linspace(10,1,14)
         #___Binary Plots ______________________________________________________________
-        ax4.plot(t_array, yr_array,    linewidth = wts[0], label='Receiver On?')
-        ax4.plot(t_array, yrhsp_array, linewidth = wts[1], label='Receiver HSU Pen?')
-        ax4.plot(t_array, yrsb_array,  linewidth = wts[2], label='Receiver SB?')
-        ax4.plot(t_array, yrsd_array,  linewidth = wts[3], label='Receiver SD?')
-        ax4.plot(t_array, yrsu_array,  linewidth = wts[4], label='Receiver SU?')
-        ax4.plot(t_array, yrsup_array, linewidth = wts[5], label='Receiver CSU Pen?')
+        ax4.plot(t_array, yn_array,    linewidth = wts[0], label='Receiver On?')
+        ax4.plot(t_array, ynhsp_array, linewidth = wts[1], label='Receiver HSU Pen?')
+        ax4.plot(t_array, ynsb_array,  linewidth = wts[2], label='Receiver SB?')
+        ax4.plot(t_array, ynsd_array,  linewidth = wts[3], label='Receiver SD?')
+        ax4.plot(t_array, ynsu_array,  linewidth = wts[4], label='Receiver SU?')
+        ax4.plot(t_array, ynsup_array, linewidth = wts[5], label='Receiver CSU Pen?')
         ax4.plot(t_array, y_array,     linewidth = wts[6], label='Cycle Generating Power?')
         ax4.plot(t_array, ychsp_array, linewidth = wts[7], label='Cycle HSU Pen?')
         ax4.plot(t_array, ycsb_array,  linewidth = wts[8], label='Cycle SB?')
@@ -519,8 +519,8 @@ class Plots(object):
         # Obj_profit      = 0.1 * d_array * p_array * ( wdot_s_array - wdot_p_array ) 
         # Obj_cycle_susd  = (Ccsu * ycsup_array + 0.1*Cchsp*ychsp_array + ycsd_array)
         # Obj_cycle_ramp  = C_delta_w*(wdot_delta_plus_array + wdot_delta_minus_array) + C_v_w*(wdot_v_plus_array + wdot_v_minus_array)
-        # Obj_rec_susd    = Crsu*yrsup_array + Crhsp*yrhsp_array + yrsd_array
-        # Obj_ops         = d_array*(Cpc*wdot_array + Ccsb*Qb*ycsb_array + Crec*xr_array)
+        # Obj_rec_susd    = Crsu*ynsup_array + Crhsp*ynhsp_array + ynsd_array
+        # Obj_ops         = d_array*(Cpc*wdot_array + Ccsb*Qb*ycsb_array + Crec*xn_array)
         
         # ax1o.plot(t_array, Obj_profit, linewidth=lw, label='Profit Term')
         # ax2o.plot(t_array, -Obj_cycle_susd, linewidth=lw, label='Cycle Startup/Shutdown Term')
