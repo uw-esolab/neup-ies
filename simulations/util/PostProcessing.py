@@ -194,10 +194,7 @@ class Plots(object):
                                             plot_all_time, start_hr, end_hr )
         
         # custom y limits and ticks to be integers
-        # ax2.set_ylim(0,5000)
-        # ax2.set_yticks(np.linspace(0,5000,5) )
         ax2.set_ylim(-0.05*self.e_tes_design.m,self.e_tes_design.m)
-        ax2.set_yticks( np.round( np.linspace(0,self.e_tes_design.m, 5), -4 ) )
 
         # plot Energy array(s)
         ax2 = self.plot_SSC_generic(ax2, ['e_ch_tes'], ['Salt Charge Level (Thermal)'], 'Energy (MWh)', None, \
@@ -351,20 +348,7 @@ class Plots(object):
         
         #__Price Array
         p_array = np.array([pe.value(dm.model.P[t]) for t in dm.model.T])
-        d_array = np.array([pe.value(dm.model.D[t]) for t in dm.model.T])
-        
-        #__Costs
-        Ccsu      = pe.value(dm.model.Ccsu)
-        Cchsp     = pe.value(dm.model.Cchsp)
-        C_delta_w = pe.value(dm.model.C_delta_w)
-        C_v_w     = pe.value(dm.model.C_v_w)
-        Crsu      = pe.value(dm.model.Crsu)
-        Crhsp     = pe.value(dm.model.Cchsp)
-        Cpc       = pe.value(dm.model.Cpc)
-        Ccsb      = pe.value(dm.model.Ccsb)
-        Crec      = pe.value(dm.model.Crec)
-        Qb        = pe.value(dm.model.Qb)
-        
+
         #___Energy Arrays
         s_array = ( np.array([pe.value(dm.model.s[t]) for t in dm.model.T])*u.kWh ).to('MWh')
         ucsu_array = ( np.array([pe.value(dm.model.ucsu[t]) for t in dm.model.T])*u.kWh ).to('MWh')
