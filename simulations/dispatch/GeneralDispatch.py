@@ -393,21 +393,6 @@ class GeneralDispatchParamWrap(object):
         # temperature values at design point
         self.T_htf_hot  = (self.SSC_dict['T_htf_hot_des']*u.celsius).to('degK')
         self.T_htf_cold = (self.SSC_dict['T_htf_cold_des']*u.celsius).to('degK')
-        T_htf  = 0.5*(self.T_htf_hot + self.T_htf_cold)
-        
-        # specific heat values at design point
-        cp_des = SSCHelperMethods.get_cp_htf(self.u, T_htf, self.SSC_dict['rec_htf'] )
-        cp_des = cp_des.to('J/g/kelvin')       
-        
-        # mass flow rate
-        dm_des = self.q_pb_design / (cp_des * (self.T_htf_hot - self.T_htf_cold) )  
-        self.dm_pb_design = dm_des.to('kg/s')                               # power block design mass flow rate
-        
-        # TES design point
-        e_tes_design = self.q_pb_design * self.SSC_dict['tshours']*u.hr  
-        m_tes_des = e_tes_design / cp_des / (self.T_htf_hot - self.T_htf_cold)     
-        self.e_tes_design = e_tes_design.to('kWh') # TES storage capacity (kWht)
-        self.m_tes_design = m_tes_des.to('kg')     # TES active storage mass (kg)
         
         
     def set_time_indexed_parameters(self, param_dict, df_array, ud_array, current_pyomo_slice):
