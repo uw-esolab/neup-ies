@@ -191,7 +191,7 @@ class NuclearTES(GenericSSCModule):
         
         # these are NuclearTES-specific setters
         params = DW.set_nuclear_parameters( params )
-        params = DW.set_time_series_nuclear_parameters( params, self.df_array, self.ud_array, current_pyomo_slice )
+        params = DW.set_time_series_nuclear_parameters( params )
         
         # this sets the initial set for the NuclearTES
         params = DW.set_initial_state( params )
@@ -239,8 +239,9 @@ class NuclearTES(GenericSSCModule):
         DW = self.dispatch_wrap
         
         # updating the initial state and time series Nuclear params
+        params = DW.set_time_indexed_parameters( params, self.df_array, self.ud_array, current_pyomo_slice )
         params = DW.set_initial_state( params, updated_SSC_dict, self.Plant, self.t_ind )
-        params = DW.set_time_series_nuclear_parameters( params, self.df_array, self.ud_array, current_pyomo_slice )
+        params = DW.set_time_series_nuclear_parameters( params )
         
         return params
     

@@ -68,7 +68,15 @@ class GeneralDispatch(object):
         self.model.num_periods = pe.Param(initialize=params["T"]) #N_T: number of time periods
         self.model.Delta = pe.Param(self.model.T, mutable=False, initialize=gd("Delta"), units=gu("Delta"))          #\Delta_{t}: duration of period t
         self.model.Delta_e = pe.Param(self.model.T, mutable=False, initialize=gd("Delta_e"), units=gu("Delta_e"))    #\Delta_{e,t}: cumulative time elapsed at end of period t
-        
+        self.model.D = pe.Param(self.model.T, mutable=True, initialize=gd("D"), units=gu("D"))                          #D_{t}: Time-weighted discount factor in period $t$ [-]
+        self.model.etaamb = pe.Param(self.model.T, mutable=True, initialize=gd("etaamb"), units=gu("etaamb"))           #\eta^{amb}_{t}: Cycle efficiency ambient temperature adjustment factor in period $t$ [-]
+        self.model.etac = pe.Param(self.model.T, mutable=True, initialize=gd("etac"), units=gu("etac"))                 #\eta^{c}_{t}: Normalized condenser parasitic loss in period $t$ [-] 
+        self.model.P = pe.Param(self.model.T, mutable=True, initialize=gd("P"), units=gu("P"))                          #P_{t}: Electricity sales price in period $t$ [\$/kWh]
+        self.model.Qc = pe.Param(self.model.T, mutable=True, initialize=gd("Qc"), units=gu("Qc"))                       #Q^{c}_{t}: Allowable power per period for cycle start-up in period $t$ [kWt]
+        self.model.Wdotnet = pe.Param(self.model.T, mutable=True, initialize=gd("Wdotnet"), units=gu("Wdotnet"))        #\dot{W}^{net}_{t}: Net grid transmission upper limit in period $t$ [kWe]
+        self.model.W_u_plus = pe.Param(self.model.T, mutable=True, initialize=gd("W_u_plus"), units=gu("W_u_plus"))     #W^{u+}_{t}: Maximum power production when starting generation in period $t$  [kWe]
+        self.model.W_u_minus = pe.Param(self.model.T, mutable=True, initialize=gd("W_u_minus"), units=gu("W_u_minus"))  #W^{u-}_{t}: Maximum power production in period $t$ when stopping generation in period $t+1$  [kWe]
+
         ### Power Cycle Parameters ###
         self.model.Ec = pe.Param(mutable=True, initialize=gd("Ec"), units=gu("Ec"))           #E^c: Required energy expended to start cycle [kWt$\cdot$h]
         self.model.eta_des = pe.Param(mutable=True, initialize=gd("eta_des"), units=gu("eta_des"))   #\eta^{des}: Cycle nominal efficiency [-] 
@@ -395,7 +403,7 @@ class GeneralDispatchParamWrap(object):
         self.m_tes_design = m_tes_des.to('kg')     # TES active storage mass (kg)
         
         
-    def set_time_indexed_parameters(self, param_dict):
+    def set_time_indexed_parameters(self, param_dict, df_array, ud_array, current_pyomo_slice):
         """ Method to set time-indexed parameters for Dispatch optimization
         
         This method calculates time parameters for Pyomo Dispatch optimization.
@@ -404,20 +412,70 @@ class GeneralDispatchParamWrap(object):
         
         Inputs:
             param_dict (dict) : dictionary of Pyomo dispatch parameters
+            df_array (array)            : array of user defined dispatch factors over simulation time
+            ud_array (list of list)     : table of user defined data as nested lists
+            current_pyomo_slice (slice) : range of current pyomo horizon (ints representing hours)
         Outputs:
             param_dict (dict) : updated dictionary of Pyomo dispatch parameters
         """
         
         u = self.u
         
+        # time parameters
         self.T       = int( self.pyomo_horizon.to('hr').magnitude )
         self.Delta   = np.array([self.dispatch_time_step.to('hr').magnitude]*self.T)*u.hr
         self.Delta_e = np.cumsum(self.Delta)
+        
+        # weight parameter
+        wt = self.PySAM_dict['weight']
+        
+        # grab time series data that we have to index
+        Tdry  = self.Tdry # dry bulb temperature from solar resource file 
+        Price = df_array  # pricing multipliers
+        
+        # if we're at the last segment, we won't have 48 hour data for the sim. here is a quick fix
+        if current_pyomo_slice.stop > len(Tdry):
+            # double-stacking
+            Tdry  = np.hstack([Tdry,  Tdry])
+            Price = np.hstack([Price, Price])
+            
+        # grabbing relevant dry temperatures
+        Tdry   = Tdry[current_pyomo_slice]
+        self.P = Price[current_pyomo_slice]*u.USD/u.kWh
+        
+        # ambient temperature fluctuations and updates
+        etamult, wmult = SSCHelperMethods.get_ambient_T_corrections_from_udpc_inputs( self.u, Tdry, ud_array ) # TODO:verify this makes sense
+        self.etaamb = etamult * self.SSC_dict['design_eff']
+        self.etac   = wmult * self.SSC_dict['ud_f_W_dot_cool_des']/100.
+
+        # power into cycle, into grid, +/-
+        self.Qc         = self.Ec / np.ceil(self.SSC_dict['startup_time']*u.hr / np.min(self.Delta)) / np.min(self.Delta) #TODO: make sure Ec is called correctly
+        self.Wdotnet    = [1.e10 for j in range(self.T)] *u.kW
+        self.W_u_plus   = [(self.Wdotl + self.W_delta_plus*0.5*dt).to('kW').magnitude for dt in self.Delta]*u.kW
+        self.W_u_minus  = [(self.Wdotl + self.W_delta_minus*0.5*dt).to('kW').magnitude for dt in self.Delta]*u.kW
+        
+        # time weights
+        n  = len(self.Delta)
+        D  = np.zeros(n)
+        
+        # looping through time
+        for t in range(n):
+            D[t]        = wt**(self.Delta_e[t]/u.hr)
+        self.D = D
         
         #------- Time indexed parameters ---------
         param_dict['T']        = self.T                    #T: time periods
         param_dict['Delta']    = self.Delta.to('hr')       #\Delta_{t}: duration of period t [hr]
         param_dict['Delta_e']  = self.Delta_e.to('hr')     #\Delta_{e,t}: cumulative time elapsed at end of period t [hr]
+        
+        param_dict['D']         = self.D          #D_{t}: Time-weighted discount factor in period $t$ [-]
+        param_dict['etaamb']    = self.etaamb     #\eta^{amb}_{t}: Cycle efficiency ambient temperature adjustment factor in period $t$ [-]
+        param_dict['etac']      = self.etac       #\eta^{c}_{t}: Normalized condenser parasitic loss in period $t$ [-] 
+        param_dict['P']         = self.P.to('USD/kWh')    #P_{t}: Electricity sales price in period $t$ [\$/kWh]
+        param_dict['Qc']        = self.Qc.to('kW')        #Q^{c}_{t}: Allowable power per period for cycle start-up in period $t$ [kWt]
+        param_dict['Wdotnet']   = self.Wdotnet.to('kW')   #\dot{W}^{net}_{t}: Net grid transmission upper limit in period $t$ [kWe]
+        param_dict['W_u_plus']  = self.W_u_plus.to('kW')  #W^{u+}_{t}: Maximum power production when starting generation in period $t$  [kWe]
+        param_dict['W_u_minus'] = self.W_u_minus.to('kW') #W^{u-}_{t}: Maximum power production in period $t$ when stopping generation in period $t+1$  [kWe]
         
         return param_dict
 

@@ -516,8 +516,8 @@ class GenericSSCModule(ABC):
         DW = self.dispatch_wrap
         
         # setting parameters for the first time
-        params = DW.set_time_indexed_parameters( params )
         params = DW.set_power_cycle_parameters( params, self.ud_array )
+        params = DW.set_time_indexed_parameters( params, self.df_array, self.ud_array, current_pyomo_slice )
         params = DW.set_fixed_cost_parameters( params )
 
         return params

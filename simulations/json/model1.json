@@ -34,7 +34,7 @@
         "nuc_piping_ht_loss":        0,
         "dw_nuc_pump":               0,
         "Dnsu":                      1,
-        "nuc_wt":                    0.999
+        "weight":                    0.999
     },
     
     "PySAM_outputs": {
