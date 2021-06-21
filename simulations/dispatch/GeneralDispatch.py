@@ -12,7 +12,7 @@ Model authors:
 Pyomo code by Alex Zolan
 Modified by Gabriel Soto
 """
-import os
+import os, copy
 import pyomo.environ as pe
 import numpy as np
 from util.FileMethods import FileMethods
@@ -103,6 +103,15 @@ class GeneralDispatch(object):
         self.model.C_delta_w = pe.Param(mutable=True, initialize=gd("C_delta_w"), units=gu("C_delta_w"))    #C^{\delta_w}: Penalty for change in power cycle  production [\$/$\Delta\text{kWe}$]
         self.model.C_v_w = pe.Param(mutable=True, initialize=gd("C_v_w"), units=gu("C_v_w"))           #C^{v_w}: Penalty for change in power cycle  production tcb{beyond designed limits} [\$/$\Delta\text{kWe}$]
         self.model.Ccsb = pe.Param(mutable=True, initialize=gd("Ccsb"), units=gu("Ccsb"))              #C^{csb}: Operating cost of power cycle standby operation [\$/kWt$\cdot$h]
+        
+        ### Initial Condition Parameters ###
+        self.model.ucsu0 = pe.Param(mutable=True, initialize=gd("ucsu0"), units=gu("ucsu0")) #u^{csu}_0: Initial cycle start-up energy inventory  [kWt$\cdot$h]
+        self.model.wdot0 = pe.Param(mutable=True, initialize=gd("wdot0"), units=gu("wdot0")) #\dot{w}_0: Initial power cycle electricity generation [kW]e
+        self.model.y0 = pe.Param(mutable=True, initialize=gd("y0"), units=gu("y0"))          #y_0: 1 if cycle is generating electric power initially, 0 otherwise
+        self.model.ycsb0 = pe.Param(mutable=True, initialize=gd("ycsb0"), units=gu("ycsb0")) #y^{csb}_0: 1 if cycle is in standby mode initially, 0 otherwise
+        self.model.ycsu0 = pe.Param(mutable=True, initialize=gd("ycsu0"), units=gu("ycsu0")) #y^{csu}_0: 1 if cycle is in starting up initially, 0 otherwise    [az] this is new.
+        self.model.Yu0 = pe.Param(mutable=True, initialize=gd("Yu0"), units=gu("Yu0"))       #Y^u_0: duration that cycle has been generating electric power [h]
+        self.model.Yd0 = pe.Param(mutable=True, initialize=gd("Yd0"), units=gu("delta_ns"))  #Y^d_0: duration that cycle has not been generating power (i.e., shut down or in standby mode) [h]
         
         #------- Persistence Parameters ---------
         # TODO: removing references to wdot_s_prev, they only exist as Constraints and should later be added to Objective somehow
@@ -363,7 +372,6 @@ class GeneralDispatchParamWrap(object):
         self.set_design()
         
 
-    ## Setters
     def set_design(self):
         """ Method to calculate and save design point values of Plant operation
         
@@ -378,7 +386,6 @@ class GeneralDispatchParamWrap(object):
         self.alpha = 1.0
         
         # design parameters
-        self.q_rec_design = self.SSC_dict['q_dot_nuclear_des'] * u.MW      # receiver design thermal power
         self.p_pb_design  = self.SSC_dict['P_ref'] * u.MW                  # power block design electrical power
         self.eta_design   = self.SSC_dict['design_eff']                    # power block design efficiency
         self.q_pb_design  = (self.p_pb_design / self.eta_design).to('MW')  # power block design thermal rating
@@ -464,18 +471,17 @@ class GeneralDispatchParamWrap(object):
         self.D = D
         
         #------- Time indexed parameters ---------
-        param_dict['T']        = self.T                    #T: time periods
-        param_dict['Delta']    = self.Delta.to('hr')       #\Delta_{t}: duration of period t [hr]
-        param_dict['Delta_e']  = self.Delta_e.to('hr')     #\Delta_{e,t}: cumulative time elapsed at end of period t [hr]
-        
-        param_dict['D']         = self.D          #D_{t}: Time-weighted discount factor in period $t$ [-]
-        param_dict['etaamb']    = self.etaamb     #\eta^{amb}_{t}: Cycle efficiency ambient temperature adjustment factor in period $t$ [-]
-        param_dict['etac']      = self.etac       #\eta^{c}_{t}: Normalized condenser parasitic loss in period $t$ [-] 
-        param_dict['P']         = self.P.to('USD/kWh')    #P_{t}: Electricity sales price in period $t$ [\$/kWh]
-        param_dict['Qc']        = self.Qc.to('kW')        #Q^{c}_{t}: Allowable power per period for cycle start-up in period $t$ [kWt]
-        param_dict['Wdotnet']   = self.Wdotnet.to('kW')   #\dot{W}^{net}_{t}: Net grid transmission upper limit in period $t$ [kWe]
-        param_dict['W_u_plus']  = self.W_u_plus.to('kW')  #W^{u+}_{t}: Maximum power production when starting generation in period $t$  [kWe]
-        param_dict['W_u_minus'] = self.W_u_minus.to('kW') #W^{u-}_{t}: Maximum power production in period $t$ when stopping generation in period $t+1$  [kWe]
+        param_dict['T']         = self.T                   #T: time periods
+        param_dict['Delta']     = self.Delta.to('hr')      #\Delta_{t}: duration of period t [hr]
+        param_dict['Delta_e']   = self.Delta_e.to('hr')    #\Delta_{e,t}: cumulative time elapsed at end of period t [hr]
+        param_dict['D']         = self.D                   #D_{t}: Time-weighted discount factor in period $t$ [-]
+        param_dict['etaamb']    = self.etaamb              #\eta^{amb}_{t}: Cycle efficiency ambient temperature adjustment factor in period $t$ [-]
+        param_dict['etac']      = self.etac                #\eta^{c}_{t}: Normalized condenser parasitic loss in period $t$ [-] 
+        param_dict['P']         = self.P.to('USD/kWh')     #P_{t}: Electricity sales price in period $t$ [\$/kWh]
+        param_dict['Qc']        = self.Qc.to('kW')         #Q^{c}_{t}: Allowable power per period for cycle start-up in period $t$ [kWt]
+        param_dict['Wdotnet']   = self.Wdotnet.to('kW')    #\dot{W}^{net}_{t}: Net grid transmission upper limit in period $t$ [kWe]
+        param_dict['W_u_plus']  = self.W_u_plus.to('kW')   #W^{u+}_{t}: Maximum power production when starting generation in period $t$  [kWe]
+        param_dict['W_u_minus'] = self.W_u_minus.to('kW')  #W^{u-}_{t}: Maximum power production in period $t$ when stopping generation in period $t+1$  [kWe]
         
         return param_dict
 
@@ -586,6 +592,75 @@ class GeneralDispatchParamWrap(object):
         return param_dict
 
 
+    def set_initial_state(self, param_dict, updated_dict=None, plant=None, npts=None ):
+        """ Method to set the initial state of the Plant before Dispatch optimization
+        
+        This method uses SSC data to set the initial state of the Plant before Dispatch
+        optimization in Pyomo. This method is called in two ways: once before starting 
+        the simulation loop, in which case it only uses values from the SSC_dict portion
+        of the given JSON script. The method is also called within the simulation loop
+        to update the initial state parameters based on the ending conditions of the 
+        previous simulation segment (provided by SSC). 
+        
+        TODO: can we just input another dictionary instead of passing the full Plant?
+        
+        Inputs:
+            param_dict (dict)    : dictionary of Pyomo dispatch parameters
+            updated_dict (dict)  : dictionary with updated SSC initial conditions from previous run
+            plant (obj)          : the full PySAM Plant object. 
+            npts (int)           : length of the SSC horizon
+        Outputs:
+            param_dict (dict) : updated dictionary of Pyomo dispatch parameters
+        """
+        u = self.u
+            
+        if updated_dict is None:
+            self.current_Plant = copy.deepcopy(self.SSC_dict)
+            self.first_run = True
+        else:
+            self.current_Plant = updated_dict
+            self.first_run = False
+            
+        # important parameters
+        e_pb_suinitremain  = self.current_Plant['pc_startup_energy_remain_initial']*u.kWh
+        wdot0              = (0 if self.first_run else self.current_Plant['wdot0'])*u.MW 
+        y0                 = (self.current_Plant['pc_op_mode_initial'] == 1) 
+        ycsb0              = (self.current_Plant['pc_op_mode_initial'] == 2) 
+        ycsu0              = (self.current_Plant['pc_op_mode_initial'] == 0 or self.current_Plant['pc_op_mode_initial'] == 4) 
+        pc_persist, pc_off = self.get_pc_persist_and_off_logs( param_dict, plant, npts ) if plant is not None else [48,48]
+        Yu0                = pc_persist if y0       else 0.0
+        Yd0                = pc_off     if (not y0) else 0.0
+        
+        # defining parameters
+        self.wdot0 = wdot0.to('kW')  #\dot{w}_0: Initial power cycle electricity generation [kWe] 
+        self.y0    = y0              #y_0: 1 if cycle is generating electric power initially, 0 otherwise   
+        self.ycsb0 = ycsb0           #y^{csb}_0: 1 if cycle is in standby mode initially, 0 otherwise
+        self.ycsu0 = ycsu0           #y^{csu}_0: 1 if cycle is in starting up initially, 0 otherwise
+        self.Yu0   = Yu0*u.hr        #Y^u_0: duration that cycle has been generating electric power [h]
+        self.Yd0   = Yd0*u.hr        #Y^d_0: duration that cycle has not been generating power (i.e., shut down or in standby mode) [h]
+        
+        # Initial cycle startup energy accumulated
+        tol = 1.e-6
+        if np.isnan(e_pb_suinitremain): # SSC seems to report NaN when startup is completed
+            self.ucsu0 = self.Ec
+        else:   
+            self.ucsu0 = max(0.0, self.Ec - e_pb_suinitremain ) 
+            if self.ucsu0 > (1.0 - tol)*self.Ec:
+                self.ucsu0 = self.Ec
+        
+        param_dict['ucsu0']  = self.ucsu0.to('kWh')   #u^{csu}_0: Initial cycle start-up energy inventory  [kWt$\cdot$h]
+        param_dict['wdot0']  = self.wdot0.to('kW')    #\dot{w}_0: Initial power cycle electricity generation [kW]e
+        param_dict['y0']     = self.y0                #y_0: 1 if cycle is generating electric power initially, 0 otherwise
+        param_dict['ycsb0']  = self.ycsb0             #y^{csb}_0: 1 if cycle is in standby mode initially, 0 otherwise
+        param_dict['ycsu0']  = self.ycsu0             #y^{csu}_0: 1 if cycle is in starting up initially, 0 otherwise
+        param_dict['Yu0']    = self.Yu0.to('hr')      #Y^u_0: duration that cycle has been generating electric power [h]
+        param_dict['Yd0']    = self.Yd0.to('hr')      #Y^d_0: duration that cycle has not been generating power (i.e., shut down or in standby mode) [h]
+        # param_dict['wdot_s_prev']    = 0*u.hr         #\dot{w}^{s,prev}: previous $\dot{w}^s$, or energy sold to grid [kWe]
+        # ^ this should be gen[-1] from previous SSC run, 0 if first_run == True
+        
+        return param_dict
+    
+    
 # =============================================================================
 # Dispatch Outputs
 # =============================================================================
