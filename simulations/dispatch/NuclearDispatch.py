@@ -85,10 +85,11 @@ class NuclearDispatch(GeneralDispatch):
         
         ### Decision Variables ###
         #------- Variables ---------
+        self.model.s = pe.Var(self.model.T, domain=pe.NonNegativeReals, bounds = (0,self.model.Eu))    #s: TES reserve quantity at period $t$  [kWt$\cdot$h]
         self.model.unsu = pe.Var(self.model.T, domain=pe.NonNegativeReals)     #u^{nsu}: Nuclear start-up energy inventory at period $t$ [kWt$\cdot$h]
         self.model.xn = pe.Var(self.model.T, domain=pe.NonNegativeReals)	   #x^n: Thermal power delivered by the nuclear at period $t$ [kWt]
         self.model.xnsu = pe.Var(self.model.T, domain=pe.NonNegativeReals)     #x^{nsu}: Nuclear start-up power consumption at period $t$ [kWt]
-         
+        
         #------- Binary Variables ---------
         self.model.yn = pe.Var(self.model.T, domain=pe.Binary)        #y^r: 1 if nuclear is generating ``usable'' thermal power at period $t$; 0 otherwise
         self.model.ynhsp = pe.Var(self.model.T, domain=pe.Binary)	  #y^{nhsp}: 1 if nuclear hot start-up penalty is incurred at period $t$ (from standby); 0 otherwise

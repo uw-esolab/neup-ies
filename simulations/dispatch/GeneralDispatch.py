@@ -21,16 +21,21 @@ from pyomo.environ import units as u_pyomo
 if not hasattr(u_pyomo,'USD'):
     u_pyomo.load_definitions_from_strings(['USD = [currency]'])
 from pyomo.util.check_units import assert_units_consistent, assert_units_equivalent, check_units_equivalent
+from abc import ABC, abstractmethod
 
 
-class GeneralDispatch(object):
+class GeneralDispatch(ABC):
     """
     The GeneralDispatch class is meant to set up and run Dispatch
     optimization as a mixed integer linear program problem using Pyomo.
     It creates a ConcreteModel in Pyomo with Parameters, Variables,
     Objectives, and Constraints. The ConcreteModel can then be solved. 
     
-    This is the base/parent class and should not be run by itself.
+    This is the base/parent class and should not be run by itself. 
+    Essentially, this sets Pyomo with PowerCycle-specific parameters,
+    variables, objectives, and constraints. Derived classes can then
+    be instantiated to add more specific constraints and overload the
+    objective function. 
     
     TODO: can we convert this to an abstract class in Python?
     """
@@ -51,6 +56,19 @@ class GeneralDispatch(object):
 
 
     def generate_params(self, params):
+        """ Method to generate parameters within Pyomo General Model
+        
+        This method reads in a dictionary of pyomo parameters and uses these
+        inputs to initialize parameters for the Pyomo Concrete Model. This method
+        sets up parameters particularly for the Power Cycle. It also defines
+        some lambda functions that helps convert Pint units to Pyomo units.
+        
+        Note: initial conditions are defined for the time period immediately 
+        preceding the start of this new Pyomo time segment. 
+        
+        Inputs:
+            params (dict)  : dictionary of Pyomo dispatch parameters
+        """
         
         time_range = range(1,params["T"]+1)
         # this is a lambda function to grab Pint Quantity magntitude if it has one (gm = get magnitude)
@@ -120,9 +138,16 @@ class GeneralDispatch(object):
 
 
     def generate_variables(self):
+        """ Method to generate parameters within Pyomo General Model
+        
+        This method instantiates variables for the Pyomo Concrete Model, with
+        domains. Does not need initial guesses here, they are defined in the 
+        parameters. Here we define continuous and binary variables for the 
+        Power Cycle. 
+        """
+        
         ### Decision Variables ###
         #------- Variables ---------
-        self.model.s = pe.Var(self.model.T, domain=pe.NonNegativeReals, bounds = (0,self.model.Eu))    #s: TES reserve quantity at period $t$  [kWt$\cdot$h]
         self.model.ucsu = pe.Var(self.model.T, domain=pe.NonNegativeReals)                             #u^{csu}: Cycle start-up energy inventory at period $t$ [kWt$\cdot$h]
         self.model.wdot = pe.Var(self.model.T, domain=pe.NonNegativeReals)                             #\dot{w}: Power cycle electricity generation at period $t$ [kWe]
         self.model.wdot_delta_plus = pe.Var(self.model.T, domain=pe.NonNegativeReals)	               #\dot{w}^{\Delta+}: Power cycle ramp-up in period $t$ [kWe]
@@ -137,7 +162,7 @@ class GeneralDispatch(object):
         self.model.y = pe.Var(self.model.T, domain=pe.Binary)         #y: 1 if cycle is generating electric power at period $t$; 0 otherwise
         self.model.ychsp = pe.Var(self.model.T, domain=pe.Binary)     #y^{chsp}: 1 if cycle hot start-up penalty is incurred at period $t$ (from standby); 0 otherwise
         self.model.ycsb = pe.Var(self.model.T, domain=pe.Binary)      #y^{csb}: 1 if cycle is in standby mode at period $t$; 0 otherwise
-        self.model.ycsd = pe.Var(self.model.T, domain=pe.Binary)	    #y^{csd}: 1 if cycle is shutting down at period $t$; 0 otherwise
+        self.model.ycsd = pe.Var(self.model.T, domain=pe.Binary)	  #y^{csd}: 1 if cycle is shutting down at period $t$; 0 otherwise
         self.model.ycsu = pe.Var(self.model.T, domain=pe.Binary)      #y^{csu}: 1 if cycle is starting up at period $t$; 0 otherwise
         self.model.ycsup = pe.Var(self.model.T, domain=pe.Binary)     #y^{csup}: 1 if cycle cold start-up penalty is incurred at period $t$ (from off); 0 otherwise
         self.model.ycgb = pe.Var(self.model.T, domain=pe.NonNegativeReals, bounds=(0,1))      #y^{cgb}: 1 if cycle begins electric power generation at period $t$; 0 otherwise
@@ -149,8 +174,15 @@ class GeneralDispatch(object):
         # self.model.wdot_s_prev_delta_minus = pe.Var(self.model.T, domain=pe.NonNegativeReals) #\dot{w}^{\Delta-}_{s,prev}: lower bound on energy sold [kWe]
         # self.model.ycoff = pe.Var(self.model.T, domain=pe.Binary)     #y^{c,off}: 1 if power cycle is off at period $t$; 0 otherwise
         
-                
+    @abstractmethod
     def add_objective(self):
+        """ Method to add an objective function to the Pyomo General Model
+        
+        This method adds an objective function to the Pyomo General Dispatch
+        model. Typically, the LORE team defined a nested function and passes it
+        into the Pyomo model. 
+        """
+        
         def objectiveRule(model):
             return (
                     sum( model.D[t] * model.Delta[t] * model.P[t]
