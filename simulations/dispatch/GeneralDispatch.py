@@ -598,6 +598,7 @@ class GeneralDispatchParamWrap(object):
             param_dict (dict) : updated dictionary of Pyomo dispatch parameters
         """
         u = self.u
+        sschm  = SSCHelperMethods
             
         if updated_dict is None:
             self.current_Plant = copy.deepcopy(self.SSC_dict)
@@ -612,7 +613,7 @@ class GeneralDispatchParamWrap(object):
         y0                 = (self.current_Plant['pc_op_mode_initial'] == 1) 
         ycsb0              = (self.current_Plant['pc_op_mode_initial'] == 2) 
         ycsu0              = (self.current_Plant['pc_op_mode_initial'] == 0 or self.current_Plant['pc_op_mode_initial'] == 4) 
-        pc_persist, pc_off = self.get_pc_persist_and_off_logs( param_dict, plant, npts ) if plant is not None else [48,48]
+        pc_persist, pc_off = sschm.get_pc_persist_and_off_logs( param_dict, plant, npts ) if plant is not None else [48,48]
         Yu0                = pc_persist if y0       else 0.0
         Yd0                = pc_off     if (not y0) else 0.0
         

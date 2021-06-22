@@ -288,3 +288,90 @@ class SSCHelperMethods(object):
         b = q[1]*(eta[1] - etap)
         
         return etap, b
+
+
+    def get_pc_persist_and_off_logs( param_dict, plant, npts ):
+        """ Method to log the amount of time Power Cycle has been ON and OFF
+        
+        This method uses SSC output data from the previous run to log how long
+        the Power Cycle has been both ON and OFF. One of the two outputs will be
+        populated in this method, and there are a bunch of logic statements to
+        correctly log the respective length of time. Method adapted from LORE Team. 
+        
+        TODO: can we just input another dictionary instead of passing the full Plant?
+        
+        Inputs:
+            param_dict (dict)    : dictionary of Pyomo dispatch parameters
+            plant (obj)          : the full PySAM Plant object. 
+            npts (int)           : length of the SSC horizon
+        Outputs:
+            disp_pc_persist0 (int) : length of time PC has been ON in the past segment
+            disp_pc_off0 (int)     : length of time PC has been OFF in the past segment
+        """
+        
+        # cycle state before start of most recent set of simulation calls
+        previous_pc_state = plant.SystemControl.pc_op_mode_initial
+        # cycle state after most recent set of simulation calls
+        current_pc_state  = plant.Outputs.pc_op_mode_final
+        # times when cycle is not generating power
+        is_pc_not_on = np.array( plant.Outputs.P_cycle[0:npts-1] ) <= 1.e-3
+        
+        ###=== Persist Log ===### 
+        # if PC is ON
+        if current_pc_state == 1:
+            # array of times (PC was generating power == True)
+            is_pc_current = np.array( plant.Outputs.P_cycle[0:npts-1] ) > 1.e-3 
+            
+        # if PC is STANDBY
+        elif current_pc_state == 2:
+            # array of times (PC was generating power == False) + (PC getting input energy == True) + (PC using startup power == False)
+            is_pc_current = np.logical_and( \
+                                np.logical_and( \
+                                    np.array( plant.Outputs.P_cycle[0:npts-1] ) <= 1.e-3, np.array( plant.Outputs.q_pb[0:npts-1] ) >= 1.e-3 ), \
+                                    np.array( plant.Outputs.q_dot_pc_startup[0:npts-1] ) <= 1.e-3 )
+        
+        # if PC is STARTUP
+        elif current_pc_state == 0:
+            # array of times (PC using startup power == True)
+            is_pc_current = np.array( plant.Outputs.q_dot_pc_startup[0:npts-1] ) > 1.e-3
+        
+        # if PC is OFF
+        elif current_pc_state == 3:
+            # array of times (PC getting input energy + PC using startup power == False)
+            is_pc_current = (np.array( plant.Outputs.q_dot_pc_startup[0:npts-1] ) + np.array( plant.Outputs.q_pb[0:npts-1] ) ) <= 1.e-3
+        
+        ###=== Indexing ===###
+        ssc_time_step = 1   # 1 hour per time step
+        n = npts            # length of ssc horizon
+        
+        ###=== OFF Log ===###
+        # if PC is ON
+        if current_pc_state == 1: 
+            # returning 0 for OFF log
+            disp_pc_off0 = 0.0
+        
+        # if PC is OFF for full simulation
+        elif is_pc_not_on.min() == 1:  
+            # add all OFF positions in this current horizon to existing OFF log
+            disp_pc_off0 = param_dict['Yd0'].to('hr').m + n*ssc_time_step  
+        
+        # if PC is OFF for some portion of current horizon
+        else:
+            # find indeces of changed OFF state
+            i = np.where(np.abs(np.diff(is_pc_not_on)) == 1)[0][-1]
+            # use index to find length of times PC was oFF
+            disp_pc_off0 = int(n-1-i)*ssc_time_step          
+        
+        ###=== Final Indexing and Logging ===###
+        # Plant has not changed state over this simulation window:
+        if n == 1 or np.abs(np.diff(is_pc_current)).max() == 0:  
+            # adding to existing persist array from Dispatch Params dictionary if state continued
+            disp_pc_persist0 = n*ssc_time_step if previous_pc_state != current_pc_state else param_dict['Yu0'].to('hr').m + n*ssc_time_step
+        # Plant *has* changed state over this simulation window:
+        else:
+            # find indeces of changed state
+            i = np.where(np.abs(np.diff(is_pc_current)) == 1)[0][-1]
+            # use index to find length of times PC was ON
+            disp_pc_persist0 = int(n-1-i)*ssc_time_step
+        
+        return disp_pc_persist0, disp_pc_off0
