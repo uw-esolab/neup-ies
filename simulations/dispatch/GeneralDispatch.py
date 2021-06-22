@@ -40,12 +40,13 @@ class GeneralDispatch(ABC):
     TODO: can we convert this to an abstract class in Python?
     """
     
+    @abstractmethod
     def __init__(self, params, unitRegistry):
         """ Initializes the GeneralDispatch module
         
         The instantiation of this class receives a parameter dictionary from
         the NE2 module (created using a DispatchWrapper class in this file but
-        separate from the GeneralDispatch or othe Dispatch classes). It first
+        separate from the GeneralDispatch or other Dispatch classes). It first
         creates an empty Concrete Model from Pyomo, then generates Parameters
         from the parameter dictionary, Variables, Objectives and Constraints.
         

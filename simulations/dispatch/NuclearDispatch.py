@@ -30,6 +30,12 @@ class NuclearDispatch(GeneralDispatch):
     def __init__(self, params, unitRegistry):
         """ Initializes the NuclearDispatch module
         
+        The instantiation of this class receives a parameter dictionary from
+        the NE2 module (created using the NuclearDispatchWrapper class). It calls
+        on the GeneralDispatch __init__ to create the model. The GeneralDispatcher first
+        creates an empty Concrete Model from Pyomo, then generates Parameters
+        from the parameter dictionary, Variables, Objectives and Constraints.
+        
         Inputs:
             params (dict)                : dictionary of Pyomo dispatch parameters
             unitRegistry (pint.registry) : unique unit Pint unit registry
@@ -40,6 +46,21 @@ class NuclearDispatch(GeneralDispatch):
 
 
     def generate_params(self, params):
+        """ Method to generate parameters within Pyomo Nuclear Model
+        
+        This method reads in a dictionary of pyomo parameters and uses these
+        inputs to initialize parameters for the Pyomo Concrete Model. This method
+        sets up parameters particularly for the Power Cycle. It also defines
+        some lambda functions that helps convert Pint units to Pyomo units. It
+        first instantiates PowerCycle parameters through GeneralDispatch, then
+        instantiates Nuclear parameters.
+        
+        Note: initial conditions are defined for the time period immediately 
+        preceding the start of this new Pyomo time segment. 
+        
+        Inputs:
+            params (dict)  : dictionary of Pyomo dispatch parameters
+        """
         
         # generating GeneralDispatch parameters first (PowerCycle, etc.)
         GeneralDispatch.generate_params(self, params)
@@ -79,6 +100,13 @@ class NuclearDispatch(GeneralDispatch):
         
 
     def generate_variables(self):
+        """ Method to generate parameters within Pyomo Nuclear Model
+        
+        This method instantiates variables for the Pyomo Concrete Model, with
+        domains. Does not need initial guesses here, they are defined in the 
+        parameters. We first define continuous and binary variables for the 
+        Power Cycle through GeneralDispatch, then declare nuclear variables.
+        """
         
         # generating GeneralDispatch variables first (PowerCycle, etc.)
         GeneralDispatch.generate_variables(self)
@@ -100,7 +128,14 @@ class NuclearDispatch(GeneralDispatch):
 
 
     def add_objective(self):
+        """ Method to add an objective function to the Pyomo Nuclear Model
+        
+        This method adds an objective function to the Pyomo Nuclear Dispatch
+        model. Typically, the LORE team defined a nested function and passes it
+        into the Pyomo model. 
+        """
         def objectiveRule(model):
+            """ Maximize profits vs. costs """
             return (
                     sum( model.D[t] * 
                     #obj_profit
@@ -119,66 +154,105 @@ class NuclearDispatch(GeneralDispatch):
         self.model.OBJ = pe.Objective(rule=objectiveRule, sense = pe.maximize)
 
 
-    def addReceiverStartupConstraints(self):
-        def rec_inventory_rule(model,t):
+    def addNuclearStartupConstraints(self):
+        """ Method to add nuclear startup constraints to the Pyomo Nuclear Model
+        
+        This method adds constraints pertaining to nuclear reactor startup within the 
+        Pyomo Nuclear Dispatch class. Several nested functions are defined. We don't
+        model nuclear reactor startup in SSC, this is kept for completeness' sake. This
+        is essentially used as a sanity check, if Pyomo deems that nuclear should shutdown
+        or startup then something is wrong and SSC will complain. 
+        """
+        def nuc_inventory_rule(model,t):
+            """ NP energy inventory for startup is balanced """
             if t == 1:
                 return model.unsu[t] <= model.unsu0 + model.Delta[t]*model.xnsu[t]
             return model.unsu[t] <= model.unsu[t-1] + model.Delta[t]*model.xnsu[t]
-        def rec_inv_nonzero_rule(model,t):
+        def nuc_inv_nonzero_rule(model,t):
+            """ NP energy inventory is positive if starting up """
             return model.unsu[t] <= model.En * model.ynsu[t]
-        def rec_startup_rule(model,t):
+        def nuc_startup_rule(model,t):
+            """ NP resumes normal operation after startup or if previously operating """
             if t == 1:
                 return model.yn[t] <= model.unsu[t]/model.En + model.yn0 + model.ynsb0
             return model.yn[t] <= model.unsu[t]/model.En + model.yn[t-1] + model.ynsb[t-1]
-        def rec_su_persist_rule(model,t):
+        def nuc_su_persist_rule(model,t):
+            """ NP cannot startup if operating in previous timestep """
             if t == 1: 
                 return model.ynsu[t] + model.yn0 <= 1
             return model.ynsu[t] +  model.yn[t-1] <= 1
         def ramp_limit_rule(model,t):
+            """ NP must abide by ramp rate limits """
             return model.xnsu[t] <= model.Qnu*model.ynsu[t]
         def nontrivial_solar_rule(model,t):
+            """ NP trivial power prevents startup """
             return model.ynsu[t] <= model.Qin_nuc[t]
-        self.model.rec_inventory_con = pe.Constraint(self.model.T,rule=rec_inventory_rule)
-        self.model.rec_inv_nonzero_con = pe.Constraint(self.model.T,rule=rec_inv_nonzero_rule)
-        self.model.rec_startup_con = pe.Constraint(self.model.T,rule=rec_startup_rule)
-        self.model.rec_su_persist_con = pe.Constraint(self.model.T,rule=rec_su_persist_rule)
+        
+        self.model.nuc_inventory_con = pe.Constraint(self.model.T,rule=nuc_inventory_rule)
+        self.model.nuc_inv_nonzero_con = pe.Constraint(self.model.T,rule=nuc_inv_nonzero_rule)
+        self.model.nuc_startup_con = pe.Constraint(self.model.T,rule=nuc_startup_rule)
+        self.model.nuc_su_persist_con = pe.Constraint(self.model.T,rule=nuc_su_persist_rule)
         self.model.ramp_limit_con = pe.Constraint(self.model.T,rule=ramp_limit_rule)
         self.model.nontrivial_solar_con = pe.Constraint(self.model.T,rule=nontrivial_solar_rule)
         
         
-    def addReceiverSupplyAndDemandConstraints(self):
-        def rec_production_rule(model,t):
+    def addNuclearSupplyAndDemandConstraints(self):
+        """ Method to add nuclear supply and demand constraints to the Pyomo Nuclear Model
+        
+        This method adds constraints pertaining to nuclear supply and demand energy
+        constraints. Some constraints might be redundant, they are adapted from the CSP
+        constraints (thanks LORE team).
+        """
+        def nuc_production_rule(model,t):
+            """ Upper bound on thermal energy produced by NP """
             return model.xn[t] + model.xnsu[t] + model.Qnsd*model.ynsd[t] <= model.Qin_nuc[t]
-        def rec_generation_rule(model,t):
+        def nuc_generation_rule(model,t):
+            """ Thermal energy production by NP only when operating """
             return model.xn[t] <= model.Qin_nuc[t] * model.yn[t]
         def min_generation_rule(model,t):
+            """ Lower bound on thermal energy produced by NP """
             return model.xn[t] >= model.Qnl * model.yn[t]
-        def rec_gen_persist_rule(model,t):
+        def nuc_gen_persist_rule(model,t):
+            """ NP not able to operate if no thermal power (adapted from CSP) """
             return model.yn[t] <= model.Qin_nuc[t]/model.Qnl
-        self.model.rec_production_con = pe.Constraint(self.model.T,rule=rec_production_rule)
-        self.model.rec_generation_con = pe.Constraint(self.model.T,rule=rec_generation_rule)
+        
+        self.model.nuc_production_con = pe.Constraint(self.model.T,rule=nuc_production_rule)
+        self.model.nuc_generation_con = pe.Constraint(self.model.T,rule=nuc_generation_rule)
         self.model.min_generation_con = pe.Constraint(self.model.T,rule=min_generation_rule)
-        self.model.rec_gen_persist_con = pe.Constraint(self.model.T,rule=rec_gen_persist_rule)
+        self.model.nuc_gen_persist_con = pe.Constraint(self.model.T,rule=nuc_gen_persist_rule)
         
         
-    def addReceiverNodeLogicConstraints(self):
-        def rec_su_sb_persist_rule(model,t):
+    def addNuclearNodeLogicConstraints(self):
+        """ Method to add nuclear logic constraints to the Pyomo General Model
+        
+        This method adds constraints pertaining to tracking binary variable
+        logic for the nuclear plant. Essentially, to make sure the correct modes
+        are activated when they are allowed. There is no Nuclear standby (nor CSP)
+        so those particular constraints are also just for completeness sake. 
+        """
+        def nuc_su_sb_persist_rule(model,t):
+            """ NP startup and standby cannot coincide """
             return model.ynsu[t] + model.ynsb[t] <= 1
-        def rec_sb_persist_rule(model,t):
+        def nuc_sb_persist_rule(model,t):
+            """ NP standby and operation cannot coincide """
             return model.yn[t] + model.ynsb[t] <= 1
         def rsb_persist_rule(model,t):
+            """ NP standby must follow operating or another standby timestep """
             if t == 1:
                 return model.ynsb[t] <= (model.yn0 + model.ynsb0) 
             return model.ynsb[t] <= model.yn[t-1] + model.ynsb[t-1]
-        def rec_su_pen_rule(model,t):
+        def nuc_su_pen_rule(model,t):
+            """ NP cold startup penalty """
             if t == 1:
                 return model.ynsup[t] >= model.ynsu[t] - model.ynsu0 
             return model.ynsup[t] >= model.ynsu[t] - model.ynsu[t-1]
-        def rec_hs_pen_rule(model,t):
+        def nuc_hs_pen_rule(model,t):
+            """ NP hot startup penalty: if we went from standby to operating """
             if t == 1:
                 return model.ynhsp[t] >= model.yn[t] - (1 - model.ynsb0)
             return model.ynhsp[t] >= model.yn[t] - (1 - model.ynsb[t-1])
-        def rec_shutdown_rule(model,t):
+        def nuc_shutdown_rule(model,t):
+            """ NP shutdown protocol """
             current_Delta = model.Delta[t]
             # structure of inequality is lb <= model.param <= ub with strict=False by default
             if self.eval_ineq(1,current_Delta) and t == 1: #not strict
@@ -190,26 +264,38 @@ class NuclearDispatch(GeneralDispatch):
             # only case remaining: Delta[t]<1, t>1
             return model.ynsd[t] >= model.yn[t-1] - model.yn[t] + model.ynsb[t-1] - model.ynsb[t]
         
-        self.model.rec_su_sb_persist_con = pe.Constraint(self.model.T,rule=rec_su_sb_persist_rule)
-        self.model.rec_sb_persist_con = pe.Constraint(self.model.T,rule=rec_sb_persist_rule)
+        self.model.nuc_su_sb_persist_con = pe.Constraint(self.model.T,rule=nuc_su_sb_persist_rule)
+        self.model.nuc_sb_persist_con = pe.Constraint(self.model.T,rule=nuc_sb_persist_rule)
         self.model.rsb_persist_con = pe.Constraint(self.model.T,rule=rsb_persist_rule)
-        self.model.rec_su_pen_con = pe.Constraint(self.model.T,rule=rec_su_pen_rule)
-        self.model.rec_hs_pen_con = pe.Constraint(self.model.T,rule=rec_hs_pen_rule)
-        self.model.rec_shutdown_con = pe.Constraint(self.model.T,rule=rec_shutdown_rule)
+        self.model.nuc_su_pen_con = pe.Constraint(self.model.T,rule=nuc_su_pen_rule)
+        self.model.nuc_hs_pen_con = pe.Constraint(self.model.T,rule=nuc_hs_pen_rule)
+        self.model.nuc_shutdown_con = pe.Constraint(self.model.T,rule=nuc_shutdown_rule)
         
 
     def addTESEnergyBalanceConstraints(self):
+        """ Method to add TES constraints to the Pyomo Nuclear Model
+        
+        This method adds constraints pertaining to TES energy balance from charging
+        with thermal power and discharging to the power cycle. 
+        
+        TODO: revisit tes_start_up_rule -> do we need this for nuclear?
+        TODO: do we need maintain_tes_rule?
+        """
         def tes_balance_rule(model, t):
+            """ Balance of energy to and from TES """
             if t == 1:
                 return model.s[t] - model.s0 == model.Delta[t] * (model.xn[t] - (model.Qc[t]*model.ycsu[t] + model.Qb*model.ycsb[t] + model.x[t] + model.Qnsb*model.ynsb[t]))
             return model.s[t] - model.s[t-1] == model.Delta[t] * (model.xn[t] - (model.Qc[t]*model.ycsu[t] + model.Qb*model.ycsb[t] + model.x[t] + model.Qnsb*model.ynsb[t]))
         def tes_upper_rule(model, t):
+            """ Upper bound to TES charge state """
             return model.s[t] <= model.Eu
         def tes_start_up_rule(model, t):
+            """ Ensuring sufficient TES charge level to startup NP """
             if t == 1:
                 return model.s0 >= model.Delta[t]*model.delta_ns[t]*( (model.Qu + model.Qb)*( -3 + model.ynsu[t] + model.y0 + model.y[t] + model.ycsb0 + model.ycsb[t] ) + model.x[t] + model.Qb*model.ycsb[t] )
             return model.s[t-1] >= model.Delta[t]*model.delta_ns[t]*( (model.Qu + model.Qb)*( -3 + model.ynsu[t] + model.y[t-1] + model.y[t] + model.ycsb[t-1] + model.ycsb[t] ) + model.x[t] + model.Qb*model.ycsb[t] )
         def maintain_tes_rule(model):
+            """ Final state of TES has to be less than or equal to start """
             return model.s[model.num_periods] <= model.s0
         
         self.model.tes_balance_con = pe.Constraint(self.model.T,rule=tes_balance_rule)
@@ -223,7 +309,8 @@ class NuclearDispatch(GeneralDispatch):
         
         This method adds constraints pertaining to efficiency constraints defined
         as a piecewise linear approximation. Also referred to as Cycle supply and 
-        demand constraints.
+        demand constraints. In the NuclearDispatch, we add an extra balance of power
+        with respect to energy storage and power produced from the nuclear reactor. 
         
         TODO: This should be revisited when adding MED!!
         """
@@ -245,13 +332,20 @@ class NuclearDispatch(GeneralDispatch):
 
 
     def generate_constraints(self):
+        """ Method to add ALL constraints to the Pyomo Nuclear Model
+        
+        This method calls the previously defined constraint methods to instantiate
+        them and add to the existing model. This method first calls the GeneralDispatch
+        version to set PowerCycle constraints, then calls nuclear constraint methods
+        to add them to the model. 
+        """
         
         # generating GeneralDispatch constraints first (PowerCycle, etc.)
         GeneralDispatch.generate_constraints(self)
         
-        self.addReceiverStartupConstraints()
-        self.addReceiverSupplyAndDemandConstraints()
-        self.addReceiverNodeLogicConstraints()
+        self.addNuclearStartupConstraints()
+        self.addNuclearSupplyAndDemandConstraints()
+        self.addNuclearNodeLogicConstraints()
         self.addTESEnergyBalanceConstraints()
 
     
