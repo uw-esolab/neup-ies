@@ -43,6 +43,12 @@ class GeneralDispatch(ABC):
     def __init__(self, params, unitRegistry):
         """ Initializes the GeneralDispatch module
         
+        The instantiation of this class receives a parameter dictionary from
+        the NE2 module (created using a DispatchWrapper class in this file but
+        separate from the GeneralDispatch or othe Dispatch classes). It first
+        creates an empty Concrete Model from Pyomo, then generates Parameters
+        from the parameter dictionary, Variables, Objectives and Constraints.
+        
         Inputs:
             params (dict)                : dictionary of Pyomo dispatch parameters
             unitRegistry (pint.registry) : unique unit Pint unit registry
@@ -180,10 +186,12 @@ class GeneralDispatch(ABC):
         
         This method adds an objective function to the Pyomo General Dispatch
         model. Typically, the LORE team defined a nested function and passes it
-        into the Pyomo model. 
+        into the Pyomo model. This version of the method should not be called,
+        is designated as an abstract method.
         """
         
         def objectiveRule(model):
+            """ Maximize profits """
             return (
                     sum( model.D[t] * model.Delta[t] * model.P[t]
                     for t in model.T) 
@@ -193,24 +201,43 @@ class GeneralDispatch(ABC):
 
 
     def addPersistenceConstraints(self):
+        """ Method to add persistence constraints to the Pyomo General Model
+        
+        This method adds constraints pertaining to persistence within the Pyomo
+        General Dispatch class. Namely, it constraints the amount of energy
+        sold into the grid in timestep t+1 relative to timestep t. It makes sure
+        that amount doesn't fluctuate by too much, whether increansig or decreasing.
+        """
+        
         # TODO: wdot_s_prev should be a single float, there should be an {if t==1} statement for wdot_s_prev
         #              and for all other t, we compare wdot_s[t] - wdot_s[t-1]
         def wdot_s_persist_pos_rule(model,t):
+            """ Energy sold shouldn't increase too much """
             return model.wdot_s_prev_delta_plus[t] >= model.wdot_s[t] - model.wdot_s_prev[t]
         def wdot_s_persist_neg_rule(model,t):
+            """ Energy sold shouldn't decrease too much """
             return model.wdot_s_prev_delta_minus[t] >= model.wdot_s_prev[t] - model.wdot_s[t]
+        
         self.model.persist_pos_con = pe.Constraint(self.model.T,rule=wdot_s_persist_pos_rule)
         self.model.persist_neg_con = pe.Constraint(self.model.T,rule=wdot_s_persist_neg_rule)
         
         
     def addCycleStartupConstraints(self):
+        """ Method to add cycle startup constraints to the Pyomo General Model
+        
+        This method adds constraints pertaining to cycle startup within the Pyomo
+        General Dispatch class. Several nested functions are defined. 
+        """
         def pc_inventory_rule(model, t):
+            """ PC energy inventory for startup is balanced """
             if t == 1:
                 return model.ucsu[t] <= model.ucsu0 + model.Delta[t] * model.Qc[t] * model.ycsu[t]
             return model.ucsu[t] <= model.ucsu[t-1] + model.Delta[t] * model.Qc[t] * model.ycsu[t]
         def pc_inv_nonzero_rule(model, t):
+            """ PC energy inventory is positive if cycle starting up """
             return model.ucsu[t] <= model.Ec * model.ycsu[t]
         def pc_startup_rule(model, t):
+            """ PC resumes normal operation after startup, standby, or previously operating """
             current_Delta = model.Delta[t]
             # structure of inequality is lb <= model.param <= ub with strict=False by default
             if self.eval_ineq(1,current_Delta) and t == 1:
@@ -222,10 +249,13 @@ class GeneralDispatch(ABC):
             # only case remaining: Delta[t]<1, t>1
             return self.eval_ineq(model.y[t], model.ucsu[t-1]/model.Ec + model.y[t-1] + model.ycsb[t-1])
         def pc_production_rule(model, t):
+            """ Heat input used for PC startup doesn't exceed max """
             return model.x[t] + model.Qc[t]*model.ycsu[t] <= model.Qu
         def pc_generation_rule(model, t):
+            """ Upper bound on heat input to PC """
             return model.x[t] <= model.Qu * model.y[t]
         def pc_min_gen_rule(model, t):
+            """ Lower bound on heat input to PC """
             return model.x[t] >= model.Ql * model.y[t]
         
         self.model.pc_inventory_con = pe.Constraint(self.model.T,rule=pc_inventory_rule)
@@ -237,31 +267,45 @@ class GeneralDispatch(ABC):
         
         
     def addPiecewiseLinearEfficiencyConstraints(self):
+        """ Method to add efficiency constraints to the Pyomo General Model
+        
+        This method adds constraints pertaining to efficiency constraints defined
+        as a piecewise linear approximation. Also referred to as Cycle supply and 
+        demand constraints.
+        """
         def power_rule(model, t):
+            """ Model of electric power vs. heat input as linear function """
             return model.wdot[t] == (model.etaamb[t]/model.eta_des)*(model.etap*model.x[t] + model.y[t]*(model.Wdotu - model.etap*model.Qu))
         def power_ub_rule(model, t):
+            """ Upper bound on PC electric power output """
             return model.wdot[t] <= model.Wdotu*(model.etaamb[t]/model.eta_des)*model.y[t]
         def power_lb_rule(model, t):
+            """ Lower bound on PC electric power output """
             return model.wdot[t] >= model.Wdotl*(model.etaamb[t]/model.eta_des)*model.y[t]
         def change_in_w_pos_rule(model, t):
+            """ Limit on increase in electric power production """
             if t == 1:
                 return model.wdot_delta_plus[t] >= model.wdot[t] - model.wdot0
             return model.wdot_delta_plus[t] >= model.wdot[t] - model.wdot[t-1]
         def change_in_w_neg_rule(model, t):
+            """ Limit on decrease in electric power production """
             if t == 1:
                 return model.wdot_delta_minus[t] >= model.wdot0 - model.wdot[t]
             return model.wdot_delta_minus[t] >= model.wdot[t-1] - model.wdot[t]
         def cycle_ramp_rate_pos_rule(model, t):
+            """ Limit on excessive ramp up of PC power production """
             return (
                     model.wdot_delta_plus[t] - model.wdot_v_plus[t] <= model.W_delta_plus*model.Delta[t] 
                     + ((model.etaamb[t]/model.eta_des)*model.W_u_plus[t] - model.W_delta_plus*model.Delta[t])*model.ycgb[t]
             )
         def cycle_ramp_rate_neg_rule(model, t):
+            """ Limit on excessive ramp down of PC power production"""
             return (
                     model.wdot_delta_minus[t] - model.wdot_v_minus[t] <= model.W_delta_minus*model.Delta[t] 
                     + ((model.etaamb[t]/model.eta_des)*model.W_u_minus[t] - model.W_delta_minus*model.Delta[t])*model.ycge[t]
             )
         def grid_max_rule(model, t):
+            """ Limits grid transmission for net power production """
             return model.wdot_s[t] <= model.Wdotnet[t]
 
         
@@ -276,19 +320,29 @@ class GeneralDispatch(ABC):
         
         
     def addMinUpAndDowntimeConstraints(self):
+        """ Method to add up and downtime constraints to the Pyomo General Model
+        
+        This method adds constraints pertaining to enforcing minimum uptime
+        and downtime of the power cycle whenever it starts or ends operation,
+        respectively. 
+        """
         def min_cycle_uptime_rule(model,t):
+            """ Enforce minimum cycle uptime """
             if pe.value(model.Delta_e[t] > (model.Yu - model.Yu0) * model.y0):
                 return sum(model.ycgb[tp] for tp in model.T if pe.value(model.Delta_e[t]-model.Delta_e[tp] < model.Yu) and pe.value(model.Delta_e[t] - model.Delta_e[tp] >= 0)) <= model.y[t]
             return pe.Constraint.Feasible
         def min_cycle_downtime_rule(model,t):
+            """ Enforce minimum cycle downtime """
             if pe.value(model.Delta_e[t] > ((model.Yd - model.Yd0)*(1-model.y0))):
                 return sum( model.ycge[tp] for tp in model.T if pe.value(model.Delta_e[t]-model.Delta_e[tp] < model.Yd) and pe.value(model.Delta_e[t] - model.Delta_e[tp] >= 0))  <= (1 - model.y[t])
             return pe.Constraint.Feasible
         def cycle_start_end_gen_rule(model,t):
+            """ Tracks startup and shutdown of plants (Garver 1962) """
             if t == 1:
                 return model.ycgb[t] - model.ycge[t] == model.y[t] - model.y0
             return model.ycgb[t] - model.ycge[t] == model.y[t] - model.y[t-1]
         def cycle_min_updown_init_rule(model,t):
+            """ Initial conditions for minimum uptime/downtime constraints """
             if self.eval_ineq(model.Delta_e[t],
                               max(pe.value(model.y0*(model.Yu-model.Yu0)), pe.value((1-model.y0)*(model.Yd-model.Yd0)))):
                 return model.y[t] == model.y0
@@ -301,31 +355,45 @@ class GeneralDispatch(ABC):
         
         
     def addCycleLogicConstraints(self):
+        """ Method to add cycle logic constraints to the Pyomo General Model
+        
+        This method adds constraints pertaining to tracking binary variable
+        logic for the power cycle. Essentially, to make sure the correct modes
+        are activated when they are allowed. 
+        """
         def pc_su_persist_rule(model, t):
+            """ PC startup can't follow an operating timestep """
             if t == 1:
                 return model.ycsu[t] + model.y0 <= 1
             return model.ycsu[t] + model.y[t-1] <= 1
         def pc_su_subhourly_rule(model, t):
+            """ PC startup and operation can't coincide """
             if self.eval_ineq(model.Delta[t],1,strict=True):
                 return model.y[t] + model.ycsu[t] <= 1
             return pe.Constraint.Feasible  #no analogous constraint for hourly or longer time steps
         def pc_sb_start_rule(model, t):
+            """ PC standby must follow operating or another standby timestep """
             if t == 1:
                 return model.ycsb[t] <= model.y0 + model.ycsb0
             return model.ycsb[t] <= model.y[t-1] + model.ycsb[t-1]
         def pc_sb_part1_rule(model, t):
+            """ PC startup and standby can't coincide """
             return model.ycsu[t] + model.ycsb[t] <= 1
         def pc_sb_part2_rule(model, t):
+            """ PC operation and standby can't coincide """
             return model.y[t] + model.ycsb[t] <= 1
         def cycle_sb_pen_rule(model, t):
+            """ PC hot startup penalty: if we went from standby to operating """
             if t == 1:
                  return model.ychsp[t] >= model.y[t] - (1 - model.ycsb0)
             return model.ychsp[t] >= model.y[t] - (1 - model.ycsb[t-1])
         def cycle_shutdown_rule(model, t):
+            """ PC shutdown only after operating or standby """
             if t == 1:
                 return model.ycsd[t] >= model.y0 - model.y[t] + model.ycsb0 - model.ycsb[t]
             return model.ycsd[t] >= model.y[t-1] - model.y[t] + model.ycsb[t-1] - model.ycsb[t]
         def cycle_start_pen_rule(model, t):
+            """ PC cold startup penalty """
             if t == 1: 
                 return model.ycsup[t] >= model.ycsu[t] - model.ycsu0 
             return model.ycsup[t] >= model.ycsu[t] - model.ycsu[t-1]
@@ -341,6 +409,13 @@ class GeneralDispatch(ABC):
 
 
     def generate_constraints(self):
+        """ Method to add ALL constraints to the Pyomo General Model
+        
+        This method calls the previously defined constraint methods to instantiate
+        them and add to the existing model. This method can be called from a 
+        derived class as well as overloaded.
+        """
+        
         # self.addPersistenceConstraints() # TODO: revisit these constraints later when we know how to add a term to Objective
         self.addPiecewiseLinearEfficiencyConstraints()
         self.addCycleStartupConstraints()
@@ -349,8 +424,25 @@ class GeneralDispatch(ABC):
     
     
     def eval_ineq(self, lb, expr, ub=None, strict=False, val=True):
+        """ Method to evaluate an inequality using pyomo syntax
         
+        This is a helper method to evaluate an inequality using the specific
+        pyomo syntax needed to evaluate when solving the model. 
+        
+        Inputs:
+            lb (**)       : lower bound of inequality
+            expr (**)     : middle value of inequality
+            ub (**)       : upper bound of inequality (if exists)
+            strict (bool) : strictness of inequality (True means < or >)
+            val (bool)    : flag to return value instead of expression
+        Outputs:
+            ineq (logical expr or float) : evaluated expression as a Pyomo object or float
+            
+        (**) - can either be a float input or a ParamData object
+        """
         ineq = pe.inequality(lb, expr, ub, strict=strict)
+        
+        # return value if requested, otherwise return Inequality Expression
         if val:
             return pe.value(ineq)
         else:
@@ -358,9 +450,35 @@ class GeneralDispatch(ABC):
 
 
     def solve_model(self, mipgap=0.7):
+        """ Method to solve the Pyomo model
+        
+        This method solves the Pyomo Concrete model that has been instantiated
+        and constructed in the __init__ of this class. The MILP (mixed integer
+        linear programming) problem is solved using a CBC (coin-or branch and cut)
+        solver that should be installed prior to solving. It takes in an input
+        for the MIP or Ratio gap. It is a termination condition for the optimization:
+        if the difference between the best known solution and worst known solution
+        (lower and upper bounds, respectively) is lower than this gap, we have
+        found our optimal solution. Here is a good primer:
+            https://www.gurobi.com/resource/mip-basics/
+        
+        Inputs:
+            mipgap (float) : minimum gap to find optimal solution
+        Outputs:
+            results (SolverResults) : dictionary of solver output after optimization,
+                                      contains information on convergence, etc.
+        """
+        
+        # define solver (Coin-or branch and cut)
         opt = pe.SolverFactory('cbc')
+        
+        # setting optimality condition
         opt.options["ratioGap"] = mipgap
+        
+        # solving model
         results = opt.solve(self.model, tee=False, keepfiles=False)
+        #TODO: assert successful optimization?
+        
         return results
     
     

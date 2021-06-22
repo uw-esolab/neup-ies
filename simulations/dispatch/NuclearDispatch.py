@@ -219,7 +219,16 @@ class NuclearDispatch(GeneralDispatch):
 
 
     def addPiecewiseLinearEfficiencyConstraints(self):
+        """ Method to add efficiency constraints to the Pyomo Nuclear Model
+        
+        This method adds constraints pertaining to efficiency constraints defined
+        as a piecewise linear approximation. Also referred to as Cycle supply and 
+        demand constraints.
+        
+        TODO: This should be revisited when adding MED!!
+        """
         def grid_sun_rule(model, t):
+            """ Balance of power flow, i.e. sold vs purchased """
             return (
                     model.wdot_s[t] - model.wdot_p[t] == (1-model.etac[t])*model.wdot[t]
                 		- model.Ln*(model.xn[t] + model.xnsu[t] + model.Qnl*model.ynsb[t])
