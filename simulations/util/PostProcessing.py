@@ -241,7 +241,7 @@ class Plots(object):
         ax.legend(loc=self.loc, fontsize=self.fsl)
 
         # plot Defocus array
-        ax2 = self.plot_SSC_generic(ax2, ['defocus'], ['Defocus'], 'Defocus (fraction)', None, \
+        ax2 = self.plot_SSC_generic(ax2, ['defocus'], ['Defocus'], 'Defocus', None, \
                                             plot_all_time, start_hr, end_hr )
         
         # plot legend for Energy arrays and also set line color to default C3 (reddish)

@@ -205,14 +205,49 @@ class SSCHelperMethods(object):
         
         T = T.to('kelvin')
         
-        a = -1.0e-10*u.J/u.g/u.kelvin**4
-        b = 2.0e-7*u.J/u.g/u.kelvin**3
-        c = 5.0e-6*u.J/u.g/u.kelvin**2
-        d = 1.4387*u.J/u.g/u.kelvin
+        a = -1.0e-10 * u.J/u.g/u.kelvin**4
+        b =  2.0e-7  * u.J/u.g/u.kelvin**3
+        c =  5.0e-6  * u.J/u.g/u.kelvin**2
+        d =  1.4387  * u.J/u.g/u.kelvin
         
         cp = (a*T**3 + b*T**2 + c*T + d).to('J/g/kelvin')
         
         return cp 
+
+
+    def get_rho_htf( u, T, rec_htf):
+        """ Method to calculate density of some heat transfer fluid 
+        
+        This method calculates density at average temperature for a heat transfer
+        fluid. In our case, we use molten salt. This method is copied from SSC,
+        specifically the htf_props cpp method. 
+        
+        Inputs:
+            u (unitRegistry) : Pint unit registry
+            T (float Quant)  : Temperature at which to find specific heat of HTF, in units of Kelvin
+            rec_htf (int)    : integer value representing HTF in SSC table
+        Outputs:
+            rho (float Quant) : fluid density value in kg/m^3
+            
+        """
+        
+        # HTF: 17 = Salt (60% NaNO3, 40% KNO3)
+        if rec_htf != 17:
+            print ('HTF %d not recognized'%rec_htf)
+            return 0.0
+        
+        T = T.to('kelvin')
+
+        a = -1.0e-07 * u.kg/u.m**3/u.kelvin**3
+        b =  0.0002  * u.kg/u.m**3/u.kelvin**2
+        c = -0.7875  * u.kg/u.m**3/u.kelvin
+        d =  2299.4  * u.kg/u.m**3
+        
+        rho = (a*T**3 + b*T**2 + c*T + d).to('kg/m^3')
+        
+        # rho = np.max(rho, 1000.0*u.kg/u.m**3)
+        
+        return rho 
 
 
     def get_ambient_T_corrections_from_udpc_inputs( u, Tamb, ud_array):
