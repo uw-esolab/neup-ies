@@ -4,6 +4,7 @@
 %=================================================================
 \documentclass[sustainability,article,submit,moreauthors,pdftex]{Definitions/mdpi} 
 \usepackage[utf8]{inputenc}
+\usepackage{listings}
 % For posting an early version of this manuscript as a preprint, you may use "preprints" as the journal and change "submit" to "accept". The document class line would be, e.g., \documentclass[preprints,article,accept,moreauthors,pdftex]{mdpi}. This is especially recommended for submission to arXiv, where line numbers should be removed before posting. For preprints.org, the editorial staff will make this change immediately prior to posting.
 
 %--------------------
@@ -107,9 +108,7 @@ $^{4}$ \quad Westinghouse Electric Company, Lead Fast Reactor Systems Developmen
 %\conference{} % An extended version of a conference paper
 
 % Abstract (Do not insert blank lines, i.e. \\) 
-\abstract{Separate cycles for solar concentrating power and lead fast reactors, which innately have issues with weather, grid demand, and time of day, have potential to benefit when coupled into a single super-critical CO2 Brayton cycle. Combining these cycles could allow for the lead fast reactor cycle to thermally charge the salt storage in the solar concentrating power cycle during low demand periods and be utilized when grid demand increases.\\ 
-The implementation of the independent cycles into one cycle must be modeled to find the preferred location of the lead fast reactor heat exchanger, concentrating solar power heat exchanger, turbines, and recuperators within the super-critical CO2 Brayton cycle. This work will illustrate the modeled cycles with constant operating points to draw a direct comparison between the studied cycle configurations and conclude on which configurations produces the highest efficiencies. Three cycle configurations were studied: 2-Cycle configuration, Combined cycle with two high temperature recuperators and three turbines, and a combined cycle with one high temperature recuperator and one turbine. In addition to these cycles, the location of where heat is drawn from the lead fast reactor cycle to charge the salt storage was analyzed. 
-.
+\abstract{Separate cycles for solar concentrating power and lead fast reactors, which innately have issues with weather, grid demand, and time of day, have potential to benefit when coupled into a single supercritical CO2 Brayton cycle. Combining these cycles could allow for the lead fast reactor cycle to thermally charge the salt storage in the solar concentrating power cycle during low demand periods and be utilized when grid demand increases. The implementation of the independent cycles into one cycle must be modeled to find the preferred location of the lead fast reactor heat exchanger, concentrating solar power heat exchanger, salt charging heat exchanger, turbines, and recuperators within the supercritical CO2 Brayton cycle. Three cycle configurations were studied: a two-cycle configuration which uses CSP and LFR heat for dedicated turbocompressors, combined cycle with two high temperature recuperators for both the CSP and LFR, and a combined cycle with CSP and LFR heat sources in parallel. 
 }
 
 
@@ -341,7 +340,7 @@ The implementation of the independent cycles into one cycle must be modeled to f
 % \end{tabular}}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\input{variables.tex}
+%\input{variables.tex}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Optional
