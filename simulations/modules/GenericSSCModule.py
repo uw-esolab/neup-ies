@@ -61,15 +61,16 @@ class GenericSSCModule(ABC):
         
         # read in dictionaries from json script
         PySAM_dict, SSC_dict, output_keys = FileMethods.read_json( self.json_name )
+
+        # save SSC_dict for usage later
+        self.SSC_dict = SSC_dict
+        self.PySAM_dict = PySAM_dict
         
         # storing SSC and Pyomo time horizons, inputs are in unit of hours
         self.ssc_horizon   = PySAM_dict['ssc_horizon'] * u.hr
         self.pyomo_horizon = PySAM_dict['pyomo_horizon'] * u.hr
         self.output_keys   = output_keys
         self.dispatch_time_step = dispatch_time_step * u.hr
-        
-        # save SSC_dict for usage later
-        self.SSC_dict = SSC_dict
         
         # save csv arrays to class 
         self.store_csv_arrays( PySAM_dict )
@@ -88,7 +89,7 @@ class GenericSSCModule(ABC):
             self.disp_results = {}
             
             # initialize dispatch wrap class
-            self.dispatch_wrap = self.create_dispatch_wrapper( PySAM_dict )
+            self.dispatch_wrap = self.create_dispatch_wrapper( self.PySAM_dict )
 
 
     def run_sim(self, run_loop=False, export=False, filename='temp.csv'):
