@@ -1,11 +1,11 @@
 %% Optional
-\abbreviations{Abbreviations}{
-The following abbreviations are used in this manuscript:\\
-
-PUT IN ALPHABETICAL ORDER?\\
+\abbreviations{Nomenclature}{
+The following abbreviations and variables are used in this manuscript:\\
 
 \noindent 
 \begin{tabular}{@{}ll}
+Abbreviations:\\
+\\
 NREL & National Renewable Energy Laboratory\\
 EES & Engineering Equation Solver\\
 CSP & Concentrating solar power\\
@@ -19,4 +19,47 @@ HTR & High temperature recuperator\\
 A & Alternator\\
 T & Turbine\\
 P & Pump\\
+ \\
+Variables [Units]:\\
+ \\
+$NTU$ & Number of transfer units [-]\\
+$CR$ & Capacitance Ratio [-]\\
+$\dot{C}$ & Capacitance Rate [W/K]\\
+$UA$ & Conductivity of heat exchanger [W/K]\\
+$\dot{Q}$ & Heat transfer rate [W]\\
+$\dot{W}$ & Power [W]\\
+$\eta$ & Isentropic efficiency [-]\\
+$\varepsilon$ & Effectiveness of heat exchanger [-]\\
+$\delta$ & Approach temperature of heat exchanger [K]\\
+$h$ & Enthalpy [J/kg]\\
+$\dot{m}$ & Mass flow rate [kg/s]\\
+$T$ & Temperature [K]\\
+$y$ & Splitter Fraction [-]\\
+$P$ & Pressure [Pa]\\
+$v$ & Volumetric flow rate [$m^3$/kg]\\
+$\Delta$ & Temperature difference [K]\\
 \end{tabular}}
+
+
+% overleaf.com/learn/latex/Code_listing
+\begin{lstlisting}[language=Python]
+    #My ees file
+    def myfunc():
+        return x
+    x = y
+
+    f = 8*y^2
+\end{lstlisting}
+
+
+% ------- new file
+
+\newcommand{\myeqnone}{%
+a^2 + b^2 = c^2
+}
+
+%---- back to the main file
+\begin{equation}
+    \myeqnone
+    \label{myeqnonelabel}
+\end{equation}
