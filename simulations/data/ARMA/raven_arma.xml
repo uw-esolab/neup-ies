@@ -57,11 +57,12 @@
 
   <Models>
     <ROM name="arma" subType="ARMA">
-      <Target>DHI,Time</Target>
+      <Target>Temperature,Time</Target>
       <Features>scaling</Features>
       <pivotParameter>Time</pivotParameter>
       <P>1</P>
       <Q>1</Q>
+      <Fourier>1440,525600</Fourier>
     </ROM>
   </Models>
 
@@ -83,14 +84,14 @@
     </PointSet>
     <HistorySet name="rawData">
       <Input>scaling</Input>
-      <Output>DHI,Time</Output>
+      <Output>Temperature,Time</Output>
       <options>
         <pivotParameter>Time</pivotParameter>
       </options>
     </HistorySet>
     <HistorySet name="synData">
       <Input>scaling</Input>
-      <Output>DHI,Time</Output>
+      <Output>Temperature,Time</Output>
       <options>
         <pivotParameter>Time</pivotParameter>
       </options>
