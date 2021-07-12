@@ -90,16 +90,22 @@ for d,dp in enumerate(dispatch):
             
 print('Made it past execute.')
 from util.PostProcessing import Plots
-upl = Plots(nuctes)
+upl = Plots(nuctes, lp=8, legend_offset=True, x_shrink=0.85)
 
-# 48 hour plot
+# creating figure
 fig = plt.figure(figsize=[13,3])
 ax1 = fig.add_subplot(211)
 ax2 = fig.add_subplot(212)
 plt.subplots_adjust(hspace=0)
 plt.gcf().subplots_adjust(bottom=0.2)
-plot_full_time = False
 
-upl.plot_SSC_power_and_energy(ax1, plot_full_time, legend_offset=True, start_hr=0, end_hr=48*4)
-upl.plot_SSC_op_modes(ax2, plot_full_time, legend_offset=True, start_hr=0, end_hr=48*4)
-# plt.tight_layout()
+# inputs to PostProcessing
+fullTime = False
+start = 0
+end   = 48*4
+
+# calling plots
+upl.plot_SSC_power_and_energy(ax=ax1, plot_all_time=fullTime, start_hr=start, end_hr=end, x_legend=1.175, y_legend_L=1.0, y_legend_R=0.2 )
+upl.plot_SSC_op_modes(        ax=ax2, plot_all_time=fullTime, start_hr=start, end_hr=end, x_legend=1.175, y_legend_L=1.0)
+
+
