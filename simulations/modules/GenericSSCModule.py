@@ -548,7 +548,8 @@ class GenericSSCModule(ABC):
                 'T_cond_out_log':    'T_cond_out',       # PC condenser water outlet temperature
                 'e_ch_tes_log'  :    'e_ch_tes',         # TES charge state
                 'op_mode_1_log' :    'op_mode_1',        # Operating Mode
-                'defocus_log'   :    'defocus'           # Nuclear "Defocus" fraction
+                'defocus_log'   :    'defocus',          # Nuclear "Defocus" fraction
+                'eta_log'       :    'eta'               # PC efficiency, gross
             }
         
         # empty array to initalize log arrays
