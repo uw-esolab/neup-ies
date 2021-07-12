@@ -116,7 +116,8 @@ class Plots(object):
             
         
     def plot_SSC_generic(self, ax, array_list, label_list, y_label, title_label=None, \
-                         plot_all_time=True, start_hr=0, end_hr=48, is_bar_graph=False, return_extra=False ):
+                         plot_all_time=True, start_hr=0, end_hr=48, is_bar_graph=False, \
+                         return_extra=False, hide_x = False ):
         
         # extracting full time array and slice 
         t_plot  = self.t_full.to('d')
@@ -151,8 +152,12 @@ class Plots(object):
             plot_on_axis( ax, get_array(a), l)
         
         # set labels and legend
+        if hide_x:
+            ax.axes.xaxis.set_visible(False)
+        else:
+            ax.set_xlabel(time_label, labelpad=self.lp, fontsize=self.fs, fontweight='bold')
         ax.set_ylabel(y_label,  labelpad=self.lp, fontsize=self.fs, fontweight='bold')
-        ax.set_xlabel(time_label, labelpad=self.lp, fontsize=self.fs, fontweight='bold')
+        
         
         # set title if given
         if title_label is not None:
@@ -165,7 +170,7 @@ class Plots(object):
             return ax
     
     
-    def plot_SSC_power_and_energy(self, ax=None, plot_all_time=True, title_label=None, start_hr=0, end_hr=48 ):
+    def plot_SSC_power_and_energy(self, ax=None, plot_all_time=True, title_label=None, legend_offset = False, start_hr=0, end_hr=48 ):
         
 
         # list of array strings 
@@ -189,19 +194,31 @@ class Plots(object):
         # twin axis to plot energy on opposite y-axis
         ax2 = ax.twinx() # this is the energy plot
         
+        # moving legend
+        if legend_offset:
+            #___Shrinking x-axis to allow room for legends off-plot
+            shrink = 0.85
+            box = ax.get_position()
+            ax.set_position([box.x0, box.y0, box.width * shrink, box.height])
+            
+            box = ax2.get_position()
+            ax2.set_position([box.x0, box.y0, box.width * shrink, box.height])
+            
+            self.lp = 8
+        
         # plot Power arrays
-        ax = self.plot_SSC_generic(ax, power_array_list, power_label_list, 'Power (MW)', title_label, \
-                                            plot_all_time, start_hr, end_hr )
+        ax = self.plot_SSC_generic(ax, power_array_list, power_label_list, 'Power \n(MW)', title_label, \
+                                            plot_all_time, start_hr, end_hr, hide_x=True )
         
         # custom y limits and ticks to be integers
-        ax2.set_ylim(-0.05*self.e_tes_design.m,self.e_tes_design.m)
+        ax2.set_ylim(-0.05*self.e_tes_design.m,0.7*self.e_tes_design.m)
 
         # plot Energy array(s)
-        ax2 = self.plot_SSC_generic(ax2, ['e_ch_tes'], ['Salt Charge Level (Thermal)'], 'Energy (MWh)', None, \
-                                            plot_all_time, start_hr, end_hr )
-        
+        ax2 = self.plot_SSC_generic(ax2, ['e_ch_tes'], ['Salt Charge Energy Level (Thermal)'], 'Energy \n(MWh)', None, \
+                                            plot_all_time, start_hr, end_hr, hide_x=True )
+            
         # plot legend for Power arrays
-        ax.legend(loc=self.loc_ul, fontsize=self.fsl)
+        ax.legend(loc=self.loc_ul, fontsize=self.fsl, bbox_to_anchor=(1.175, 1.0) )
         
         # custom y limits and ticks to be integers
         ax.set_ylim(-100,1100)
@@ -209,7 +226,9 @@ class Plots(object):
         
         # plot legend for Energy arrays and also set line color to default C3 (reddish)
         ax2.get_lines()[0].set_color("C4")
-        ax2.legend(loc=self.loc_ur, fontsize=self.fsl)
+        ax2.legend(loc=self.loc_ul, fontsize=self.fsl, bbox_to_anchor=(1.175, 0.2) )
+        
+                    
 
 
     def plot_SSC_massflow(self, ax=None, plot_all_time=True, title_label=None, start_hr=0, end_hr=48 ):
@@ -253,7 +272,7 @@ class Plots(object):
         ax2.set_yticks(np.arange(0,1.1,0.5))
 
 
-    def plot_SSC_op_modes(self, ax=None, plot_all_time=True, title_label=None, start_hr=0, end_hr=48 ):
+    def plot_SSC_op_modes(self, ax=None, plot_all_time=True, title_label=None, legend_offset = False, start_hr=0, end_hr=48 ):
         
         #-------------------------#
         #---- Creating Figure ----#
@@ -267,8 +286,22 @@ class Plots(object):
         # twin axis to plot energy on opposite y-axis
         ax2 = ax.twinx() # this is the price plot
     
+        # moving legend
+        if legend_offset:
+            #___Shrinking x-axis to allow room for legends off-plot
+            shrink = 0.85
+            box = ax.get_position()
+            ax.set_position([box.x0, box.y0, box.width * shrink, box.height])
+            
+            box = ax2.get_position()
+            ax2.set_position([box.x0, box.y0, box.width * shrink, box.height])
+            
+            self.loc = self.loc_ul
+            
+            self.lp = 8
+            
         # create plot for OP Mode line
-        ax2 = self.plot_SSC_generic(ax2, ['price'], [' '], 'Price Multiplier ($/kWh)', None, \
+        ax2 = self.plot_SSC_generic(ax2, ['price'], [None], 'Tariff \n($/kWh)', None, \
                                                        plot_all_time, start_hr, end_hr, True, False )
         
         # custom y limits and ticks to be integers
@@ -276,7 +309,7 @@ class Plots(object):
         ax2.set_yticks(np.arange(0,2.5,0.5))
         
         # create plot for OP Mode line
-        ax, d_slice1, t_plot1 = self.plot_SSC_generic(ax, ['op_mode_1'], [' '], 'Operating Mode', title_label, \
+        ax, d_slice1, t_plot1 = self.plot_SSC_generic(ax, ['op_mode_1'], [None], 'Operating \nMode', title_label, \
                                                        plot_all_time, start_hr, end_hr, False, True )
         
         # plot legend for OP Mode line
@@ -297,7 +330,7 @@ class Plots(object):
                 ax.plot(t_plot1[inds].m, op_mode_1[inds], 'o', label=self.operating_modes[int(op)])
         
         # plotting legend for OP modes
-        ax.legend(loc=self.loc, fontsize=self.fsl)
+        ax.legend(loc=self.loc, fontsize=self.fsl, bbox_to_anchor=(1.175, 0.8) )
         
         # custom y limits and ticks to be integers
         ax.set_ylim(0,40)
@@ -543,43 +576,43 @@ class Plots(object):
         
         self.operating_modes = [
             'ITER_START',
-            'CR_OFF__PC_OFF__TES_OFF__AUX_OFF',
-            'CR_SU__PC_OFF__TES_OFF__AUX_OFF',
-            'CR_ON__PC_SU__TES_OFF__AUX_OFF',
-            'CR_ON__PC_SB__TES_OFF__AUX_OFF',
-            'CR_ON__PC_RM_HI__TES_OFF__AUX_OFF',
-            'CR_ON__PC_RM_LO__TES_OFF__AUX_OFF',
-            'CR_DF__PC_MAX__TES_OFF__AUX_OFF',
-            'CR_OFF__PC_SU__TES_DC__AUX_OFF',
-            'CR_ON__PC_OFF__TES_CH__AUX_OFF',
-            'CR_ON__PC_TARGET__TES_CH__AUX_OFF',
-            'CR_ON__PC_TARGET__TES_DC__AUX_OFF',
-            'CR_ON__PC_RM_LO__TES_EMPTY__AUX_OFF',
-            'CR_DF__PC_OFF__TES_FULL__AUX_OFF',
-            'CR_OFF__PC_SB__TES_DC__AUX_OFF',
-            'CR_OFF__PC_MIN__TES_EMPTY__AUX_OFF',
-            'CR_OFF__PC_RM_LO__TES_EMPTY__AUX_OFF',
-            'CR_ON__PC_SB__TES_CH__AUX_OFF',
-            'CR_SU__PC_MIN__TES_EMPTY__AUX_OFF',
-            'CR_SU__PC_SB__TES_DC__AUX_OFF',
-            'CR_ON__PC_SB__TES_DC__AUX_OFF',
-            'CR_OFF__PC_TARGET__TES_DC__AUX_OFF',
-            'CR_SU__PC_TARGET__TES_DC__AUX_OFF',
-            'CR_ON__PC_RM_HI__TES_FULL__AUX_OFF',
-            'CR_ON__PC_MIN__TES_EMPTY__AUX_OFF',
-            'CR_SU__PC_RM_LO__TES_EMPTY__AUX_OFF',
-            'CR_DF__PC_MAX__TES_FULL__AUX_OFF',
-            'CR_ON__PC_SB__TES_FULL__AUX_OFF',
-            'CR_SU__PC_SU__TES_DC__AUX_OFF',
-            'CR_ON__PC_SU__TES_CH__AUX_OFF',
-            'CR_DF__PC_SU__TES_FULL__AUX_OFF',
-            'CR_DF__PC_SU__TES_OFF__AUX_OFF',
-            'CR_TO_COLD__PC_TARGET__TES_DC__AUX_OFF',
-            'CR_TO_COLD__PC_RM_LO__TES_EMPTY__AUX_OFF',
-            'CR_TO_COLD__PC_SB__TES_DC__AUX_OFF',
-            'CR_TO_COLD__PC_MIN__TES_EMPTY__AUX_OFF',
-            'CR_TO_COLD__PC_OFF__TES_OFF__AUX_OFF',
-            'CR_TO_COLD__PC_SU__TES_DC__AUX_OFF',
+            'NUC_OFF__PC_OFF__TES_OFF',
+            'NUC_SU__PC_OFF__TES_OFF',
+            'NUC_ON__PC_SU__TES_OFF',
+            'NUC_ON__PC_SB__TES_OFF',
+            'NUC_ON__PC_RM_HI__TES_OFF',
+            'NUC_ON__PC_RM_LO__TES_OFF',
+            'NUC_DF__PC_MAX__TES_OFF',
+            'NUC_OFF__PC_SU__TES_DC',
+            'NUC_ON__PC_OFF__TES_CH',
+            'NUC_ON__PC_TARGET__TES_CH',
+            'NUC_ON__PC_TARGET__TES_DC',
+            'NUC_ON__PC_RM_LO__TES_EMPTY',
+            'NUC_DF__PC_OFF__TES_FULL',
+            'NUC_OFF__PC_SB__TES_DC',
+            'NUC_OFF__PC_MIN__TES_EMPTY',
+            'NUC_OFF__PC_RM_LO__TES_EMPTY',
+            'NUC_ON__PC_SB__TES_CH',
+            'NUC_SU__PC_MIN__TES_EMPTY',
+            'NUC_SU__PC_SB__TES_DC',
+            'NUC_ON__PC_SB__TES_DC',
+            'NUC_OFF__PC_TARGET__TES_DC',
+            'NUC_SU__PC_TARGET__TES_DC',
+            'NUC_ON__PC_RM_HI__TES_FULL',
+            'NUC_ON__PC_MIN__TES_EMPTY',
+            'NUC_SU__PC_RM_LO__TES_EMPTY',
+            'NUC_DF__PC_MAX__TES_FULL',
+            'NUC_ON__PC_SB__TES_FULL',
+            'NUC_SU__PC_SU__TES_DC',
+            'NUC_ON__PC_SU__TES_CH',
+            'NUC_DF__PC_SU__TES_FULL',
+            'NUC_DF__PC_SU__TES_OFF',
+            'NUC_TO_COLD__PC_TARGET__TES_DC',
+            'NUC_TO_COLD__PC_RM_LO__TES_EMPTY',
+            'NUC_TO_COLD__PC_SB__TES_DC',
+            'NUC_TO_COLD__PC_MIN__TES_EMPTY',
+            'NUC_TO_COLD__PC_OFF__TES_OFF',
+            'NUC_TO_COLD__PC_SU__TES_DC',
             'ITER_END'  ]
 
     
