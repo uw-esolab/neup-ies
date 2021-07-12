@@ -28,8 +28,8 @@ class Plots(object):
     Note that the Plots class must be initialized before using. 
     """
 
-    def __init__(self, module, fsl='x-small', loc='best',
-                 lp=16, lps=12, fs=12, lw=2):
+    def __init__(self, module, fsl='x-small', loc='best', legend_offset=False,
+                 lp=16, lps=12, fs=12, lw=2, x_shrink=0.85, x_legend=12):
         """ Initializes the Plots module
 
         The instantiation of this class receives a full module object, the module
@@ -38,13 +38,15 @@ class Plots(object):
         matplotlib plots. 
 
         Inputs:
-            module (object)  : object representing NE2 module class after simulations
-            fsl (str)        : fontsize for legend
-            loc (str)        : location of legend
-            lp (int)         : labelpad for axis labels
-            lps (int)        : labelpad for axis labels - short version
-            fs (int)         : fontsize for labels, titles, etc.
-            lw (int)         : linewidth for plotting
+            module (object)     : object representing NE2 module class after simulations
+            fsl (str)           : fontsize for legend
+            loc (str)           : location of legend
+            legend_offset(bool) : are we plotting legends off-axis?
+            lp (int)            : labelpad for axis labels
+            lps (int)           : labelpad for axis labels - short version
+            fs (int)            : fontsize for labels, titles, etc.
+            lw (int)            : linewidth for plotting
+            x_shrink (float)    : (legend_offset==True) amount to shrink axis to make room for legend
         """
         # full PySAM module
         self.mod = module.Plant
@@ -60,12 +62,16 @@ class Plots(object):
         self.set_operating_modes_list()
 
         # user-defined plotting parameters
-        self.lp = lp  # labelpad
+        self.lp  = lp  # labelpad
         self.lps = lps  # labelpad short
-        self.fs = fs  # fontsize
-        self.lw = lw  # linewidth
+        self.fs  = fs  # fontsize
+        self.lw  = lw  # linewidth
         self.fsl = fsl  # fontsize legend
         self.loc = loc  # location of legend
+        
+        # offsetting legend
+        self.legend_offset = legend_offset # boolean - are we plotting legends off-axis?
+        self.x_shrink      = x_shrink # amount to shrink x-asis by to make room for legend
 
         # alternate legend locations
         self.loc_ur = 'upper right'
@@ -152,7 +158,6 @@ class Plots(object):
         The method receives as input an Axis or AxesSubplot object to plot on.
         It then plots the given x and y arrays as a line plot with given label 
         and color. Results plotted as line plot.
-        TODO: make label None by default
 
         Inputs:
             ax (object)        : axis object to plot on
@@ -175,7 +180,6 @@ class Plots(object):
         The method receives as input an Axis or AxesSubplot object to plot on.
         It then plots the given x and y arrays as a line plot with given label 
         and color. Results plotted as a bar plot.
-        TODO: make label None by default
 
         Inputs:
             ax (object)        : axis object to plot on
@@ -249,6 +253,12 @@ class Plots(object):
         #--- Creating Figure  ---#
         #========================#
         
+        if self.legend_offset:
+            # ___Shrinking x-axis to allow room for legends off-plot
+            shrink = self.x_shrink
+            box = ax.get_position()
+            ax.set_position([box.x0, box.y0, box.width * shrink, box.height])
+        
         # plotting data from list
         for a, l in zip(array_list, label_list):
             plot_data_on_axis(ax, get_array(a), l)
@@ -279,17 +289,105 @@ class Plots(object):
     # =============================================================================
     #  Specific SSC plots
     # =============================================================================
-    def plot_SSC_power_and_energy(self, ax=None, plot_all_time=True, title_label=None, legend_offset=False, start_hr=0, end_hr=48):
+    def plot_SSC_power_and_energy(self, ax=None, title_label=None, plot_all_time=True, \
+                                  start_hr=0, end_hr=48, hide_x=False, x_legend=1.2, \
+                                  y_legend_L=1.0, y_legend_R=1.0):
+        """ Method to plot power and energy data on single plot
 
-        # list of array strings
-        power_array_list = ['p_cycle', 'q_dot_rec_in', 'gen', 'q_dot_pc_su']
+        This method is used specifically to plot power and energy data from SSC simulation
+        results. Built-in options to plot legend off-axis. 
 
-        # list of labels for each array string to extract from Outputs
+        Inputs:
+            ax (object)         : axis object to plot on
+            plot_all_time(bool) : are we plotting all results or just a portion?
+            title_label(str)    : title name for plot
+            start_hr (int)      : (plot_all_time==False) hour used for starting index 
+            end_hr (int)        : (plot_all_time==False) hour used for ending index
+            hide_x(bool)        : hiding the x-axis from this particular plot
+            x_legend (float)    : (legend_offset==True) x-offset defining left-most side of legend
+            y_legend_L (float)  : (legend_offset==True) y-offset of left y-axis plot
+            y_legend_R (float)  : (legend_offset==True) y-offset of right y-axis plot
+        """
+        #========================#
+        #--- Creating Figure  ---#
+        #========================#
+
+        # if no axis object specified, create a figure and axis from it
+        if ax is None:
+            fig = plt.figure(figsize=[10, 5])
+            ax = fig.gca()   # this is the power plot
+
+        # twin axis to plot energy on opposite y-axis
+        ax2 = ax.twinx()  # this is the energy plot
+        
+        # custom y limits and ticks to be integers for Power
+        #TODO: add these as some sort of input, maybe dict?
+        ax.set_ylim(-100, 1100)
+        ax.set_yticks([0, 250, 500, 750, 1000])
+
+        # plot Power arrays
+        power_array_list = ['p_cycle', 'q_dot_rec_in', 'gen', 'q_dot_pc_su'] # list of array strings
         power_label_list = ['P_cycle (Electric)',
                             'Q_dot to Salt (Thermal)',
                             'Power generated (Electric)',
-                            'PC startup thermal power (Thermal)']
+                            'PC startup thermal power (Thermal)'] # list of labels for each array string to extract from Outputs
+        power_ylabel = 'Power \n(MW)'
+        ax  = self.plot_SSC_generic(ax, array_list=power_array_list, \
+                                    label_list=power_label_list, \
+                                    y_label=power_ylabel, \
+                                    title_label=title_label, \
+                                    plot_all_time=plot_all_time, \
+                                    start_hr=start_hr, end_hr=end_hr, hide_x=hide_x)
 
+        # custom y limits and ticks to be integers for Energy
+        ax2.set_ylim(-0.05*self.e_tes_design.m, 0.7*self.e_tes_design.m)
+
+        # plot Energy array(s)
+        energy_array_list = ['e_ch_tes']
+        energy_label_list = ['Salt Charge Energy Level (Thermal)']
+        energy_ylabel = 'Energy \n(MWh)'
+        ax2 = self.plot_SSC_generic(ax2, array_list=energy_array_list, \
+                                    label_list=energy_label_list, \
+                                    y_label=energy_ylabel, \
+                                    title_label=None, \
+                                    plot_all_time=plot_all_time, \
+                                    start_hr=start_hr, end_hr=end_hr, hide_x=hide_x)
+        
+        # set line color to default C4 (purple)
+        ax2.get_lines()[0].set_color("C4")
+        
+        #========================#
+        #---- Setting Labels ----#
+        #========================#
+        
+        # customizing legend(s)
+        if self.legend_offset:
+            ax.legend( loc=self.loc_ul, fontsize=self.fsl, bbox_to_anchor=(x_legend, y_legend_L)) # plot legend for Power arrays
+            ax2.legend(loc=self.loc_ul, fontsize=self.fsl, bbox_to_anchor=(x_legend, y_legend_R)) # plot legend for Energy arrays and also 
+        else:
+            ax.legend( loc=self.loc_ul, fontsize=self.fsl) # plot legend for Power arrays
+            ax2.legend(loc=self.loc_ul, fontsize=self.fsl) # plot legend for Energy arrays and also 
+
+
+    def plot_SSC_massflow(self, ax=None, title_label=None, plot_all_time=True, \
+                          start_hr=0, end_hr=48, hide_x=False,  x_legend=1.2, \
+                          y_legend_L=1.0, y_legend_R=1.0):
+        """ Method to plot mass flow and defocus data on single plot
+
+        This method is used specifically to plot mass flow and defocus data from SSC simulation
+        results. Built-in options to plot legend off-axis. 
+
+        Inputs:
+            ax (object)         : axis object to plot on
+            plot_all_time(bool) : are we plotting all results or just a portion?
+            title_label(str)    : title name for plot
+            start_hr (int)      : (plot_all_time==False) hour used for starting index 
+            end_hr (int)        : (plot_all_time==False) hour used for ending index
+            hide_x(bool)        : hiding the x-axis from this particular plot
+            x_legend (float)    : (legend_offset==True) x-offset defining left-most side of legend
+            y_legend_L (float)  : (legend_offset==True) y-offset of left y-axis plot
+            y_legend_R (float)  : (legend_offset==True) y-offset of right y-axis plot
+        """
         #========================#
         #--- Creating Figure  ---#
         #========================#
@@ -302,53 +400,71 @@ class Plots(object):
         # twin axis to plot energy on opposite y-axis
         ax2 = ax.twinx()  # this is the energy plot
 
-        # moving legend
-        if legend_offset:
-            # ___Shrinking x-axis to allow room for legends off-plot
-            shrink = 0.85
-            box = ax.get_position()
-            ax.set_position([box.x0, box.y0, box.width * shrink, box.height])
+        # plot mass flow arrays
+        mass_array_list = ['m_dot_pc', 'm_dot_rec'] # list of array strings
+        mass_label_list = ['PC HTF mass flow rate',
+                           'Receiver Mass Flow Rate'] # list of labels for each array string to extract from Outputs
+        mass_ylabel = 'Mass Flow \n(kg/s)'
+        ax  = self.plot_SSC_generic(ax, array_list=mass_array_list, \
+                                    label_list=mass_label_list, \
+                                    y_label=mass_ylabel, \
+                                    title_label=title_label, \
+                                    plot_all_time=plot_all_time, \
+                                    start_hr=start_hr, end_hr=end_hr, hide_x=hide_x)
+        
+        # custom y limits and ticks to be integers for Defocus
+        ax2.set_ylim(0, 1.3)
+        ax2.set_yticks(np.arange(0, 1.1, 0.5))
+        
+        # plot defocus array(s)
+        energy_array_list = ['defocus']
+        energy_label_list = ['Defocus']
+        energy_ylabel = 'Defocus'
+        ax2 = self.plot_SSC_generic(ax2, array_list=energy_array_list, \
+                                    label_list=energy_label_list, \
+                                    y_label=energy_ylabel, \
+                                    title_label=None, \
+                                    plot_all_time=plot_all_time, \
+                                    start_hr=start_hr, end_hr=end_hr, hide_x=hide_x)
+        
+        # set line color to default C3 (reddish)
+        ax2.get_lines()[0].set_color("C3")
+        
+        #========================#
+        #---- Setting Labels ----#
+        #========================#
+        
+        # customizing legend(s)
+        if self.legend_offset:
+            ax.legend( loc=self.loc_ul, fontsize=self.fsl, bbox_to_anchor=(x_legend, y_legend_L)) # plot legend for Power arrays
+            ax2.legend(loc=self.loc_ul, fontsize=self.fsl, bbox_to_anchor=(x_legend, y_legend_R)) # plot legend for Energy arrays and also 
+        else:
+            ax.legend( loc=self.loc_ul, fontsize=self.fsl) # plot legend for Power arrays
+            ax2.legend(loc=self.loc_ul, fontsize=self.fsl) # plot legend for Energy arrays and also 
 
-            box = ax2.get_position()
-            ax2.set_position([box.x0, box.y0, box.width * shrink, box.height])
 
-            self.lp = 8
+    def plot_SSC_op_modes(self, ax=None, title_label=None, plot_all_time=True, \
+                          start_hr=0, end_hr=48, hide_x=False,  x_legend=1.2, \
+                          y_legend_L=1.0, y_legend_R=1.0):
+        """ Method to plot operating modes history on single plot
 
-        # plot Power arrays
-        ax = self.plot_SSC_generic(ax, power_array_list, power_label_list, 'Power \n(MW)', title_label,
-                                   plot_all_time, start_hr, end_hr, hide_x=True)
+        This method is used specifically to plot operating modes and relative 
+        pricing data from SSC simulation results. Built-in options to plot legend off-axis. 
 
-        # custom y limits and ticks to be integers
-        ax2.set_ylim(-0.05*self.e_tes_design.m, 0.7*self.e_tes_design.m)
-
-        # plot Energy array(s)
-        ax2 = self.plot_SSC_generic(ax2, ['e_ch_tes'], ['Salt Charge Energy Level (Thermal)'], 'Energy \n(MWh)', None,
-                                    plot_all_time, start_hr, end_hr, hide_x=True)
-
-        # plot legend for Power arrays
-        ax.legend(loc=self.loc_ul, fontsize=self.fsl,
-                  bbox_to_anchor=(1.175, 1.0))
-
-        # custom y limits and ticks to be integers
-        ax.set_ylim(-100, 1100)
-        ax.set_yticks([0, 250, 500, 750, 1000])
-
-        # plot legend for Energy arrays and also set line color to default C3 (reddish)
-        ax2.get_lines()[0].set_color("C4")
-        ax2.legend(loc=self.loc_ul, fontsize=self.fsl,
-                   bbox_to_anchor=(1.175, 0.2))
-
-    def plot_SSC_massflow(self, ax=None, plot_all_time=True, title_label=None, start_hr=0, end_hr=48):
-
-        # list of array strings
-        power_array_list = ['m_dot_pc', 'm_dot_rec']
-
-        # list of labels for each array string to extract from Outputs
-        power_label_list = ['PC HTF mass flow rate',
-                            'Receiver Mass Flow Rate']
-        #-------------------------#
-        #---- Creating Figure ----#
-        #-------------------------#
+        Inputs:
+            ax (object)         : axis object to plot on
+            plot_all_time(bool) : are we plotting all results or just a portion?
+            title_label(str)    : title name for plot
+            start_hr (int)      : (plot_all_time==False) hour used for starting index 
+            end_hr (int)        : (plot_all_time==False) hour used for ending index
+            hide_x(bool)        : hiding the x-axis from this particular plot
+            x_legend (float)    : (legend_offset==True) x-offset defining left-most side of legend
+            y_legend_L (float)  : (legend_offset==True) y-offset of left y-axis plot
+            y_legend_R (float)  : (legend_offset==True) y-offset of right y-axis plot
+        """
+        #========================#
+        #--- Creating Figure  ---#
+        #========================#
 
         # if no axis object specified, create a figure and axis from it
         if ax is None:
@@ -356,118 +472,118 @@ class Plots(object):
             ax = fig.gca()   # this is the power plot
 
         # twin axis to plot energy on opposite y-axis
-        ax2 = ax.twinx()  # this is the defocus plot
-
-        # plotting Mass Flow arrays
-        ax = self.plot_SSC_generic(ax, power_array_list, power_label_list, 'Mass Flow (kg/s)', title_label,
-                                   plot_all_time, start_hr, end_hr)
-
-        # plotting legend for Mass Flow arrays
-        ax.legend(loc=self.loc, fontsize=self.fsl)
-
-        # plot Defocus array
-        ax2 = self.plot_SSC_generic(ax2, ['defocus'], ['Defocus'], 'Defocus', None,
-                                    plot_all_time, start_hr, end_hr)
-
-        # plot legend for Energy arrays and also set line color to default C3 (reddish)
-        ax2.get_lines()[0].set_color("C3")
-        ax2.legend(loc=self.loc, fontsize=self.fsl)
-
-        # custom y limits and ticks to be integers
-        ax2.set_ylim(0, 1.3)
-        ax2.set_yticks(np.arange(0, 1.1, 0.5))
-
-    def plot_SSC_op_modes(self, ax=None, plot_all_time=True, title_label=None, legend_offset=False, start_hr=0, end_hr=48):
-
-        #-------------------------#
-        #---- Creating Figure ----#
-        #-------------------------#
-
-        # if no axis object specified, create a figure and axis from it
-        if ax is None:
-            fig = plt.figure(figsize=[10, 5])
-            ax = fig.gca()   # this is the main plot
-
-        # twin axis to plot energy on opposite y-axis
-        ax2 = ax.twinx()  # this is the price plot
-
-        # moving legend
-        if legend_offset:
-            # ___Shrinking x-axis to allow room for legends off-plot
-            shrink = 0.85
-            box = ax.get_position()
-            ax.set_position([box.x0, box.y0, box.width * shrink, box.height])
-
-            box = ax2.get_position()
-            ax2.set_position([box.x0, box.y0, box.width * shrink, box.height])
-
-            self.loc = self.loc_ul
-
-            self.lp = 8
-
-        # create plot for OP Mode line
-        ax2 = self.plot_SSC_generic(ax2, ['price'], [None], 'Tariff \n($/kWh)', None,
-                                    plot_all_time, start_hr, end_hr, True, False)
+        ax2 = ax.twinx()  # this is the energy plot
 
         # custom y limits and ticks to be integers
         ax2.set_ylim(0, 2.5)
         ax2.set_yticks(np.arange(0, 2.5, 0.5))
-
-        # create plot for OP Mode line
-        ax, d_slice1, t_plot1 = self.plot_SSC_generic(ax, ['op_mode_1'], [None], 'Operating \nMode', title_label,
-                                                      plot_all_time, start_hr, end_hr, False, True)
-
-        # plot legend for OP Mode line
-        ax.legend(loc=self.loc, fontsize=self.fsl)
-
-        # set OP Mode line color to black
-        ax.get_lines()[0].set_color("k")
-
-        # extract operating modes to designated array
-        op_mode_1 = self.get_array('op_mode_1', d_slice1)
-
-        # Plotting data points over the OP mode line with different colors and labels
-        for op in self.op_mode_result[d_slice1]:
-            # getting unique operating modes
-            inds = (op_mode_1 == op)
-            # individual index getting plotted with unique color and label
-            if np.sum(inds):
-                ax.plot(t_plot1[inds].m, op_mode_1[inds], 'o',
-                        label=self.operating_modes[int(op)])
-
-        # plotting legend for OP modes
-        ax.legend(loc=self.loc, fontsize=self.fsl, bbox_to_anchor=(1.175, 0.8))
-
+        
+        # plot price array(s)
+        price_array_list = ['price']
+        price_label_list = [None]
+        price_ylabel = 'Tariff \n($/kWh)'
+        ax2 = self.plot_SSC_generic(ax2, array_list=price_array_list, \
+                                    label_list=price_label_list, \
+                                    y_label=price_ylabel, \
+                                    title_label=None, \
+                                    plot_all_time=plot_all_time, \
+                                    start_hr=start_hr, end_hr=end_hr, hide_x=hide_x, \
+                                    is_bar_graph=True)
+            
         # custom y limits and ticks to be integers
         ax.set_ylim(0, 40)
         ax.set_yticks(np.arange(0, 40, 5))
 
-    def plot_SSC_temperatures(self, ax=None, plot_all_time=True, title_label=None, start_hr=0, end_hr=48):
+        # plot operating mode arrays
+        op_array_list = ['op_mode_1'] # list of array strings
+        op_label_list = [None]        # list of labels for each array string to extract from Outputs
+        op_ylabel = 'Operating \nMode'
+        ax, d_slice, t_plot  = self.plot_SSC_generic(ax, array_list=op_array_list, \
+                                    label_list=op_label_list, \
+                                    y_label=op_ylabel, \
+                                    title_label=title_label, \
+                                    plot_all_time=plot_all_time, \
+                                    start_hr=start_hr, end_hr=end_hr, hide_x=hide_x, \
+                                    return_extra=True)
+        
+        #========================#
+        # extract operating modes to designated array
+        op_mode_1 = self.get_array('op_mode_1', d_slice)
 
-        # list of array strings
-        power_array_list = ['T_pc_in', 'T_pc_out', 'T_tes_cold', 'T_tes_hot']
+        # Plotting data points over the OP mode line with different colors and labels
+        for op in self.op_mode_result[d_slice]:
+            # getting unique operating modes
+            inds = (op_mode_1 == op)
+            # individual index getting plotted with unique color and label
+            if np.sum(inds):
+                ax.plot(t_plot[inds].m, op_mode_1[inds], 'o', label=self.operating_modes[int(op)])
 
-        # list of labels for each array string to extract from Outputs
-        power_label_list = ['PC HTF (hot) inlet temperature',
-                            'PC HTF (cold) outlet temperature',
-                            'TES cold temperature',
-                            'TES hot temperature']
+        #========================#
+        #---- Setting Labels ----#
+        #========================#
+        
+        # set OP Mode line color to black
+        ax.get_lines()[0].set_color("k")
+        
+        # customizing legend(s)
+        if self.legend_offset:
+            ax.legend( loc=self.loc_ul, fontsize=self.fsl, bbox_to_anchor=(x_legend, y_legend_L)) # plot legend for Power arrays
+        else:
+            ax.legend( loc=self.loc_ul, fontsize=self.fsl) # plot legend for Power arrays
 
-        #-------------------------#
-        #---- Creating Figure ----#
-        #-------------------------#
+
+    def plot_SSC_temperatures(self, ax=None, title_label=None, plot_all_time=True, \
+                              start_hr=0, end_hr=48, hide_x=False,  x_legend=1.2, \
+                              y_legend_L=1.0, y_legend_R=1.0):
+        """ Method to plot temperature data on single plot
+
+        This method is used specifically to plot temperature data from SSC simulation
+        results. Built-in options to plot legend off-axis. 
+
+        Inputs:
+            ax (object)         : axis object to plot on
+            plot_all_time(bool) : are we plotting all results or just a portion?
+            title_label(str)    : title name for plot
+            start_hr (int)      : (plot_all_time==False) hour used for starting index 
+            end_hr (int)        : (plot_all_time==False) hour used for ending index
+            hide_x(bool)        : hiding the x-axis from this particular plot
+            x_legend (float)    : (legend_offset==True) x-offset defining left-most side of legend
+            y_legend_L (float)  : (legend_offset==True) y-offset of left y-axis plot
+            y_legend_R (float)  : (legend_offset==True) y-offset of right y-axis plot
+        """
+        #========================#
+        #--- Creating Figure  ---#
+        #========================#
 
         # if no axis object specified, create a figure and axis from it
         if ax is None:
             fig = plt.figure(figsize=[10, 5])
             ax = fig.gca()   # this is the power plot
 
-        # plotting Mass Flow arrays
-        ax = self.plot_SSC_generic(ax, power_array_list, power_label_list, 'Temperature (C)', title_label,
-                                   plot_all_time, start_hr, end_hr)
+        # plot temperature arrays
+        temp_array_list = ['T_pc_in', 'T_pc_out', 'T_tes_cold', 'T_tes_hot'] # list of array strings
+        temp_label_list = ['PC HTF (hot) inlet temperature',
+                           'PC HTF (cold) outlet temperature',
+                           'TES cold temperature',
+                           'TES hot temperature'] # list of labels for each array string to extract from Outputs
+        temp_ylabel = 'Temperature (C)'
+        ax  = self.plot_SSC_generic(ax, array_list=temp_array_list, \
+                                    label_list=temp_label_list, \
+                                    y_label=temp_ylabel, \
+                                    title_label=title_label, \
+                                    plot_all_time=plot_all_time, \
+                                    start_hr=start_hr, end_hr=end_hr, hide_x=hide_x)
+        
+        #========================#
+        #---- Setting Labels ----#
+        #========================#
+        
+        # customizing legend(s)
+        if self.legend_offset:
+            ax.legend( loc=self.loc_ul, fontsize=self.fsl, bbox_to_anchor=(x_legend, y_legend_L)) # plot legend for Temperature arrays
+        else:
+            ax.legend( loc=self.loc_ul, fontsize=self.fsl) # plot legend for Temperature arrays
 
-        # plotting legend for Mass Flow arrays
-        ax.legend(loc=self.loc, fontsize=self.fsl)
 
     def plot_pyomo(self, dm):
 
