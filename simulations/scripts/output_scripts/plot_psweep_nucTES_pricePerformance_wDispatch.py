@@ -52,94 +52,116 @@ lcoe_nom_array      = Storage['lcoe_nom_array']
 # Plots
 # =============================================================================
 
-wiPyomo24 = tuple( [0,range(len(iterator1)),range(len(iterator2))] )
-wiPyomo48 = tuple( [1,range(len(iterator1)),range(len(iterator2))] )
-woPyomo   = tuple( [2,range(len(iterator1)),range(len(iterator2))] )
+## can we automate this:
+    # look through types of dispatch
+    #     find optimal value in each run
+    #     compare between each
+    #     print out optimum
+    # plot 2D map of dispatch type that lead to optimum
+    # plot the other two as contours
 
-x_array = P_ref*iterator2
+# creating figure object
+fig = plt.figure(constrained_layout=True)
+ax = fig.gca()
 
-array_list = [ ppa_array,
-               lcoe_nom_array ]
+#===================================
+# plotting 2D heat map for Qdot losses, with interpolation
+im = ax.imshow(lcoe_nom_array[2].T, origin='lower', interpolation='bicubic')
 
-colormarkers = ['C1', 'C2']
+# creating colorbar for the 2D heatmap with label
+cb = fig.colorbar(im, ax=ax)
+# cb.set_label(r'$\dot{q}^{L}_{TES}$ (MW)', fontweight = 'bold')
 
-label_list = [ 'PPA Price',
-               'LCOE Nom' ]
+# setting tick marks for x and y axes
+ax.set_xticks(range(len(iterator1)))
+ax.set_xticklabels(iterator1)
+ax.set_yticks(range(len(iterator2)))
+ax.set_yticklabels(iterator2)
 
-lw = 2
+# x_array = P_ref*iterator2
 
-# Energy Outputs
-fig = plt.figure(figsize=(12,8))
-ax1 = fig.add_subplot(211)
-ax2 = fig.add_subplot(212)
-# ax = fig.gca()
-ax1.plot( x_array, annual_energy_array[woPyomo] , 'C0',    linewidth = lw,  label='No Pyomo'  )
-ax1.plot( x_array, annual_energy_array[wiPyomo48] , 'C0--',  linewidth = lw,  label='w/ Pyomo 48 hr'  )
-ax1.plot( x_array, annual_energy_array[wiPyomo24] , 'C0:',  linewidth = lw,  label='w/ Pyomo 24 hr'  )
+# array_list = [ ppa_array,
+#                lcoe_nom_array ]
 
-# ax1.set_xlabel('P_ref', fontweight='bold')
-ax1.set_ylabel('Annual Energy (TWh)', fontweight='bold')
-ax1.legend(loc='best')
-ax1.set_title('tshours = {0} hr'.format(iterator1[0]), fontweight='bold')
+# colormarkers = ['C1', 'C2']
 
-# Financial Outputs
-# fig = plt.figure()
-# ax = fig.gca()
+# label_list = [ 'PPA Price',
+#                'LCOE Nom' ]
 
-for array, color, label in zip(array_list, colormarkers, label_list):
-    colorP1 = color + '--'
-    colorP2 = color + ':'
+# lw = 2
+
+# # Energy Outputs
+# fig = plt.figure(figsize=(12,8))
+# ax1 = fig.add_subplot(211)
+# ax2 = fig.add_subplot(212)
+# # ax = fig.gca()
+# ax1.plot( x_array, annual_energy_array[woPyomo] , 'C0',    linewidth = lw,  label='No Pyomo'  )
+# ax1.plot( x_array, annual_energy_array[wiPyomo48] , 'C0--',  linewidth = lw,  label='w/ Pyomo 48 hr'  )
+# ax1.plot( x_array, annual_energy_array[wiPyomo24] , 'C0:',  linewidth = lw,  label='w/ Pyomo 24 hr'  )
+
+# # ax1.set_xlabel('P_ref', fontweight='bold')
+# ax1.set_ylabel('Annual Energy (TWh)', fontweight='bold')
+# ax1.legend(loc='best')
+# ax1.set_title('tshours = {0} hr'.format(iterator1[0]), fontweight='bold')
+
+# # Financial Outputs
+# # fig = plt.figure()
+# # ax = fig.gca()
+
+# for array, color, label in zip(array_list, colormarkers, label_list):
+#     colorP1 = color + '--'
+#     colorP2 = color + ':'
     
-    labelP1 = label + ' w/ Pyomo 48 Hr'
-    labelP2 = label + ' w/ Pyomo 24 Hr'
+#     labelP1 = label + ' w/ Pyomo 48 Hr'
+#     labelP2 = label + ' w/ Pyomo 24 Hr'
     
-    ax2.plot( x_array, array[woPyomo]   , color,   linewidth = lw, label = label)
-    ax2.plot( x_array, array[wiPyomo48] , colorP1, linewidth = lw, label = labelP1)
-    ax2.plot( x_array, array[wiPyomo24] , colorP2, linewidth = lw, label = labelP2)
+#     ax2.plot( x_array, array[woPyomo]   , color,   linewidth = lw, label = label)
+#     ax2.plot( x_array, array[wiPyomo48] , colorP1, linewidth = lw, label = labelP1)
+#     ax2.plot( x_array, array[wiPyomo24] , colorP2, linewidth = lw, label = labelP2)
 
-ax2.set_xlabel('P_ref', fontweight='bold')
-ax2.set_ylabel('Price (¢/kWh)', fontweight='bold')
-ax2.legend(loc='best')
-# ax2.set_title('tshours = {0} hr'.format(iterator1[0]), fontweight='bold')
+# ax2.set_xlabel('P_ref', fontweight='bold')
+# ax2.set_ylabel('Price (¢/kWh)', fontweight='bold')
+# ax2.legend(loc='best')
+# # ax2.set_title('tshours = {0} hr'.format(iterator1[0]), fontweight='bold')
 
-# =============================================================================
-# Old plots
-# =============================================================================
+# # =============================================================================
+# # Old plots
+# # =============================================================================
 
-###--- Sweep over Cycle Max Fraction, tshours constant
-# fig = plt.figure()
-# ax = fig.gca()
-# axx = ax.twinx()
-# ax.plot( cycle_max, ppa_array.flatten() ,       linewidth = 3, label='PPA Price  (¢/kWh)'  )
-# ax.plot( cycle_max, lppa_nom_array.flatten() ,  linewidth = 3,  label='Levelized PPA Price - nominal  (¢/kWh)'  )
-# ax.plot( cycle_max, lppa_real_array.flatten() , linewidth = 3,  label='Levelized PPA Price - real (¢/kWh)'  )
-# ax.plot( cycle_max, lcoe_nom_array.flatten() ,  linewidth = 3,  label='Levelized COE - nominal  (¢/kWh)'  )
-# ax.plot( cycle_max, lcoe_real_array.flatten() , linewidth = 3,  label='Levelized COE - real  (¢/kWh)'  )
+# ###--- Sweep over Cycle Max Fraction, tshours constant
+# # fig = plt.figure()
+# # ax = fig.gca()
+# # axx = ax.twinx()
+# # ax.plot( cycle_max, ppa_array.flatten() ,       linewidth = 3, label='PPA Price  (¢/kWh)'  )
+# # ax.plot( cycle_max, lppa_nom_array.flatten() ,  linewidth = 3,  label='Levelized PPA Price - nominal  (¢/kWh)'  )
+# # ax.plot( cycle_max, lppa_real_array.flatten() , linewidth = 3,  label='Levelized PPA Price - real (¢/kWh)'  )
+# # ax.plot( cycle_max, lcoe_nom_array.flatten() ,  linewidth = 3,  label='Levelized COE - nominal  (¢/kWh)'  )
+# # ax.plot( cycle_max, lcoe_real_array.flatten() , linewidth = 3,  label='Levelized COE - real  (¢/kWh)'  )
 
-# axx.plot( cycle_max , npv_array , 'k' , linewidth = 3, )
+# # axx.plot( cycle_max , npv_array , 'k' , linewidth = 3, )
 
-# ax.set_xlabel('Cycle Max Fraction', fontweight='bold')
-# ax.set_ylabel('Price (¢/kWh)', fontweight='bold')
-# axx.set_ylabel('Price ($M)', fontweight='bold')
-# ax.legend(loc='best')
-# ax.set_title('tshours = {0}'.format(tshours[0]))
+# # ax.set_xlabel('Cycle Max Fraction', fontweight='bold')
+# # ax.set_ylabel('Price (¢/kWh)', fontweight='bold')
+# # axx.set_ylabel('Price ($M)', fontweight='bold')
+# # ax.legend(loc='best')
+# # ax.set_title('tshours = {0}'.format(tshours[0]))
 
-###--- Sweep over tshours, Cycle Max Fraction constant
-# fig = plt.figure()
-# ax = fig.gca()
-# axx = ax.twinx()
-# ax.plot( tshours, ppa_array.flatten() ,       linewidth = 3, label='PPA Price  (¢/kWh)'  )
-# ax.plot( tshours, lppa_nom_array.flatten() ,  linewidth = 3,  label='Levelized PPA Price - nominal  (¢/kWh)'  )
-# ax.plot( tshours, lppa_real_array.flatten() , linewidth = 3,  label='Levelized PPA Price - real (¢/kWh)'  )
-# ax.plot( tshours, lcoe_nom_array.flatten() ,  linewidth = 3,  label='Levelized COE - nominal  (¢/kWh)'  )
-# ax.plot( tshours, lcoe_real_array.flatten() , linewidth = 3,  label='Levelized COE - real  (¢/kWh)'  )
+# ###--- Sweep over tshours, Cycle Max Fraction constant
+# # fig = plt.figure()
+# # ax = fig.gca()
+# # axx = ax.twinx()
+# # ax.plot( tshours, ppa_array.flatten() ,       linewidth = 3, label='PPA Price  (¢/kWh)'  )
+# # ax.plot( tshours, lppa_nom_array.flatten() ,  linewidth = 3,  label='Levelized PPA Price - nominal  (¢/kWh)'  )
+# # ax.plot( tshours, lppa_real_array.flatten() , linewidth = 3,  label='Levelized PPA Price - real (¢/kWh)'  )
+# # ax.plot( tshours, lcoe_nom_array.flatten() ,  linewidth = 3,  label='Levelized COE - nominal  (¢/kWh)'  )
+# # ax.plot( tshours, lcoe_real_array.flatten() , linewidth = 3,  label='Levelized COE - real  (¢/kWh)'  )
 
-# axx.plot( tshours , npv_array.flatten() , 'k' , linewidth = 3, )
+# # axx.plot( tshours , npv_array.flatten() , 'k' , linewidth = 3, )
 
-# ax.set_xlabel('tshours', fontweight='bold')
-# ax.set_ylabel('Price (¢/kWh)', fontweight='bold')
-# axx.set_ylabel('Price ($M)', fontweight='bold')
-# ax.legend(loc='best')
-# ax.set_title('cycle_max = {0}'.format(cycle_max[0]))
+# # ax.set_xlabel('tshours', fontweight='bold')
+# # ax.set_ylabel('Price (¢/kWh)', fontweight='bold')
+# # axx.set_ylabel('Price ($M)', fontweight='bold')
+# # ax.legend(loc='best')
+# # ax.set_title('cycle_max = {0}'.format(cycle_max[0]))
 
 
