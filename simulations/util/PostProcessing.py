@@ -20,7 +20,7 @@ rc('font', weight='bold', size=12)
 class Plots(object):
     """
     The Plots class is a part of the PostProcessing family of classes. It can 
-    output results from both SSC and Pyomo-only models. This might be a 
+    output results from SSCmodels. This might be a 
     Sisyphus-ian task as some of the parameters are very unique to whatever 
     plot you are trying to make, but will do my best to provide basic structures
     and templates to work off of. 
@@ -82,6 +82,7 @@ class Plots(object):
         self.loc_cl = 'center left'  # location of legend
 
         # saving some outputs for plotting
+        # TODO: make this its own method, that way we can overload it later
         self.p_cycle = np.asarray(Outputs.P_cycle) * u.MW
         self.gen = (np.asarray(Outputs.gen) * u.kW).to('MW')
         self.q_dot_rec_in = np.asarray(Outputs.q_dot_rec_inc) * u.MW
@@ -97,8 +98,7 @@ class Plots(object):
         self.e_ch_tes = np.asarray(Outputs.e_ch_tes) * u.MWh
         self.op_mode_1 = np.asarray(Outputs.op_mode_1)
         self.defocus = np.asarray(Outputs.defocus)
-        self.price = np.asarray(
-            self.mod.TimeOfDeliveryFactors.dispatch_factors_ts)
+        self.price = np.asarray(self.mod.TimeOfDeliveryFactors.dispatch_factors_ts)
 
         # setting static inputs
         self.q_rec_design  = self.mod.SystemDesign.q_dot_nuclear_des * u.MW  # receiver design thermal power
@@ -170,8 +170,7 @@ class Plots(object):
         if color is None:
             ax.plot(x_array.m, y_array, linewidth=self.lw, label=label)
         else:
-            ax.plot(x_array.m, y_array, color=color,
-                    linewidth=self.lw, label=label)
+            ax.plot(x_array.m, y_array, color=color, linewidth=self.lw, label=label)
 
 
     def bar_plot_on_axis(self, ax, x_array, y_array, dx, label, alpha=0.5, color=None):
@@ -289,6 +288,7 @@ class Plots(object):
     # =============================================================================
     #  Specific SSC plots
     # =============================================================================
+    
     def plot_SSC_power_and_energy(self, ax=None, title_label=None, plot_all_time=True, \
                                   start_hr=0, end_hr=48, hide_x=False, x_legend=1.2, \
                                   y_legend_L=1.0, y_legend_R=1.0):
@@ -506,8 +506,9 @@ class Plots(object):
                                     start_hr=start_hr, end_hr=end_hr, hide_x=hide_x, \
                                     return_extra=True)
         
-        #========================#
-        # extract operating modes to designated array
+        #==================================================#
+        #---- extract operating modes to designated array
+        #==================================================#
         op_mode_1 = self.get_array('op_mode_1', d_slice)
 
         # Plotting data points over the OP mode line with different colors and labels
@@ -585,78 +586,198 @@ class Plots(object):
             ax.legend( loc=self.loc_ul, fontsize=self.fsl) # plot legend for Temperature arrays
 
 
+    def set_operating_modes_list(self):
+        """ Method to define list of operating modes
+
+        This method creates a list of operating modes pertaining to the specific SSC module we are
+        using. This particular list was taken from /ssc/tcs/csp_solver_core.h, in the 
+        `C_system_operating_modes` class.
+        """
+
+        self.operating_modes = [
+            'ITER_START',
+            'NUC_OFF__PC_OFF__TES_OFF',
+            'NUC_SU__PC_OFF__TES_OFF',
+            'NUC_ON__PC_SU__TES_OFF',
+            'NUC_ON__PC_SB__TES_OFF',
+            'NUC_ON__PC_RM_HI__TES_OFF',
+            'NUC_ON__PC_RM_LO__TES_OFF',
+            'NUC_DF__PC_MAX__TES_OFF',
+            'NUC_OFF__PC_SU__TES_DC',
+            'NUC_ON__PC_OFF__TES_CH',
+            'NUC_ON__PC_TARGET__TES_CH',
+            'NUC_ON__PC_TARGET__TES_DC',
+            'NUC_ON__PC_RM_LO__TES_EMPTY',
+            'NUC_DF__PC_OFF__TES_FULL',
+            'NUC_OFF__PC_SB__TES_DC',
+            'NUC_OFF__PC_MIN__TES_EMPTY',
+            'NUC_OFF__PC_RM_LO__TES_EMPTY',
+            'NUC_ON__PC_SB__TES_CH',
+            'NUC_SU__PC_MIN__TES_EMPTY',
+            'NUC_SU__PC_SB__TES_DC',
+            'NUC_ON__PC_SB__TES_DC',
+            'NUC_OFF__PC_TARGET__TES_DC',
+            'NUC_SU__PC_TARGET__TES_DC',
+            'NUC_ON__PC_RM_HI__TES_FULL',
+            'NUC_ON__PC_MIN__TES_EMPTY',
+            'NUC_SU__PC_RM_LO__TES_EMPTY',
+            'NUC_DF__PC_MAX__TES_FULL',
+            'NUC_ON__PC_SB__TES_FULL',
+            'NUC_SU__PC_SU__TES_DC',
+            'NUC_ON__PC_SU__TES_CH',
+            'NUC_DF__PC_SU__TES_FULL',
+            'NUC_DF__PC_SU__TES_OFF',
+            'NUC_TO_COLD__PC_TARGET__TES_DC',
+            'NUC_TO_COLD__PC_RM_LO__TES_EMPTY',
+            'NUC_TO_COLD__PC_SB__TES_DC',
+            'NUC_TO_COLD__PC_MIN__TES_EMPTY',
+            'NUC_TO_COLD__PC_OFF__TES_OFF',
+            'NUC_TO_COLD__PC_SU__TES_DC',
+            'ITER_END']
+
+
+class DispatchPlots(object):
+    """
+    The Plots class is a part of the PostProcessing family of classes. It can 
+    output results from Pyomo Dispatch models. 
+
+    Note that the DispatchPlots class must be initialized before using. 
+    """
+
+    def __init__(self, model, fsl='x-small', loc='best', legend_offset=False,
+                 lp=16, lps=12, fs=12, lw=2, x_shrink=0.75, x_legend=12):
+        """ Initializes the Plots module
+
+        The instantiation of this class receives a full Dispatch object, the module
+        being one of the Pyomo Dispatch model created in the /neup-ies/simulations/dispatch directory.
+        It also contains various inputs relating to cosmetic parameters for
+        matplotlib plots. 
+
+        Inputs:
+            model (object)      : object representing Pyomo Dispatch Model with results
+            fsl (str)           : fontsize for legend
+            loc (str)           : location of legend
+            legend_offset(bool) : are we plotting legends off-axis?
+            lp (int)            : labelpad for axis labels
+            lps (int)           : labelpad for axis labels - short version
+            fs (int)            : fontsize for labels, titles, etc.
+            lw (int)            : linewidth for plotting
+            x_shrink (float)    : (legend_offset==True) amount to shrink axis to make room for legend
+        """
+        # full Dispatch Model from Pyomo
+        self.dm = model
+
+        # user-defined plotting parameters
+        self.lp  = lp  # labelpad
+        self.lps = lps  # labelpad short
+        self.fs  = fs  # fontsize
+        self.lw  = lw  # linewidth
+        self.fsl = fsl  # fontsize legend
+        self.loc = loc  # location of legend
+        
+        # offsetting legend
+        self.legend_offset = legend_offset # boolean - are we plotting legends off-axis?
+        self.x_shrink      = x_shrink # amount to shrink x-asis by to make room for legend
+
+        # alternate legend locations
+        self.loc_ur = 'upper right'
+        self.loc_ul = 'upper left'
+        self.loc_lr = 'lower right'  # location of legend
+        self.loc_ll = 'lower left'  # location of legend
+        self.loc_cr = 'center right'  # location of legend
+        self.loc_cl = 'center left'  # location of legend
+        
+        # extract outputs from Dispatch model
+        self.set_pyomo_outputs()
+    
+    
+    def set_pyomo_outputs(self):
+        """ Method to define list of Pyomo output arrays
+
+        This method extracts outputs from the Pyomo Dispatch model, converts them to numpy arrays
+        and saves them to `self`. 
+        """
+        
+        # Dispatch Model with results
+        dm = self.dm
+        
+        # lambda functions
+        extract_from_model = lambda name: getattr(dm.model, name)
+        extract_array      = lambda name: np.array([ pe.value(extract_from_model(name)[t]) for t in dm.model.T ])
+        extract_energy     = lambda name: (extract_array(name)*u.kWh).to('MWh') 
+        extract_power      = lambda name: (extract_array(name)*u.kW).to('MW') 
+        
+        # Time and Pricing Arrays
+        self.t_array = extract_array('Delta_e') 
+        self.p_array = extract_array('P')
+
+        # Energy Arrays
+        self.s_array     = extract_energy('s')
+        self.ucsu_array  = extract_energy('ucsu')
+        self.unsu_array  = extract_energy('unsu')
+        
+        # Power Arrays
+        self.wdot_array             = extract_power('wdot')
+        self.wdot_delta_plus_array  = extract_power('wdot_delta_plus')
+        self.wdot_delta_minus_array = extract_power('wdot_delta_minus')
+        self.wdot_v_plus_array      = extract_power('wdot_v_plus')
+        self.wdot_v_minus_array     = extract_power('wdot_v_minus')
+        self.wdot_s_array           = extract_power('wdot_s')
+        self.wdot_p_array           = extract_power('wdot_p')
+        self.x_array                = extract_power('x')
+        self.xn_array               = extract_power('xn')
+        self.xnsu_array             = extract_power('xnsu')
+
+        # Binary Arrays (Nuclear)
+        self.yn_array    = extract_array('yn') 
+        self.ynhsp_array = extract_array('ynhsp') 
+        self.ynsb_array  = extract_array('ynsb') 
+        self.ynsd_array  = extract_array('ynsu') 
+        self.ynsu_array  = extract_array('ynsu') 
+        self.ynsup_array = extract_array('ynsup') 
+        
+        # Binary Arrays (Cycle). adding a +2 to show all binaries on the same plot
+        self.y_array     = extract_array('y') + 2
+        self.ychsp_array = extract_array('ychsp') + 2
+        self.ycsb_array  = extract_array('ycsb')  + 2
+        self.ycsd_array  = extract_array('ycsd')  + 2
+        self.ycsu_array  = extract_array('ycsu')  + 2
+        self.ycsup_array = extract_array('ycsup') + 2
+        self.ycgb_array  = extract_array('ycgb')  + 2
+        self.ycge_array  = extract_array('ycge')  + 2
+    
+    
+    def overwrite_model(self, new_model):
+        """ Overwrites current dispatch model saved to self
+
+        This method deletes current model saved to object and overwrites it with new model that
+        is used as input to this method.
+
+        Inputs:
+            new_model (object)   : object representing Pyomo Dispatch Model with results
+        """
+        
+        # delete current Dispatch mode
+        del self.dm
+        
+        # save new model to self
+        self.dm = new_model
+        
+        # re-set the pyomo outputs from new model
+        self.set_pyomo_outputs()
+        
+
     def plot_pyomo(self, dm):
 
-        lw = self.lw
-        lp = self.lp
-        lps = self.lps
-        fs = self.fs
-        fsl = self.fsl
-        loc = 'best'
+        lw     = self.lw
+        lp     = self.lp
+        lps    = self.lps
+        fs     = self.fs
+        fsl    = self.fsl
+        loc    = self.loc
         loc_cr = self.loc_cr
 
-        # ___Time Array
-        t_array = np.array([pe.value(dm.model.Delta_e[t]) for t in dm.model.T])
-
-        # __Price Array
-        p_array = np.array([pe.value(dm.model.P[t]) for t in dm.model.T])
-
-        # ___Energy Arrays
-        s_array = (np.array([pe.value(dm.model.s[t])
-                   for t in dm.model.T])*u.kWh).to('MWh')
-        ucsu_array = (np.array([pe.value(dm.model.ucsu[t])
-                      for t in dm.model.T])*u.kWh).to('MWh')
-        unsu_array = (np.array([pe.value(dm.model.unsu[t])
-                      for t in dm.model.T])*u.kWh).to('MWh')
-
-        # ___Power Arrays
-        wdot_array = (np.array([pe.value(dm.model.wdot[t])
-                      for t in dm.model.T])*u.kW).to('MW')
-        wdot_delta_plus_array = (np.array(
-            [pe.value(dm.model.wdot_delta_plus[t]) for t in dm.model.T])*u.kW).to('MW')
-        wdot_delta_minus_array = (np.array(
-            [pe.value(dm.model.wdot_delta_minus[t]) for t in dm.model.T])*u.kW).to('MW')
-        wdot_v_plus_array = (np.array(
-            [pe.value(dm.model.wdot_v_plus[t]) for t in dm.model.T])*u.kW).to('MW')
-        wdot_v_minus_array = (np.array(
-            [pe.value(dm.model.wdot_v_minus[t]) for t in dm.model.T])*u.kW).to('MW')
-        wdot_s_array = (np.array([pe.value(dm.model.wdot_s[t])
-                        for t in dm.model.T])*u.kW).to('MW')
-        wdot_p_array = (np.array([pe.value(dm.model.wdot_p[t])
-                        for t in dm.model.T])*u.kW).to('MW')
-        x_array = (np.array([pe.value(dm.model.x[t])
-                   for t in dm.model.T])*u.kW).to('MW')
-        xn_array = (np.array([pe.value(dm.model.xn[t])
-                    for t in dm.model.T])*u.kW).to('MW')
-        xnsu_array = (np.array([pe.value(dm.model.xnsu[t])
-                      for t in dm.model.T])*u.kW).to('MW')
-        # wdot_s_prev_delta_plus_array = ( np.array([pe.value(dm.model.wdot_s_prev_delta_plus[t]) for t in dm.model.T])*u.kW ).to('MW')
-        # wdot_s_prev_delta_minus_array = ( np.array([pe.value(dm.model.wdot_s_prev_delta_minus[t]) for t in dm.model.T])*u.kW ).to('MW')
-
-        # ___Binary Arrays
-        yn_array = np.array([pe.value(dm.model.yn[t]) for t in dm.model.T])
-        ynhsp_array = np.array([pe.value(dm.model.ynhsp[t])
-                               for t in dm.model.T])
-        ynsb_array = np.array([pe.value(dm.model.ynsb[t]) for t in dm.model.T])
-        ynsd_array = np.array([pe.value(dm.model.ynsd[t]) for t in dm.model.T])
-        ynsu_array = np.array([pe.value(dm.model.ynsu[t]) for t in dm.model.T])
-        ynsup_array = np.array([pe.value(dm.model.ynsup[t])
-                               for t in dm.model.T])
-        y_array = np.array([pe.value(dm.model.y[t]) for t in dm.model.T])+2
-        ychsp_array = np.array([pe.value(dm.model.ychsp[t])
-                               for t in dm.model.T])+2
-        ycsb_array = np.array([pe.value(dm.model.ycsb[t])
-                              for t in dm.model.T])+2
-        ycsd_array = np.array([pe.value(dm.model.ycsd[t])
-                              for t in dm.model.T])+2
-        ycsu_array = np.array([pe.value(dm.model.ycsu[t])
-                              for t in dm.model.T])+2
-        ycsup_array = np.array([pe.value(dm.model.ycsup[t])
-                               for t in dm.model.T])+2
-        ycgb_array = np.array([pe.value(dm.model.ycgb[t])
-                              for t in dm.model.T])+2
-        ycge_array = np.array([pe.value(dm.model.ycge[t])
-                              for t in dm.model.T])+2
+       
 
         # ___Marking 24 hour lines
         time_24hr = np.ones([len(t_array)])*24
@@ -739,8 +860,6 @@ class Plots(object):
                  linewidth=wts[2], label='PC Ramp Up Beyond (E')
         ax3.plot(t_array, wdot_v_minus_array.m,
                  linewidth=wts[3], label='PC Ramp Down Beyond(E')
-        # ax3.plot(t_array,wdot_s_prev_delta_plus_array.m,  linewidth = wts[4], label='UB on Delta w (E')
-        # ax3.plot(t_array,wdot_s_prev_delta_minus_array.m, linewidth = wts[5], label='LB on Delta w (E')
 
         # -Line marking the 24 hour line
         ax3.plot(time_24hr, power_24hr, 'k--', linewidth=lw)
@@ -834,48 +953,3 @@ class Plots(object):
 
         # plt.tight_layout()
 
-    def set_operating_modes_list(self):
-
-        # this is taken from ssc/tcs/csp_solver_core.h
-        #    in the `C_system_operating_modes` class
-
-        self.operating_modes = [
-            'ITER_START',
-            'NUC_OFF__PC_OFF__TES_OFF',
-            'NUC_SU__PC_OFF__TES_OFF',
-            'NUC_ON__PC_SU__TES_OFF',
-            'NUC_ON__PC_SB__TES_OFF',
-            'NUC_ON__PC_RM_HI__TES_OFF',
-            'NUC_ON__PC_RM_LO__TES_OFF',
-            'NUC_DF__PC_MAX__TES_OFF',
-            'NUC_OFF__PC_SU__TES_DC',
-            'NUC_ON__PC_OFF__TES_CH',
-            'NUC_ON__PC_TARGET__TES_CH',
-            'NUC_ON__PC_TARGET__TES_DC',
-            'NUC_ON__PC_RM_LO__TES_EMPTY',
-            'NUC_DF__PC_OFF__TES_FULL',
-            'NUC_OFF__PC_SB__TES_DC',
-            'NUC_OFF__PC_MIN__TES_EMPTY',
-            'NUC_OFF__PC_RM_LO__TES_EMPTY',
-            'NUC_ON__PC_SB__TES_CH',
-            'NUC_SU__PC_MIN__TES_EMPTY',
-            'NUC_SU__PC_SB__TES_DC',
-            'NUC_ON__PC_SB__TES_DC',
-            'NUC_OFF__PC_TARGET__TES_DC',
-            'NUC_SU__PC_TARGET__TES_DC',
-            'NUC_ON__PC_RM_HI__TES_FULL',
-            'NUC_ON__PC_MIN__TES_EMPTY',
-            'NUC_SU__PC_RM_LO__TES_EMPTY',
-            'NUC_DF__PC_MAX__TES_FULL',
-            'NUC_ON__PC_SB__TES_FULL',
-            'NUC_SU__PC_SU__TES_DC',
-            'NUC_ON__PC_SU__TES_CH',
-            'NUC_DF__PC_SU__TES_FULL',
-            'NUC_DF__PC_SU__TES_OFF',
-            'NUC_TO_COLD__PC_TARGET__TES_DC',
-            'NUC_TO_COLD__PC_RM_LO__TES_EMPTY',
-            'NUC_TO_COLD__PC_SB__TES_DC',
-            'NUC_TO_COLD__PC_MIN__TES_EMPTY',
-            'NUC_TO_COLD__PC_OFF__TES_OFF',
-            'NUC_TO_COLD__PC_SU__TES_DC',
-            'ITER_END']
