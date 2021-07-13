@@ -48,6 +48,8 @@ class Plots(object):
             lw (int)            : linewidth for plotting
             x_shrink (float)    : (legend_offset==True) amount to shrink axis to make room for legend
         """
+        
+        self.u = u
 
         # user-defined plotting parameters
         self.lp  = lp   # labelpad
@@ -219,7 +221,7 @@ class Plots(object):
 
     def plot_SSC_generic(self, ax, array_list, label_list, y_label, lw_list=None,  
                          title_label=None,plot_all_time=True, start_hr=0, end_hr=48, 
-                         is_bar_graph=False, return_extra=False, hide_x=False):
+                         is_bar_graph=False, return_extra=False, hide_x=False, left_axis=True):
         """ Method to plot generic SSC data
 
         This method is used to plot any type of SSC data. It lives a level above the
@@ -241,11 +243,14 @@ class Plots(object):
             is_bar_graph(bool)  : are we plotting a bar graph instead of line graph?
             return_extra(bool)  : returning extra outputs
             hide_x(bool)        : hiding the x-axis from this particular plot
+            left_axis (bool)    : are we plotting on the left y-axis, not a twin axis?
         Outputs:
             ax (object)         : axis object to plot on
             d_slice (int)       : (return_extra==True) slicer used for arrays
             t_plot (int)        : (return_extra==True) array of times used as x-axis
         """
+        u = self.u
+        
         # extracting full time array and slice
         d_slice = self.full_slice
         
@@ -280,7 +285,7 @@ class Plots(object):
         #--- Creating Figure  ---#
         #========================#
         
-        if self.legend_offset:
+        if self.legend_offset and left_axis:
             # Shrinking x-axis to allow room for legends off-plot
             shrink = self.x_shrink
             box = ax.get_position()
@@ -382,7 +387,7 @@ class Plots(object):
                                     y_label=energy_ylabel, \
                                     title_label=None, \
                                     plot_all_time=plot_all_time, \
-                                    start_hr=start_hr, end_hr=end_hr, hide_x=hide_x)
+                                    start_hr=start_hr, end_hr=end_hr, hide_x=hide_x, left_axis=False)
         
         # set line color to default C4 (purple)
         ax2.get_lines()[0].set_color("C4")
@@ -426,10 +431,10 @@ class Plots(object):
         # if no axis object specified, create a figure and axis from it
         if ax is None:
             fig = plt.figure(figsize=[10, 5])
-            ax = fig.gca()   # this is the power plot
+            ax = fig.gca()   # this is the mass flow plot
 
-        # twin axis to plot energy on opposite y-axis
-        ax2 = ax.twinx()  # this is the energy plot
+        # twin axis to plot defocus on opposite y-axis
+        ax2 = ax.twinx()  # this is the defocus plot
 
         # plot mass flow arrays
         mass_array_list = ['m_dot_pc', 'm_dot_rec'] # list of array strings
@@ -456,7 +461,7 @@ class Plots(object):
                                     y_label=energy_ylabel, \
                                     title_label=None, \
                                     plot_all_time=plot_all_time, \
-                                    start_hr=start_hr, end_hr=end_hr, hide_x=hide_x)
+                                    start_hr=start_hr, end_hr=end_hr, hide_x=hide_x, left_axis=False)
         
         # set line color to default C3 (reddish)
         ax2.get_lines()[0].set_color("C3")
@@ -467,11 +472,11 @@ class Plots(object):
         
         # customizing legend(s)
         if self.legend_offset:
-            ax.legend( loc=self.loc_ul, fontsize=self.fsl, bbox_to_anchor=(x_legend, y_legend_L)) # plot legend for Power arrays
-            ax2.legend(loc=self.loc_ul, fontsize=self.fsl, bbox_to_anchor=(x_legend, y_legend_R)) # plot legend for Energy arrays and also 
+            ax.legend( loc=self.loc_ul, fontsize=self.fsl, bbox_to_anchor=(x_legend, y_legend_L)) # plot legend for mass flow arrays
+            ax2.legend(loc=self.loc_ul, fontsize=self.fsl, bbox_to_anchor=(x_legend, y_legend_R)) # plot legend for defocus arrays and also 
         else:
-            ax.legend( loc=self.loc_ul, fontsize=self.fsl) # plot legend for Power arrays
-            ax2.legend(loc=self.loc_ul, fontsize=self.fsl) # plot legend for Energy arrays and also 
+            ax.legend( loc=self.loc_ul, fontsize=self.fsl) # plot legend for mass flow arrays
+            ax2.legend(loc=self.loc_ul, fontsize=self.fsl) # plot legend for defocus arrays and also 
 
 
     def plot_SSC_op_modes(self, ax=None, title_label=None, plot_all_time=True, \
@@ -500,10 +505,10 @@ class Plots(object):
         # if no axis object specified, create a figure and axis from it
         if ax is None:
             fig = plt.figure(figsize=[10, 5])
-            ax = fig.gca()   # this is the power plot
+            ax = fig.gca()   # this is the Op Modes plot
 
-        # twin axis to plot energy on opposite y-axis
-        ax2 = ax.twinx()  # this is the energy plot
+        # twin axis to plot pricing on opposite y-axis
+        ax2 = ax.twinx()  # this is the pricing plot
 
         # custom y limits and ticks to be integers
         ax2.set_ylim(0, 2.5)
@@ -519,7 +524,7 @@ class Plots(object):
                                     title_label=None, \
                                     plot_all_time=plot_all_time, \
                                     start_hr=start_hr, end_hr=end_hr, hide_x=hide_x, \
-                                    is_bar_graph=True)
+                                    is_bar_graph=True, left_axis=False)
             
         # custom y limits and ticks to be integers
         ax.set_ylim(0, 40)
@@ -559,9 +564,9 @@ class Plots(object):
         
         # customizing legend(s)
         if self.legend_offset:
-            ax.legend( loc=self.loc_ul, fontsize=self.fsl, bbox_to_anchor=(x_legend, y_legend_L)) # plot legend for Power arrays
+            ax.legend( loc=self.loc_ul, fontsize=self.fsl, bbox_to_anchor=(x_legend, y_legend_L)) # plot legend for Op Modes arrays
         else:
-            ax.legend( loc=self.loc_ul, fontsize=self.fsl) # plot legend for Power arrays
+            ax.legend( loc=self.loc_ul, fontsize=self.fsl) # plot legend for Op Modes arrays
 
 
     def plot_SSC_temperatures(self, ax=None,  title_label=None, plot_all_time=True, \
@@ -692,7 +697,17 @@ class DispatchPlots(Plots):
             lp (int)            : labelpad for axis labels
             lps (int)           : labelpad for axis labels - short version
             fs (int)            : fontsize for labels, titles, etc.
-            lw (int)            : linewidth for plotting
+            lw (int)            : linewidth fo        # plot price array(s)
+        price_array_list = ['price']
+        price_label_list = [None]
+        price_ylabel = 'Tariff \n($/kWh)'
+        ax2 = self.plot_SSC_generic(ax2, array_list=price_array_list, \
+                                    label_list=price_label_list, \
+                                    y_label=price_ylabel, \
+                                    title_label=None, \
+                                    plot_all_time=plot_all_time, \
+                                    start_hr=start_hr, end_hr=end_hr, hide_x=hide_x, \
+                                    is_bar_graph=True)r plotting
             x_shrink (float)    : (legend_offset==True) amount to shrink axis to make room for legend
         """
         
@@ -700,6 +715,7 @@ class DispatchPlots(Plots):
         Plots.__init__( self, module, fsl, loc, legend_offset, \
                  lp, lps, fs, lw, x_shrink, x_legend)
  
+
         # continuing with Pyomo Dispatch plots
         if self.mod_class_name == 'dispatch':
             
@@ -722,6 +738,7 @@ class DispatchPlots(Plots):
         
         # Dispatch Model with results
         dm = self.dm
+        u = self.u
         
         # lambda functions
         extract_from_model = lambda name: getattr(dm.model, name)
@@ -734,7 +751,7 @@ class DispatchPlots(Plots):
         self.p_array = extract_array('P')
         
         # marking the midway point
-        self.T = len(self.t_array)
+        self.T = len(self.t_full)
         self.time_midway = np.ones([self.T])*int(self.T/2)
 
         # Energy Arrays
@@ -762,15 +779,15 @@ class DispatchPlots(Plots):
         self.ynsu_array  = extract_array('ynsu') 
         self.ynsup_array = extract_array('ynsup') 
         
-        # Binary Arrays (Cycle). adding a +2 to show all binaries on the same plot
-        self.y_array     = extract_array('y') + 2
-        self.ychsp_array = extract_array('ychsp') + 2
-        self.ycsb_array  = extract_array('ycsb')  + 2
-        self.ycsd_array  = extract_array('ycsd')  + 2
-        self.ycsu_array  = extract_array('ycsu')  + 2
-        self.ycsup_array = extract_array('ycsup') + 2
-        self.ycgb_array  = extract_array('ycgb')  + 2
-        self.ycge_array  = extract_array('ycge')  + 2
+        # Binary Arrays (Cycle)
+        self.y_array     = extract_array('y') 
+        self.ychsp_array = extract_array('ychsp') 
+        self.ycsb_array  = extract_array('ycsb') 
+        self.ycsd_array  = extract_array('ycsd') 
+        self.ycsu_array  = extract_array('ycsu') 
+        self.ycsup_array = extract_array('ycsup') 
+        self.ycgb_array  = extract_array('ycgb')  
+        self.ycge_array  = extract_array('ycge') 
     
     
     def overwrite_model(self, new_model):
@@ -796,9 +813,9 @@ class DispatchPlots(Plots):
     def plot_pyomo_energy(self, ax=None, title_label=None, plot_all_time=True, \
                           start_hr=0, end_hr=48, hide_x=False,  x_legend=1.2, \
                           y_legend_L=1.0, y_legend_R=1.0):
-        """ Method to plot temperature data on single plot
+        """ Method to plot energy data from Pyomo Dispatch on single plot
 
-        This method is used specifically to plot temperature data from SSC simulation
+        This method is used specifically to plot energy data from Dispatch simulation
         results. Built-in options to plot legend off-axis. 
 
         Inputs:
@@ -812,6 +829,7 @@ class DispatchPlots(Plots):
             y_legend_L (float)  : (legend_offset==True) y-offset of left y-axis plot
             y_legend_R (float)  : (legend_offset==True) y-offset of right y-axis plot
         """
+
         #========================#
         #--- Creating Figure  ---#
         #========================#
@@ -821,200 +839,373 @@ class DispatchPlots(Plots):
             fig = plt.figure(figsize=[10, 5])
             ax = fig.gca()   # this is the power plot
 
+        # plot energy arrays
+        energy_array_list = ['s_array', 'ucsu_array', 'unsu_array'] # list of array strings
+        energy_label_list = ['TES Reserve Quantity',
+                             'Cycle Startup Energy Inventory',
+                             'Nuclear Startup Energy Inventory'] # list of labels for each array string to extract from Outputs
+        energy_wts = np.linspace(4, 2, 3).tolist()
+        energy_ylabel = 'Energy \n(MWh)'
+
+        ax  = self.plot_SSC_generic(ax, array_list=energy_array_list, \
+                                    label_list=energy_label_list, \
+                                    y_label=energy_ylabel, \
+                                    lw_list=energy_wts, \
+                                    title_label=title_label, \
+                                    plot_all_time=plot_all_time, \
+                                    start_hr=start_hr, end_hr=end_hr, hide_x=hide_x)
+            
+        #========================#
+        #--- Extra arrays  ---#
+        #========================#
+        
         # retrieving arrays
-        t_array = self.t_array
         s_array = self.s_array.m    
         ucsu_array = self.ucsu_array.m
         unsu_array = self.unsu_array.m
         
         # vertical energy line at midpoint
-        energy_vert = np.linspace( np.min(s_array), np.max(s_array)*1.1, self.T )
+        energy_vert = np.linspace( np.min([s_array, ucsu_array, unsu_array]), 
+                                   np.max([s_array, ucsu_array, unsu_array])*1.1, 
+                                   self.T )
+            
+        # Line marking the midpoint line
+        ax.plot(self.time_midway, energy_vert, 'k--', linewidth=self.lw)
 
 
-
-
-        # ___Energy Plots ___________________________________________________________________
-        wts = np.linspace(4, 2, 3)
-        ax1.plot(t_array, s_array,
-                 linewidth=wts[0], label='TES Reserve Quantity')
-        ax1.plot(t_array, ucsu_array.m,
-                 linewidth=wts[1], label='Cycle Startup Energy Inventory')
-        ax1.plot(t_array, unsu_array,
-                 linewidth=wts[2], label='Nuclear Startup Energy Inventory')
-
-        # -Line marking the 24 hour line
-        ax1.plot(time_24hr, energy_24hr, 'k--', linewidth=lw)
-
-        # -Labels
-        ax1.set_ylabel('Energy (MWh)', labelpad=lp,
-                       fontsize=fs, fontweight='bold')
-        ax1.legend(loc=loc, fontsize=fsl, bbox_to_anchor=(
-            1.4, 1.0))  # bbox stuff places legend off-plot
-
-
-        # plot temperature arrays
-        temp_array_list = ['T_pc_in', 'T_pc_out', 'T_tes_cold', 'T_tes_hot'] # list of array strings
-        temp_label_list = ['PC HTF (hot) inlet temperature',
-                           'PC HTF (cold) outlet temperature',
-                           'TES cold temperature',
-                           'TES hot temperature'] # list of labels for each array string to extract from Outputs
-        temp_ylabel = 'Temperature (C)'
-        ax  = self.plot_SSC_generic(ax, array_list=temp_array_list, \
-                                    label_list=temp_label_list, \
-                                    y_label=temp_ylabel, \
-                                    title_label=title_label, \
-                                    plot_all_time=plot_all_time, \
-                                    start_hr=start_hr, end_hr=end_hr, hide_x=hide_x)
-        
         #========================#
         #---- Setting Labels ----#
         #========================#
         
         # customizing legend(s)
         if self.legend_offset:
-            ax.legend( loc=self.loc_ul, fontsize=self.fsl, bbox_to_anchor=(x_legend, y_legend_L)) # plot legend for Temperature arrays
+            ax.legend( loc=self.loc_ul, fontsize=self.fsl, bbox_to_anchor=(x_legend, y_legend_L)) # plot legend for Energy arrays
         else:
-            ax.legend( loc=self.loc_ul, fontsize=self.fsl) # plot legend for Temperature arrays
+            ax.legend( loc=self.loc_ul, fontsize=self.fsl) # plot legend for Energy arrays
 
         
+    def plot_pyomo_power(self, ax=None, title_label=None, plot_all_time=True, \
+                          start_hr=0, end_hr=48, hide_x=False,  x_legend=1.2, \
+                          y_legend_L=1.0, y_legend_R=1.0):
+        """ Method to plot power and pricing data from Pyomo Dispatch on single plot
 
-    def plot_pyomo(self):
-        """ Method to plot pyomo results
+        This method is used specifically to plot power data from Dispatch simulation
+        results. Built-in options to plot legend off-axis. 
 
-        This method extracts outputs from the Pyomo Dispatch model, converts them to numpy arrays
-        and saves them to `self`. 
+        Inputs:
+            ax (object)         : axis object to plot on
+            plot_all_time(bool) : are we plotting all results or just a portion?
+            title_label(str)    : title name for plot
+            start_hr (int)      : (plot_all_time==False) hour used for starting index 
+            end_hr (int)        : (plot_all_time==False) hour used for ending index
+            hide_x(bool)        : hiding the x-axis from this particular plot
+            x_legend (float)    : (legend_offset==True) x-offset defining left-most side of legend
+            y_legend_L (float)  : (legend_offset==True) y-offset of left y-axis plot
+            y_legend_R (float)  : (legend_offset==True) y-offset of right y-axis plot
         """
-        lw     = self.lw
-        lp     = self.lp
-        lps    = self.lps
-        fs     = self.fs
-        fsl    = self.fsl
-        loc    = self.loc
-        loc_cr = self.loc_cr
 
-       
+        #========================#
+        #--- Creating Figure  ---#
+        #========================#
 
-        # ___Marking 24 hour lines
-        energy_24hr = np.linspace(np.min(s_array.m),
-                                  np.max(s_array.m, )*1.1, len(t_array))
-        power_24hr = np.linspace(np.min([wdot_array.m, x_array.m]),
-                                 np.max([wdot_array.m, x_array.m])*1.3, len(t_array))
-        binary_24hr = np.linspace(0, 3.1, len(t_array))
-        binary_div = 1.5*np.ones(len(t_array))
+        # if no axis object specified, create a figure and axis from it
+        if ax is None:
+            fig = plt.figure(figsize=[10, 5])
+            ax = fig.gca()   # this is the power plot
+    
+        # twin axis to plot pricing on opposite y-axis
+        ax2 = ax.twinx()  # this is the pricing plot
+
+        # plot energy arrays
+        power_array_list = ['wdot_array', 'x_array', 'xn_array',
+                            'xnsu_array', 'wdot_s_array', 'wdot_p_array'] # list of array strings
+        power_label_list = ['Cycle Out (E)', 'Cycle In (T)',
+                            'Nuclear Out (T)', 'Nuclear Startup (T)',
+                            'Energy Sold to Grid (E)', 'Energy Purchased (E)'] # list of labels for each array string to extract from Outputs
+        power_wts = np.linspace(6, 2, 6).tolist()
+        power_ylabel = 'Power \n(MW)'
+
+        ax  = self.plot_SSC_generic(ax, array_list=power_array_list, \
+                                    label_list=power_label_list, \
+                                    y_label=power_ylabel, \
+                                    lw_list=power_wts, \
+                                    title_label=title_label, \
+                                    plot_all_time=plot_all_time, \
+                                    start_hr=start_hr, end_hr=end_hr, hide_x=hide_x)
+        
+        #========================#
+        #--- Extra arrays  ------#
+        #========================#
+        
+        # retrieving arrays
+        wdot_array    = self.wdot_array.m    
+        x_array       = self.x_array.m
+        xn_array      = self.xn_array.m
+        xnsu_array    = self.xnsu_array.m    
+        wdot_s_array  = self.wdot_s_array.m
+        wdot_p_array  = self.wdot_p_array.m
+        
+        # vertical power line at midpoint
+        power_vert = np.linspace(  np.min([wdot_array, x_array, xn_array, \
+                                           xnsu_array, wdot_s_array, wdot_p_array]), 
+                                   np.max([wdot_array, x_array, xn_array, \
+                                           xnsu_array, wdot_s_array, wdot_p_array])*1.1, 
+                                   self.T )
+            
+        # Line marking the midpoint line
+        ax.plot(self.time_midway, power_vert, 'k--', linewidth=self.lw)   
+            
+        #========================#
+        #--- Double axis      ---#
+        #========================#
+        
+        # plot price array(s)
+        price_array_list = ['p_array']
+        price_label_list = [None]
+        price_ylabel = 'Tariff \n($/kWh)'
+        ax2 = self.plot_SSC_generic(ax2, array_list=price_array_list, \
+                                    label_list=price_label_list, \
+                                    y_label=price_ylabel, \
+                                    title_label=None, \
+                                    plot_all_time=plot_all_time, \
+                                    start_hr=start_hr, end_hr=end_hr, hide_x=hide_x, \
+                                    is_bar_graph=True, left_axis=False)
+            
+        #========================#
+        #---- Setting Labels ----#
+        #========================#
+        
+        # customizing legend(s)
+        if self.legend_offset:
+            ax.legend( loc=self.loc_ul, fontsize=self.fsl, bbox_to_anchor=(x_legend, y_legend_L)) # plot legend for Power arrays
+        else:
+            ax.legend( loc=self.loc_ul, fontsize=self.fsl) # plot legend for Power arrays
+            
+
+    def plot_pyomo_power_ramps(self, ax=None, title_label=None, plot_all_time=True, \
+                          start_hr=0, end_hr=48, hide_x=False,  x_legend=1.2, \
+                          y_legend_L=1.0, y_legend_R=1.0):
+        """ Method to plot power ramping data from Pyomo Dispatch on single plot
+
+        This method is used specifically to plot energy data from Dispatch simulation
+        results. Built-in options to plot legend off-axis. 
+
+        Inputs:
+            ax (object)         : axis object to plot on
+            plot_all_time(bool) : are we plotting all results or just a portion?
+            title_label(str)    : title name for plot
+            start_hr (int)      : (plot_all_time==False) hour used for starting index 
+            end_hr (int)        : (plot_all_time==False) hour used for ending index
+            hide_x(bool)        : hiding the x-axis from this particular plot
+            x_legend (float)    : (legend_offset==True) x-offset defining left-most side of legend
+            y_legend_L (float)  : (legend_offset==True) y-offset of left y-axis plot
+            y_legend_R (float)  : (legend_offset==True) y-offset of right y-axis plot
+        """
+
+        #========================#
+        #--- Creating Figure  ---#
+        #========================#
+
+        # if no axis object specified, create a figure and axis from it
+        if ax is None:
+            fig = plt.figure(figsize=[10, 5])
+            ax = fig.gca()   # this is the power plot
+
+        # plot energy arrays
+        pramp_array_list = ['wdot_delta_plus_array', 'wdot_delta_minus_array', 
+                            'wdot_v_plus_array', 'wdot_v_minus_array'] # list of array strings
+        pramp_label_list = ['PC Ramp Up (E)', 'PC Ramp Down (E)',
+                            'PC Ramp Up Beyond (E)', 'PC Ramp Down Beyond(E)'] # list of labels for each array string to extract from Outputs
+        pramp_wts = np.linspace(6, 2, 6).tolist()
+        pramp_ylabel = 'Power \nRamping \n' + r'($\Delta$MW)'
+
+        ax  = self.plot_SSC_generic(ax, array_list=pramp_array_list, \
+                                    label_list=pramp_label_list, \
+                                    y_label=pramp_ylabel, \
+                                    lw_list=pramp_wts, \
+                                    title_label=title_label, \
+                                    plot_all_time=plot_all_time, \
+                                    start_hr=start_hr, end_hr=end_hr, hide_x=hide_x)
+            
+        #========================#
+        #--- Extra arrays  ------#
+        #========================#
+        
+        # retrieving arrays
+        wdot_delta_plus_array  = self.wdot_delta_plus_array.m    
+        wdot_delta_minus_array = self.wdot_delta_minus_array.m
+        wdot_v_plus_array  = self.wdot_v_plus_array.m
+        wdot_v_minus_array = self.wdot_v_minus_array.m
+        
+        # vertical power ramp line at midpoint
+        pramp_vert = np.linspace( np.min([wdot_delta_plus_array, wdot_delta_minus_array, 
+                                           wdot_v_plus_array, wdot_v_minus_array]), 
+                                   np.max([wdot_delta_plus_array, wdot_delta_minus_array, 
+                                           wdot_v_plus_array, wdot_v_minus_array])*1.1, 
+                                   self.T )
+            
+        # Line marking the midpoint line
+        ax.plot(self.time_midway, pramp_vert, 'k--', linewidth=self.lw)
 
 
+        #========================#
+        #---- Setting Labels ----#
+        #========================#
+        
+        # customizing legend(s)
+        if self.legend_offset:
+            ax.legend( loc=self.loc_ul, fontsize=self.fsl, bbox_to_anchor=(x_legend, y_legend_L)) # plot legend for power ramping arrays
+        else:
+            ax.legend( loc=self.loc_ul, fontsize=self.fsl) # plot legend for power ramping arrays
+            
+            
+    def plot_pyomo_nuclear_bin(self, ax=None, title_label=None, plot_all_time=True, \
+                          start_hr=0, end_hr=48, hide_x=False,  x_legend=1.2, \
+                          y_legend_L=1.0, y_legend_R=1.0):
+        """ Method to plot nuclear binary data from Pyomo Dispatch on single plot
 
-        # ___Energy Plots ___________________________________________________________________
-        wts = np.linspace(4, 2, 3)
-        ax1.plot(t_array, s_array.m,
-                 linewidth=wts[0], label='TES Reserve Quantity')
-        ax1.plot(t_array, ucsu_array.m,
-                 linewidth=wts[1], label='Cycle Startup Energy Inventory')
-        ax1.plot(t_array, unsu_array.m,
-                 linewidth=wts[2], label='Nuclear Startup Energy Inventory')
+        This method is used specifically to plot data from Dispatch simulation
+        results pertaining to nuclear binary values. Variables include whether
+        nuclear plant is running (0 or 1), etc. Built-in options to plot legend 
+        off-axis. 
 
-        # -Line marking the 24 hour line
-        ax1.plot(time_24hr, energy_24hr, 'k--', linewidth=lw)
+        Inputs:
+            ax (object)         : axis object to plot on
+            plot_all_time(bool) : are we plotting all results or just a portion?
+            title_label(str)    : title name for plot
+            start_hr (int)      : (plot_all_time==False) hour used for starting index 
+            end_hr (int)        : (plot_all_time==False) hour used for ending index
+            hide_x(bool)        : hiding the x-axis from this particular plot
+            x_legend (float)    : (legend_offset==True) x-offset defining left-most side of legend
+            y_legend_L (float)  : (legend_offset==True) y-offset of left y-axis plot
+            y_legend_R (float)  : (legend_offset==True) y-offset of right y-axis plot
+        """
 
-        # -Labels
-        ax1.set_ylabel('Energy (MWh)', labelpad=lp,
-                       fontsize=fs, fontweight='bold')
-        ax1.legend(loc=loc, fontsize=fsl, bbox_to_anchor=(
-            1.4, 1.0))  # bbox stuff places legend off-plot
+        #========================#
+        #--- Creating Figure  ---#
+        #========================#
 
-        # ___Power Plots ___________________________________________________________________
-        wts = np.linspace(6, 2, 6)
-        ax2.plot(t_array, wdot_array.m,
-                 linewidth=wts[0], label='Cycle Out (E)')
-        ax2.plot(t_array, x_array.m,    linewidth=wts[1], label='Cycle In (T)')
-        ax2.plot(t_array, xn_array.m,
-                 linewidth=wts[2], label='Nuclear Out (T)')
-        ax2.plot(t_array, xnsu_array.m,
-                 linewidth=wts[3], label='Nuclear Startup (T)')
-        ax2.plot(t_array, wdot_s_array.m,
-                 linewidth=wts[4], label='Energy Sold to Grid (E)')
-        ax2.plot(t_array, wdot_p_array.m,
-                 linewidth=wts[5], label='Energy Purchased (E)')
+        # if no axis object specified, create a figure and axis from it
+        if ax is None:
+            fig = plt.figure(figsize=[10, 5])
+            ax = fig.gca()   # this is the power plot
 
-        # -Line marking the 24 hour line
-        ax2.plot(time_24hr, power_24hr, 'k--', linewidth=lw)
+        # plot nuclear binary arrays
+        nucbin_array_list = ['yn_array',   'ynhsp_array', 'ynsb_array',
+                             'ynsd_array', 'ynsu_array',  'ynsup_array'] # list of array strings
+        nucbin_label_list = ['Is Nuclear On?', 'Is Nuclear HSU Pen?', 
+                             'Is Nuclear SB?', 'Is Nuclear SD?', 
+                             'Is Nuclear SU?', 'Is Nuclear CSU Pen?'] # list of labels for each array string to extract from Outputs
+        nucbin_wts = np.linspace(10, 1.5, 6).tolist()
+        nucbin_ylabel = 'Nuclear \nBinary \nVariables'
 
-        # -Labels
-        ax2.set_ylabel('Power (MW)', labelpad=lp,
-                       fontsize=fs, fontweight='bold')
-        ax2.legend(loc=loc, fontsize=fsl, bbox_to_anchor=(1.42, 1.0))
+        ax  = self.plot_SSC_generic(ax, array_list=nucbin_array_list, \
+                                    label_list=nucbin_label_list, \
+                                    y_label=nucbin_ylabel, \
+                                    lw_list=nucbin_wts, \
+                                    title_label=title_label, \
+                                    plot_all_time=plot_all_time, \
+                                    start_hr=start_hr, end_hr=end_hr, hide_x=hide_x)
+            
+        #========================#
+        #--- Extra arrays  ---#
+        #========================#
 
-        # ___Power Plots x2 ___________________________________________________________________
-        wts = np.linspace(6, 2, 6)
-        ax3.plot(t_array, wdot_delta_plus_array.m,
-                 linewidth=wts[0], label='PC Ramp Up (E)')
-        ax3.plot(t_array, wdot_delta_minus_array.m,
-                 linewidth=wts[1], label='PC Ramp Down (E)')
-        ax3.plot(t_array, wdot_v_plus_array.m,
-                 linewidth=wts[2], label='PC Ramp Up Beyond (E')
-        ax3.plot(t_array, wdot_v_minus_array.m,
-                 linewidth=wts[3], label='PC Ramp Down Beyond(E')
+        # vertical binary line at midpoint
+        binary_vert = np.linspace( -0.5, 1.5, self.T )
+            
+        # Line marking the midpoint line
+        ax.plot(self.time_midway, binary_vert, 'k--', linewidth=self.lw)
+        
+        # set binary ticks and labels
+        ax.set_yticks([0, 1])
+        ax.set_yticklabels(['No', 'Yes'])
 
-        # -Line marking the 24 hour line
-        ax3.plot(time_24hr, power_24hr, 'k--', linewidth=lw)
+        #========================#
+        #---- Setting Labels ----#
+        #========================#
+        
+        # customizing legend(s)
+        if self.legend_offset:
+            ax.legend( loc=self.loc_ul, fontsize=self.fsl, bbox_to_anchor=(x_legend, y_legend_L)) # plot legend for Nuclear arrays
+        else:
+            ax.legend( loc=self.loc_ul, fontsize=self.fsl) # plot legend for Nuclear arrays
 
-        # -Labels
-        ax3.set_ylabel('Power (MW)', labelpad=lp,
-                       fontsize=fs, fontweight='bold')
-        ax3.legend(loc=loc, fontsize=fsl, bbox_to_anchor=(1.34, 1.0))
 
-        # ___Price Plot ________________________________________________________________
-        ax5.bar(t_array, p_array, np.diff(t_array)
-                [0], alpha=0.35, label="Price")
+    def plot_pyomo_cycle_bin(self, ax=None, title_label=None, plot_all_time=True, \
+                          start_hr=0, end_hr=48, hide_x=False,  x_legend=1.2, \
+                          y_legend_L=1.0, y_legend_R=1.0):
+        """ Method to plot power cycle binary data from Pyomo Dispatch on single plot
 
-        wts = np.linspace(10, 1, 14)
-        # ___Binary Plots ______________________________________________________________
-        ax4.plot(t_array, yn_array,    linewidth=wts[0], label='Receiver On?')
-        ax4.plot(t_array, ynhsp_array,
-                 linewidth=wts[1], label='Receiver HSU Pen?')
-        ax4.plot(t_array, ynsb_array,  linewidth=wts[2], label='Receiver SB?')
-        ax4.plot(t_array, ynsd_array,  linewidth=wts[3], label='Receiver SD?')
-        ax4.plot(t_array, ynsu_array,  linewidth=wts[4], label='Receiver SU?')
-        ax4.plot(t_array, ynsup_array,
-                 linewidth=wts[5], label='Receiver CSU Pen?')
-        ax4.plot(t_array, y_array,
-                 linewidth=wts[6], label='Cycle Generating Power?')
-        ax4.plot(t_array, ychsp_array,
-                 linewidth=wts[7], label='Cycle HSU Pen?')
-        ax4.plot(t_array, ycsb_array,  linewidth=wts[8], label='Cycle SB?')
-        ax4.plot(t_array, ycsd_array,  linewidth=wts[9], label='Cycle SD?')
-        ax4.plot(t_array, ycsu_array,  color='k',
-                 linewidth=wts[10], label='Cycle SU?')
-        ax4.plot(t_array, ycsup_array,
-                 linewidth=wts[11], label='Cycle CSU Pen?')
-        ax4.plot(t_array, ycgb_array,
-                 linewidth=wts[12], label='Cycle Began Gen?')
-        ax4.plot(t_array, ycge_array,
-                 linewidth=wts[13], label='Cycle Stopped Gen?')
-        ax4.plot(t_array, binary_div, 'k--', linewidth=2)
+        This method is used specifically to plot data from Dispatch simulation
+        results pertaining to cycle binary values. Variables include whether
+        power cycle is running (0 or 1), etc. Built-in options to plot legend 
+        off-axis. 
 
-        # -Line marking the 24 hour line
-        ax4.plot(time_24hr, binary_24hr, 'k--', linewidth=lw)
+        Inputs:
+            ax (object)         : axis object to plot on
+            plot_all_time(bool) : are we plotting all results or just a portion?
+            title_label(str)    : title name for plot
+            start_hr (int)      : (plot_all_time==False) hour used for starting index 
+            end_hr (int)        : (plot_all_time==False) hour used for ending index
+            hide_x(bool)        : hiding the x-axis from this particular plot
+            x_legend (float)    : (legend_offset==True) x-offset defining left-most side of legend
+            y_legend_L (float)  : (legend_offset==True) y-offset of left y-axis plot
+            y_legend_R (float)  : (legend_offset==True) y-offset of right y-axis plot
+        """
 
-        # -Labels
-        ax4.set_xlabel('Time (hrs)', labelpad=lp,
-                       fontsize=fs, fontweight='bold')
-        ax4.set_ylabel('Binary Vars', labelpad=lp,
-                       fontsize=fs, fontweight='bold')
-        ax4.legend(loc=loc, fontsize=fsl, bbox_to_anchor=(1.35, 1.3))
-        ax5.set_ylabel('Price ($/kWh)', labelpad=lps,
-                       fontsize=fs, fontweight='bold')
-        ax5.legend(loc=loc_cr, fontsize=fsl)
+        #========================#
+        #--- Creating Figure  ---#
+        #========================#
 
-        # -Axis limits and tickmarks
-        ax4.set_ylim(-0.2, 3.4)
-        ax4.set_yticks([0, 1, 2, 3])
-        ax4.set_yticklabels([0, 1, 0, 1])
-        ax5.set_ylim(0.4, 2.5)
-        ax5.set_yticks([0.50, 0.75, 1])
+        # if no axis object specified, create a figure and axis from it
+        if ax is None:
+            fig = plt.figure(figsize=[10, 5])
+            ax = fig.gca()   # this is the power plot
 
-        # set full title
-        ax1.set_title('Pyomo Results - Normal', fontweight='bold')
+        # plot cycle binary arrays
+        cyclebin_array_list = ['y_array',   'ychsp_array', 'ycsb_array',
+                               'ycsd_array', 'ycsu_array',  'ycsup_array',
+                               'ycgb_array', 'ycge_array'] # list of array strings
+        cyclebin_label_list = ['Is Cycle Generating Power?', 'Is Cycle HSU Pen?', 'Is Cycle SB?', 
+                               'Is Cycle SD?',               'Is Cycle SU?',      'Is Cycle CSU Pen?', 
+                               'Is Cycle Began Gen?',        'Is Cycle Stopped Gen?'] 
+
+        cyclebin_wts = np.linspace(10, 1.5, 8).tolist()
+        cyclebin_ylabel = 'Cycle \nBinary \nVariables'
+
+        ax  = self.plot_SSC_generic(ax, array_list=cyclebin_array_list, \
+                                    label_list=cyclebin_label_list, \
+                                    y_label=cyclebin_ylabel, \
+                                    lw_list=cyclebin_wts, \
+                                    title_label=title_label, \
+                                    plot_all_time=plot_all_time, \
+                                    start_hr=start_hr, end_hr=end_hr, hide_x=hide_x)
+            
+        #========================#
+        #--- Extra arrays  ---#
+        #========================#
+
+        # vertical binary line at midpoint
+        binary_vert = np.linspace( -0.5, 1.5, self.T )
+            
+        # Line marking the midpoint line
+        ax.plot(self.time_midway, binary_vert, 'k--', linewidth=self.lw)
+        
+        # set binary ticks and labels
+        ax.set_yticks([0, 1])
+        ax.set_yticklabels(['No', 'Yes'])
+
+        #========================#
+        #---- Setting Labels ----#
+        #========================#
+        
+        # customizing legend(s)
+        if self.legend_offset:
+            ax.legend( loc=self.loc_ul, fontsize=self.fsl, bbox_to_anchor=(x_legend, y_legend_L)) # plot legend for Energy arrays
+        else:
+            ax.legend( loc=self.loc_ul, fontsize=self.fsl) # plot legend for Energy arrays
+            
 
         # plt.tight_layout()
 
