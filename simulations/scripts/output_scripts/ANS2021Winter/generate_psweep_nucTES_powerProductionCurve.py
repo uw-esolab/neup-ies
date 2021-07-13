@@ -105,7 +105,7 @@ start = 0
 end   = 48*4
 
 # calling plots
-upl.plot_SSC_power_and_energy(ax=ax1, plot_all_time=fullTime, start_hr=start, end_hr=end, x_legend=1.175, y_legend_L=1.0, y_legend_R=0.2 )
+upl.plot_SSC_power_and_energy(ax=ax1, plot_all_time=fullTime, start_hr=start, end_hr=end, x_legend=1.175, y_legend_L=1.0, y_legend_R=0.2, hide_x=True )
 upl.plot_SSC_op_modes(        ax=ax2, plot_all_time=fullTime, start_hr=start, end_hr=end, x_legend=1.175, y_legend_L=1.0)
 
 
