@@ -20,6 +20,10 @@ class FileMethods(object):
     neup_dir     = os.path.dirname(samsim_dir)
     parent_dir   = os.path.dirname(neup_dir)
     
+    #defining directories for data storage and outputs
+    data_dir     = os.path.join(samsim_dir,'data')
+    output_dir   = os.path.join(samsim_dir,'outputs')
+    
     
     def read_csv_through_pandas(filepath):
         """ Method to read csv file and return data array
