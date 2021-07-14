@@ -24,14 +24,14 @@ print("PID = ", pid)
 # setting up arrays to cycle through
 dispatch  = np.array([ True, True, False ])
 tshours   = np.array([ 10, 12, 14, 16, 18])
-p_mult    = np.array([ 1.05, 1.1, 1.15, 1.25, 1.35, 1.45])
+p_mult    = np.array([ 1.05, 1.15, 1.25, 1.35, 1.45])
+
+# SSC and dispatch horizons for each dispatch element above ^
+sscH = np.array([12, 24, 24])
+pyoH = np.array([24, 48, 48])
 
 # baseline cycle power output
 P_ref = 465
-
-# SSC and dispatch horizons
-sscH = np.array([12, 24, 24])
-pyoH = np.array([24, 48, 48])
 
 # formally defining the iterator arrays
 iterator1 = tshours 
@@ -44,6 +44,14 @@ empty = np.zeros([  len(dispatch) , len(iterator1), len(iterator2) ])
 annual_energy_array = empty.copy()
 ppa_array           = empty.copy()
 lcoe_nom_array      = empty.copy()
+npv_aftertax        = empty.copy()
+flip_actual_irr     = empty.copy()
+flip_actual_year    = empty.copy()
+irr_aftertax        = empty.copy()
+cost_installed      = empty.copy()
+size_of_equity      = empty.copy()
+size_of_debt        = empty.copy()
+
 
 # starting the time counter
 tic = time.perf_counter()
@@ -81,9 +89,16 @@ for d,dp in enumerate(dispatch): #over dispatch type
             
             # log outputs
             annual_energy_array[d,i,j] = (nt.Outputs.annual_energy*u.kWh).to('TWh').m
-            ppa_array[d,i,j] = so.Outputs.ppa
-            lcoe_nom_array[d,i,j]  = so.Outputs.lcoe_nom
-            
+            ppa_array[d,i,j]         = so.Outputs.ppa           # in cents/kWh
+            lcoe_nom_array[d,i,j]    = so.Outputs.lcoe_nom      # in cents/kWh
+            npv_aftertax[d,i,j]      = so.Outputs.project_return_aftertax_npv/1e6 #in million $
+            flip_actual_irr[d,i,j]   = so.Outputs.flip_actual_irr   # in %
+            flip_actual_year[d,i,j]  = so.Outputs.flip_actual_year  # in yr
+            irr_aftertax[d,i,j]      = so.Outputs.project_return_aftertax_irr  # in %
+            cost_installed [d,i,j]   = so.Outputs.cost_installed/1e6  #in million $
+            size_of_equity[d,i,j]    = so.Outputs.size_of_equity/1e6  #in million $
+            size_of_debt[d,i,j]      = so.Outputs.size_of_debt/1e6    #in million $
+
             # reset the Plant and Grid, prevents memory leak
             del nuctes
             del nt
@@ -114,10 +129,17 @@ Storage['pyoH']   = pyoH
 Storage['annual_energy_array'] = annual_energy_array
 Storage['ppa_array']           = ppa_array
 Storage['lcoe_nom_array']      = lcoe_nom_array
+Storage['npv_aftertax']        = npv_aftertax
+Storage['flip_actual_irr']     = flip_actual_irr
+Storage['flip_actual_year']    = flip_actual_year
+Storage['irr_aftertax']        = irr_aftertax
+Storage['cost_installed']      = cost_installed
+Storage['size_of_equity']      = size_of_equity
+Storage['size_of_debt']        = size_of_debt
 
 # locating output directory
 output_dir = FileMethods.output_dir
-filename   = 'pricePerfvsDispatch_sizingTESandCycle.nuctes' 
+filename   = 'pricePerfvsDispatch_sizingTESandCycle_irr11pct.nuctes' 
 NTPath = os.path.join(output_dir, filename)
 
 # pickling
