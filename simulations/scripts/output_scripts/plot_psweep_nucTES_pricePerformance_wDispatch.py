@@ -16,6 +16,7 @@ rc('font', weight='bold',size=12)
 u = pint.UnitRegistry()
 import pickle
 from util.FileMethods import FileMethods
+import matplotlib.cm as cm
 
 pid = os.getpid()
 print("PID = ", pid)
@@ -49,119 +50,158 @@ lcoe_nom_array      = Storage['lcoe_nom_array']
 
     
 # =============================================================================
-# Plots
+# Set Up Figures and Initialize Lists
 # =============================================================================
 
-## can we automate this:
-    # look through types of dispatch
-    #     find optimal value in each run
-    #     compare between each
-    #     print out optimum
-    # plot 2D map of dispatch type that lead to optimum
-    # plot the other two as contours
+# creating figure
+fig = plt.figure(figsize=[18.5,6])
+ax1 = fig.add_subplot(131)
+ax2 = fig.add_subplot(132)
+ax3 = fig.add_subplot(133)
 
-# creating figure object
-fig = plt.figure(constrained_layout=True)
-ax = fig.gca()
+# adjusting space between 
+plt.subplots_adjust(wspace=0.4)
 
-#===================================
-# plotting 2D heat map for Qdot losses, with interpolation
-im = ax.imshow(lcoe_nom_array[2].T, origin='lower', interpolation='bicubic')
+# names of dispatch scenarios
+dispatch_scenarios  = ['Pyomo - 24hr Horizon', 'Pyomo - 48hr Horizon', 'No Pyomo - SSC Only ']  
 
-# creating colorbar for the 2D heatmap with label
-cb = fig.colorbar(im, ax=ax)
-# cb.set_label(r'$\dot{q}^{L}_{TES}$ (MW)', fontweight = 'bold')
+# specific performance metrics to plot 
+performance_metrics = [annual_energy_array, ppa_array, lcoe_nom_array]
+N              = len(performance_metrics)
+get_max        = [True, False, False] # whether each performance is optimized with max or min
+axes           = [ax1,ax2,ax3] # list of axes
+heat_cmap_list = ['Blues', 'Blues_r', 'Blues_r'] # colormaps used for each performance metric
+metric_labels  = ['Annual Energy Production \n(TWh)',
+                  'PPA Price \n(cents/kWh)',
+                  'LCOE \n(cents/kWh)' ] # labels for each performance metric
 
-# setting tick marks for x and y axes
-ax.set_xticks(range(len(iterator1)))
-ax.set_xticklabels(iterator1)
-ax.set_yticks(range(len(iterator2)))
-ax.set_yticklabels(iterator2)
+# colormap for contours
+cmap_contour = cm.RdBu
 
-# x_array = P_ref*iterator2
+# some other arrays
+P_array  = P_ref * p_mult #actual power cycle reference outputs
+lp = 12 #labelpad
 
-# array_list = [ ppa_array,
-#                lcoe_nom_array ]
 
-# colormarkers = ['C1', 'C2']
+# ========================================   
+# Looping!
+# ========================================     
 
-# label_list = [ 'PPA Price',
-#                'LCOE Nom' ]
-
-# lw = 2
-
-# # Energy Outputs
-# fig = plt.figure(figsize=(12,8))
-# ax1 = fig.add_subplot(211)
-# ax2 = fig.add_subplot(212)
-# # ax = fig.gca()
-# ax1.plot( x_array, annual_energy_array[woPyomo] , 'C0',    linewidth = lw,  label='No Pyomo'  )
-# ax1.plot( x_array, annual_energy_array[wiPyomo48] , 'C0--',  linewidth = lw,  label='w/ Pyomo 48 hr'  )
-# ax1.plot( x_array, annual_energy_array[wiPyomo24] , 'C0:',  linewidth = lw,  label='w/ Pyomo 24 hr'  )
-
-# # ax1.set_xlabel('P_ref', fontweight='bold')
-# ax1.set_ylabel('Annual Energy (TWh)', fontweight='bold')
-# ax1.legend(loc='best')
-# ax1.set_title('tshours = {0} hr'.format(iterator1[0]), fontweight='bold')
-
-# # Financial Outputs
-# # fig = plt.figure()
-# # ax = fig.gca()
-
-# for array, color, label in zip(array_list, colormarkers, label_list):
-#     colorP1 = color + '--'
-#     colorP2 = color + ':'
+for n in range(N):
     
-#     labelP1 = label + ' w/ Pyomo 48 Hr'
-#     labelP2 = label + ' w/ Pyomo 24 Hr'
+    # indeces for dispatch scenarios
+    dispatch_series  = list( range(N) ) # declare this every loop
     
-#     ax2.plot( x_array, array[woPyomo]   , color,   linewidth = lw, label = label)
-#     ax2.plot( x_array, array[wiPyomo48] , colorP1, linewidth = lw, label = labelP1)
-#     ax2.plot( x_array, array[wiPyomo24] , colorP2, linewidth = lw, label = labelP2)
+    #extracting specific performance metric
+    performance_metric = performance_metrics[n]
+    
+    # get optimum value of performance metric 
+    Opt = np.amax(performance_metric) if get_max[n] \
+            else np.amin(performance_metric)
 
-# ax2.set_xlabel('P_ref', fontweight='bold')
-# ax2.set_ylabel('Price (¢/kWh)', fontweight='bold')
-# ax2.legend(loc='best')
-# # ax2.set_title('tshours = {0} hr'.format(iterator1[0]), fontweight='bold')
+    # indeces for this maximum value - { D=Dispatch_Type, T=tshours, P=power_cycle }
+    [Opt_D, Opt_T, Opt_P] = [np.where(performance_metric == Opt)[d][0] for d in range(N)]
 
-# # =============================================================================
-# # Old plots
-# # =============================================================================
+    # plotting 2D heat map of the **Dispatch type** that leads to optimum value
+    im = axes[n].imshow(performance_metric[Opt_D].T, origin='lower', 
+                        cmap=heat_cmap_list[n])
 
-# ###--- Sweep over Cycle Max Fraction, tshours constant
-# # fig = plt.figure()
-# # ax = fig.gca()
-# # axx = ax.twinx()
-# # ax.plot( cycle_max, ppa_array.flatten() ,       linewidth = 3, label='PPA Price  (¢/kWh)'  )
-# # ax.plot( cycle_max, lppa_nom_array.flatten() ,  linewidth = 3,  label='Levelized PPA Price - nominal  (¢/kWh)'  )
-# # ax.plot( cycle_max, lppa_real_array.flatten() , linewidth = 3,  label='Levelized PPA Price - real (¢/kWh)'  )
-# # ax.plot( cycle_max, lcoe_nom_array.flatten() ,  linewidth = 3,  label='Levelized COE - nominal  (¢/kWh)'  )
-# # ax.plot( cycle_max, lcoe_real_array.flatten() , linewidth = 3,  label='Levelized COE - real  (¢/kWh)'  )
+    # setting axis labels
+    axes[n].set_xlabel('tshours \n(hr)', fontweight='bold')
+    if n == 0:
+        axes[n].set_ylabel('Power Cycle Output\n(MW)', fontweight='bold')
 
-# # axx.plot( cycle_max , npv_array , 'k' , linewidth = 3, )
+    # set title of plot
+    title = axes[n].set_title('Optimum: ' + dispatch_scenarios[Opt_D], fontweight='bold')
 
-# # ax.set_xlabel('Cycle Max Fraction', fontweight='bold')
-# # ax.set_ylabel('Price (¢/kWh)', fontweight='bold')
-# # axx.set_ylabel('Price ($M)', fontweight='bold')
-# # ax.legend(loc='best')
-# # ax.set_title('tshours = {0}'.format(tshours[0]))
+    # creating colorbar for the 2D heatmap with label
+    cb = fig.colorbar(im, ax=axes[n], fraction=0.06, pad=0.01)
+    cb.set_label(metric_labels[n], labelpad= lp, fontweight = 'bold')
 
-# ###--- Sweep over tshours, Cycle Max Fraction constant
-# # fig = plt.figure()
-# # ax = fig.gca()
-# # axx = ax.twinx()
-# # ax.plot( tshours, ppa_array.flatten() ,       linewidth = 3, label='PPA Price  (¢/kWh)'  )
-# # ax.plot( tshours, lppa_nom_array.flatten() ,  linewidth = 3,  label='Levelized PPA Price - nominal  (¢/kWh)'  )
-# # ax.plot( tshours, lppa_real_array.flatten() , linewidth = 3,  label='Levelized PPA Price - real (¢/kWh)'  )
-# # ax.plot( tshours, lcoe_nom_array.flatten() ,  linewidth = 3,  label='Levelized COE - nominal  (¢/kWh)'  )
-# # ax.plot( tshours, lcoe_real_array.flatten() , linewidth = 3,  label='Levelized COE - real  (¢/kWh)'  )
+    # setting tick marks for x and y axes
+    axes[n].set_xticks(range(len(tshours)))
+    axes[n].set_xticklabels( ['{0}'.format(t) for t in tshours] )
+    if n == 0:
+        axes[n].set_yticks(range(len(P_array)))
+        axes[n].set_yticklabels( ['{0:.2f}'.format(P) for P in P_array] )
+    else:
+        axes[n].axes.yaxis.set_visible(False)
 
-# # axx.plot( tshours , npv_array.flatten() , 'k' , linewidth = 3, )
+    # getting extent of heatmap to help with contours
+    xmin,xmax,ymin,ymax = im.get_extent()
+    x_series = np.linspace(xmin, xmax, len(tshours))
+    y_series = np.linspace(ymin, ymax, len(P_array))
 
-# # ax.set_xlabel('tshours', fontweight='bold')
-# # ax.set_ylabel('Price (¢/kWh)', fontweight='bold')
-# # axx.set_ylabel('Price ($M)', fontweight='bold')
-# # ax.legend(loc='best')
-# # ax.set_title('cycle_max = {0}'.format(cycle_max[0]))
+    #=========================================================================
+    ### First Contour: Difference between Optimum and Suboptimum #1
+    rm = dispatch_series.pop(Opt_D) #remove optimal index
+    
+    # find difference between optimal Dispatch type and next available
+    diff_1 = performance_metric[Opt_D] - performance_metric[dispatch_series[0]]
+    diff_1 /= performance_metric[Opt_D]
+    
+    # find min and max values of difference
+    diff1min = diff_1.min()
+    diff1max = diff_1.max()
+    
+    # define contour levels
+    if np.sign(diff1min) != np.sign(diff1max):
+        # difference has only one sign, so optimal is strictly better
+        levels_1 = [diff1min, 0.7*diff1min, 0.4*diff1min, 0, 0.4*diff1max, 0.9*diff1max, diff1max]
+    else:
+        # difference changes signs, so sometimes the Dispatch type behaves worse
+        levels_1 = [diff1min, 0.75*diff1min, 0.3*diff1min, diff1max]
 
+    # contour plot for Suboptimum #1
+    CS1 = axes[n].contour(x_series, y_series, diff_1.T, levels_1, cmap=cmap_contour)
 
+    # labels for each contour level
+    fmt_1 = {}
+    for l,s in zip(CS1.levels, levels_1):
+        # plotting as percentages
+        fmt_1[l] = ' {0:.1f}'.format(s*100) + ' % '
+        
+    # Add contour labels
+    axes[n].clabel(CS1,  inline=True, fmt=fmt_1, fontsize=10)
+    
+    # creating label for entire contour plot
+    CS1.collections[n].set_label('Pct wrt ' + dispatch_scenarios[dispatch_series[0]])
+
+    #=========================================================================
+    ### Second Contour: Difference between Optimum and Suboptimum #2
+    
+    # find difference between optimal Dispatch type and next available
+    diff_2 = performance_metric[Opt_D] - performance_metric[dispatch_series[1]]
+    diff_2 /= performance_metric[Opt_D]
+    
+    # find min and max values of difference
+    diff2min = diff_2.min()
+    diff2max = diff_2.max()
+    
+    # define contour levels
+    if np.sign(diff2min) != np.sign(diff2max):
+        # difference has only one sign, so optimal is strictly better
+        levels_2 = [diff2min, 0.7*diff2min, 0.4*diff2min, 0, 0.4*diff2max, 0.9*diff2max, diff2max]
+    else:
+        # difference changes signs, so sometimes the Dispatch type behaves worse
+        levels_2 = [diff2min, 0.75*diff2min, 0.3*diff2min, diff2max]
+
+    # contour plot for Suboptimum #2
+    CS2 = axes[n].contour(x_series, y_series, diff_2.T, levels_2, linestyles='--', cmap=cmap_contour)
+
+    # labels for each contour level
+    fmt_2 = {}
+    for l,s in zip(CS2.levels, levels_2):
+        # plotting as percentages
+        fmt_2[l] = ' {0:.1f}'.format(s*100) + ' % '
+        
+    # Add contour labels
+    axes[n].clabel(CS2,  inline=True, fmt=fmt_2, fontsize=10)
+    
+    # creating label for entire contour plot
+    CS2.collections[0].set_label('Pct wrt ' + dispatch_scenarios[dispatch_series[1]])
+    
+    # adding legend for the contours
+    axes[n].legend(loc='best')
+    
+    
