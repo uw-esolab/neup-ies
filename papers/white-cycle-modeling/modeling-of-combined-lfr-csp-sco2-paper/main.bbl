@@ -20,4 +20,10 @@ Hirsch, T.; Eck, M.; Blanco, M.J.; Wagner, M.; Feldhoff, J.F.
   From the guiSmo Project.
 \newblock  Energy Sustainability,  2011, Vol. 54686, pp. 737--742.
 
+\bibitem[Nellis and Klein(2008)]{nellis_klein_2008}
+Nellis, G.; Klein, S.
+\newblock {\em Heat Transfer}; Cambridge University Press,  2008.
+\newblock
+  doi:{\changeurlcolor{black}\href{https://doi.org/10.1017/CBO9780511841606}{\detokenize{10.1017/CBO9780511841606}}}.
+
 \end{thebibliography}
