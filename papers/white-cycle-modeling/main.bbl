@@ -1,0 +1,22 @@
+\begin{thebibliography}{999}
+
+\bibitem[Wagner(2017)]{wagner2017optimization}
+Wagner, M.J.
+\newblock Optimization of stored energy dispatch for concentrating solar power
+  systems.
+\newblock PhD thesis, Colorado School of Mines,  2017.
+
+\bibitem[Blair \em{et~al.}(2005)Blair, Dobos, Freeman, Gilman, Janzou, Wagner,
+  Neises, and Mehos]{blair2005sam}
+Blair, N.; Dobos, A.; Freeman, J.; Gilman, P.; Janzou, P.; Wagner, M.; Neises,
+  T.; Mehos, M.
+\newblock SAM five year solar technologies roadmap {\bf 2005}.
+
+\bibitem[Hirsch \em{et~al.}(2011)Hirsch, Eck, Blanco, Wagner, and
+  Feldhoff]{hirsch2011standardization}
+Hirsch, T.; Eck, M.; Blanco, M.J.; Wagner, M.; Feldhoff, J.F.
+\newblock Standardization of CSP Performance Model Projection: Latest Results
+  From the guiSmo Project.
+\newblock  Energy Sustainability,  2011, Vol. 54686, pp. 737--742.
+
+\end{thebibliography}
