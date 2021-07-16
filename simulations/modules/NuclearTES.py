@@ -33,7 +33,9 @@ class NuclearTES(GenericSSCModule):
         
         # initialize Generic module, csv data arrays should be saved here
         GenericSSCModule.__init__( self, plant_name, json_name, is_dispatch )
-
+        
+        # define specific PySAM module to be called later
+        self.PySAM_Module = NuclearTes
         
     def store_csv_arrays(self, input_dict):
         """ Method to get data from specified csv files and store in class
@@ -76,7 +78,7 @@ class NuclearTES(GenericSSCModule):
         plant_dat = pssc.dict_to_ssc_table( self.SSC_dict, self.plant_name )
         
         # create new Plant object
-        self.Plant = NuclearTes.wrap(plant_dat)
+        self.Plant = self.PySAM_Module.wrap(plant_dat)
         
         # manually setting data arrays from csv files
         self.Plant.SolarResource.solar_resource_file         = self.solar_resource_file
