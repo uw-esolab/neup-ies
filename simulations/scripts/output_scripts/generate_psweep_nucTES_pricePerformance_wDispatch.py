@@ -82,6 +82,9 @@ for d,dp in enumerate(dispatch): #over dispatch type
             nuctes.SSC_dict['P_ref'] = fm*P_ref
             nuctes.SSC_dict['tshours'] = th
             
+            # update target IRR, nominal was 11% for CSP
+            nuctes.SSC_dict['flip_target_percent'] = 11
+            
             # run simulation
             nuctes.run_sim( run_loop=True )
             nt = nuctes.Plant

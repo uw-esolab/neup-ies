@@ -27,7 +27,7 @@ print("PID = ", pid)
 
 # locating output directory
 output_dir = FileMethods.output_dir
-filename   = 'pricePerfvsDispatch_sizingTESandCycle.nuctes' 
+filename   = 'pricePerfvsDispatch_sizingTESandCycle_irr11pct.nuctes' 
 NTPath = os.path.join(output_dir, filename)
 
 # pickling
@@ -47,7 +47,9 @@ pyoH         = Storage['pyoH']
 annual_energy_array = Storage['annual_energy_array'] 
 ppa_array           = Storage['ppa_array']
 lcoe_nom_array      = Storage['lcoe_nom_array']
-
+npv_aftertax = Storage['npv_aftertax']
+irr = Storage['irr_aftertax']
+irr_mean = np.mean(irr)
     
 # =============================================================================
 # Set Up Figures and Initialize Lists
@@ -55,6 +57,7 @@ lcoe_nom_array      = Storage['lcoe_nom_array']
 
 # creating figure
 fig = plt.figure(figsize=[18.5,6])
+fig.suptitle("IRR: {0:.1f}".format(irr_mean), fontsize=14)
 ax1 = fig.add_subplot(131)
 ax2 = fig.add_subplot(132)
 ax3 = fig.add_subplot(133)
@@ -66,14 +69,14 @@ plt.subplots_adjust(wspace=0.4)
 dispatch_scenarios  = ['Pyomo - 24hr Horizon', 'Pyomo - 48hr Horizon', 'No Pyomo - SSC Only ']  
 
 # specific performance metrics to plot 
-performance_metrics = [annual_energy_array, ppa_array, lcoe_nom_array]
+performance_metrics = [annual_energy_array, ppa_array, npv_aftertax]
 N              = len(performance_metrics)
 get_max        = [True, False, False] # whether each performance is optimized with max or min
 axes           = [ax1,ax2,ax3] # list of axes
 heat_cmap_list = ['Blues', 'Blues_r', 'Blues_r'] # colormaps used for each performance metric
 metric_labels  = ['Annual Energy Production \n(TWh)',
                   'PPA Price \n(cents/kWh)',
-                  'LCOE \n(cents/kWh)' ] # labels for each performance metric
+                  'NPV \n($M)' ] # labels for each performance metric
 
 # colormap for contours
 cmap_contour = cm.RdBu
@@ -136,72 +139,76 @@ for n in range(N):
     ### First Contour: Difference between Optimum and Suboptimum #1
     rm = dispatch_series.pop(Opt_D) #remove optimal index
     
-    # find difference between optimal Dispatch type and next available
-    diff_1 = performance_metric[Opt_D] - performance_metric[dispatch_series[0]]
-    diff_1 /= performance_metric[Opt_D]
-    
-    # find min and max values of difference
-    diff1min = diff_1.min()
-    diff1max = diff_1.max()
-    
-    # define contour levels
-    if np.sign(diff1min) != np.sign(diff1max):
-        # difference has only one sign, so optimal is strictly better
-        levels_1 = [diff1min, 0.7*diff1min, 0.4*diff1min, 0, 0.4*diff1max, 0.9*diff1max, diff1max]
-    else:
-        # difference changes signs, so sometimes the Dispatch type behaves worse
-        levels_1 = [diff1min, 0.75*diff1min, 0.3*diff1min, diff1max]
-
-    # contour plot for Suboptimum #1
-    CS1 = axes[n].contour(x_series, y_series, diff_1.T, levels_1, cmap=cmap_contour)
-
-    # labels for each contour level
-    fmt_1 = {}
-    for l,s in zip(CS1.levels, levels_1):
-        # plotting as percentages
-        fmt_1[l] = ' {0:.1f}'.format(s*100) + ' % '
+    if Opt_D == 2:
+        # find difference between optimal Dispatch type and next available
+        diff_1 = performance_metric[Opt_D] - performance_metric[dispatch_series[1]]
+        diff_1 /= performance_metric[Opt_D]
         
-    # Add contour labels
-    axes[n].clabel(CS1,  inline=True, fmt=fmt_1, fontsize=10)
-    
-    # creating label for entire contour plot
-    CS1.collections[n].set_label('Pct wrt ' + dispatch_scenarios[dispatch_series[0]])
-
-    #=========================================================================
-    ### Second Contour: Difference between Optimum and Suboptimum #2
-    
-    # find difference between optimal Dispatch type and next available
-    diff_2 = performance_metric[Opt_D] - performance_metric[dispatch_series[1]]
-    diff_2 /= performance_metric[Opt_D]
-    
-    # find min and max values of difference
-    diff2min = diff_2.min()
-    diff2max = diff_2.max()
-    
-    # define contour levels
-    if np.sign(diff2min) != np.sign(diff2max):
-        # difference has only one sign, so optimal is strictly better
-        levels_2 = [diff2min, 0.7*diff2min, 0.4*diff2min, 0, 0.4*diff2max, 0.9*diff2max, diff2max]
-    else:
-        # difference changes signs, so sometimes the Dispatch type behaves worse
-        levels_2 = [diff2min, 0.75*diff2min, 0.3*diff2min, diff2max]
-
-    # contour plot for Suboptimum #2
-    CS2 = axes[n].contour(x_series, y_series, diff_2.T, levels_2, linestyles='--', cmap=cmap_contour)
-
-    # labels for each contour level
-    fmt_2 = {}
-    for l,s in zip(CS2.levels, levels_2):
-        # plotting as percentages
-        fmt_2[l] = ' {0:.1f}'.format(s*100) + ' % '
+        # find min and max values of difference
+        diff1min = diff_1.min()
+        diff1max = diff_1.max()
         
-    # Add contour labels
-    axes[n].clabel(CS2,  inline=True, fmt=fmt_2, fontsize=10)
+        # define contour levels
+        if np.sign(diff1min) != np.sign(diff1max):
+            # difference has only one sign, so optimal is strictly better
+            levels_1 = [diff1min, 0.7*diff1min, 0.4*diff1min, 0, 0.4*diff1max, 0.9*diff1max, diff1max]
+        else:
+            # difference changes signs, so sometimes the Dispatch type behaves worse
+            levels_1 = [diff1min, 0.75*diff1min, 0.3*diff1min, diff1max]
     
-    # creating label for entire contour plot
-    CS2.collections[0].set_label('Pct wrt ' + dispatch_scenarios[dispatch_series[1]])
+        # contour plot for Suboptimum #1
+        CS1 = axes[n].contour(x_series, y_series, diff_1.T, levels_1, cmap=cmap_contour)
     
-    # adding legend for the contours
-    axes[n].legend(loc='best')
+        # labels for each contour level
+        fmt_1 = {}
+        for l,s in zip(CS1.levels, levels_1):
+            # plotting as percentages
+            fmt_1[l] = ' {0:.1f}'.format(s*100) + ' % '
+            
+        # Add contour labels
+        axes[n].clabel(CS1,  inline=True, fmt=fmt_1, fontsize=10)
+        
+        # creating label for entire contour plot
+        CS1.collections[n].set_label('Pct wrt ' + dispatch_scenarios[dispatch_series[1]])
     
+    else:
+
+        #=========================================================================
+        ### Second Contour: Difference between Optimum and Suboptimum #2
+        
+        # find difference between optimal Dispatch type and next available
+        diff_2 = performance_metric[Opt_D] - performance_metric[dispatch_series[-1]]
+        diff_2 /= performance_metric[Opt_D]
+        
+        # find min and max values of difference
+        diff2min = diff_2.min()
+        diff2max = diff_2.max()
+        
+        # define contour levels
+        if np.sign(diff2min) != np.sign(diff2max):
+            # difference has only one sign, so optimal is strictly better
+            levels_2 = np.hstack([  np.linspace(diff2min, 0, 4) , np.linspace(0, diff2max, 4)[1:] ] )
+            levels_2 = levels_2.tolist()
+        else:
+            # difference changes signs, so sometimes the Dispatch type behaves worse
+            levels_2 = np.linspace(diff2min, diff2max, 5).tolist()
+    
+        # contour plot for Suboptimum #2
+        CS2 = axes[n].contour(x_series, y_series, diff_2.T, levels_2, linestyles='--', cmap=cmap_contour)
+    
+        # labels for each contour level
+        fmt_2 = {}
+        for l,s in zip(CS2.levels, levels_2):
+            # plotting as percentages
+            fmt_2[l] = ' {0:.1f}'.format(s*100) + ' % '
+            
+        # Add contour labels
+        axes[n].clabel(CS2,  inline=True, fmt=fmt_2, fontsize=10)
+        
+        # creating label for entire contour plot
+        CS2.collections[0].set_label('Pct wrt ' + dispatch_scenarios[dispatch_series[-1]])
+        
+        # adding legend for the contours
+        axes[n].legend(loc='best')
+        
     
