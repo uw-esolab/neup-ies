@@ -4,7 +4,7 @@ import datetime
 
 # Open  data file
 data_file_name = "862903_43.09_-89.42_2018.csv"
-data_file = pd.read_csv(data_file_name, header=2).astype(int)
+data_file = pd.read_csv(data_file_name, header=2)
 
 # Extract DHI solar data
 target_data = data_file["Temperature"].astype(float)
