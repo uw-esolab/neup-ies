@@ -37,6 +37,7 @@ class NuclearTES(GenericSSCModule):
         # define specific PySAM module to be called later
         self.PySAM_Module = NuclearTes
         
+        
     def store_csv_arrays(self, input_dict):
         """ Method to get data from specified csv files and store in class
         

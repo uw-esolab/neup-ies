@@ -286,7 +286,8 @@ class GenericSSCModule(ABC):
             
             # time-printer
             print_time = int(time_next.to('d').magnitude)
-            if not print_time % 10: print('   [%s / %s] completed.' % (print_time, np.round(time_end.to('d').m)) )
+            # if not print_time % 1: 
+            print('   [%s / %s] completed.' % (print_time, np.round(time_end.to('d').m)) )
             
             # update: SSC(t) -> Plant(t+1)
             self.update_Plant_after_SSC( )
@@ -586,8 +587,8 @@ class GenericSSCModule(ABC):
             convert_output = lambda arr: tuple( arr.tolist() )
         
         # Main Loop -- we're working with pointer magic here, tread carefully
-        #     Log_Arrays['key'] -> keyword for PySAM_Outputs
-        #                'key'  -> keyword for self
+        #     Log_Arrays['key'] -> returns keyword for PySAM_Outputs
+        #                'key'  -> returns keyword for self
         for key in self.Log_Arrays.keys():
             # get current key's value from NE2 module
             self_output  = getattr(self, key )
