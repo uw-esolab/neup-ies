@@ -88,7 +88,7 @@ else
 fi
 
 cd $SSCDIR
-git checkout model1testmerge
+git checkout NE2-model1-v1.2
 
 # First check if SAM actually exists --------------------------
 cd $DEVDIR
