@@ -127,3 +127,142 @@ class SolarDispatch(GeneralDispatch):
         self.model.yrsu = pe.Var(self.model.T, domain=pe.Binary)      #y^{rsu}: 1 if receiver is starting up at period $t$; 0 otherwise
         self.model.yrsup = pe.Var(self.model.T, domain=pe.Binary)     #y^{rsup}: 1 if receiver cold start-up penalty is incurred at period $t$ (from off); 0 otherwise
 
+
+    def add_objective(self):
+        """ Method to add an objective function to the Pyomo Solar Model
+        
+        This method adds an objective function to the Pyomo Solar Dispatch
+        model. Typically, the LORE team defined a nested function and passes it
+        into the Pyomo model. 
+        """
+        def objectiveRule(model):
+            """ Maximize profits vs. costs """
+            return (
+                    sum( model.D[t] * 
+                    #obj_profit
+                    model.Delta[t]*model.P[t]*0.1*(model.wdot_s[t] - model.wdot_p[t])
+                    #obj_cost_cycle_su_hs_sd
+                    - (model.Ccsu*model.ycsup[t] + 0.1*model.Cchsp*model.ychsp[t] + model.alpha*model.ycsd[t])
+                    #obj_cost_cycle_ramping
+                    - (model.C_delta_w*(model.wdot_delta_plus[t]+model.wdot_delta_minus[t])+model.C_v_w*(model.wdot_v_plus[t] + model.wdot_v_minus[t]))
+                    #obj_cost_rec_su_hs_sd
+                    - (model.Crsu*model.yrsup[t] + model.Crhsp*model.yrhsp[t] + model.alpha*model.yrsd[t])
+                    #obj_cost_ops
+                    - model.Delta[t]*(model.Cpc*model.wdot[t] + model.Ccsb*model.Qb*model.ycsb[t] + model.Crec*model.xr[t] )
+                    for t in model.T) 
+                    )
+        
+        self.model.OBJ = pe.Objective(rule=objectiveRule, sense = pe.maximize)
+
+
+    def addReceiverStartupConstraints(self):
+        """ Method to add solar startup constraints to the Pyomo Solar Model
+        
+        This method adds constraints pertaining to CSP power tower startup within the 
+        Pyomo Solar Dispatch class. Several nested functions are defined. 
+        """
+        def rec_inventory_rule(model,t):
+            """ CSP energy inventory for startup is balanced """
+            if t == 1:
+                return model.ursu[t] <= model.ursu0 + model.Delta[t]*model.xrsu[t]
+            return model.ursu[t] <= model.ursu[t-1] + model.Delta[t]*model.xrsu[t]
+        def rec_inv_nonzero_rule(model,t):
+            """ CSP energy inventory is positive if starting up """
+            return model.ursu[t] <= model.Er * model.yrsu[t]
+        def rec_startup_rule(model,t):
+            """ CSP resumes normal operation after startup or if previously operating """
+            if t == 1:
+                return model.yr[t] <= model.ursu[t]/model.Er + model.yr0 + model.yrsb0
+            return model.yr[t] <= model.ursu[t]/model.Er + model.yr[t-1] + model.yrsb[t-1]
+        def rec_su_persist_rule(model,t):
+            """ CSP cannot startup if operating in previous timestep """
+            if t == 1: 
+                return model.yrsu[t] + model.yr0 <= 1
+            return model.yrsu[t] +  model.yr[t-1] <= 1
+        def ramp_limit_rule(model,t):
+            """ CSP must abide by ramp rate limits """
+            return model.xrsu[t] <= model.Qru*model.yrsu[t]
+        def nontrivial_solar_rule(model,t):
+            """ CSP trivial power prevents startup """
+            return model.yrsu[t] <= model.Qin[t]
+        
+        self.model.rec_inventory_con = pe.Constraint(self.model.T,rule=rec_inventory_rule)
+        self.model.rec_inv_nonzero_con = pe.Constraint(self.model.T,rule=rec_inv_nonzero_rule)
+        self.model.rec_startup_con = pe.Constraint(self.model.T,rule=rec_startup_rule)
+        self.model.rec_su_persist_con = pe.Constraint(self.model.T,rule=rec_su_persist_rule)
+        self.model.ramp_limit_con = pe.Constraint(self.model.T,rule=ramp_limit_rule)
+        self.model.nontrivial_solar_con = pe.Constraint(self.model.T,rule=nontrivial_solar_rule)
+
+
+    def addReceiverSupplyAndDemandConstraints(self):
+        """ Method to add CSP supply and demand constraints to the Pyomo Solar Model
+        
+        This method adds constraints pertaining to solar supply and demand energy
+        constraints. 
+        """
+        def rec_production_rule(model,t):
+            """ Upper bound on thermal energy produced by NP """
+            return model.xr[t] + model.xrsu[t] + model.Qrsd*model.yrsd[t] <= model.Qin[t]
+        def rec_generation_rule(model,t):
+            """ Thermal energy production by NP only when operating """
+            return model.xr[t] <= model.Qin[t] * model.yr[t]
+        def min_generation_rule(model,t):
+            """ Lower bound on thermal energy produced by NP """
+            return model.xr[t] >= model.Qrl * model.yr[t]
+        def rec_gen_persist_rule(model,t):
+            """ NP not able to operate if no thermal power (adapted from CSP) """
+            return model.yr[t] <= model.Qin[t]/model.Qrl
+        
+        self.model.rec_production_con = pe.Constraint(self.model.T,rule=rec_production_rule)
+        self.model.rec_generation_con = pe.Constraint(self.model.T,rule=rec_generation_rule)
+        self.model.min_generation_con = pe.Constraint(self.model.T,rule=min_generation_rule)
+        self.model.rec_gen_persist_con = pe.Constraint(self.model.T,rule=rec_gen_persist_rule)
+        
+
+    def addReceiverNodeLogicConstraints(self):
+        """ Method to add solar logic constraints to the Pyomo Solar Dispatch Model
+        
+        This method adds constraints pertaining to tracking binary variable
+        logic for the CSP. Essentially, to make sure the correct modes
+        are activated when they are allowed. 
+        """
+        def rec_su_sb_persist_rule(model,t):
+            """ CSP startup and standby cannot coincide """
+            return model.yrsu[t] + model.yrsb[t] <= 1
+        def rec_sb_persist_rule(model,t):
+            """ CSP standby and operation cannot coincide """
+            return model.yr[t] + model.yrsb[t] <= 1
+        def rsb_persist_rule(model,t):
+            """ CSP standby must follow operating or another standby timestep """
+            if t == 1:
+                return model.yrsb[t] <= (model.yr0 + model.yrsb0) 
+            return model.yrsb[t] <= model.yr[t-1] + model.yrsb[t-1]
+        def rec_su_pen_rule(model,t):
+            """ CSP cold startup penalty """
+            if t == 1:
+                return model.yrsup[t] >= model.yrsu[t] - model.yrsu0 
+            return model.yrsup[t] >= model.yrsu[t] - model.yrsu[t-1]
+        def rec_hs_pen_rule(model,t):
+            """ CSP hot startup penalty: if we went from standby to operating """
+            if t == 1:
+                return model.yrhsp[t] >= model.yr[t] - (1 - model.yrsb0)
+            return model.yrhsp[t] >= model.yr[t] - (1 - model.yrsb[t-1])
+        def rec_shutdown_rule(model,t):
+            """ CSP shutdown protocol """
+            current_Delta = model.Delta[t]
+            # structure of inequality is lb <= model.param <= ub with strict=False by default
+            if self.eval_ineq(1,current_Delta) and t == 1: #not strict
+                return 0 >= model.yr0 - model.yr[t] +  model.yrsb0 - model.yrsb[t]
+            elif self.eval_ineq(1,current_Delta) and t > 1: # not strict
+                return model.yrsd[t-1] >= model.yr[t-1] - model.yr[t] + model.yrsb[t-1] - model.yrsb[t]
+            elif self.eval_ineq(current_Delta,1,strict=True) and t == 1:
+                return model.yrsd[t] >= model.yr0  - model.yr[t] + model.yrsb0 - model.yrsb[t]
+            # only case remaining: Delta[t]<1, t>1
+            return model.yrsd[t] >= model.yr[t-1] - model.yr[t] + model.yrsb[t-1] - model.yrsb[t]
+        
+        self.model.rec_su_sb_persist_con = pe.Constraint(self.model.T,rule=rec_su_sb_persist_rule)
+        self.model.rec_sb_persist_con = pe.Constraint(self.model.T,rule=rec_sb_persist_rule)
+        self.model.rsb_persist_con = pe.Constraint(self.model.T,rule=rsb_persist_rule)
+        self.model.rec_su_pen_con = pe.Constraint(self.model.T,rule=rec_su_pen_rule)
+        self.model.rec_hs_pen_con = pe.Constraint(self.model.T,rule=rec_hs_pen_rule)
+        self.model.rec_shutdown_con = pe.Constraint(self.model.T,rule=rec_shutdown_rule)
