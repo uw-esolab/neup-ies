@@ -23,6 +23,7 @@ where `$DEVDIR` is the parent directory where `neup-ies` is located.
 <br/><br/>
 
 ## Building SAM
+Before building either the debug or export versions of SAM: it helps if you delete any existing `SSC`, `SAM`, and `pysam` folders (be sure to commit changes prior to this!). If you have run these scripts previously, also delete the `build_debug`, `build_sam_export`, and `build_ssc_export` folders if they exist. Note that the build scripts below specify a specific tag or branch from each of the projects, modify these as necessary (results not guaranteed...). 
 
 1.  To build SSC and all accompanying projects in their debugging versions, run the following in a command line in the directory `$DEVDIR/neup-ies`:
     ```
