@@ -10,7 +10,14 @@
         "eta_file":                  "data/eta_map.csv",
         "flux_file":                 "data/flux_maps.csv",
         "ssc_horizon":               24,
-        "pyomo_horizon":             48
+        "pyomo_horizon":             48,
+        "rec_op_cost":               0.002,
+        "rec_cold_su":               950,
+        "rec_hot_su":                190,
+        "q_rec_standby_frac":        0.05,
+        "q_rec_shutdown_frac":       0.0,
+        "dw_rec_pump":               0.0,
+        "tower_piping_ht_loss":      0.0
     },
     
     "PySAM_outputs": {

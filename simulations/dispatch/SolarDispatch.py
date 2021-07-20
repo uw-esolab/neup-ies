@@ -340,3 +340,143 @@ class SolarDispatch(GeneralDispatch):
         self.addReceiverSupplyAndDemandConstraints()
         self.addReceiverNodeLogicConstraints()
         self.addTESEnergyBalanceConstraints()
+
+
+# =============================================================================
+# Dispatch Wrapper
+# =============================================================================
+
+class SolarDispatchParamWrap(GeneralDispatchParamWrap):
+    """
+    The SolarDispatchParamWrap class is meant to be the staging area for the 
+    creation of Parameters ONLY for the SolarDispatch class. It communicates 
+    with the NE2 modules, receiving SSC and PySAM input dictionaries to calculate 
+    both static parameters used for every simulation segment AND initial conditions 
+    that can be updated.
+    """
+    
+    def __init__(self, unit_registry, SSC_dict=None, PySAM_dict=None, pyomo_horizon=48, 
+                   dispatch_time_step=1):
+        """ Initializes the SolarDispatchParamWrap module
+        
+        Inputs:
+            unitRegistry (pint.registry)   : unique unit Pint unit registry
+            SSC_dict (dict)                : dictionary of SSC inputs needed to run modules
+            PySAM_dict (dict)              : dictionary of PySAM inputs + file names
+            pyomo_horizon (int Quant)      : length of Pyomo simulation segment (hours)
+            dispatch_time_step (int Quant) : length of each Pyomo time step (hours)
+        """
+        
+        GeneralDispatchParamWrap.__init__( self, unit_registry, SSC_dict, PySAM_dict, 
+                            pyomo_horizon, dispatch_time_step )
+
+
+    def set_design(self):
+        """ Method to calculate and save design point values of Plant operation
+        
+        This method extracts values and calculates for design point parameters 
+        of our Plant (e.g., nuclear thermal power output, power cycle efficiency,
+        inlet and outlet temperatures, etc.). 
+        """
+        
+        u = self.u
+        
+        GeneralDispatchParamWrap.set_design(self)
+
+        # CSP parameters
+        self.q_rec_design = self.SSC_dict['q_dot_rec_inc'] * u.MW      # CSP design thermal power
+        
+        # specific heat values at design point
+        T_htf  = 0.5*(self.T_htf_hot + self.T_htf_cold)
+        cp_des = SSCHelperMethods.get_cp_htf(self.u, T_htf, self.SSC_dict['rec_htf'] )
+        cp_des = cp_des.to('J/g/kelvin')       
+        
+        # mass flow rate
+        dm_des = self.q_pb_design / (cp_des * (self.T_htf_hot - self.T_htf_cold) )  
+        self.dm_pb_design = dm_des.to('kg/s')                               # power block design mass flow rate
+        
+        # TES design point
+        e_tes_design = self.q_pb_design * self.SSC_dict['tshours']*u.hr  
+        m_tes_des = e_tes_design / cp_des / (self.T_htf_hot - self.T_htf_cold)     
+        self.e_tes_design = e_tes_design.to('kWh') # TES storage capacity (kWht)
+        self.m_tes_design = m_tes_des.to('kg')     # TES active storage mass (kg)
+
+
+    def set_fixed_cost_parameters(self, param_dict):
+        """ Method to set fixed costs of the Plant
+        
+        This method calculates some fixed costs for the Plant operations, startup,
+        standby, etc. 
+        
+        Inputs:
+            param_dict (dict) : dictionary of Pyomo dispatch parameters
+        Outputs:
+            param_dict (dict) : updated dictionary of Pyomo dispatch parameters
+        """
+        
+        # grabbing unit registry set up in GeneralDispatch
+        u = self.u
+    
+        # set up costs from parent class
+        param_dict = GeneralDispatchParamWrap.set_fixed_cost_parameters( self, param_dict )
+        
+        # TODO: old values from LORE files
+        C_rec  = self.PySAM_dict['rec_op_cost'] * u.USD / u.MWh #Q_ratio * 0.002  * u.USD/u.kWh        
+        C_rsu  = self.PySAM_dict['rec_cold_su'] * u.USD
+        C_rhsp = self.PySAM_dict['rec_hot_su'] * u.USD
+
+        ### Cost Parameters ###
+        param_dict['Crec']   = C_rec.to('USD/kWh')  #C^{rec}: Operating cost of heliostat field and receiver [\$/kWt$\cdot$h]
+        param_dict['Crsu']   = C_rsu.to('USD')      #C^{rsu}: Penalty for receiver cold start-up [\$/start]
+        param_dict['Crhsp']  = C_rhsp.to('USD')     #C^{rhsp}: Penalty for receiver hot start-up [\$/start]
+
+        return param_dict
+
+
+    def set_solar_parameters(self, param_dict):
+        """ Method to set parameters specific to the Solar Plant for Dispatch optimization
+        
+        This method calculates some parameters specific to the SolarTES plant
+        which are meant to be fixed throughout the simulation. 
+        
+        Inputs:
+            param_dict (dict) : dictionary of Pyomo dispatch parameters
+        Outputs:
+            param_dict (dict) : updated dictionary of Pyomo dispatch parameters
+        """
+        
+        # grabbing unit registry set up in GeneralDispatch
+        u = self.u 
+        
+        time_fix = 1*u.hr                  # TODO: we're missing a time term to fix units
+        dw_rec_pump             = self.PySAM_dict['dw_rec_pump']*u.MW   # TODO: Pumping parasitic at design point reciever mass flow rate (MWe)
+        tower_piping_ht_loss    = self.PySAM_dict['tower_piping_ht_loss']*u.kW   # TODO: Tower piping heat trace full-load parasitic load (kWe) 
+        q_rec_standby_fraction  = self.PySAM_dict['q_rec_standby_frac']        # TODO: Nuclear standby energy consumption (fraction of design point thermal power)
+        q_rec_shutdown_fraction = self.PySAM_dict['q_rec_shutdown_frac']       # TODO: Nuclear shutdown energy consumption (fraction of design point thermal power)
+        
+        self.deltal = self.SSC_dict['rec_su_delay']*u.hr
+        self.Ehs    = self.SSC_dict['p_start']*u.kWh
+        self.Er     = self.SSC_dict['rec_qf_delay'] * self.q_rec_design * time_fix
+        self.Eu     = self.SSC_dict['tshours']*u.hr * self.q_pb_design
+        self.Lr     = dw_rec_pump / self.q_rec_design
+        self.Qrl    = self.SSC_dict['f_rec_min'] * self.q_rec_design * time_fix
+        self.Qrsb   = q_rec_standby_fraction  * self.q_rec_design * time_fix
+        self.Qrsd   = q_rec_shutdown_fraction * self.q_rec_design * time_fix
+        self.Qru    = self.Er / self.deltarl  
+        self.Wh     = self.SSC_dict['p_track']*u.kW
+        self.Wnht   = tower_piping_ht_loss
+        
+        ### CSP Field and Receiver Parameters ###
+        param_dict['deltal'] = self.deltal.to('hr')    #\delta^l: Minimum time to start the receiver [hr]
+        param_dict['Ehs']    = self.Ehs.to('kWh')      #E^{hs}: Heliostat field startup or shut down parasitic loss [kWe$\cdot$h]
+        param_dict['Er']     = self.Er.to('kWh')       #E^r: Required energy expended to start receiver [kWt$\cdot$h]
+        param_dict['Eu']     = self.Eu.to('kWh')       #E^u: Thermal energy storage capacity [kWt$\cdot$h]
+        param_dict['Lr']     = self.Lr.to('')          #L^r: Receiver pumping power per unit power produced [kWe/kWt]
+        param_dict['Qrl']    = self.Qrl.to('kWh')      #Q^{rl}: Minimum operational thermal power delivered by receiver [kWt$\cdot$h]
+        param_dict['Qrsb']   = self.Qrsb.to('kWh')     #Q^{rsb}: Required thermal power for receiver standby [kWt$\cdot$h]
+        param_dict['Qrsd']   = self.Qrsd.to('kWh')     #Q^{rsd}: Required thermal power for receiver shut down [kWt$\cdot$h] 
+        param_dict['Qru']    = self.Qru.to('kW')       #Q^{ru}: Allowable power per period for receiver start-up [kWt$\cdot$h]
+        param_dict['Wh']     = self.Wh.to('kW')        #W^h: Heliostat field tracking parasitic loss [kWe]
+        param_dict['Wnht']   = self.Wnht.to('kW')      #W^{ht}: Tower piping heat trace parasitic loss [kWe]
+        
+        return param_dict
