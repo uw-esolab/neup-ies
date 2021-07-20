@@ -266,3 +266,77 @@ class SolarDispatch(GeneralDispatch):
         self.model.rec_su_pen_con = pe.Constraint(self.model.T,rule=rec_su_pen_rule)
         self.model.rec_hs_pen_con = pe.Constraint(self.model.T,rule=rec_hs_pen_rule)
         self.model.rec_shutdown_con = pe.Constraint(self.model.T,rule=rec_shutdown_rule)
+
+
+    def addTESEnergyBalanceConstraints(self):
+        """ Method to add TES constraints to the Pyomo Solar Model
+        
+        This method adds constraints pertaining to TES energy balance from charging
+        with thermal power and discharging to the power cycle. 
+        """
+        def tes_balance_rule(model, t):
+            """ Balance of energy to and from TES """
+            if t == 1:
+                return model.s[t] - model.s0 == model.Delta[t] * (model.xr[t] - (model.Qc[t]*model.ycsu[t] + model.Qb*model.ycsb[t] + model.x[t] + model.Qrsb*model.yrsb[t]))
+            return model.s[t] - model.s[t-1] == model.Delta[t] * (model.xr[t] - (model.Qc[t]*model.ycsu[t] + model.Qb*model.ycsb[t] + model.x[t] + model.Qrsb*model.yrsb[t]))
+        def tes_upper_rule(model, t):
+            """ Upper bound to TES charge state """
+            return model.s[t] <= model.Eu
+        def tes_start_up_rule(model, t):
+            """ Ensuring sufficient TES charge level to startup NP """
+            if t == 1:
+                return model.s0 >= model.Delta[t]*model.delta_rs[t]*( (model.Qu + model.Qb)*( -3 + model.yrsu[t] + model.y0 + model.y[t] + model.ycsb0 + model.ycsb[t] ) + model.x[t] + model.Qb*model.ycsb[t] )
+            return model.s[t-1] >= model.Delta[t]*model.delta_rs[t]*( (model.Qu + model.Qb)*( -3 + model.yrsu[t] + model.y[t-1] + model.y[t] + model.ycsb[t-1] + model.ycsb[t] ) + model.x[t] + model.Qb*model.ycsb[t] )
+        def maintain_tes_rule(model):
+            """ Final state of TES has to be less than or equal to start """
+            return model.s[model.num_periods] <= model.s0
+        
+        self.model.tes_balance_con = pe.Constraint(self.model.T,rule=tes_balance_rule)
+        self.model.tes_upper_con = pe.Constraint(self.model.T,rule=tes_upper_rule)
+        self.model.tes_start_up_con = pe.Constraint(self.model.T,rule=tes_start_up_rule)
+        self.model.maintain_tes_con = pe.Constraint(rule=maintain_tes_rule)
+
+
+    def addPiecewiseLinearEfficiencyConstraints(self):
+        """ Method to add efficiency constraints to the Pyomo Solar Model
+        
+        This method adds constraints pertaining to efficiency constraints defined
+        as a piecewise linear approximation. Also referred to as Cycle supply and 
+        demand constraints. In the SolarDispatch, we add an extra balance of power
+        with respect to energy storage and power produced from the CSP plant. 
+        
+        TODO: This should be revisited when adding MED!!
+        """
+        def grid_sun_rule(model, t):
+            """ Balance of power flow, i.e. sold vs purchased """
+            return (
+                    model.wdot_s[t] - model.wdot_p[t] == (1-model.etac[t])*model.wdot[t]
+                		- model.Lr*(model.xr[t] + model.xrsu[t] + model.Qrl*model.yrsb[t])
+                		- model.Lc*model.x[t] 
+                        - model.Wh*model.yr[t] - model.Wb*model.ycsb[t] - model.Wht*(model.yrsb[t]+model.yrsu[t])		#Is Wrsb energy [kWh] or power [kW]?  [az] Wrsb = Wht in the math?
+                		- (model.Ehs/model.Delta[t])*(model.yrsu[t] + model.yrsb[t] + model.yrsd[t])
+            )
+        
+        # call the parent version of this method
+        GeneralDispatch.addPiecewiseLinearEfficiencyConstraints(self)
+        
+        # additional constraints
+        self.model.grid_sun_con = pe.Constraint(self.model.T,rule=grid_sun_rule)
+        
+
+    def generate_constraints(self):
+        """ Method to add ALL constraints to the Pyomo Solar Model
+        
+        This method calls the previously defined constraint methods to instantiate
+        them and add to the existing model. This method first calls the GeneralDispatch
+        version to set PowerCycle constraints, then calls nuclear constraint methods
+        to add them to the model. 
+        """
+        
+        # generating GeneralDispatch constraints first (PowerCycle, etc.)
+        GeneralDispatch.generate_constraints(self)
+        
+        self.addReceiverStartupConstraints()
+        self.addReceiverSupplyAndDemandConstraints()
+        self.addReceiverNodeLogicConstraints()
+        self.addTESEnergyBalanceConstraints()
