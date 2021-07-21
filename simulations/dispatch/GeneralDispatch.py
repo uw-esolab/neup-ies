@@ -136,7 +136,7 @@ class GeneralDispatch(ABC):
         self.model.ycsb0 = pe.Param(mutable=True, initialize=gd("ycsb0"), units=gu("ycsb0")) #y^{csb}_0: 1 if cycle is in standby mode initially, 0 otherwise
         self.model.ycsu0 = pe.Param(mutable=True, initialize=gd("ycsu0"), units=gu("ycsu0")) #y^{csu}_0: 1 if cycle is in starting up initially, 0 otherwise    [az] this is new.
         self.model.Yu0 = pe.Param(mutable=True, initialize=gd("Yu0"), units=gu("Yu0"))       #Y^u_0: duration that cycle has been generating electric power [h]
-        self.model.Yd0 = pe.Param(mutable=True, initialize=gd("Yd0"), units=gu("delta_ns"))  #Y^d_0: duration that cycle has not been generating power (i.e., shut down or in standby mode) [h]
+        self.model.Yd0 = pe.Param(mutable=True, initialize=gd("Yd0"), units=gu("Yd0"))       #Y^d_0: duration that cycle has not been generating power (i.e., shut down or in standby mode) [h]
         
         #------- Persistence Parameters ---------
         # TODO: removing references to wdot_s_prev, they only exist as Constraints and should later be added to Objective somehow
