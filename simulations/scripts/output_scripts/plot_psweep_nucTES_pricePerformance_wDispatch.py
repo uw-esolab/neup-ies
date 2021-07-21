@@ -190,15 +190,31 @@ for n in range(N):
     # define contour levels
     if np.sign(diffmin_pct) == np.sign(diffmax_pct):
         # difference has only one sign, so optimal is strictly better
-        cmap_contour = cm.Reds_r # colormap for contours
+        cmap_contour = cm.Reds_r if Opt_D != 2 else cm.Reds # colormap for contours
         strictly_better = True
         if Opt_D == 2:
             levels = [diffmin_pct, 0.75*diffmin_pct, 0.3*diffmin_pct, diffmax_pct]
         else:
             levels = np.linspace(diffmin_pct, diffmax_pct, 5).tolist()
     else:
-        # difference changes signs, so sometimes the Dispatch type behaves worse
-        cmap_contour = cm.RdBu_r  if get_max[n] and Opt_D != 2 else cm.RdBu # colormap for contours
+        # difference changes signs, so sometimes the Dispatch type behaves worse in some regions
+        #
+        # red values represent better relative performance
+        # RdBu_r => red is higher value
+        # RdBu   => red is lower value
+        
+        #                       |  max = True    |  max = False 
+        # ---------------------------------------------------------
+        # Opt_D != 2            | higher => red  |   lower => red
+        # [compare              |   (RdBu_r)     |     (RdBu)
+        #  relative to SSC]     |                |
+        # ---------------------------------------------------------
+        # Opt_D == 2            | lower => red   |   higher => red
+        # [compare              |   (RdBu)       |     (RdBu_r)
+        #  relative to non-SSC] |                
+        #
+        cmap_contour = cm.RdBu_r if (get_max[n]     and Opt_D != 2) \
+                                 or (not get_max[n] and Opt_D == 2) else cm.RdBu # colormap for contours
         strictly_better = False
         if Opt_D == 2:
             levels = [diffmin_pct, 0.7*diffmin_pct, 0.4*diffmin_pct, 0, 0.4*diffmax_pct, 0.9*diffmax_pct, diffmax_pct]
