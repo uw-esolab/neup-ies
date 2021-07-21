@@ -16,7 +16,6 @@ from util.FileMethods import FileMethods
 from util.SSCHelperMethods import SSCHelperMethods
 from dispatch.GeneralDispatch import GeneralDispatch as GD
 from dispatch.GeneralDispatch import GeneralDispatchParamWrap as GDP
-from dispatch.GeneralDispatch import GeneralDispatchOutputs as GDO
 import numpy as np
 import copy
 from abc import ABC, abstractmethod
@@ -417,7 +416,7 @@ class GenericSSCModule(ABC):
         """
         return params
         
-        
+    @abstractmethod    
     def update_Plant_after_Pyomo(self):
         """ Update SSC Plant inputs with Pyomo optimization outputs from current segment simulation
 
