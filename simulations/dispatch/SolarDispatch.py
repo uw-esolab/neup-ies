@@ -382,16 +382,20 @@ class SolarDispatchParamWrap(GeneralDispatchParamWrap):
         u = self.u
         
         GeneralDispatchParamWrap.set_design(self)
-
-        # CSP parameters
-        self.q_rec_design = self.SSC_dict['q_dot_rec_inc'] * u.MW      # CSP design thermal power
         
         # specific heat values at design point
         T_htf  = 0.5*(self.T_htf_hot + self.T_htf_cold)
+        self.T_htf_avg = T_htf
         cp_des = SSCHelperMethods.get_cp_htf(self.u, T_htf, self.SSC_dict['rec_htf'] )
-        cp_des = cp_des.to('J/g/kelvin')       
+        cp_des = cp_des.to('J/g/kelvin')   
         
-        # mass flow rate
+        # CSP parameters
+        self.q_rec_design = self.SSC_dict["P_ref"]/self.SSC_dict["design_eff"]*self.SSC_dict["solarm"]* u.MW      # CSP design thermal power
+        
+        dm_rec_des = self.q_rec_design / (cp_des * (self.T_htf_hot - self.T_htf_cold) )  
+        self.dm_rec_design = dm_rec_des.to('kg/s') 
+    
+        # PC mass flow rate
         dm_des = self.q_pb_design / (cp_des * (self.T_htf_hot - self.T_htf_cold) )  
         self.dm_pb_design = dm_des.to('kg/s')                               # power block design mass flow rate
         
@@ -448,23 +452,26 @@ class SolarDispatchParamWrap(GeneralDispatchParamWrap):
         # grabbing unit registry set up in GeneralDispatch
         u = self.u 
         
-        time_fix = 1*u.hr                  # TODO: we're missing a time term to fix units
-        dw_rec_pump             = self.PySAM_dict['dw_rec_pump']*u.MW   # TODO: Pumping parasitic at design point reciever mass flow rate (MWe)
+        # pumpimg parasitics for receiver
+        wdot = SSCHelperMethods.estimate_receiver_pumping_parasitic(u, self.T_htf_avg, self.dm_rec_design, self.SSC_dict)
+        
+        time_fix = 1*u.hr         # TODO: we're missing a time term to fix units
+        wdot     = wdot.to('MW')  
         tower_piping_ht_loss    = self.PySAM_dict['tower_piping_ht_loss']*u.kW   # TODO: Tower piping heat trace full-load parasitic load (kWe) 
-        q_rec_standby_fraction  = self.PySAM_dict['q_rec_standby_frac']        # TODO: Nuclear standby energy consumption (fraction of design point thermal power)
-        q_rec_shutdown_fraction = self.PySAM_dict['q_rec_shutdown_frac']       # TODO: Nuclear shutdown energy consumption (fraction of design point thermal power)
+        q_rec_standby_fraction  = self.PySAM_dict['q_rec_standby_frac']        # TODO: check this is correct
+        q_rec_shutdown_fraction = self.PySAM_dict['q_rec_shutdown_frac']       # TODO: check this is correct
         
         self.deltal = self.SSC_dict['rec_su_delay']*u.hr
         self.Ehs    = self.SSC_dict['p_start']*u.kWh
         self.Er     = self.SSC_dict['rec_qf_delay'] * self.q_rec_design * time_fix
         self.Eu     = self.SSC_dict['tshours']*u.hr * self.q_pb_design
-        self.Lr     = dw_rec_pump / self.q_rec_design
+        self.Lr     = wdot / self.q_rec_design
         self.Qrl    = self.SSC_dict['f_rec_min'] * self.q_rec_design * time_fix
         self.Qrsb   = q_rec_standby_fraction  * self.q_rec_design * time_fix
         self.Qrsd   = q_rec_shutdown_fraction * self.q_rec_design * time_fix
-        self.Qru    = self.Er / self.deltarl  
+        self.Qru    = self.Er / self.deltal  
         self.Wh     = self.SSC_dict['p_track']*u.kW
-        self.Wnht   = tower_piping_ht_loss
+        self.Wht   = tower_piping_ht_loss
         
         ### CSP Field and Receiver Parameters ###
         param_dict['deltal'] = self.deltal.to('hr')    #\delta^l: Minimum time to start the receiver [hr]
@@ -477,6 +484,222 @@ class SolarDispatchParamWrap(GeneralDispatchParamWrap):
         param_dict['Qrsd']   = self.Qrsd.to('kWh')     #Q^{rsd}: Required thermal power for receiver shut down [kWt$\cdot$h] 
         param_dict['Qru']    = self.Qru.to('kW')       #Q^{ru}: Allowable power per period for receiver start-up [kWt$\cdot$h]
         param_dict['Wh']     = self.Wh.to('kW')        #W^h: Heliostat field tracking parasitic loss [kWe]
-        param_dict['Wnht']   = self.Wnht.to('kW')      #W^{ht}: Tower piping heat trace parasitic loss [kWe]
+        param_dict['Wht']    = self.Wht.to('kW')      #W^{ht}: Tower piping heat trace parasitic loss [kWe]
         
         return param_dict
+
+
+    def set_time_series_solar_parameters(self, param_dict, updated_dict=None):
+        """ Method to set fixed costs of the Plant for Dispatch optimization
+        
+        This method calculates some time series parameters for the Plant operations, startup,
+        standby, etc. These are NOT meant to be fixed, but updated at the beginning
+        of every segment using the latest SSC outputs or to extract the next relevant
+        segment of pricing arrays, efficiencies, etc. 
+        
+        Inputs:
+            param_dict (dict)   : dictionary of Pyomo dispatch parameters
+            updated_dict (dict) : dictionary with updated SSC initial conditions from previous run  
+        Outputs:
+            param_dict (dict) : updated dictionary of Pyomo dispatch parameters
+        """
+        
+        #MAKE SURE TO CALL THIS METHOD AFTER THE NUCLEAR PARAMETERS 
+        u = self.u
+        
+        # differentiating between first and updated runs
+        if updated_dict is None:
+            self.current_Plant = copy.deepcopy(self.SSC_dict)
+            self.first_run = True
+        else:
+            self.current_Plant = updated_dict
+            self.first_run = False
+        
+        # thermal power and startup params
+        self.Drsu  = self.current_Plant['rec_su_delay']*u.hr   # Minimum time to start the CSP plant (hr)
+        self.Qin   = np.array([self.q_rec_design.m]*self.T)*self.q_rec_design.u if self.first_run \
+                                else self.current_Plant['q_dot_rec_inc']
+        
+        # instantiating arrays
+        n  = len(self.Delta)
+        delta_rs = np.zeros(n)
+        
+        # loop to set startup nuclear params (probably won't need, keeping it for unit testing?)
+        for t in range(n):
+            Ein = self.Qin[t]*self.Delta[t]
+            E_compare = (self.Er / max(1.*u.kWh, Ein.to('kWh'))).to('')
+            delta_rs[t] = min(1., max( E_compare, self.Drsu/self.Delta[t]))
+        
+        self.delta_rs   = delta_rs
+
+        ### Time series CSP Parameters ###
+        param_dict['delta_rs']  = self.delta_rs          #\delta^{rs}_{t}: Estimated fraction of period $t$ required for receiver start-up [-]
+        param_dict['Qin']       = self.Qin.to('kW')      #Q^{in}_{t}: Available thermal power generated by the CSP heliostat field in period $t$ [kWt]
+        
+        return param_dict
+
+
+    def set_initial_state(self, param_dict, updated_dict=None, plant=None, npts=None ):
+        """ Method to set the initial state of the Plant before Dispatch optimization
+        
+        This method uses SSC data to set the initial state of the Plant before Dispatch
+        optimization in Pyomo. This method is called in two ways: once before starting 
+        the simulation loop, in which case it only uses values from the SSC_dict portion
+        of the given JSON script. The method is also called within the simulation loop
+        to update the initial state parameters based on the ending conditions of the 
+        previous simulation segment (provided by SSC). 
+        
+        TODO: can we just input another dictionary instead of passing the full Plant?
+        
+        Inputs:
+            param_dict (dict)    : dictionary of Pyomo dispatch parameters
+            updated_dict (dict)  : dictionary with updated SSC initial conditions from previous run
+            plant (obj)          : the full PySAM Plant object. 
+            npts (int)           : length of the SSC horizon
+        Outputs:
+            param_dict (dict) : updated dictionary of Pyomo dispatch parameters
+        """
+        u = self.u
+        
+        # First filling out initial states from GeneralDispatcher
+        param_dict = GeneralDispatchParamWrap.set_initial_state( self, param_dict, updated_dict, plant, npts )
+        
+        if updated_dict is None:
+            self.current_Plant = copy.deepcopy(self.SSC_dict)
+            self.first_run = True
+        else:
+            self.current_Plant = updated_dict
+            self.first_run = False
+        
+        # TES masses, temperatures, specific heat
+        m_hot  = self.m_tes_design * (self.current_Plant['csp.pt.tes.init_hot_htf_percent']/100)        # Available active mass in hot tank
+        T_tes_hot_init  = (self.current_Plant['T_tank_hot_init']*u.celsius).to('degK')
+        T_tes_init  = 0.5*(T_tes_hot_init + self.T_htf_cold)
+        cp_tes_init = SSCHelperMethods.get_cp_htf(self.u, T_tes_init, self.SSC_dict['rec_htf'] )
+        
+        # important parameters
+        s_current          = m_hot * cp_tes_init * (T_tes_hot_init - self.T_htf_cold) # TES capacity
+        s0                 = min(self.Eu.to('kWh'), s_current.to('kWh')  )
+        yr0                = (self.current_Plant['rec_op_mode_initial'] == 2)
+        yrsb0              = False   # We don't have standby mode for either Nuclear or CSP
+        yrsu0              = (self.current_Plant['rec_op_mode_initial'] == 1)
+        t_rec              = self.current_Plant['rec_startup_time_remain_init']
+        t_rec_suinitremain = t_rec if not np.isnan( t_rec ) else 0.0
+        e_rec              = self.current_Plant['rec_startup_energy_remain_init']
+        e_rec_suinitremain = e_rec if not np.isnan( e_rec ) else 0.0
+        rec_accum_time     = max(0.0*u.hr, self.Drsu - t_rec_suinitremain*u.hr )
+        rec_accum_energy   = max(0.0*u.Wh, self.Er   - e_rec_suinitremain*u.Wh )
+
+        # defining parameters
+        self.s0    = s0              #s_0: Initial TES reserve quantity  [kWt$\cdot$h]
+        self.yr0   = yr0             #y^r_0: 1 if receiver is generating ``usable'' thermal power initially, 0 otherwise  [az] this is new.
+        self.yrsb0 = yrsb0           #y^{rsb}_0: 1 if receiver is in standby mode initially, 0 otherwise [az] this is new.
+        self.yrsu0 = yrsu0           #y^{rsu}_0: 1 if receiver is in starting up initially, 0 otherwise    [az] this is new.
+        
+        # Initial nuclear startup energy inventory
+        self.ursu0 = min(rec_accum_energy, rec_accum_time * self.Qru)  # Note, SS receiver model in ssc assumes full available power is used for startup (even if, time requirement is binding)
+        if self.ursu0 > (1.0 - 1.e-6)*self.Er:
+            self.ursu0 = self.Er
+
+        param_dict['s0']     = self.s0.to('kWh')    #s_0: Initial TES reserve quantity  [kWt$\cdot$h]
+        param_dict['ursu0']  = self.ursu0.to('kWh') #u^{rsu}_0: Initial receiver start-up energy inventory [kWt$\cdot$h]
+        param_dict['yr0']    = self.yr0             #y^r_0: 1 if receiver is generating ``usable'' thermal power initially, 0 otherwise  [az] this is new.
+        param_dict['yrsb0']  = self.yrsb0           #y^{rsb}_0: 1 if receiver is in standby mode initially, 0 otherwise [az] this is new.
+        param_dict['yrsu0']  = self.yrsu0           #y^{rsu}_0: 1 if receiver is in starting up initially, 0 otherwise    [az] this is new.
+        
+        return param_dict
+
+
+class SolarDispatchOutputs(object):
+    """
+    The SolarDispatchOutputs class is meant to handle outputs from a given,
+    solved Pyomo Dispatch model. It returns desired outputs in appropriate formats
+    and syntaxes for PostProcessing and linking simulation segments between Pyomo
+    and SSC calls. 
+    """
+    
+    def get_dispatch_targets_from_Pyomo(dispatch_model, ssc_horizon, N_full, run_loop=False):
+        """ Method to set fixed costs of the Plant
+        
+        This method parses through the solved Pyomo model for Dispatch optimization
+        and extracts results that are used as Dispatch Targets in the *SAME* simulation
+        segment but in SSC rather than Pyomo. If we're not running a loop, we can
+        still update SSC only I guess this happens once for whatever Pyomo horizon
+        is defined (this might not be a feature we keep long-term, perhaps only for
+                    debugging). 
+        
+        Inputs:
+            dispatch_model (Pyomo model) : solved Pyomo Dispatch model (ConcreteModel)
+            ssc_horizon (float Quant)    : length of time of SSC horizon (in hours)
+            N_full (int)                 : length of full simulation time (in hours, no Quant)
+            run_loop (bool)              : flag to determine if simulation is segmented
+        Outputs:
+            disp_targs (dict) : dictionary of dispatch target arrays for use in SSC 
+        """
+        
+        dm = dispatch_model
+        
+        # range of pyomo and SSC horizon times
+        t_pyomo = dm.model.T
+        f_ind   = int( ssc_horizon.to('hr').m ) # index in hours of final horizon (e.g. 24)
+        t_horizon = range(f_ind)
+        
+        # if we're not running a loop, define a list of 0s to pad the output so it matches full array size
+        if not run_loop:
+            N_leftover = N_full - f_ind
+            empty_array = [0]*N_leftover
+        
+        #----Receiver Binary Outputs----
+        yr   = np.array([pe.value(dm.model.yr[t])   for t in t_pyomo])
+        yrsu = np.array([pe.value(dm.model.yrsu[t]) for t in t_pyomo])
+        yrsb = np.array([pe.value(dm.model.yrsb[t]) for t in t_pyomo])
+        
+        #----Cycle Binary Outputs----
+        y    = np.array([pe.value(dm.model.y[t])    for t in t_pyomo])
+        ycsu = np.array([pe.value(dm.model.ycsu[t]) for t in t_pyomo])
+        ycsb = np.array([pe.value(dm.model.ycsb[t]) for t in t_pyomo])
+    
+        #----Cycle Thermal Power Utilization----
+        x = np.array([pe.value(dm.model.x[t])   for t in t_pyomo])/1000. # from kWt -> MWt
+        
+        #----Thermal Capacity for Cycle Startup and Operation----
+        Qc = np.array([pe.value(dm.model.Qc[t]) for t in t_pyomo])/1000. # from kWt -> MWt
+        Qu = dm.model.Qu.value/1000. # from kWt -> MWt
+    
+        # dispatch target -- nuclear startup/standby binaries
+        is_rec_su_allowed_in = [1 if (yr[t] + yrsu[t] + yrsb[t]) > 0.001 else 0 for t in t_horizon]  # Receiver on, startup, or standby
+        is_rec_sb_allowed_in = [1 if yrsb[t] > 0.001                     else 0 for t in t_horizon]  # Receiver standby
+        
+        # dispatch target -- cycle startup/standby binaries
+        is_pc_su_allowed_in  = [1 if (y[t] + ycsu[t]) > 0.001 else 0 for t in t_horizon]  # Cycle on or startup
+        is_pc_sb_allowed_in  = [1 if ycsb[t] > 0.001          else 0 for t in t_horizon]  # Cycle standby
+    
+        # dispatch target -- cycle thermal inputs and capacities
+        q_pc_target_su_in    = [Qc[t] if ycsu[t] > 0.001 else 0.0 for t in t_horizon]
+        q_pc_target_on_in    = [x[t]                              for t in t_horizon]
+        q_pc_max_in          = [Qu                                for t in t_horizon]
+        
+        # empty dictionary for output
+        disp_targs = {}
+        
+        # if we're running full simulation in steps, save SSC horizon portion of Pyomo horizon results
+        if run_loop:
+            disp_targs['is_rec_su_allowed_in'] = is_rec_su_allowed_in 
+            disp_targs['is_rec_sb_allowed_in'] = is_rec_sb_allowed_in
+            disp_targs['is_pc_su_allowed_in']  = is_pc_su_allowed_in 
+            disp_targs['is_pc_sb_allowed_in']  = is_pc_sb_allowed_in  
+            disp_targs['q_pc_target_su_in']    = q_pc_target_su_in  
+            disp_targs['q_pc_target_on_in']    = q_pc_target_on_in
+            disp_targs['q_pc_max_in']          = q_pc_max_in
+        # if we're running full simulation all at once, need arrays to match size of full sim
+        # TODO: is this a feature we want in the long term? Or just for debugging the first Pyomo call?
+        else:
+            disp_targs['is_rec_su_allowed_in'] = np.hstack( [is_rec_su_allowed_in , empty_array] ).tolist()
+            disp_targs['is_rec_sb_allowed_in'] = np.hstack( [is_rec_sb_allowed_in , empty_array] ).tolist()
+            disp_targs['is_pc_su_allowed_in']  = np.hstack( [is_pc_su_allowed_in  , empty_array] ).tolist()
+            disp_targs['is_pc_sb_allowed_in']  = np.hstack( [is_pc_sb_allowed_in  , empty_array] ).tolist()
+            disp_targs['q_pc_target_su_in']    = np.hstack( [q_pc_target_su_in    , empty_array] ).tolist()
+            disp_targs['q_pc_target_on_in']    = np.hstack( [q_pc_target_on_in    , empty_array] ).tolist()
+            disp_targs['q_pc_max_in']          = np.hstack( [q_pc_max_in          , empty_array] ).tolist()
+            
+        return disp_targs

@@ -501,7 +501,7 @@ class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
         
         # thermal power and startup params
         self.Dnsu    = self.PySAM_dict['Dnsu']*u.hr   # Minimum time to start the nuclear plant (hr)
-        self.Qin_nuc = np.array([self.q_nuc_design.magnitude]*self.T)*self.q_nuc_design.units #TODO: update at each segment
+        self.Qin_nuc = np.array([self.q_nuc_design.m]*self.T)*self.q_nuc_design.u #TODO: update at each segment
         
         # instantiating arrays
         n  = len(self.Delta)
