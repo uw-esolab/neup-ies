@@ -37,6 +37,9 @@ class NuclearTES(GenericSSCModule):
         # define specific PySAM module to be called later
         self.PySAM_Module = NuclearTes
         
+        # define specific Dispatch module to be called later
+        self.Dispatch_Module = ND
+        
         
     def store_csv_arrays(self, input_dict):
         """ Method to get data from specified csv files and store in class
@@ -123,7 +126,7 @@ class NuclearTES(GenericSSCModule):
         """
         
         # Creation of Dispatch model (could be overloaded)
-        dispatch_model = ND(params, self.u)
+        dispatch_model = self.Dispatch_Module(params, self.u)
         
         # Solving Dispatch optimization model
         rt_results = dispatch_model.solve_model()
