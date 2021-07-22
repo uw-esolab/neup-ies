@@ -14,43 +14,30 @@ import pint
 u = pint.UnitRegistry(autoconvert_offset_to_baseunit=True)
 rc('axes', linewidth=2)
 rc('font', weight='bold', size=12)
+from util.PostProcessing import OutputExtraction
 from util.PostProcessing import Plots
 from util.PostProcessing import DispatchPlots
 
-class SolarPlots(Plots):
-    """
-    The Plots class is a part of the PostProcessing family of classes. It can 
-    output results from SSCmodels. This might be a 
-    Sisyphus-ian task as some of the parameters are very unique to whatever 
-    plot you are trying to make, but will do my best to provide basic structures
-    and templates to work off of. 
 
-    Note that the Plots class must be initialized before using. 
+class SolarOutputExtraction(OutputExtraction):
     """
-
-    def __init__(self, module, fsl='x-small', loc='best', legend_offset=False,
-                 lp=16, lps=12, fs=12, lw=2, x_shrink=0.85, x_legend=12):
-        """ Initializes the Plots module
+    The OutputExtraction class is a part of the PostProcessing family of classes.
+    It extracts outputs from SSC or Dispatch models. Can be called from other 
+    plotting classes to extract outputs.  
+    """
+    
+    def __init__(self, module):
+        """ Initializes the OutputExtraction module
 
         The instantiation of this class receives a full module object, the module
         being one of the NE2 modules in the /neup-ies/simulations/modules directory.
-        It also contains various inputs relating to cosmetic parameters for
-        matplotlib plots. 
+        or a Dispatch module. 
 
         Inputs:
             module (object)     : object representing NE2 module class after simulations
-            fsl (str)           : fontsize for legend
-            loc (str)           : location of legend
-            legend_offset(bool) : are we plotting legends off-axis?
-            lp (int)            : labelpad for axis labels
-            lps (int)           : labelpad for axis labels - short version
-            fs (int)            : fontsize for labels, titles, etc.
-            lw (int)            : linewidth for plotting
-            x_shrink (float)    : (legend_offset==True) amount to shrink axis to make room for legend
         """
         
-        Plots.__init__(self, module, fsl=fsl, loc=loc, legend_offset=legend_offset,
-                 lp=lp, lps=lps, fs=fs, lw=lw, x_shrink=x_shrink, x_legend=x_legend)
+        OutputExtraction.__init__(self, module)
         
         
     def set_ssc_outputs(self, mod_out):
@@ -92,6 +79,145 @@ class SolarPlots(Plots):
         op_mode_result, modes_order = np.unique(self.op_mode_1, return_index=True) # mode orders and re-ordering
         self.op_mode_result = op_mode_result[np.argsort(modes_order)]     # re-order modes by first appearance of each
 
+
+    def set_pyomo_outputs(self):
+        """ Method to define list of Pyomo output arrays
+
+        This method extracts outputs from the Pyomo Dispatch model, converts them to numpy arrays
+        and saves them to `self`. 
+        """
+        
+        # Dispatch Model with results
+        dm = self.dm
+        u = self.u
+        
+        # lambda functions
+        extract_from_model = lambda name: getattr(dm.model, name)
+        extract_array      = lambda name: np.array([ pe.value(extract_from_model(name)[t]) for t in dm.model.T ])
+        extract_energy     = lambda name: (extract_array(name)*u.kWh).to('MWh') 
+        extract_power      = lambda name: (extract_array(name)*u.kW).to('MW') 
+        
+        # Time and Pricing Arrays
+        self.t_full = extract_array('Delta_e') * u.hr
+        self.p_array = extract_array('P')
+        
+        # marking the midway point
+        self.T = len(self.t_full)
+        self.time_midway = np.ones([self.T])*int(self.T/2)
+
+        # Energy Arrays
+        self.s_array     = extract_energy('s')
+        self.ucsu_array  = extract_energy('ucsu')
+        self.ursu_array  = extract_energy('ursu')
+        
+        # Power Arrays
+        self.wdot_array             = extract_power('wdot')
+        self.wdot_delta_plus_array  = extract_power('wdot_delta_plus')
+        self.wdot_delta_minus_array = extract_power('wdot_delta_minus')
+        self.wdot_v_plus_array      = extract_power('wdot_v_plus')
+        self.wdot_v_minus_array     = extract_power('wdot_v_minus')
+        self.wdot_s_array           = extract_power('wdot_s')
+        self.wdot_p_array           = extract_power('wdot_p')
+        self.x_array                = extract_power('x')
+        self.xr_array               = extract_power('xr')
+        self.xrsu_array             = extract_power('xrsu')
+
+        # Binary Arrays (Nuclear)
+        self.yr_array    = extract_array('yr') 
+        self.yrhsp_array = extract_array('yrhsp') 
+        self.yrsb_array  = extract_array('yrsb') 
+        self.yrsd_array  = extract_array('yrsu') 
+        self.yrsu_array  = extract_array('yrsu') 
+        self.yrsup_array = extract_array('yrsup') 
+        
+        # Binary Arrays (Cycle)
+        self.y_array     = extract_array('y') 
+        self.ychsp_array = extract_array('ychsp') 
+        self.ycsb_array  = extract_array('ycsb') 
+        self.ycsd_array  = extract_array('ycsd') 
+        self.ycsu_array  = extract_array('ycsu') 
+        self.ycsup_array = extract_array('ycsup') 
+        self.ycgb_array  = extract_array('ycgb')  
+        self.ycge_array  = extract_array('ycge') 
+
+
+class SolarPlots(Plots):
+    """
+    The Plots class is a part of the PostProcessing family of classes. It can 
+    output results from SSCmodels. This might be a 
+    Sisyphus-ian task as some of the parameters are very unique to whatever 
+    plot you are trying to make, but will do my best to provide basic structures
+    and templates to work off of. 
+
+    Note that the Plots class must be initialized before using. 
+    """
+
+    def __init__(self, module, fsl='x-small', loc='best', legend_offset=False,
+                 lp=16, lps=12, fs=12, lw=2, x_shrink=0.85, x_legend=12):
+        """ Initializes the Plots module
+
+        The instantiation of this class receives a full module object, the module
+        being one of the NE2 modules in the /neup-ies/simulations/modules directory.
+        It also contains various inputs relating to cosmetic parameters for
+        matplotlib plots. 
+
+        Inputs:
+            module (object)     : object representing NE2 module class after simulations
+            fsl (str)           : fontsize for legend
+            loc (str)           : location of legend
+            legend_offset(bool) : are we plotting legends off-axis?
+            lp (int)            : labelpad for axis labels
+            lps (int)           : labelpad for axis labels - short version
+            fs (int)            : fontsize for labels, titles, etc.
+            lw (int)            : linewidth for plotting
+            x_shrink (float)    : (legend_offset==True) amount to shrink axis to make room for legend
+        """
+        
+        self.u = u
+
+        # user-defined plotting parameters
+        self.lp  = lp   # labelpad
+        self.lps = lps  # labelpad short
+        self.fs  = fs   # fontsize
+        self.lw  = lw   # linewidth
+        self.fsl = fsl  # fontsize legend
+        self.loc = loc  # location of legend
+
+        # offsetting legend
+        self.legend_offset = legend_offset # boolean - are we plotting legends off-axis?
+        self.x_shrink      = x_shrink # amount to shrink x-asis by to make room for legend
+
+        # alternate legend locations
+        self.loc_ur = 'upper right'
+        self.loc_ul = 'upper left'
+        self.loc_lr = 'lower right'   # location of legend
+        self.loc_ll = 'lower left'    # location of legend
+        self.loc_cr = 'center right'  # location of legend
+        self.loc_cl = 'center left'   # location of legend
+        
+        # module class name
+        mod_class = module.__class__.__module__
+        self.mod_class_name = mod_class.split('.')[0]
+        
+        # continuing with SSC plots
+        if self.mod_class_name == 'modules':
+            
+            # full PySAM module
+            self.mod = module.Plant
+            
+            # define an Output object to extract information from SSC
+            Outputs = self.mod.PySAM_Outputs if module.run_loop else self.mod.Outputs
+            
+            # saving full time logs
+            self.t_full = np.asarray(Outputs.time_hr)*u.hr
+            self.full_slice = slice(0, len(self.t_full), 1)
+            
+            # setting operating modes, kept it way at the bottom because it's ugly
+            self.set_operating_modes_list()
+            
+            # extracting outputs
+            SolarOutputExtraction.set_ssc_outputs(self, Outputs)
+        
 
     def set_operating_modes_list(self):
         """ Method to define list of operating modes
@@ -173,69 +299,21 @@ class SolarDispatchPlots(DispatchPlots):
         """
         
         # initialize Plots class
-        DispatchPlots.__init__( self, module, fsl, loc, legend_offset, \
+        SolarPlots.__init__( self, module, fsl, loc, legend_offset, \
                  lp, lps, fs, lw, x_shrink, x_legend)
-    
-    
-    def set_pyomo_outputs(self):
-        """ Method to define list of Pyomo output arrays
+ 
 
-        This method extracts outputs from the Pyomo Dispatch model, converts them to numpy arrays
-        and saves them to `self`. 
-        """
-        
-        # Dispatch Model with results
-        dm = self.dm
-        u = self.u
-        
-        # lambda functions
-        extract_from_model = lambda name: getattr(dm.model, name)
-        extract_array      = lambda name: np.array([ pe.value(extract_from_model(name)[t]) for t in dm.model.T ])
-        extract_energy     = lambda name: (extract_array(name)*u.kWh).to('MWh') 
-        extract_power      = lambda name: (extract_array(name)*u.kW).to('MW') 
-        
-        # Time and Pricing Arrays
-        self.t_full = extract_array('Delta_e') * u.hr
-        self.p_array = extract_array('P')
-        
-        # marking the midway point
-        self.T = len(self.t_full)
-        self.time_midway = np.ones([self.T])*int(self.T/2)
-
-        # Energy Arrays
-        self.s_array     = extract_energy('s')
-        self.ucsu_array  = extract_energy('ucsu')
-        self.ursu_array  = extract_energy('ursu')
-        
-        # Power Arrays
-        self.wdot_array             = extract_power('wdot')
-        self.wdot_delta_plus_array  = extract_power('wdot_delta_plus')
-        self.wdot_delta_minus_array = extract_power('wdot_delta_minus')
-        self.wdot_v_plus_array      = extract_power('wdot_v_plus')
-        self.wdot_v_minus_array     = extract_power('wdot_v_minus')
-        self.wdot_s_array           = extract_power('wdot_s')
-        self.wdot_p_array           = extract_power('wdot_p')
-        self.x_array                = extract_power('x')
-        self.xr_array               = extract_power('xr')
-        self.xrsu_array             = extract_power('xrsu')
-
-        # Binary Arrays (Nuclear)
-        self.yr_array    = extract_array('yr') 
-        self.yrhsp_array = extract_array('yrhsp') 
-        self.yrsb_array  = extract_array('yrsb') 
-        self.yrsd_array  = extract_array('yrsu') 
-        self.yrsu_array  = extract_array('yrsu') 
-        self.yrsup_array = extract_array('yrsup') 
-        
-        # Binary Arrays (Cycle)
-        self.y_array     = extract_array('y') 
-        self.ychsp_array = extract_array('ychsp') 
-        self.ycsb_array  = extract_array('ycsb') 
-        self.ycsd_array  = extract_array('ycsd') 
-        self.ycsu_array  = extract_array('ycsu') 
-        self.ycsup_array = extract_array('ycsup') 
-        self.ycgb_array  = extract_array('ycgb')  
-        self.ycge_array  = extract_array('ycge') 
+        # continuing with Pyomo Dispatch plots
+        if self.mod_class_name == 'dispatch':
+            
+            # saving module to self
+            self.dm = module
+            
+            # extract outputs from Dispatch model
+            SolarOutputExtraction.set_pyomo_outputs(self)
+            
+            # slice of arrays
+            self.full_slice = slice(0, len(self.t_full), 1)
 
 
     def plot_pyomo_energy(self, ax=None, title_label=None, plot_all_time=True, \
