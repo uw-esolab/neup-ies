@@ -34,7 +34,7 @@
         "nuc_piping_ht_loss":        0,
         "dw_nuc_pump":               0,
         "Dnsu":                      1,
-        "nuc_wt":                    0.999
+        "weight":                    0.999
     },
     
     "PySAM_outputs": {
@@ -140,10 +140,10 @@
         "csp.pt.sf.land_overhead_factor" :  1,
         "T_htf_cold_des" :  440,
         "T_htf_hot_des"  :  560,
-        "P_ref" :           465,
+        "P_ref" :           525,
         "design_eff" :      0.489473684,
         "tshours" :         10,
-        "solarm" :      2.3999999999999999,
+        "solarm" :      1.0,
         "N_panels" :    20,
         "d_tube_out" :  40,
         "th_tube" :     1.25,
@@ -177,7 +177,7 @@
         "h_tank" :              12,
         "cold_tank_max_heat" :  15,
         "u_tank" :              0.40000000000000002,
-        "tank_pairs" :          1,
+        "tank_pairs" :          15,
         "cold_tank_Thtr" :      280,
         "h_tank_min" :          1,
         "hot_tank_Thtr" :       500,
@@ -219,7 +219,7 @@
         "pb_pump_coef" :  0.55000000000000004,
         "startup_time" :  0.5,
         "startup_frac" :  0.5,
-        "cycle_max_frac" :     1.15,
+        "cycle_max_frac" :     1.05,
         "cycle_cutoff_frac" :  0.20000000000000001,
         "q_sby_frac" :  0.20000000000000001,
         "dT_cw_ref" :   10,

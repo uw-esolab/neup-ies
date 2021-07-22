@@ -19,7 +19,7 @@ from dispatch.GeneralDispatch import GeneralDispatchParamWrap as GDP
 from dispatch.GeneralDispatch import GeneralDispatchOutputs as GDO
 import numpy as np
 import copy
-from abc import ABC
+from abc import ABC, abstractmethod
 
 class GenericSSCModule(ABC):
     """
@@ -39,7 +39,8 @@ class GenericSSCModule(ABC):
     
     """
     
-    def __init__(self, plant_name="nuclear_tes", json_name="model1", 
+    @abstractmethod
+    def __init__(self, plant_name="abstract", json_name="abstract", 
                        is_dispatch=False, dispatch_time_step=1):
         """ Initializes the GenericSSCModules
         
@@ -60,15 +61,16 @@ class GenericSSCModule(ABC):
         
         # read in dictionaries from json script
         PySAM_dict, SSC_dict, output_keys = FileMethods.read_json( self.json_name )
+
+        # save SSC_dict for usage later
+        self.SSC_dict = SSC_dict
+        self.PySAM_dict = PySAM_dict
         
         # storing SSC and Pyomo time horizons, inputs are in unit of hours
         self.ssc_horizon   = PySAM_dict['ssc_horizon'] * u.hr
         self.pyomo_horizon = PySAM_dict['pyomo_horizon'] * u.hr
         self.output_keys   = output_keys
         self.dispatch_time_step = dispatch_time_step * u.hr
-        
-        # save SSC_dict for usage later
-        self.SSC_dict = SSC_dict
         
         # save csv arrays to class 
         self.store_csv_arrays( PySAM_dict )
@@ -87,7 +89,7 @@ class GenericSSCModule(ABC):
             self.disp_results = {}
             
             # initialize dispatch wrap class
-            self.dispatch_wrap = self.create_dispatch_wrapper( PySAM_dict )
+            self.dispatch_wrap = self.create_dispatch_wrapper( self.PySAM_dict )
 
 
     def run_sim(self, run_loop=False, export=False, filename='temp.csv'):
@@ -136,7 +138,7 @@ class GenericSSCModule(ABC):
         if export:
             self.export_results(filename)
          
-            
+    @abstractmethod
     def store_csv_arrays(self, input_dict):
         """ Method to get data from specified csv files and store in class
         
@@ -154,7 +156,7 @@ class GenericSSCModule(ABC):
         parent_dir = FileMethods.parent_dir
         self.solar_resource_file = os.path.join(parent_dir, input_dict['solar_resource_rel_parent']) #os.path.join
         
-        
+    @abstractmethod    
     def create_Plant(self):
         """ Method to create Plant object for the first time
         
@@ -171,7 +173,7 @@ class GenericSSCModule(ABC):
         # create new Plant object
         self.Plant = GenericSystem.wrap(plant_dat)
 
-    
+    @abstractmethod
     def create_Grid(self):
         """ Method to create Grid object for the first time
         
@@ -338,19 +340,7 @@ class GenericSSCModule(ABC):
             self.gen_log[i_start:i_end] = self.Plant.Outputs.gen[0:self.t_ind ]
         
         
-    def reset_all(self):
-        """ Reset SSC submodules
-        
-        This method resets all PySAM wrappers, deleting them from this NE2 class.
-        Primarily done for unit testing, but could also have use if running 
-        simulations in parallel. 
-        """
-        
-        del self.Plant
-        del self.Grid
-        del self.SO
-        
-    
+    @abstractmethod
     def run_pyomo(self, params):
         """ Running Pyomo dispatch optimization
         
@@ -406,7 +396,7 @@ class GenericSSCModule(ABC):
         self.Plant.SystemControl.pc_startup_energy_remain_initial = self.Plant.Outputs.pc_startup_time_remain_final
         self.Plant.SystemControl.pc_startup_time_remain_init      = self.Plant.Outputs.pc_startup_energy_remain_final
       
-        
+    @abstractmethod    
     def update_Pyomo_after_SSC(self, params, current_pyomo_slice):
         """ Update Pyomo inputs with SSC outputs from previous segment simulation
         
@@ -468,7 +458,7 @@ class GenericSSCModule(ABC):
         self.Plant.SystemControl.q_pc_target_on_in    = dispatch_targets['q_pc_target_on_in']
         self.Plant.SystemControl.q_pc_max_in          = dispatch_targets['q_pc_max_in']
         
-
+    @abstractmethod
     def create_dispatch_wrapper(self, PySAM_dict):
         """ Creating a wrapper object for calling a class that creates dispatch parameters
         
@@ -494,7 +484,7 @@ class GenericSSCModule(ABC):
         
         return dispatch_wrap
 
-
+    @abstractmethod
     def create_dispatch_params(self, current_pyomo_slice):
         """ Populating a dictionary with dispatch parameters before optimization
         
@@ -516,8 +506,8 @@ class GenericSSCModule(ABC):
         DW = self.dispatch_wrap
         
         # setting parameters for the first time
-        params = DW.set_time_indexed_parameters( params )
         params = DW.set_power_cycle_parameters( params, self.ud_array )
+        params = DW.set_time_indexed_parameters( params, self.df_array, self.ud_array, current_pyomo_slice )
         params = DW.set_fixed_cost_parameters( params )
 
         return params
@@ -558,7 +548,8 @@ class GenericSSCModule(ABC):
                 'T_cond_out_log':    'T_cond_out',       # PC condenser water outlet temperature
                 'e_ch_tes_log'  :    'e_ch_tes',         # TES charge state
                 'op_mode_1_log' :    'op_mode_1',        # Operating Mode
-                'defocus_log'   :    'defocus'           # Nuclear "Defocus" fraction
+                'defocus_log'   :    'defocus',          # Nuclear "Defocus" fraction
+                'eta_log'       :    'eta'               # PC efficiency, gross
             }
         
         # empty array to initalize log arrays
@@ -664,4 +655,16 @@ class GenericSSCModule(ABC):
         # call the util method to write data to csv/xlsx file
         FileMethods.write_csv(dataframe_list, columns, filename)
 
-            
+
+    def reset_all(self):
+        """ Reset SSC submodules
+        
+        This method resets all PySAM wrappers, deleting them from this NE2 class.
+        Primarily done for unit testing, but could also have use if running 
+        simulations in parallel. 
+        """
+        
+        del self.Plant
+        del self.Grid
+        del self.SO
+        

@@ -89,9 +89,9 @@ ax3 = fig.add_subplot(313)
 
 plot_full_time = True
 
-upl.plot_SSC_power_and_energy(ax1, plot_full_time, title_label='SSC Results - 48 hrs')
-upl.plot_SSC_op_modes(ax2, plot_full_time)
-upl.plot_SSC_massflow(ax3, plot_full_time)
+upl.plot_SSC_power_and_energy(ax1 )#, plot_full_time=plot_full_time, title_label='SSC Results - 48 hrs')
+upl.plot_SSC_op_modes(ax2) #, plot_full_time=plot_full_time)
+upl.plot_SSC_massflow(ax3) #, plot_full_time=plot_full_time)
 
 # full 1 year plot
 # figF = plt.figure(figsize=[10,8])

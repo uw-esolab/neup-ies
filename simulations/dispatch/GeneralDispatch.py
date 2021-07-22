@@ -12,7 +12,7 @@ Model authors:
 Pyomo code by Alex Zolan
 Modified by Gabriel Soto
 """
-import os
+import os, copy
 import pyomo.environ as pe
 import numpy as np
 from util.FileMethods import FileMethods
@@ -21,22 +21,34 @@ from pyomo.environ import units as u_pyomo
 if not hasattr(u_pyomo,'USD'):
     u_pyomo.load_definitions_from_strings(['USD = [currency]'])
 from pyomo.util.check_units import assert_units_consistent, assert_units_equivalent, check_units_equivalent
+from abc import ABC, abstractmethod
 
 
-class GeneralDispatch(object):
+class GeneralDispatch(ABC):
     """
     The GeneralDispatch class is meant to set up and run Dispatch
     optimization as a mixed integer linear program problem using Pyomo.
     It creates a ConcreteModel in Pyomo with Parameters, Variables,
     Objectives, and Constraints. The ConcreteModel can then be solved. 
     
-    This is the base/parent class and should not be run by itself.
+    This is the base/parent class and should not be run by itself. 
+    Essentially, this sets Pyomo with PowerCycle-specific parameters,
+    variables, objectives, and constraints. Derived classes can then
+    be instantiated to add more specific constraints and overload the
+    objective function. 
     
     TODO: can we convert this to an abstract class in Python?
     """
     
+    @abstractmethod
     def __init__(self, params, unitRegistry):
         """ Initializes the GeneralDispatch module
+        
+        The instantiation of this class receives a parameter dictionary from
+        the NE2 module (created using a DispatchWrapper class in this file but
+        separate from the GeneralDispatch or other Dispatch classes). It first
+        creates an empty Concrete Model from Pyomo, then generates Parameters
+        from the parameter dictionary, Variables, Objectives and Constraints.
         
         Inputs:
             params (dict)                : dictionary of Pyomo dispatch parameters
@@ -51,6 +63,19 @@ class GeneralDispatch(object):
 
 
     def generate_params(self, params):
+        """ Method to generate parameters within Pyomo General Model
+        
+        This method reads in a dictionary of pyomo parameters and uses these
+        inputs to initialize parameters for the Pyomo Concrete Model. This method
+        sets up parameters particularly for the Power Cycle. It also defines
+        some lambda functions that helps convert Pint units to Pyomo units.
+        
+        Note: initial conditions are defined for the time period immediately 
+        preceding the start of this new Pyomo time segment. 
+        
+        Inputs:
+            params (dict)  : dictionary of Pyomo dispatch parameters
+        """
         
         time_range = range(1,params["T"]+1)
         # this is a lambda function to grab Pint Quantity magntitude if it has one (gm = get magnitude)
@@ -68,7 +93,15 @@ class GeneralDispatch(object):
         self.model.num_periods = pe.Param(initialize=params["T"]) #N_T: number of time periods
         self.model.Delta = pe.Param(self.model.T, mutable=False, initialize=gd("Delta"), units=gu("Delta"))          #\Delta_{t}: duration of period t
         self.model.Delta_e = pe.Param(self.model.T, mutable=False, initialize=gd("Delta_e"), units=gu("Delta_e"))    #\Delta_{e,t}: cumulative time elapsed at end of period t
-        
+        self.model.D = pe.Param(self.model.T, mutable=True, initialize=gd("D"), units=gu("D"))                          #D_{t}: Time-weighted discount factor in period $t$ [-]
+        self.model.etaamb = pe.Param(self.model.T, mutable=True, initialize=gd("etaamb"), units=gu("etaamb"))           #\eta^{amb}_{t}: Cycle efficiency ambient temperature adjustment factor in period $t$ [-]
+        self.model.etac = pe.Param(self.model.T, mutable=True, initialize=gd("etac"), units=gu("etac"))                 #\eta^{c}_{t}: Normalized condenser parasitic loss in period $t$ [-] 
+        self.model.P = pe.Param(self.model.T, mutable=True, initialize=gd("P"), units=gu("P"))                          #P_{t}: Electricity sales price in period $t$ [\$/kWh]
+        self.model.Qc = pe.Param(self.model.T, mutable=True, initialize=gd("Qc"), units=gu("Qc"))                       #Q^{c}_{t}: Allowable power per period for cycle start-up in period $t$ [kWt]
+        self.model.Wdotnet = pe.Param(self.model.T, mutable=True, initialize=gd("Wdotnet"), units=gu("Wdotnet"))        #\dot{W}^{net}_{t}: Net grid transmission upper limit in period $t$ [kWe]
+        self.model.W_u_plus = pe.Param(self.model.T, mutable=True, initialize=gd("W_u_plus"), units=gu("W_u_plus"))     #W^{u+}_{t}: Maximum power production when starting generation in period $t$  [kWe]
+        self.model.W_u_minus = pe.Param(self.model.T, mutable=True, initialize=gd("W_u_minus"), units=gu("W_u_minus"))  #W^{u-}_{t}: Maximum power production in period $t$ when stopping generation in period $t+1$  [kWe]
+
         ### Power Cycle Parameters ###
         self.model.Ec = pe.Param(mutable=True, initialize=gd("Ec"), units=gu("Ec"))           #E^c: Required energy expended to start cycle [kWt$\cdot$h]
         self.model.eta_des = pe.Param(mutable=True, initialize=gd("eta_des"), units=gu("eta_des"))   #\eta^{des}: Cycle nominal efficiency [-] 
@@ -96,6 +129,15 @@ class GeneralDispatch(object):
         self.model.C_v_w = pe.Param(mutable=True, initialize=gd("C_v_w"), units=gu("C_v_w"))           #C^{v_w}: Penalty for change in power cycle  production tcb{beyond designed limits} [\$/$\Delta\text{kWe}$]
         self.model.Ccsb = pe.Param(mutable=True, initialize=gd("Ccsb"), units=gu("Ccsb"))              #C^{csb}: Operating cost of power cycle standby operation [\$/kWt$\cdot$h]
         
+        ### Initial Condition Parameters ###
+        self.model.ucsu0 = pe.Param(mutable=True, initialize=gd("ucsu0"), units=gu("ucsu0")) #u^{csu}_0: Initial cycle start-up energy inventory  [kWt$\cdot$h]
+        self.model.wdot0 = pe.Param(mutable=True, initialize=gd("wdot0"), units=gu("wdot0")) #\dot{w}_0: Initial power cycle electricity generation [kW]e
+        self.model.y0 = pe.Param(mutable=True, initialize=gd("y0"), units=gu("y0"))          #y_0: 1 if cycle is generating electric power initially, 0 otherwise
+        self.model.ycsb0 = pe.Param(mutable=True, initialize=gd("ycsb0"), units=gu("ycsb0")) #y^{csb}_0: 1 if cycle is in standby mode initially, 0 otherwise
+        self.model.ycsu0 = pe.Param(mutable=True, initialize=gd("ycsu0"), units=gu("ycsu0")) #y^{csu}_0: 1 if cycle is in starting up initially, 0 otherwise    [az] this is new.
+        self.model.Yu0 = pe.Param(mutable=True, initialize=gd("Yu0"), units=gu("Yu0"))       #Y^u_0: duration that cycle has been generating electric power [h]
+        self.model.Yd0 = pe.Param(mutable=True, initialize=gd("Yd0"), units=gu("delta_ns"))  #Y^d_0: duration that cycle has not been generating power (i.e., shut down or in standby mode) [h]
+        
         #------- Persistence Parameters ---------
         # TODO: removing references to wdot_s_prev, they only exist as Constraints and should later be added to Objective somehow
         # self.model.wdot_s_prev  = pe.Param(self.model.T, mutable=True, initialize=gd("wdot_s_prev"), units=gu("wdot_s_prev")) #\dot{w}^{s,prev}: previous $\dot{w}^s$, or energy sold to grid [kWe]
@@ -103,33 +145,31 @@ class GeneralDispatch(object):
 
 
     def generate_variables(self):
+        """ Method to generate parameters within Pyomo General Model
+        
+        This method instantiates variables for the Pyomo Concrete Model, with
+        domains. Does not need initial guesses here, they are defined in the 
+        parameters. Here we define continuous and binary variables for the 
+        Power Cycle. 
+        """
+        
         ### Decision Variables ###
         #------- Variables ---------
-        self.model.s = pe.Var(self.model.T, domain=pe.NonNegativeReals, bounds = (0,self.model.Eu))    #s: TES reserve quantity at period $t$  [kWt$\cdot$h]
-        self.model.ucsu = pe.Var(self.model.T, domain=pe.NonNegativeReals)                         #u^{csu}: Cycle start-up energy inventory at period $t$ [kWt$\cdot$h]
-        self.model.ursu = pe.Var(self.model.T, domain=pe.NonNegativeReals)                         #u^{rsu}: Receiver start-up energy inventory at period $t$ [kWt$\cdot$h]
-        self.model.wdot = pe.Var(self.model.T, domain=pe.NonNegativeReals)                         #\dot{w}: Power cycle electricity generation at period $t$ [kWe]
-        self.model.wdot_delta_plus = pe.Var(self.model.T, domain=pe.NonNegativeReals)	             #\dot{w}^{\Delta+}: Power cycle ramp-up in period $t$ [kWe]
-        self.model.wdot_delta_minus = pe.Var(self.model.T, domain=pe.NonNegativeReals)	         #\dot{w}^{\Delta-}: Power cycle ramp-down in period $t$ [kWe]
+        self.model.ucsu = pe.Var(self.model.T, domain=pe.NonNegativeReals)                             #u^{csu}: Cycle start-up energy inventory at period $t$ [kWt$\cdot$h]
+        self.model.wdot = pe.Var(self.model.T, domain=pe.NonNegativeReals)                             #\dot{w}: Power cycle electricity generation at period $t$ [kWe]
+        self.model.wdot_delta_plus = pe.Var(self.model.T, domain=pe.NonNegativeReals)	               #\dot{w}^{\Delta+}: Power cycle ramp-up in period $t$ [kWe]
+        self.model.wdot_delta_minus = pe.Var(self.model.T, domain=pe.NonNegativeReals)	               #\dot{w}^{\Delta-}: Power cycle ramp-down in period $t$ [kWe]
         self.model.wdot_v_plus = pe.Var(self.model.T, domain=pe.NonNegativeReals, bounds = (0,self.model.W_v_plus))      #\dot{w}^{v+}: Power cycle ramp-up beyond designed limit in period $t$ [kWe]
         self.model.wdot_v_minus = pe.Var(self.model.T, domain=pe.NonNegativeReals, bounds = (0,self.model.W_v_minus)) 	 #\dot{w}^{v-}: Power cycle ramp-down beyond designed limit in period $t$ [kWe]
-        self.model.wdot_s = pe.Var(self.model.T, domain=pe.NonNegativeReals)	                     #\dot{w}^s: Energy sold to grid in time t [kWe]
-        self.model.wdot_p = pe.Var(self.model.T, domain=pe.NonNegativeReals)	                     #\dot{w}^p: Energy purchased from the grid in time t [kWe]
-        self.model.x = pe.Var(self.model.T, domain=pe.NonNegativeReals)                            #x: Cycle thermal power utilization at period $t$ [kWt]
-        self.model.xr = pe.Var(self.model.T, domain=pe.NonNegativeReals)	                          #x^r: Thermal power delivered by the receiver at period $t$ [kWt]
-        self.model.xrsu = pe.Var(self.model.T, domain=pe.NonNegativeReals)                         #x^{rsu}: Receiver start-up power consumption at period $t$ [kWt]
+        self.model.wdot_s = pe.Var(self.model.T, domain=pe.NonNegativeReals)	                       #\dot{w}^s: Energy sold to grid in time t [kWe]
+        self.model.wdot_p = pe.Var(self.model.T, domain=pe.NonNegativeReals)	                       #\dot{w}^p: Energy purchased from the grid in time t [kWe]
+        self.model.x = pe.Var(self.model.T, domain=pe.NonNegativeReals)                                #x: Cycle thermal power utilization at period $t$ [kWt]
         
         #------- Binary Variables ---------
-        self.model.yr = pe.Var(self.model.T, domain=pe.Binary)        #y^r: 1 if receiver is generating ``usable'' thermal power at period $t$; 0 otherwise
-        self.model.yrhsp = pe.Var(self.model.T, domain=pe.Binary)	    #y^{rhsp}: 1 if receiver hot start-up penalty is incurred at period $t$ (from standby); 0 otherwise
-        self.model.yrsb = pe.Var(self.model.T, domain=pe.Binary)	    #y^{rsb}: 1 if receiver is in standby mode at period $t$; 0 otherwise
-        self.model.yrsd = pe.Var(self.model.T, domain=pe.Binary)	    #y^{rsd}: 1 if receiver is shut down at period $t$; 0 otherwise
-        self.model.yrsu = pe.Var(self.model.T, domain=pe.Binary)      #y^{rsu}: 1 if receiver is starting up at period $t$; 0 otherwise
-        self.model.yrsup = pe.Var(self.model.T, domain=pe.Binary)     #y^{rsup}: 1 if receiver cold start-up penalty is incurred at period $t$ (from off); 0 otherwise
         self.model.y = pe.Var(self.model.T, domain=pe.Binary)         #y: 1 if cycle is generating electric power at period $t$; 0 otherwise
         self.model.ychsp = pe.Var(self.model.T, domain=pe.Binary)     #y^{chsp}: 1 if cycle hot start-up penalty is incurred at period $t$ (from standby); 0 otherwise
         self.model.ycsb = pe.Var(self.model.T, domain=pe.Binary)      #y^{csb}: 1 if cycle is in standby mode at period $t$; 0 otherwise
-        self.model.ycsd = pe.Var(self.model.T, domain=pe.Binary)	    #y^{csd}: 1 if cycle is shutting down at period $t$; 0 otherwise
+        self.model.ycsd = pe.Var(self.model.T, domain=pe.Binary)	  #y^{csd}: 1 if cycle is shutting down at period $t$; 0 otherwise
         self.model.ycsu = pe.Var(self.model.T, domain=pe.Binary)      #y^{csu}: 1 if cycle is starting up at period $t$; 0 otherwise
         self.model.ycsup = pe.Var(self.model.T, domain=pe.Binary)     #y^{csup}: 1 if cycle cold start-up penalty is incurred at period $t$ (from off); 0 otherwise
         self.model.ycgb = pe.Var(self.model.T, domain=pe.NonNegativeReals, bounds=(0,1))      #y^{cgb}: 1 if cycle begins electric power generation at period $t$; 0 otherwise
@@ -141,21 +181,20 @@ class GeneralDispatch(object):
         # self.model.wdot_s_prev_delta_minus = pe.Var(self.model.T, domain=pe.NonNegativeReals) #\dot{w}^{\Delta-}_{s,prev}: lower bound on energy sold [kWe]
         # self.model.ycoff = pe.Var(self.model.T, domain=pe.Binary)     #y^{c,off}: 1 if power cycle is off at period $t$; 0 otherwise
         
-                
+    @abstractmethod
     def add_objective(self):
+        """ Method to add an objective function to the Pyomo General Model
+        
+        This method adds an objective function to the Pyomo General Dispatch
+        model. Typically, the LORE team defined a nested function and passes it
+        into the Pyomo model. This version of the method should not be called,
+        is designated as an abstract method.
+        """
+        
         def objectiveRule(model):
+            """ Maximize profits """
             return (
-                    sum( model.D[t] * 
-                    #obj_profit
-                    model.Delta[t]*model.P[t]*0.1*(model.wdot_s[t] - model.wdot_p[t])
-                    #obj_cost_cycle_su_hs_sd
-                    - (model.Ccsu*model.ycsup[t] + 0.1*model.Cchsp*model.ychsp[t] + model.alpha*model.ycsd[t])
-                    #obj_cost_cycle_ramping
-                    - (model.C_delta_w*(model.wdot_delta_plus[t]+model.wdot_delta_minus[t])+model.C_v_w*(model.wdot_v_plus[t] + model.wdot_v_minus[t]))
-                    #obj_cost_rec_su_hs_sd
-                    - (model.Crsu*model.yrsup[t] + model.Crhsp*model.yrhsp[t] + model.alpha*model.yrsd[t])
-                    #obj_cost_ops
-                    - model.Delta[t]*(model.Cpc*model.wdot[t] + model.Ccsb*model.Qb*model.ycsb[t] + model.Crec*model.xr[t] )
+                    sum( model.D[t] * model.Delta[t] * model.P[t]
                     for t in model.T) 
                     )
         
@@ -163,123 +202,43 @@ class GeneralDispatch(object):
 
 
     def addPersistenceConstraints(self):
+        """ Method to add persistence constraints to the Pyomo General Model
+        
+        This method adds constraints pertaining to persistence within the Pyomo
+        General Dispatch class. Namely, it constraints the amount of energy
+        sold into the grid in timestep t+1 relative to timestep t. It makes sure
+        that amount doesn't fluctuate by too much, whether increansig or decreasing.
+        """
+        
         # TODO: wdot_s_prev should be a single float, there should be an {if t==1} statement for wdot_s_prev
         #              and for all other t, we compare wdot_s[t] - wdot_s[t-1]
         def wdot_s_persist_pos_rule(model,t):
+            """ Energy sold shouldn't increase too much """
             return model.wdot_s_prev_delta_plus[t] >= model.wdot_s[t] - model.wdot_s_prev[t]
         def wdot_s_persist_neg_rule(model,t):
+            """ Energy sold shouldn't decrease too much """
             return model.wdot_s_prev_delta_minus[t] >= model.wdot_s_prev[t] - model.wdot_s[t]
+        
         self.model.persist_pos_con = pe.Constraint(self.model.T,rule=wdot_s_persist_pos_rule)
         self.model.persist_neg_con = pe.Constraint(self.model.T,rule=wdot_s_persist_neg_rule)
-
-
-    def addReceiverStartupConstraints(self):
-        def rec_inventory_rule(model,t):
-            if t == 1:
-                return model.ursu[t] <= model.ursu0 + model.Delta[t]*model.xrsu[t]
-            return model.ursu[t] <= model.ursu[t-1] + model.Delta[t]*model.xrsu[t]
-        def rec_inv_nonzero_rule(model,t):
-            return model.ursu[t] <= model.Er * model.yrsu[t]
-        def rec_startup_rule(model,t):
-            if t == 1:
-                return model.yr[t] <= model.ursu[t]/model.Er + model.yr0 + model.yrsb0
-            return model.yr[t] <= model.ursu[t]/model.Er + model.yr[t-1] + model.yrsb[t-1]
-        def rec_su_persist_rule(model,t):
-            if t == 1: 
-                return model.yrsu[t] + model.yr0 <= 1
-            return model.yrsu[t] +  model.yr[t-1] <= 1
-        def ramp_limit_rule(model,t):
-            return model.xrsu[t] <= model.Qru*model.yrsu[t]
-        def nontrivial_solar_rule(model,t):
-            return model.yrsu[t] <= model.Qin[t]
-        self.model.rec_inventory_con = pe.Constraint(self.model.T,rule=rec_inventory_rule)
-        self.model.rec_inv_nonzero_con = pe.Constraint(self.model.T,rule=rec_inv_nonzero_rule)
-        self.model.rec_startup_con = pe.Constraint(self.model.T,rule=rec_startup_rule)
-        self.model.rec_su_persist_con = pe.Constraint(self.model.T,rule=rec_su_persist_rule)
-        self.model.ramp_limit_con = pe.Constraint(self.model.T,rule=ramp_limit_rule)
-        self.model.nontrivial_solar_con = pe.Constraint(self.model.T,rule=nontrivial_solar_rule)
-        
-        
-    def addReceiverSupplyAndDemandConstraints(self):
-        def rec_production_rule(model,t):
-            return model.xr[t] + model.xrsu[t] + model.Qrsd*model.yrsd[t] <= model.Qin[t]
-        def rec_generation_rule(model,t):
-            return model.xr[t] <= model.Qin[t] * model.yr[t]
-        def min_generation_rule(model,t):
-            return model.xr[t] >= model.Qrl * model.yr[t]
-        def rec_gen_persist_rule(model,t):
-            return model.yr[t] <= model.Qin[t]/model.Qrl
-        self.model.rec_production_con = pe.Constraint(self.model.T,rule=rec_production_rule)
-        self.model.rec_generation_con = pe.Constraint(self.model.T,rule=rec_generation_rule)
-        self.model.min_generation_con = pe.Constraint(self.model.T,rule=min_generation_rule)
-        self.model.rec_gen_persist_con = pe.Constraint(self.model.T,rule=rec_gen_persist_rule)
-        
-        
-    def addReceiverNodeLogicConstraints(self):
-        def rec_su_sb_persist_rule(model,t):
-            return model.yrsu[t] + model.yrsb[t] <= 1
-        def rec_sb_persist_rule(model,t):
-            return model.yr[t] + model.yrsb[t] <= 1
-        def rsb_persist_rule(model,t):
-            if t == 1:
-                return model.yrsb[t] <= (model.yr0 + model.yrsb0) 
-            return model.yrsb[t] <= model.yr[t-1] + model.yrsb[t-1]
-        def rec_su_pen_rule(model,t):
-            if t == 1:
-                return model.yrsup[t] >= model.yrsu[t] - model.yrsu0 
-            return model.yrsup[t] >= model.yrsu[t] - model.yrsu[t-1]
-        def rec_hs_pen_rule(model,t):
-            if t == 1:
-                return model.yrhsp[t] >= model.yr[t] - (1 - model.yrsb0)
-            return model.yrhsp[t] >= model.yr[t] - (1 - model.yrsb[t-1])
-        def rec_shutdown_rule(model,t):
-            current_Delta = model.Delta[t]
-            # structure of inequality is lb <= model.param <= ub with strict=False by default
-            if self.eval_ineq(1,current_Delta) and t == 1: #not strict
-                return 0 >= model.yr0 - model.yr[t] +  model.yrsb0 - model.yrsb[t]
-            elif self.eval_ineq(1,current_Delta) and t > 1: # not strict
-                return model.yrsd[t-1] >= model.yr[t-1] - model.yr[t] + model.yrsb[t-1] - model.yrsb[t]
-            elif self.eval_ineq(current_Delta,1,strict=True) and t == 1:
-                return model.yrsd[t] >= model.yr0  - model.yr[t] + model.yrsb0 - model.yrsb[t]
-            # only case remaining: Delta[t]<1, t>1
-            return model.yrsd[t] >= model.yr[t-1] - model.yr[t] + model.yrsb[t-1] - model.yrsb[t]
-        
-        self.model.rec_su_sb_persist_con = pe.Constraint(self.model.T,rule=rec_su_sb_persist_rule)
-        self.model.rec_sb_persist_con = pe.Constraint(self.model.T,rule=rec_sb_persist_rule)
-        self.model.rsb_persist_con = pe.Constraint(self.model.T,rule=rsb_persist_rule)
-        self.model.rec_su_pen_con = pe.Constraint(self.model.T,rule=rec_su_pen_rule)
-        self.model.rec_hs_pen_con = pe.Constraint(self.model.T,rule=rec_hs_pen_rule)
-        self.model.rec_shutdown_con = pe.Constraint(self.model.T,rule=rec_shutdown_rule)
-        
-        
-    def addTESEnergyBalanceConstraints(self):
-        def tes_balance_rule(model, t):
-            if t == 1:
-                return model.s[t] - model.s0 == model.Delta[t] * (model.xr[t] - (model.Qc[t]*model.ycsu[t] + model.Qb*model.ycsb[t] + model.x[t] + model.Qrsb*model.yrsb[t]))
-            return model.s[t] - model.s[t-1] == model.Delta[t] * (model.xr[t] - (model.Qc[t]*model.ycsu[t] + model.Qb*model.ycsb[t] + model.x[t] + model.Qrsb*model.yrsb[t]))
-        def tes_upper_rule(model, t):
-            return model.s[t] <= model.Eu
-        def tes_start_up_rule(model, t):
-            if t == 1:
-                return model.s0 >= model.Delta[t]*model.delta_rs[t]*( (model.Qu + model.Qb)*( -3 + model.yrsu[t] + model.y0 + model.y[t] + model.ycsb0 + model.ycsb[t] ) + model.x[t] + model.Qb*model.ycsb[t] )
-            return model.s[t-1] >= model.Delta[t]*model.delta_rs[t]*( (model.Qu + model.Qb)*( -3 + model.yrsu[t] + model.y[t-1] + model.y[t] + model.ycsb[t-1] + model.ycsb[t] ) + model.x[t] + model.Qb*model.ycsb[t] )
-        def maintain_tes_rule(model):
-            return model.s[model.num_periods] <= model.s0
-        
-        self.model.tes_balance_con = pe.Constraint(self.model.T,rule=tes_balance_rule)
-        self.model.tes_upper_con = pe.Constraint(self.model.T,rule=tes_upper_rule)
-        self.model.tes_start_up_con = pe.Constraint(self.model.T,rule=tes_start_up_rule)
-        self.model.maintain_tes_con = pe.Constraint(rule=maintain_tes_rule)
         
         
     def addCycleStartupConstraints(self):
+        """ Method to add cycle startup constraints to the Pyomo General Model
+        
+        This method adds constraints pertaining to cycle startup within the Pyomo
+        General Dispatch class. Several nested functions are defined. 
+        """
         def pc_inventory_rule(model, t):
+            """ PC energy inventory for startup is balanced """
             if t == 1:
                 return model.ucsu[t] <= model.ucsu0 + model.Delta[t] * model.Qc[t] * model.ycsu[t]
             return model.ucsu[t] <= model.ucsu[t-1] + model.Delta[t] * model.Qc[t] * model.ycsu[t]
         def pc_inv_nonzero_rule(model, t):
+            """ PC energy inventory is positive if cycle starting up """
             return model.ucsu[t] <= model.Ec * model.ycsu[t]
         def pc_startup_rule(model, t):
+            """ PC resumes normal operation after startup, standby, or previously operating """
             current_Delta = model.Delta[t]
             # structure of inequality is lb <= model.param <= ub with strict=False by default
             if self.eval_ineq(1,current_Delta) and t == 1:
@@ -291,10 +250,13 @@ class GeneralDispatch(object):
             # only case remaining: Delta[t]<1, t>1
             return self.eval_ineq(model.y[t], model.ucsu[t-1]/model.Ec + model.y[t-1] + model.ycsb[t-1])
         def pc_production_rule(model, t):
+            """ Heat input used for PC startup doesn't exceed max """
             return model.x[t] + model.Qc[t]*model.ycsu[t] <= model.Qu
         def pc_generation_rule(model, t):
+            """ Upper bound on heat input to PC """
             return model.x[t] <= model.Qu * model.y[t]
         def pc_min_gen_rule(model, t):
+            """ Lower bound on heat input to PC """
             return model.x[t] >= model.Ql * model.y[t]
         
         self.model.pc_inventory_con = pe.Constraint(self.model.T,rule=pc_inventory_rule)
@@ -306,40 +268,47 @@ class GeneralDispatch(object):
         
         
     def addPiecewiseLinearEfficiencyConstraints(self):
+        """ Method to add efficiency constraints to the Pyomo General Model
+        
+        This method adds constraints pertaining to efficiency constraints defined
+        as a piecewise linear approximation. Also referred to as Cycle supply and 
+        demand constraints.
+        """
         def power_rule(model, t):
+            """ Model of electric power vs. heat input as linear function """
             return model.wdot[t] == (model.etaamb[t]/model.eta_des)*(model.etap*model.x[t] + model.y[t]*(model.Wdotu - model.etap*model.Qu))
         def power_ub_rule(model, t):
+            """ Upper bound on PC electric power output """
             return model.wdot[t] <= model.Wdotu*(model.etaamb[t]/model.eta_des)*model.y[t]
         def power_lb_rule(model, t):
+            """ Lower bound on PC electric power output """
             return model.wdot[t] >= model.Wdotl*(model.etaamb[t]/model.eta_des)*model.y[t]
         def change_in_w_pos_rule(model, t):
+            """ Limit on increase in electric power production """
             if t == 1:
                 return model.wdot_delta_plus[t] >= model.wdot[t] - model.wdot0
             return model.wdot_delta_plus[t] >= model.wdot[t] - model.wdot[t-1]
         def change_in_w_neg_rule(model, t):
+            """ Limit on decrease in electric power production """
             if t == 1:
                 return model.wdot_delta_minus[t] >= model.wdot0 - model.wdot[t]
             return model.wdot_delta_minus[t] >= model.wdot[t-1] - model.wdot[t]
         def cycle_ramp_rate_pos_rule(model, t):
+            """ Limit on excessive ramp up of PC power production """
             return (
                     model.wdot_delta_plus[t] - model.wdot_v_plus[t] <= model.W_delta_plus*model.Delta[t] 
                     + ((model.etaamb[t]/model.eta_des)*model.W_u_plus[t] - model.W_delta_plus*model.Delta[t])*model.ycgb[t]
             )
         def cycle_ramp_rate_neg_rule(model, t):
+            """ Limit on excessive ramp down of PC power production"""
             return (
                     model.wdot_delta_minus[t] - model.wdot_v_minus[t] <= model.W_delta_minus*model.Delta[t] 
                     + ((model.etaamb[t]/model.eta_des)*model.W_u_minus[t] - model.W_delta_minus*model.Delta[t])*model.ycge[t]
             )
         def grid_max_rule(model, t):
+            """ Limits grid transmission for net power production """
             return model.wdot_s[t] <= model.Wdotnet[t]
-        def grid_sun_rule(model, t):
-            return (
-                    model.wdot_s[t] - model.wdot_p[t] == (1-model.etac[t])*model.wdot[t]
-                		- model.Lr*(model.xr[t] + model.xrsu[t] + model.Qrl*model.yrsb[t])
-                		- model.Lc*model.x[t] 
-                        - model.Wh*model.yr[t] - model.Wb*model.ycsb[t] - model.Wht*(model.yrsb[t]+model.yrsu[t])		#Is Wrsb energy [kWh] or power [kW]?  [az] Wrsb = Wht in the math?
-                		- (model.Ehs/model.Delta[t])*(model.yrsu[t] + model.yrsb[t] + model.yrsd[t])
-            )
+
         
         self.model.power_con = pe.Constraint(self.model.T,rule=power_rule)
         self.model.power_ub_con = pe.Constraint(self.model.T,rule=power_ub_rule)
@@ -349,23 +318,32 @@ class GeneralDispatch(object):
         self.model.cycle_ramp_rate_pos_con = pe.Constraint(self.model.T,rule=cycle_ramp_rate_pos_rule)
         self.model.cycle_ramp_rate_neg_con = pe.Constraint(self.model.T,rule=cycle_ramp_rate_neg_rule)
         self.model.grid_max_con = pe.Constraint(self.model.T,rule=grid_max_rule)
-        self.model.grid_sun_con = pe.Constraint(self.model.T,rule=grid_sun_rule)
         
         
     def addMinUpAndDowntimeConstraints(self):
+        """ Method to add up and downtime constraints to the Pyomo General Model
+        
+        This method adds constraints pertaining to enforcing minimum uptime
+        and downtime of the power cycle whenever it starts or ends operation,
+        respectively. 
+        """
         def min_cycle_uptime_rule(model,t):
+            """ Enforce minimum cycle uptime """
             if pe.value(model.Delta_e[t] > (model.Yu - model.Yu0) * model.y0):
                 return sum(model.ycgb[tp] for tp in model.T if pe.value(model.Delta_e[t]-model.Delta_e[tp] < model.Yu) and pe.value(model.Delta_e[t] - model.Delta_e[tp] >= 0)) <= model.y[t]
             return pe.Constraint.Feasible
         def min_cycle_downtime_rule(model,t):
+            """ Enforce minimum cycle downtime """
             if pe.value(model.Delta_e[t] > ((model.Yd - model.Yd0)*(1-model.y0))):
                 return sum( model.ycge[tp] for tp in model.T if pe.value(model.Delta_e[t]-model.Delta_e[tp] < model.Yd) and pe.value(model.Delta_e[t] - model.Delta_e[tp] >= 0))  <= (1 - model.y[t])
             return pe.Constraint.Feasible
         def cycle_start_end_gen_rule(model,t):
+            """ Tracks startup and shutdown of plants (Garver 1962) """
             if t == 1:
                 return model.ycgb[t] - model.ycge[t] == model.y[t] - model.y0
             return model.ycgb[t] - model.ycge[t] == model.y[t] - model.y[t-1]
         def cycle_min_updown_init_rule(model,t):
+            """ Initial conditions for minimum uptime/downtime constraints """
             if self.eval_ineq(model.Delta_e[t],
                               max(pe.value(model.y0*(model.Yu-model.Yu0)), pe.value((1-model.y0)*(model.Yd-model.Yd0)))):
                 return model.y[t] == model.y0
@@ -378,31 +356,45 @@ class GeneralDispatch(object):
         
         
     def addCycleLogicConstraints(self):
+        """ Method to add cycle logic constraints to the Pyomo General Model
+        
+        This method adds constraints pertaining to tracking binary variable
+        logic for the power cycle. Essentially, to make sure the correct modes
+        are activated when they are allowed. 
+        """
         def pc_su_persist_rule(model, t):
+            """ PC startup can't follow an operating timestep """
             if t == 1:
                 return model.ycsu[t] + model.y0 <= 1
             return model.ycsu[t] + model.y[t-1] <= 1
         def pc_su_subhourly_rule(model, t):
+            """ PC startup and operation can't coincide """
             if self.eval_ineq(model.Delta[t],1,strict=True):
                 return model.y[t] + model.ycsu[t] <= 1
             return pe.Constraint.Feasible  #no analogous constraint for hourly or longer time steps
         def pc_sb_start_rule(model, t):
+            """ PC standby must follow operating or another standby timestep """
             if t == 1:
                 return model.ycsb[t] <= model.y0 + model.ycsb0
             return model.ycsb[t] <= model.y[t-1] + model.ycsb[t-1]
         def pc_sb_part1_rule(model, t):
+            """ PC startup and standby can't coincide """
             return model.ycsu[t] + model.ycsb[t] <= 1
         def pc_sb_part2_rule(model, t):
+            """ PC operation and standby can't coincide """
             return model.y[t] + model.ycsb[t] <= 1
         def cycle_sb_pen_rule(model, t):
+            """ PC hot startup penalty: if we went from standby to operating """
             if t == 1:
                  return model.ychsp[t] >= model.y[t] - (1 - model.ycsb0)
             return model.ychsp[t] >= model.y[t] - (1 - model.ycsb[t-1])
         def cycle_shutdown_rule(model, t):
+            """ PC shutdown only after operating or standby """
             if t == 1:
                 return model.ycsd[t] >= model.y0 - model.y[t] + model.ycsb0 - model.ycsb[t]
             return model.ycsd[t] >= model.y[t-1] - model.y[t] + model.ycsb[t-1] - model.ycsb[t]
         def cycle_start_pen_rule(model, t):
+            """ PC cold startup penalty """
             if t == 1: 
                 return model.ycsup[t] >= model.ycsu[t] - model.ycsu0 
             return model.ycsup[t] >= model.ycsu[t] - model.ycsu[t-1]
@@ -418,20 +410,40 @@ class GeneralDispatch(object):
 
 
     def generate_constraints(self):
+        """ Method to add ALL constraints to the Pyomo General Model
+        
+        This method calls the previously defined constraint methods to instantiate
+        them and add to the existing model. This method can be called from a 
+        derived class as well as overloaded.
+        """
+        
         # self.addPersistenceConstraints() # TODO: revisit these constraints later when we know how to add a term to Objective
-        self.addReceiverStartupConstraints()
-        self.addReceiverSupplyAndDemandConstraints()
-        self.addReceiverNodeLogicConstraints()
-        self.addTESEnergyBalanceConstraints()
-        self.addCycleStartupConstraints()
         self.addPiecewiseLinearEfficiencyConstraints()
+        self.addCycleStartupConstraints()
         self.addMinUpAndDowntimeConstraints()
         self.addCycleLogicConstraints()
     
     
     def eval_ineq(self, lb, expr, ub=None, strict=False, val=True):
+        """ Method to evaluate an inequality using pyomo syntax
         
+        This is a helper method to evaluate an inequality using the specific
+        pyomo syntax needed to evaluate when solving the model. 
+        
+        Inputs:
+            lb (**)       : lower bound of inequality
+            expr (**)     : middle value of inequality
+            ub (**)       : upper bound of inequality (if exists)
+            strict (bool) : strictness of inequality (True means < or >)
+            val (bool)    : flag to return value instead of expression
+        Outputs:
+            ineq (logical expr or float) : evaluated expression as a Pyomo object or float
+            
+        (**) - can either be a float input or a ParamData object
+        """
         ineq = pe.inequality(lb, expr, ub, strict=strict)
+        
+        # return value if requested, otherwise return Inequality Expression
         if val:
             return pe.value(ineq)
         else:
@@ -439,9 +451,35 @@ class GeneralDispatch(object):
 
 
     def solve_model(self, mipgap=0.7):
+        """ Method to solve the Pyomo model
+        
+        This method solves the Pyomo Concrete model that has been instantiated
+        and constructed in the __init__ of this class. The MILP (mixed integer
+        linear programming) problem is solved using a CBC (coin-or branch and cut)
+        solver that should be installed prior to solving. It takes in an input
+        for the MIP or Ratio gap. It is a termination condition for the optimization:
+        if the difference between the best known solution and worst known solution
+        (lower and upper bounds, respectively) is lower than this gap, we have
+        found our optimal solution. Here is a good primer:
+            https://www.gurobi.com/resource/mip-basics/
+        
+        Inputs:
+            mipgap (float) : minimum gap to find optimal solution
+        Outputs:
+            results (SolverResults) : dictionary of solver output after optimization,
+                                      contains information on convergence, etc.
+        """
+        
+        # define solver (Coin-or branch and cut)
         opt = pe.SolverFactory('cbc')
+        
+        # setting optimality condition
         opt.options["ratioGap"] = mipgap
+        
+        # solving model
         results = opt.solve(self.model, tee=False, keepfiles=False)
+        #TODO: assert successful optimization?
+        
         return results
     
     
@@ -485,7 +523,6 @@ class GeneralDispatchParamWrap(object):
         self.set_design()
         
 
-    ## Setters
     def set_design(self):
         """ Method to calculate and save design point values of Plant operation
         
@@ -500,7 +537,6 @@ class GeneralDispatchParamWrap(object):
         self.alpha = 1.0
         
         # design parameters
-        self.q_rec_design = self.SSC_dict['q_dot_nuclear_des'] * u.MW      # receiver design thermal power
         self.p_pb_design  = self.SSC_dict['P_ref'] * u.MW                  # power block design electrical power
         self.eta_design   = self.SSC_dict['design_eff']                    # power block design efficiency
         self.q_pb_design  = (self.p_pb_design / self.eta_design).to('MW')  # power block design thermal rating
@@ -508,24 +544,9 @@ class GeneralDispatchParamWrap(object):
         # temperature values at design point
         self.T_htf_hot  = (self.SSC_dict['T_htf_hot_des']*u.celsius).to('degK')
         self.T_htf_cold = (self.SSC_dict['T_htf_cold_des']*u.celsius).to('degK')
-        T_htf  = 0.5*(self.T_htf_hot + self.T_htf_cold)
-        
-        # specific heat values at design point
-        cp_des = SSCHelperMethods.get_cp_htf(self.u, T_htf, self.SSC_dict['rec_htf'] )
-        cp_des = cp_des.to('J/g/kelvin')       
-        
-        # mass flow rate
-        dm_des = self.q_pb_design / (cp_des * (self.T_htf_hot - self.T_htf_cold) )  
-        self.dm_pb_design = dm_des.to('kg/s')                               # power block design mass flow rate
-        
-        # TES design point
-        e_tes_design = self.q_pb_design * self.SSC_dict['tshours']*u.hr  
-        m_tes_des = e_tes_design / cp_des / (self.T_htf_hot - self.T_htf_cold)     
-        self.e_tes_design = e_tes_design.to('kWh') # TES storage capacity (kWht)
-        self.m_tes_design = m_tes_des.to('kg')     # TES active storage mass (kg)
         
         
-    def set_time_indexed_parameters(self, param_dict):
+    def set_time_indexed_parameters(self, param_dict, df_array, ud_array, current_pyomo_slice):
         """ Method to set time-indexed parameters for Dispatch optimization
         
         This method calculates time parameters for Pyomo Dispatch optimization.
@@ -534,20 +555,69 @@ class GeneralDispatchParamWrap(object):
         
         Inputs:
             param_dict (dict) : dictionary of Pyomo dispatch parameters
+            df_array (array)            : array of user defined dispatch factors over simulation time
+            ud_array (list of list)     : table of user defined data as nested lists
+            current_pyomo_slice (slice) : range of current pyomo horizon (ints representing hours)
         Outputs:
             param_dict (dict) : updated dictionary of Pyomo dispatch parameters
         """
         
         u = self.u
         
+        # time parameters
         self.T       = int( self.pyomo_horizon.to('hr').magnitude )
         self.Delta   = np.array([self.dispatch_time_step.to('hr').magnitude]*self.T)*u.hr
         self.Delta_e = np.cumsum(self.Delta)
         
+        # weight parameter
+        wt = self.PySAM_dict['weight']
+        
+        # grab time series data that we have to index
+        Tdry  = self.Tdry # dry bulb temperature from solar resource file 
+        Price = df_array  # pricing multipliers
+        
+        # if we're at the last segment, we won't have 48 hour data for the sim. here is a quick fix
+        if current_pyomo_slice.stop > len(Tdry):
+            # double-stacking
+            Tdry  = np.hstack([Tdry,  Tdry])
+            Price = np.hstack([Price, Price])
+            
+        # grabbing relevant dry temperatures
+        Tdry   = Tdry[current_pyomo_slice]
+        self.P = Price[current_pyomo_slice]*u.USD/u.kWh
+        
+        # ambient temperature fluctuations and updates
+        etamult, wmult = SSCHelperMethods.get_ambient_T_corrections_from_udpc_inputs( self.u, Tdry, ud_array ) # TODO:verify this makes sense
+        self.etaamb = etamult * self.SSC_dict['design_eff']
+        self.etac   = wmult * self.SSC_dict['ud_f_W_dot_cool_des']/100.
+
+        # power into cycle, into grid, +/-
+        self.Qc         = self.Ec / np.ceil(self.SSC_dict['startup_time']*u.hr / np.min(self.Delta)) / np.min(self.Delta) #TODO: make sure Ec is called correctly
+        self.Wdotnet    = [1.e10 for j in range(self.T)] *u.kW
+        self.W_u_plus   = [(self.Wdotl + self.W_delta_plus*0.5*dt).to('kW').magnitude for dt in self.Delta]*u.kW
+        self.W_u_minus  = [(self.Wdotl + self.W_delta_minus*0.5*dt).to('kW').magnitude for dt in self.Delta]*u.kW
+        
+        # time weights
+        n  = len(self.Delta)
+        D  = np.zeros(n)
+        
+        # looping through time
+        for t in range(n):
+            D[t]        = wt**(self.Delta_e[t]/u.hr)
+        self.D = D
+        
         #------- Time indexed parameters ---------
-        param_dict['T']        = self.T                    #T: time periods
-        param_dict['Delta']    = self.Delta.to('hr')       #\Delta_{t}: duration of period t [hr]
-        param_dict['Delta_e']  = self.Delta_e.to('hr')     #\Delta_{e,t}: cumulative time elapsed at end of period t [hr]
+        param_dict['T']         = self.T                   #T: time periods
+        param_dict['Delta']     = self.Delta.to('hr')      #\Delta_{t}: duration of period t [hr]
+        param_dict['Delta_e']   = self.Delta_e.to('hr')    #\Delta_{e,t}: cumulative time elapsed at end of period t [hr]
+        param_dict['D']         = self.D                   #D_{t}: Time-weighted discount factor in period $t$ [-]
+        param_dict['etaamb']    = self.etaamb              #\eta^{amb}_{t}: Cycle efficiency ambient temperature adjustment factor in period $t$ [-]
+        param_dict['etac']      = self.etac                #\eta^{c}_{t}: Normalized condenser parasitic loss in period $t$ [-] 
+        param_dict['P']         = self.P.to('USD/kWh')     #P_{t}: Electricity sales price in period $t$ [\$/kWh]
+        param_dict['Qc']        = self.Qc.to('kW')         #Q^{c}_{t}: Allowable power per period for cycle start-up in period $t$ [kWt]
+        param_dict['Wdotnet']   = self.Wdotnet.to('kW')    #\dot{W}^{net}_{t}: Net grid transmission upper limit in period $t$ [kWe]
+        param_dict['W_u_plus']  = self.W_u_plus.to('kW')   #W^{u+}_{t}: Maximum power production when starting generation in period $t$  [kWe]
+        param_dict['W_u_minus'] = self.W_u_minus.to('kW')  #W^{u-}_{t}: Maximum power production in period $t$ when stopping generation in period $t+1$  [kWe]
         
         return param_dict
 
@@ -658,6 +728,76 @@ class GeneralDispatchParamWrap(object):
         return param_dict
 
 
+    def set_initial_state(self, param_dict, updated_dict=None, plant=None, npts=None ):
+        """ Method to set the initial state of the Plant before Dispatch optimization
+        
+        This method uses SSC data to set the initial state of the Plant before Dispatch
+        optimization in Pyomo. This method is called in two ways: once before starting 
+        the simulation loop, in which case it only uses values from the SSC_dict portion
+        of the given JSON script. The method is also called within the simulation loop
+        to update the initial state parameters based on the ending conditions of the 
+        previous simulation segment (provided by SSC). 
+        
+        TODO: can we just input another dictionary instead of passing the full Plant?
+        
+        Inputs:
+            param_dict (dict)    : dictionary of Pyomo dispatch parameters
+            updated_dict (dict)  : dictionary with updated SSC initial conditions from previous run
+            plant (obj)          : the full PySAM Plant object. 
+            npts (int)           : length of the SSC horizon
+        Outputs:
+            param_dict (dict) : updated dictionary of Pyomo dispatch parameters
+        """
+        u = self.u
+        sschm  = SSCHelperMethods
+            
+        if updated_dict is None:
+            self.current_Plant = copy.deepcopy(self.SSC_dict)
+            self.first_run = True
+        else:
+            self.current_Plant = updated_dict
+            self.first_run = False
+            
+        # important parameters
+        e_pb_suinitremain  = self.current_Plant['pc_startup_energy_remain_initial']*u.kWh
+        wdot0              = (0 if self.first_run else self.current_Plant['wdot0'])*u.MW 
+        y0                 = (self.current_Plant['pc_op_mode_initial'] == 1) 
+        ycsb0              = (self.current_Plant['pc_op_mode_initial'] == 2) 
+        ycsu0              = (self.current_Plant['pc_op_mode_initial'] == 0 or self.current_Plant['pc_op_mode_initial'] == 4) 
+        pc_persist, pc_off = sschm.get_pc_persist_and_off_logs( param_dict, plant, npts ) if plant is not None else [48,48]
+        Yu0                = pc_persist if y0       else 0.0
+        Yd0                = pc_off     if (not y0) else 0.0
+        
+        # defining parameters
+        self.wdot0 = wdot0.to('kW')  #\dot{w}_0: Initial power cycle electricity generation [kWe] 
+        self.y0    = y0              #y_0: 1 if cycle is generating electric power initially, 0 otherwise   
+        self.ycsb0 = ycsb0           #y^{csb}_0: 1 if cycle is in standby mode initially, 0 otherwise
+        self.ycsu0 = ycsu0           #y^{csu}_0: 1 if cycle is in starting up initially, 0 otherwise
+        self.Yu0   = Yu0*u.hr        #Y^u_0: duration that cycle has been generating electric power [h]
+        self.Yd0   = Yd0*u.hr        #Y^d_0: duration that cycle has not been generating power (i.e., shut down or in standby mode) [h]
+        
+        # Initial cycle startup energy accumulated
+        tol = 1.e-6
+        if np.isnan(e_pb_suinitremain): # SSC seems to report NaN when startup is completed
+            self.ucsu0 = self.Ec
+        else:   
+            self.ucsu0 = max(0.0, self.Ec - e_pb_suinitremain ) 
+            if self.ucsu0 > (1.0 - tol)*self.Ec:
+                self.ucsu0 = self.Ec
+        
+        param_dict['ucsu0']  = self.ucsu0.to('kWh')   #u^{csu}_0: Initial cycle start-up energy inventory  [kWt$\cdot$h]
+        param_dict['wdot0']  = self.wdot0.to('kW')    #\dot{w}_0: Initial power cycle electricity generation [kW]e
+        param_dict['y0']     = self.y0                #y_0: 1 if cycle is generating electric power initially, 0 otherwise
+        param_dict['ycsb0']  = self.ycsb0             #y^{csb}_0: 1 if cycle is in standby mode initially, 0 otherwise
+        param_dict['ycsu0']  = self.ycsu0             #y^{csu}_0: 1 if cycle is in starting up initially, 0 otherwise
+        param_dict['Yu0']    = self.Yu0.to('hr')      #Y^u_0: duration that cycle has been generating electric power [h]
+        param_dict['Yd0']    = self.Yd0.to('hr')      #Y^d_0: duration that cycle has not been generating power (i.e., shut down or in standby mode) [h]
+        # param_dict['wdot_s_prev']    = 0*u.hr         #\dot{w}^{s,prev}: previous $\dot{w}^s$, or energy sold to grid [kWe]
+        # ^ this should be gen[-1] from previous SSC run, 0 if first_run == True
+        
+        return param_dict
+    
+    
 # =============================================================================
 # Dispatch Outputs
 # =============================================================================
@@ -702,9 +842,9 @@ class GeneralDispatchOutputs(object):
             empty_array = [0]*N_leftover
         
         #----Receiver Binary Outputs----
-        yr   = np.array([pe.value(dm.model.yr[t])   for t in t_pyomo])
-        yrsu = np.array([pe.value(dm.model.yrsu[t]) for t in t_pyomo])
-        yrsb = np.array([pe.value(dm.model.yrsb[t]) for t in t_pyomo])
+        yn   = np.array([pe.value(dm.model.yn[t])   for t in t_pyomo])
+        ynsu = np.array([pe.value(dm.model.ynsu[t]) for t in t_pyomo])
+        ynsb = np.array([pe.value(dm.model.ynsb[t]) for t in t_pyomo])
         
         #----Cycle Binary Outputs----
         y    = np.array([pe.value(dm.model.y[t])    for t in t_pyomo])
@@ -718,9 +858,9 @@ class GeneralDispatchOutputs(object):
         Qc = np.array([pe.value(dm.model.Qc[t]) for t in t_pyomo])/1000. # from kWt -> MWt
         Qu = dm.model.Qu.value/1000. # from kWt -> MWt
     
-        # dispatch target -- receiver startup/standby binaries
-        is_rec_su_allowed_in = [1 if (yr[t] + yrsu[t] + yrsb[t]) > 0.001 else 0 for t in t_horizon]  # Receiver on, startup, or standby
-        is_rec_sb_allowed_in = [1 if yrsb[t] > 0.001                     else 0 for t in t_horizon]  # Receiver standby
+        # dispatch target -- nuclear startup/standby binaries
+        is_nuc_su_allowed_in = [1 if (yn[t] + ynsu[t] + ynsb[t]) > 0.001 else 0 for t in t_horizon]  # Nuclear on, startup, or standby
+        is_nuc_sb_allowed_in = [1 if ynsb[t] > 0.001                     else 0 for t in t_horizon]  # Nuclear standby
         
         # dispatch target -- cycle startup/standby binaries
         is_pc_su_allowed_in  = [1 if (y[t] + ycsu[t]) > 0.001 else 0 for t in t_horizon]  # Cycle on or startup
@@ -736,8 +876,8 @@ class GeneralDispatchOutputs(object):
         
         # if we're running full simulation in steps, save SSC horizon portion of Pyomo horizon results
         if run_loop:
-            disp_targs['is_rec_su_allowed_in'] = is_rec_su_allowed_in 
-            disp_targs['is_rec_sb_allowed_in'] = is_rec_sb_allowed_in
+            disp_targs['is_rec_su_allowed_in'] = is_nuc_su_allowed_in 
+            disp_targs['is_rec_sb_allowed_in'] = is_nuc_sb_allowed_in
             disp_targs['is_pc_su_allowed_in']  = is_pc_su_allowed_in 
             disp_targs['is_pc_sb_allowed_in']  = is_pc_sb_allowed_in  
             disp_targs['q_pc_target_su_in']    = q_pc_target_su_in  
@@ -746,8 +886,8 @@ class GeneralDispatchOutputs(object):
         # if we're running full simulation all at once, need arrays to match size of full sim
         # TODO: is this a feature we want in the long term? Or just for debugging the first Pyomo call?
         else:
-            disp_targs['is_rec_su_allowed_in'] = np.hstack( [is_rec_su_allowed_in , empty_array] ).tolist()
-            disp_targs['is_rec_sb_allowed_in'] = np.hstack( [is_rec_sb_allowed_in , empty_array] ).tolist()
+            disp_targs['is_rec_su_allowed_in'] = np.hstack( [is_nuc_su_allowed_in , empty_array] ).tolist()
+            disp_targs['is_rec_sb_allowed_in'] = np.hstack( [is_nuc_sb_allowed_in , empty_array] ).tolist()
             disp_targs['is_pc_su_allowed_in']  = np.hstack( [is_pc_su_allowed_in  , empty_array] ).tolist()
             disp_targs['is_pc_sb_allowed_in']  = np.hstack( [is_pc_sb_allowed_in  , empty_array] ).tolist()
             disp_targs['q_pc_target_su_in']    = np.hstack( [q_pc_target_su_in    , empty_array] ).tolist()
