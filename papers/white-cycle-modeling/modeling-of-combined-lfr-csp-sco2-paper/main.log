@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.22 (MiKTeX 21.6) (preloaded format=pdflatex 2021.6.16)  14 JUL 2021 15:16
+This is pdfTeX, Version 3.141592653-2.6-1.40.22 (MiKTeX 21.6) (preloaded format=pdflatex 2021.6.16)  22 JUL 2021 10:49
 entering extended mode
 **c:/Users/brian/Desktop/GitBash/neup-ies/papers/white-cycle-modeling/modeling-of-combined-lfr-csp-sco2-paper/main.tex
 (c:/Users/brian/Desktop/GitBash/neup-ies/papers/white-cycle-modeling/modeling-of-combined-lfr-csp-sco2-paper/main.tex
@@ -1009,7 +1009,7 @@ Package epstopdf Info: Output file is already uptodate.
 
 
 pdfTeX warning: pdflatex (file ./Definitions/logo-mdpi-eps-converted-to.pdf): PDF inclusion: found PDF version <1.7>, but at most version <1.5> allowed
-<Definitions/logo-mdpi-eps-converted-to.pdf, id=115, 88.33pt x 58.2175pt>
+<Definitions/logo-mdpi-eps-converted-to.pdf, id=111, 88.33pt x 58.2175pt>
 File: Definitions/logo-mdpi-eps-converted-to.pdf Graphic file (type pdf)
 <use Definitions/logo-mdpi-eps-converted-to.pdf>
 Package pdftex.def Info: Definitions/logo-mdpi-eps-converted-to.pdf  used on input line 150.
@@ -1071,7 +1071,7 @@ Package epstopdf Info: Output file is already uptodate.
 
 
 pdfTeX warning: pdflatex (file ./Definitions/logo-orcid-eps-converted-to.pdf): PDF inclusion: found PDF version <1.7>, but at most version <1.5> allowed
-<Definitions/logo-orcid-eps-converted-to.pdf, id=117, 102.3825pt x 102.3825pt>
+<Definitions/logo-orcid-eps-converted-to.pdf, id=113, 102.3825pt x 102.3825pt>
 File: Definitions/logo-orcid-eps-converted-to.pdf Graphic file (type pdf)
 <use Definitions/logo-orcid-eps-converted-to.pdf>
 Package pdftex.def Info: Definitions/logo-orcid-eps-converted-to.pdf  used on input line 150.
@@ -1139,7 +1139,7 @@ Package microtype Info: Loading generic protrusion settings for font family
 (microtype)             For optimal results, create family-specific settings.
 (microtype)             See the microtype manual for details.
  (content.tex
-Package hyperref Info: bookmark level for unknown specialtable defaults to 0 on input line 47.
+Package hyperref Info: bookmark level for unknown specialtable defaults to 0 on input line 53.
 
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
@@ -1153,13 +1153,13 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 {C:/Users/brian/AppData/Local/MiKTeX/pdftex/config/pdftex.map} <./Definitions/logo-mdpi-eps-converted-to.pdf> <./Definitions/logo-orcid-eps-converted-to.pdf>]
 
 pdfTeX warning: pdflatex (file ./Definitions/c-lfr-on.pdf): PDF inclusion: found PDF version <1.7>, but at most version <1.5> allowed
-<Definitions/c-lfr-on.pdf, id=145, 844.5954pt x 317.0244pt>
+<Definitions/c-lfr-on.pdf, id=144, 844.5954pt x 317.0244pt>
 File: Definitions/c-lfr-on.pdf Graphic file (type pdf)
 <use Definitions/c-lfr-on.pdf>
-Package pdftex.def Info: Definitions/c-lfr-on.pdf  used on input line 86.
+Package pdftex.def Info: Definitions/c-lfr-on.pdf  used on input line 100.
 (pdftex.def)             Requested size: 525.23764pt x 197.15776pt.
 
-Overfull \vbox (43.33755pt too high) has occurred while \output is active []
+Overfull \vbox (68.90257pt too high) has occurred while \output is active []
 
 
 
@@ -1170,42 +1170,20 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                \addtolength{\topmargin}{-12.18796pt}.
 
 [2 <./Definitions/c-lfr-on.pdf>]
-Underfull \hbox (badness 10000) in paragraph at lines 95--144
-[][]
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 95--144
+Underfull \hbox (badness 10000) in paragraph at lines 111--133
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 148--197
-[][]
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 148--197
-
- []
-
-
-Package fancyhdr Warning: \headheight is too small (12.0pt): 
-(fancyhdr)                Make it at least 24.18796pt, for example:
-(fancyhdr)                \setlength{\headheight}{24.18796pt}.
-(fancyhdr)                You might also make \topmargin smaller to compensate:
-(fancyhdr)                \addtolength{\topmargin}{-12.18796pt}.
-
-[3]
 
 pdfTeX warning: pdflatex (file ./Definitions/c-csp-on.pdf): PDF inclusion: found PDF version <1.7>, but at most version <1.5> allowed
-<Definitions/c-csp-on.pdf, id=161, 844.62114pt x 510.30344pt>
+<Definitions/c-csp-on.pdf, id=158, 844.62114pt x 510.30344pt>
 File: Definitions/c-csp-on.pdf Graphic file (type pdf)
 <use Definitions/c-csp-on.pdf>
-Package pdftex.def Info: Definitions/c-csp-on.pdf  used on input line 203.
+Package pdftex.def Info: Definitions/c-csp-on.pdf  used on input line 142.
 (pdftex.def)             Requested size: 525.23764pt x 317.35818pt.
 
-Overfull \vbox (207.223pt too high) has occurred while \output is active []
+Overfull \vbox (43.87425pt too high) has occurred while \output is active []
 
 
 
@@ -1215,24 +1193,45 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller to compensate:
 (fancyhdr)                \addtolength{\topmargin}{-12.18796pt}.
 
-[4 <./Definitions/c-csp-on.pdf>]
+[3 <./Definitions/c-csp-on.pdf>]
+Underfull \hbox (badness 10000) in paragraph at lines 153--179
+
+ []
+
+
 
 pdfTeX warning: pdflatex (file ./Definitions/c-1htr1t-on.pdf): PDF inclusion: found PDF version <1.7>, but at most version <1.5> allowed
-<Definitions/c-1htr1t-on.pdf, id=170, 825.43678pt x 595.16469pt>
+<Definitions/c-1htr1t-on.pdf, id=169, 825.43678pt x 595.16469pt>
 File: Definitions/c-1htr1t-on.pdf Graphic file (type pdf)
 <use Definitions/c-1htr1t-on.pdf>
-Package pdftex.def Info: Definitions/c-1htr1t-on.pdf  used on input line 214.
+Package pdftex.def Info: Definitions/c-1htr1t-on.pdf  used on input line 190.
 (pdftex.def)             Requested size: 525.23764pt x 378.73363pt.
+
+Overfull \vbox (216.88986pt too high) has occurred while \output is active []
+
+
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 24.18796pt, for example:
+(fancyhdr)                \setlength{\headheight}{24.18796pt}.
+(fancyhdr)                You might also make \topmargin smaller to compensate:
+(fancyhdr)                \addtolength{\topmargin}{-12.18796pt}.
+
+[4 <./Definitions/c-1htr1t-on.pdf>]
+Underfull \hbox (badness 10000) in paragraph at lines 201--230
+
+ []
+
 
 
 pdfTeX warning: pdflatex (file ./Definitions/c-2htr3t-on.pdf): PDF inclusion: found PDF version <1.7>, but at most version <1.5> allowed
-<Definitions/c-2htr3t-on.pdf, id=171, 845.07718pt x 417.2388pt>
+<Definitions/c-2htr3t-on.pdf, id=180, 845.07718pt x 417.2388pt>
 File: Definitions/c-2htr3t-on.pdf Graphic file (type pdf)
 <use Definitions/c-2htr3t-on.pdf>
-Package pdftex.def Info: Definitions/c-2htr3t-on.pdf  used on input line 225.
+Package pdftex.def Info: Definitions/c-2htr3t-on.pdf  used on input line 241.
 (pdftex.def)             Requested size: 525.23764pt x 259.3284pt.
 
-Overfull \vbox (42.95483pt too high) has occurred while \output is active []
+Overfull \vbox (168.9497pt too high) has occurred while \output is active []
 
 
 
@@ -1242,32 +1241,45 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller to compensate:
 (fancyhdr)                \addtolength{\topmargin}{-12.18796pt}.
 
-[5 <./Definitions/c-1htr1t-on.pdf> <./Definitions/c-2htr3t-on.pdf>]
+[5 <./Definitions/c-2htr3t-on.pdf>]
+Underfull \hbox (badness 10000) in paragraph at lines 252--286
+
+ []
+
+
 
 pdfTeX warning: pdflatex (file ./Definitions/c-lfr-pre.pdf): PDF inclusion: found PDF version <1.7>, but at most version <1.5> allowed
-<Definitions/c-lfr-pre.pdf, id=182, 842.4617pt x 282.36923pt>
+<Definitions/c-lfr-pre.pdf, id=191, 842.4617pt x 282.36923pt>
 File: Definitions/c-lfr-pre.pdf Graphic file (type pdf)
 <use Definitions/c-lfr-pre.pdf>
-Package pdftex.def Info: Definitions/c-lfr-pre.pdf  used on input line 238.
+Package pdftex.def Info: Definitions/c-lfr-pre.pdf  used on input line 301.
 (pdftex.def)             Requested size: 525.23764pt x 176.04515pt.
+
+Overfull \vbox (186.78162pt too high) has occurred while \output is active []
+
+
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 24.18796pt, for example:
+(fancyhdr)                \setlength{\headheight}{24.18796pt}.
+(fancyhdr)                You might also make \topmargin smaller to compensate:
+(fancyhdr)                \addtolength{\topmargin}{-12.18796pt}.
+
+[6 <./Definitions/c-lfr-pre.pdf>]
+Underfull \hbox (badness 10000) in paragraph at lines 312--341
+
+ []
+
 
 
 pdfTeX warning: pdflatex (file ./Definitions/c-lfr-post.pdf): PDF inclusion: found PDF version <1.7>, but at most version <1.5> allowed
-<Definitions/c-lfr-post.pdf, id=183, 847.86328pt x 303.21977pt>
+<Definitions/c-lfr-post.pdf, id=202, 847.86328pt x 303.21977pt>
 File: Definitions/c-lfr-post.pdf Graphic file (type pdf)
 <use Definitions/c-lfr-post.pdf>
-Package pdftex.def Info: Definitions/c-lfr-post.pdf  used on input line 250.
+Package pdftex.def Info: Definitions/c-lfr-post.pdf  used on input line 352.
 (pdftex.def)             Requested size: 525.23764pt x 187.84625pt.
 
-
-pdfTeX warning: pdflatex (file ./Definitions/c-lfr-par.pdf): PDF inclusion: found PDF version <1.7>, but at most version <1.5> allowed
-<Definitions/c-lfr-par.pdf, id=184, 846.13925pt x 302.79549pt>
-File: Definitions/c-lfr-par.pdf Graphic file (type pdf)
-<use Definitions/c-lfr-par.pdf>
-Package pdftex.def Info: Definitions/c-lfr-par.pdf  used on input line 262.
-(pdftex.def)             Requested size: 525.23764pt x 187.95764pt.
-
-Overfull \vbox (24.76192pt too high) has occurred while \output is active []
+Overfull \vbox (24.20238pt too high) has occurred while \output is active []
 
 
 
@@ -1277,22 +1289,63 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller to compensate:
 (fancyhdr)                \addtolength{\topmargin}{-12.18796pt}.
 
-[6 <./Definitions/c-lfr-pre.pdf> <./Definitions/c-lfr-post.pdf> <./Definitions/c-lfr-par.pdf>]
+[7 <./Definitions/c-lfr-post.pdf>]
+
+pdfTeX warning: pdflatex (file ./Definitions/c-lfr-par.pdf): PDF inclusion: found PDF version <1.7>, but at most version <1.5> allowed
+<Definitions/c-lfr-par.pdf, id=213, 846.13925pt x 302.79549pt>
+File: Definitions/c-lfr-par.pdf Graphic file (type pdf)
+<use Definitions/c-lfr-par.pdf>
+Package pdftex.def Info: Definitions/c-lfr-par.pdf  used on input line 368.
+(pdftex.def)             Requested size: 525.23764pt x 187.95764pt.
+
+Underfull \hbox (badness 10000) in paragraph at lines 379--410
+
+ []
+
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 24.18796pt, for example:
+(fancyhdr)                \setlength{\headheight}{24.18796pt}.
+(fancyhdr)                You might also make \topmargin smaller to compensate:
+(fancyhdr)                \addtolength{\topmargin}{-12.18796pt}.
+
+[8 <./Definitions/c-lfr-par.pdf>]
 
 pdfTeX warning: pdflatex (file ./Definitions/c-lfr-circ.pdf): PDF inclusion: found PDF version <1.7>, but at most version <1.5> allowed
-<Definitions/c-lfr-circ.pdf, id=198, 842.65836pt x 437.06142pt>
+<Definitions/c-lfr-circ.pdf, id=224, 842.65836pt x 437.06142pt>
 File: Definitions/c-lfr-circ.pdf Graphic file (type pdf)
 <use Definitions/c-lfr-circ.pdf>
-Package pdftex.def Info: Definitions/c-lfr-circ.pdf  used on input line 273.
+Package pdftex.def Info: Definitions/c-lfr-circ.pdf  used on input line 421.
 (pdftex.def)             Requested size: 525.23764pt x 272.42911pt.
 
+Overfull \vbox (57.16518pt too high) has occurred while \output is active []
+
+
+
+Package fancyhdr Warning: \headheight is too small (12.0pt): 
+(fancyhdr)                Make it at least 24.18796pt, for example:
+(fancyhdr)                \setlength{\headheight}{24.18796pt}.
+(fancyhdr)                You might also make \topmargin smaller to compensate:
+(fancyhdr)                \addtolength{\topmargin}{-12.18796pt}.
+
+[9 <./Definitions/c-lfr-circ.pdf>]
 
 pdfTeX warning: pdflatex (file ./Definitions/c-lfr-circ-sub.pdf): PDF inclusion: found PDF version <1.7>, but at most version <1.5> allowed
-<Definitions/c-lfr-circ-sub.pdf, id=199, 669.2503pt x 536.75531pt>
+<Definitions/c-lfr-circ-sub.pdf, id=233, 669.2503pt x 536.75531pt>
 File: Definitions/c-lfr-circ-sub.pdf Graphic file (type pdf)
 <use Definitions/c-lfr-circ-sub.pdf>
-Package pdftex.def Info: Definitions/c-lfr-circ-sub.pdf  used on input line 283.
+Package pdftex.def Info: Definitions/c-lfr-circ-sub.pdf  used on input line 434.
 (pdftex.def)             Requested size: 284.52756pt x 228.20398pt.
+
+Underfull \hbox (badness 10000) in paragraph at lines 441--442
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 445--459
+
+ []
+
 Package epstopdf Info: Source file: <Definitions/logo-mdpi.eps>
 (epstopdf)                    date: 2021-06-16 15:37:48
 (epstopdf)                    size: 736802 bytes
@@ -1300,11 +1353,11 @@ Package epstopdf Info: Source file: <Definitions/logo-mdpi.eps>
 (epstopdf)                    date: 2021-06-16 15:37:48
 (epstopdf)                    size: 43966 bytes
 (epstopdf)             Command: <miktex-epstopdf --outfile=Definitions/logo-mdpi-eps-converted-to.pdf Definitions/logo-mdpi.eps>
-(epstopdf)             \includegraphics on input line 332.
+(epstopdf)             \includegraphics on input line 501.
 Package epstopdf Info: Output file is already uptodate.
 File: Definitions/logo-mdpi-eps-converted-to.pdf Graphic file (type pdf)
 <use Definitions/logo-mdpi-eps-converted-to.pdf>
-Package pdftex.def Info: Definitions/logo-mdpi-eps-converted-to.pdf  used on input line 332.
+Package pdftex.def Info: Definitions/logo-mdpi-eps-converted-to.pdf  used on input line 501.
 (pdftex.def)             Requested size: 298.75394pt x 196.9437pt.
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
@@ -1313,7 +1366,7 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller to compensate:
 (fancyhdr)                \addtolength{\topmargin}{-12.18796pt}.
 
-[7 <./Definitions/c-lfr-circ.pdf> <./Definitions/c-lfr-circ-sub.pdf>]
+[10 <./Definitions/c-lfr-circ-sub.pdf>]
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
 (fancyhdr)                Make it at least 24.18796pt, for example:
@@ -1321,7 +1374,7 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller to compensate:
 (fancyhdr)                \addtolength{\topmargin}{-12.18796pt}.
 
-[8]) (backmatter.tex
+[11]) (backmatter.tex
 LaTeX Font Info:    Font shape `U/msa/m/n' will be
 (Font)              scaled to size 9.37807pt on input line 3.
 LaTeX Font Info:    Font shape `U/msa/m/n' will be
@@ -1345,7 +1398,7 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller to compensate:
 (fancyhdr)                \addtolength{\topmargin}{-12.18796pt}.
 
-[9]) (main.bbl) 
+[12]) (main.bbl) 
 AED: lastpage setting LastPage
 
 Package fancyhdr Warning: \headheight is too small (12.0pt): 
@@ -1354,22 +1407,22 @@ Package fancyhdr Warning: \headheight is too small (12.0pt):
 (fancyhdr)                You might also make \topmargin smaller to compensate:
 (fancyhdr)                \addtolength{\topmargin}{-12.18796pt}.
 
-[10] (main.aux)
+[13] (main.aux)
 Package rerunfilecheck Info: File `main.out' has not changed.
-(rerunfilecheck)             Checksum: AEA78BE0A26403A37CC633F0500D1010;3665.
+(rerunfilecheck)             Checksum: F0A128B837570A5BBD82471D607098CB;3828.
  ) 
 Here is how much of TeX's memory you used:
- 31208 strings out of 478864
- 544208 string characters out of 2848660
- 1113116 words of memory out of 3000000
- 48142 multiletter control sequences out of 15000+600000
- 468123 words of font info for 317 fonts, out of 8000000 for 9000
+ 31306 strings out of 478864
+ 545109 string characters out of 2848660
+ 1111030 words of memory out of 3000000
+ 48146 multiletter control sequences out of 15000+600000
+ 473141 words of font info for 376 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  123i,13n,122p,3767b,1237s stack positions out of 5000i,500n,10000p,200000b,80000s
- <C:\Users\brian\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi600\ecss0500.pk>{C:/Users/brian/AppData/Local/Programs/MiKTeX/fonts/enc/dvips/base/8r.enc}<C:/Users/brian/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr10.pfb><C:/Users/brian/AppData/Local/Programs/MiKTeX/fonts/type1/public/mathpazo/fplmr.pfb><C:/Users/brian/AppData/Local/Programs/MiKTeX/fonts/type1/public/mathpazo/fplmri.pfb><C:/Users/brian/AppData/Local/Programs/MiKTeX/fonts/type1/urw/palatino/uplb8a.pfb><C:/Users/brian/AppData/Local/Programs/MiKTeX/fonts/type1/urw/palatino/uplr8a.pfb><C:/Users/brian/AppData/Local/Programs/MiKTeX/fonts/type1/urw/palatino/uplri8a.pfb>
-Output written on main.pdf (10 pages, 1129331 bytes).
+ <C:\Users\brian\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi600\ecss0500.pk>{C:/Users/brian/AppData/Local/Programs/MiKTeX/fonts/enc/dvips/base/8r.enc}<C:/Users/brian/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr10.pfb><C:/Users/brian/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy10.pfb><C:/Users/brian/AppData/Local/Programs/MiKTeX/fonts/type1/public/mathpazo/fplmr.pfb><C:/Users/brian/AppData/Local/Programs/MiKTeX/fonts/type1/public/mathpazo/fplmri.pfb><C:/Users/brian/AppData/Local/Programs/MiKTeX/fonts/type1/urw/palatino/uplb8a.pfb><C:/Users/brian/AppData/Local/Programs/MiKTeX/fonts/type1/urw/palatino/uplr8a.pfb><C:/Users/brian/AppData/Local/Programs/MiKTeX/fonts/type1/urw/palatino/uplri8a.pfb>
+Output written on main.pdf (13 pages, 1158600 bytes).
 PDF statistics:
- 310 PDF objects out of 1000 (max. 8388607)
- 69 named destinations out of 1000 (max. 500000)
- 99612 words of extra memory for PDF output out of 106986 (max. 10000000)
+ 349 PDF objects out of 1000 (max. 8388607)
+ 76 named destinations out of 1000 (max. 500000)
+ 99604 words of extra memory for PDF output out of 106986 (max. 10000000)
 
