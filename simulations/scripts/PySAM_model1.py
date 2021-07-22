@@ -28,9 +28,9 @@ print("PID = ", pid)
 # =============================================================================
 
 # defining directories
-nuctes = NuclearTES.NuclearTES()
+nuctes = NuclearTES.NuclearTES(is_dispatch=False)
 output_file = 'output.csv'
-nuctes.run_sim( run_loop=False, export=True, filename=output_file )
+nuctes.run_sim( run_loop=True, export=False, filename=output_file )
 nt = nuctes.Plant
 so = nuctes.SO
 
@@ -93,94 +93,5 @@ upl.plot_SSC_power_and_energy(ax1 )#, plot_full_time=plot_full_time, title_label
 upl.plot_SSC_op_modes(ax2) #, plot_full_time=plot_full_time)
 upl.plot_SSC_massflow(ax3) #, plot_full_time=plot_full_time)
 
-# full 1 year plot
-# figF = plt.figure(figsize=[10,8])
-# ax1F = figF.add_subplot(311)
-# ax2F = figF.add_subplot(312)
-# ax3F = figF.add_subplot(313)
 
-# upl.plot_SSC_power_and_energy(ax1F, True, title_label='SSC Results - Full Year')
-# upl.plot_SSC_op_modes(ax2F, True)
-# upl.plot_SSC_massflow(ax3F, True)
-
-
-# upl.plot_SSC_op_modes(False)
-# upl.plot_SSC_op_modes(True)
-# upl.plot_SSC_power_and_energy(False)
-# upl.plot_SSC_power_and_energy(True)
-# upl.plot_SSC_massflow(False)
-# upl.plot_SSC_massflow(True)
-
-
-# plt.figure()
-# plt.plot(t_plot,nuctes.df_array)
-
-
-# fig = plt.figure(figsize=[10,8])
-# ax1 = fig.gca()
-# # ax1 = fig.add_subplot(311)
-# # ax2 = fig.add_subplot(312)
-# # ax3 = fig.add_subplot(313)
-
-# # Energy plot
-# ax1.plot(t_plot, e_ch_tes, linewidth = lw, label='Salt Charge Level (MWht)')
-# ax1.plot(t_plot, p_cycle, linewidth = lw, label='P_cycle (Electric)')
-# ax1.plot(t_plot, q_dot_rec_in, linewidth = lw, label='Q_dot to Salt (Thermal)')
-# ax1.plot(t_plot, gen, linewidth = lw, label='Power generated')
-# ax1.set_ylabel('Power (MW)', labelpad=lp, fontsize=fs, fontweight='bold')
-# ax1.legend(loc=loc,fontsize=fsl)
-# ax1.set_xlabel('Time (days)', labelpad=lp, fontsize=fs, fontweight='bold')
-
-# Mass flow rate plot
-# ax2.plot(t_plot, m_dot, linewidth = lw, label='m_dot_water_pc')
-# ax2.set_ylabel('Mass flow (kg/s)', labelpad=lp, fontsize=fs, fontweight='bold')
-# ax2.legend(loc=loc,fontsize=fsl)
-
-# Temperature plot
-# ax3.plot(t_plot, T_pc_in, linewidth = lw, label='PC HTF inlet')
-# ax3.plot(t_plot, T_pc_out, linewidth = lw, label='PC HTF outlet')
-# ax3.set_xlabel('Time (days)', labelpad=lp, fontsize=fs, fontweight='bold')
-# ax3.set_ylabel('Temperature (C)', labelpad=lp, fontsize=fs, fontweight='bold')
-# ax3.legend(loc=loc,fontsize=fsl)
-
-# operating modes time history
-# fig = plt.figure()
-# ax = fig.gca()
-# ax2.plot(t_plot, op_mode_1)
-# for op in n_modes:
-#     inds = op_mode_1 == op
-#     ax2.plot(t_plot[inds], op_mode_1[inds], '.', label=op_modes_list[int(op)])
-# ax2.set_ylabel('Operating Mode', labelpad=lp, fontsize=fs, fontweight='bold')
-# ax2.legend(loc=loc,fontsize=fsl)
-
-
-# fig = plt.figure(figsize=[10,4])
-# ax1 = fig.gca()
-# ax2 = ax1.twinx()
-# # ax1 = fig.add_subplot(311)
-# # ax2 = fig.add_subplot(312)
-# # ax3 = fig.add_subplot(313)
-# ind = 48
-# rng = slice(ind*0,ind*1,1)
-# t_plot = t_plot[rng]
-# e_ch_tes = e_ch_tes[rng]
-# p_cycle = p_cycle[rng]
-# q_dot_rec_in = q_dot_rec_in[rng]
-# gen = gen[rng]
-# price = nuctes.df_array[rng]*200
-# dt = np.diff(t_plot)[0]
-
-# # Energy plot
-# ax1.bar(t_plot,price,dt,alpha=0.5,label="Price Multiplier")
-# ax2.plot(t_plot, e_ch_tes, linewidth = lw, color='C3', label='Salt Charge Level (MWh)')
-# ax1.plot(t_plot, p_cycle, linewidth = lw, label='P_cycle (Electric)')
-# ax1.plot(t_plot, q_dot_rec_in, linewidth = lw, label='Q_dot to Salt (Thermal)')
-# ax1.plot(t_plot, gen, linewidth = lw, label='Power generated')
-# ax1.set_ylabel('Power (MW)', labelpad=lp, fontsize=fs, fontweight='bold')
-# ax2.set_ylabel('Energy (MWh)', labelpad=lp, fontsize=fs, fontweight='bold')
-# ax1.legend(loc='best',fontsize=fsl)
-# ax2.legend(loc=loc_cr,fontsize=fsl)
-# ax1.set_xlabel('Time (days)', labelpad=lp, fontsize=fs, fontweight='bold')
-
-# plt.tight_layout()
 
