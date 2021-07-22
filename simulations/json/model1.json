@@ -116,7 +116,7 @@
         "heliostat_spec_cost" :  0,
         "plant_spec_cost" :      1040,
         "bop_spec_cost" :    290,
-        "tes_spec_cost" :    22,
+        "tes_spec_cost" :    50.4,
         "land_spec_cost" :   10000,
         "contingency_rate" : 7,
         "sales_tax_rate" :   5,
