@@ -27,7 +27,7 @@ print("PID = ", pid)
 
 # locating output directory
 output_dir = FileMethods.output_dir
-filename   = 'pricePerfvsDispatch_sizingTESandCycle_irr11pct.nuctes' 
+filename   = 'pricePerfvsDispatch_sizingTESandCycle_irr11pct_simplerevenue.nuctes' 
 NTPath = os.path.join(output_dir, filename)
 
 # pickling
@@ -49,6 +49,7 @@ ppa_array           = Storage['ppa_array']
 lcoe_nom_array      = Storage['lcoe_nom_array']
 npv_aftertax = Storage['npv_aftertax']
 irr          = Storage['irr_aftertax']
+revenue      = Storage['simple_revenue'] * 1e-9
 irr_mean     = np.mean(irr)
     
 # =============================================================================
@@ -74,14 +75,14 @@ plt.subplots_adjust(wspace=0.4)
 dispatch_scenarios  = ['Pyomo - 24hr Horizon', 'Pyomo - 48hr Horizon', 'No Pyomo - SSC Only']  
 
 # specific performance metrics to plot 
-performance_metrics = [annual_energy_array, ppa_array, npv_aftertax]
+performance_metrics = [annual_energy_array, ppa_array, revenue]
 N              = len(performance_metrics)
 get_max        = [True, False, True] # whether each performance is optimized with max or min
 axes           = [ax1,ax2,ax3] # list of axes
-heat_cmap_list = ['Blues', 'Blues_r', 'Blues_r'] # colormaps used for each performance metric
+heat_cmap_list = ['Blues', 'Blues_r', 'Blues'] # colormaps used for each performance metric
 metric_labels  = ['Annual Energy Production \n(TWh)',
                   'PPA Price \n(cents/kWh)',
-                  'NPV \n($M)' ] # labels for each performance metric
+                  'Revenue - Simple Calculation \n($B)' ] # labels for each performance metric
 
 # some other arrays
 P_array  = P_ref * p_mult #actual power cycle reference outputs
@@ -190,7 +191,8 @@ for n in range(N):
     # define contour levels
     if np.sign(diffmin_pct) == np.sign(diffmax_pct):
         # difference has only one sign, so optimal is strictly better
-        cmap_contour = cm.Reds_r if Opt_D != 2 else cm.Reds # colormap for contours
+        cmap_contour = cm.Reds if (get_max[n]     and Opt_D != 2) \
+                               or (not get_max[n] and Opt_D == 2) else cm.Reds_r # colormap for contours
         strictly_better = True
         if Opt_D == 2:
             levels = [diffmin_pct, 0.75*diffmin_pct, 0.3*diffmin_pct, diffmax_pct]
