@@ -8,11 +8,12 @@ Created on Tue Jul 13 09:35:14 2021
 
 import modules.NuclearTES as NuclearTES
 import os, time
-import pint
 import numpy as np
-u = pint.UnitRegistry()
 import pickle
 from util.FileMethods import FileMethods
+from util.SSCHelperMethods import SSCHelperMethods
+u = SSCHelperMethods.define_unit_registry()
+from util.PostProcessing import OutputExtraction
 
 pid = os.getpid()
 print("PID = ", pid)
@@ -51,6 +52,7 @@ irr_aftertax        = empty.copy()
 cost_installed      = empty.copy()
 size_of_equity      = empty.copy()
 size_of_debt        = empty.copy()
+simple_revenue      = empty.copy()
 
 
 # starting the time counter
@@ -102,10 +104,20 @@ for d,dp in enumerate(dispatch): #over dispatch type
             size_of_equity[d,i,j]    = so.Outputs.size_of_equity/1e6  #in million $
             size_of_debt[d,i,j]      = so.Outputs.size_of_debt/1e6    #in million $
 
+            outputs = OutputExtraction(nuctes)
+            
+            price     = outputs.price * u.USD / u.kWh
+            power_gen = outputs.gen.m * u.MWh
+            
+            revenue = (price*power_gen).to('USD')
+            
+            simple_revenue[d,i,j]  = revenue.sum().m # in dollars
+
             # reset the Plant and Grid, prevents memory leak
             del nuctes
             del nt
             del so
+            del outputs
 
 # end time counter
 toc = time.perf_counter()        
@@ -139,10 +151,11 @@ Storage['irr_aftertax']        = irr_aftertax
 Storage['cost_installed']      = cost_installed
 Storage['size_of_equity']      = size_of_equity
 Storage['size_of_debt']        = size_of_debt
+Storage['simple_revenue']      = simple_revenue
 
 # locating output directory
 output_dir = FileMethods.output_dir
-filename   = 'pricePerfvsDispatch_sizingTESandCycle_irr11pct.nuctes' 
+filename   = 'pricePerfvsDispatch_sizingTESandCycle_irr11pct_simplerevenue.nuctes' 
 NTPath = os.path.join(output_dir, filename)
 
 # pickling

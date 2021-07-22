@@ -35,7 +35,7 @@ nt = nuctes.Plant
 # retrieving the DispatchPlots class
 from util.PostProcessing import DispatchPlots
 # specifying dispatch model
-ind = 100
+ind = 0
 # extracting specific, solved dispatch model
 dm = nuctes.disp_models[str(ind)]
 # create Dispatch plotting object

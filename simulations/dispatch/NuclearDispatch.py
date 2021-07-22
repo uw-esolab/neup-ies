@@ -424,8 +424,7 @@ class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
         # set up costs from parent class
         param_dict = GeneralDispatchParamWrap.set_fixed_cost_parameters( self, param_dict )
         
-        # TODO: old values from LORE files
-        C_nuc  = self.PySAM_dict['nuc_op_cost'] * u.USD / u.MWh #Q_ratio * 0.002  * u.USD/u.kWh        
+        C_nuc  = self.PySAM_dict['nuc_op_cost'] * u.USD / u.MWh  # value taken from Cory @ Westinghouse, later converted to $/kWh        
         C_nsu  = self.PySAM_dict['nuc_cold_su'] * u.USD
         C_nhsp = self.PySAM_dict['nuc_hot_su'] * u.USD
 
