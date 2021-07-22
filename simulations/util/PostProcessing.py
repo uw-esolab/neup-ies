@@ -15,12 +15,157 @@ u = pint.UnitRegistry(autoconvert_offset_to_baseunit=True)
 rc('axes', linewidth=2)
 rc('font', weight='bold', size=12)
 
+class OutputExtraction(object):
+    """
+    The OutputExtraction class is a part of the PostProcessing family of classes.
+    It extracts outputs from SSC or Dispatch models. Can be called from other 
+    plotting classes to extract outputs.  
+    """
+    
+    def __init__(self, module):
+        """ Initializes the OutputExtraction module
 
-# BIG difference here is that the Plots class gets initialized
+        The instantiation of this class receives a full module object, the module
+        being one of the NE2 modules in the /neup-ies/simulations/modules directory.
+        or a Dispatch module. 
+
+        Inputs:
+            module (object)     : object representing NE2 module class after simulations
+        """
+        
+        # module class name
+        mod_class = module.__class__.__module__
+        self.mod_class_name = mod_class.split('.')[0]
+
+        # continuing with SSC plots
+        if self.mod_class_name == 'modules':
+            
+            # full PySAM module
+            self.mod = module.Plant
+            
+            # define an Output object to extract information from SSC
+            Outputs = self.mod.PySAM_Outputs if module.run_loop else self.mod.Outputs
+            
+            self.t_full = np.asarray(Outputs.time_hr)*u.hr
+            
+            # extracting outputs
+            self.set_ssc_outputs( Outputs )
+        
+        elif self.mod_class_name == 'dispatch':
+            
+            # saving module to self
+            self.dm = module
+            
+            # extract outputs from Dispatch model
+            self.set_pyomo_outputs()
+
+    
+    def set_ssc_outputs(self, mod_out):
+        """ Method to set SSC outputs from module
+        
+        The method extracts SSC outputs and save them to arrays. The input to this
+        method is a subclass to an NE2 class holding all outputs to simulations.          
+        
+        Inputs:
+            mod_out (object)  : object representing Outputs subclass of NE2 module
+        """
+        # saving some outputs for plotting
+        self.p_cycle      = np.asarray(mod_out.P_cycle) * u.MW
+        self.gen          = (np.asarray(mod_out.gen) * u.kW).to('MW')
+        self.q_dot_rec_in = np.asarray(mod_out.q_dot_rec_inc) * u.MW
+        self.q_pb         = np.asarray(mod_out.q_pb) * u.MW
+        self.q_dot_pc_su  = np.asarray(mod_out.q_dot_pc_startup) * u.MW
+        self.m_dot_pc     = np.asarray(mod_out.m_dot_pc) * u.kg/u.s
+        self.m_dot_rec    = np.asarray(mod_out.m_dot_rec) * u.kg/u.s
+        self.T_pc_in      = np.asarray(mod_out.T_pc_in) * u.degC
+        self.T_pc_out     = np.asarray(mod_out.T_pc_out) * u.degC
+        self.T_tes_cold   = np.asarray(mod_out.T_tes_cold) * u.degC
+        self.T_tes_hot    = np.asarray(mod_out.T_tes_hot) * u.degC
+        self.T_cond_out   = np.asarray(mod_out.T_cond_out) * u.degC
+        self.e_ch_tes     = np.asarray(mod_out.e_ch_tes) * u.MWh
+        self.op_mode_1    = np.asarray(mod_out.op_mode_1)
+        self.defocus      = np.asarray(mod_out.defocus)
+        self.price        = np.asarray(self.mod.TimeOfDeliveryFactors.dispatch_factors_ts)
+
+        # setting static inputs
+        self.q_rec_design  = self.mod.SystemDesign.q_dot_nuclear_des * u.MW  # receiver design thermal power
+        self.p_pb_design   = self.mod.SystemDesign.P_ref * u.MW              # power block design electrical power
+        self.eta_design    = self.mod.SystemDesign.design_eff                # power block design efficiency
+        self.q_pb_design  = (self.p_pb_design / self.eta_design).to('MW')    # power block design thermal rating
+        self.T_htf_hot    = (self.mod.SystemDesign.T_htf_hot_des*u.celsius).to('degK')   # heat transfer fluid Hot temp
+        self.T_htf_cold   = (self.mod.SystemDesign.T_htf_cold_des*u.celsius).to('degK')  # heat transfer fluid Cold temp
+        self.e_tes_design = (self.q_pb_design * self.mod.SystemDesign.tshours*u.hr).to('MWh')  # TES storage capacity (kWht)
+
+        # operating modes
+        op_mode_result, modes_order = np.unique(self.op_mode_1, return_index=True) # mode orders and re-ordering
+        self.op_mode_result = op_mode_result[np.argsort(modes_order)]     # re-order modes by first appearance of each
+
+
+    def set_pyomo_outputs(self):
+        """ Method to define list of Pyomo output arrays
+
+        This method extracts outputs from the Pyomo Dispatch model, converts them to numpy arrays
+        and saves them to `self`. 
+        """
+        
+        # Dispatch Model with results
+        dm = self.dm
+        u = self.u
+        
+        # lambda functions
+        extract_from_model = lambda name: getattr(dm.model, name)
+        extract_array      = lambda name: np.array([ pe.value(extract_from_model(name)[t]) for t in dm.model.T ])
+        extract_energy     = lambda name: (extract_array(name)*u.kWh).to('MWh') 
+        extract_power      = lambda name: (extract_array(name)*u.kW).to('MW') 
+        
+        # Time and Pricing Arrays
+        self.t_full = extract_array('Delta_e') * u.hr
+        self.p_array = extract_array('P')
+        
+        # marking the midway point
+        self.T = len(self.t_full)
+        self.time_midway = np.ones([self.T])*int(self.T/2)
+
+        # Energy Arrays
+        self.s_array     = extract_energy('s')
+        self.ucsu_array  = extract_energy('ucsu')
+        self.unsu_array  = extract_energy('unsu')
+        
+        # Power Arrays
+        self.wdot_array             = extract_power('wdot')
+        self.wdot_delta_plus_array  = extract_power('wdot_delta_plus')
+        self.wdot_delta_minus_array = extract_power('wdot_delta_minus')
+        self.wdot_v_plus_array      = extract_power('wdot_v_plus')
+        self.wdot_v_minus_array     = extract_power('wdot_v_minus')
+        self.wdot_s_array           = extract_power('wdot_s')
+        self.wdot_p_array           = extract_power('wdot_p')
+        self.x_array                = extract_power('x')
+        self.xn_array               = extract_power('xn')
+        self.xnsu_array             = extract_power('xnsu')
+
+        # Binary Arrays (Nuclear)
+        self.yn_array    = extract_array('yn') 
+        self.ynhsp_array = extract_array('ynhsp') 
+        self.ynsb_array  = extract_array('ynsb') 
+        self.ynsd_array  = extract_array('ynsu') 
+        self.ynsu_array  = extract_array('ynsu') 
+        self.ynsup_array = extract_array('ynsup') 
+        
+        # Binary Arrays (Cycle)
+        self.y_array     = extract_array('y') 
+        self.ychsp_array = extract_array('ychsp') 
+        self.ycsb_array  = extract_array('ycsb') 
+        self.ycsd_array  = extract_array('ycsd') 
+        self.ycsu_array  = extract_array('ycsu') 
+        self.ycsup_array = extract_array('ycsup') 
+        self.ycgb_array  = extract_array('ycgb')  
+        self.ycge_array  = extract_array('ycge') 
+        
+        
 class Plots(object):
     """
     The Plots class is a part of the PostProcessing family of classes. It can 
-    output results from SSCmodels. This might be a 
+    plot outputs from SSC model runs. This might be a 
     Sisyphus-ian task as some of the parameters are very unique to whatever 
     plot you are trying to make, but will do my best to provide basic structures
     and templates to work off of. 
@@ -92,48 +237,7 @@ class Plots(object):
             self.set_operating_modes_list()
             
             # extracting outputs
-            self.set_ssc_outputs( Outputs )
-    
-    
-    def set_ssc_outputs(self, mod_out):
-        """ Method to set SSC outputs from module
-        
-        The method extracts SSC outputs and save them to arrays. The input to this
-        method is a subclass to an NE2 class holding all outputs to simulations.          
-        
-        Inputs:
-            mod_out (object)  : object representing Outputs subclass of NE2 module
-        """
-        # saving some outputs for plotting
-        self.p_cycle      = np.asarray(mod_out.P_cycle) * u.MW
-        self.gen          = (np.asarray(mod_out.gen) * u.kW).to('MW')
-        self.q_dot_rec_in = np.asarray(mod_out.q_dot_rec_inc) * u.MW
-        self.q_pb         = np.asarray(mod_out.q_pb) * u.MW
-        self.q_dot_pc_su  = np.asarray(mod_out.q_dot_pc_startup) * u.MW
-        self.m_dot_pc     = np.asarray(mod_out.m_dot_pc) * u.kg/u.s
-        self.m_dot_rec    = np.asarray(mod_out.m_dot_rec) * u.kg/u.s
-        self.T_pc_in      = np.asarray(mod_out.T_pc_in) * u.degC
-        self.T_pc_out     = np.asarray(mod_out.T_pc_out) * u.degC
-        self.T_tes_cold   = np.asarray(mod_out.T_tes_cold) * u.degC
-        self.T_tes_hot    = np.asarray(mod_out.T_tes_hot) * u.degC
-        self.T_cond_out   = np.asarray(mod_out.T_cond_out) * u.degC
-        self.e_ch_tes     = np.asarray(mod_out.e_ch_tes) * u.MWh
-        self.op_mode_1    = np.asarray(mod_out.op_mode_1)
-        self.defocus      = np.asarray(mod_out.defocus)
-        self.price        = np.asarray(self.mod.TimeOfDeliveryFactors.dispatch_factors_ts)
-
-        # setting static inputs
-        self.q_rec_design  = self.mod.SystemDesign.q_dot_nuclear_des * u.MW  # receiver design thermal power
-        self.p_pb_design   = self.mod.SystemDesign.P_ref * u.MW              # power block design electrical power
-        self.eta_design    = self.mod.SystemDesign.design_eff                # power block design efficiency
-        self.q_pb_design  = (self.p_pb_design / self.eta_design).to('MW')    # power block design thermal rating
-        self.T_htf_hot    = (self.mod.SystemDesign.T_htf_hot_des*u.celsius).to('degK')   # heat transfer fluid Hot temp
-        self.T_htf_cold   = (self.mod.SystemDesign.T_htf_cold_des*u.celsius).to('degK')  # heat transfer fluid Cold temp
-        self.e_tes_design = (self.q_pb_design * self.mod.SystemDesign.tshours*u.hr).to('MWh')  # TES storage capacity (kWht)
-
-        # operating modes
-        op_mode_result, modes_order = np.unique(self.op_mode_1, return_index=True) # mode orders and re-ordering
-        self.op_mode_result = op_mode_result[np.argsort(modes_order)]     # re-order modes by first appearance of each
+            OutputExtraction.set_ssc_outputs(self, Outputs)
 
 
     def get_array(self, array_str, slicer):
@@ -723,91 +827,10 @@ class DispatchPlots(Plots):
             self.dm = module
             
             # extract outputs from Dispatch model
-            self.set_pyomo_outputs()
+            OutputExtraction.set_pyomo_outputs(self)
             
             # slice of arrays
             self.full_slice = slice(0, len(self.t_full), 1)
-    
-    
-    def set_pyomo_outputs(self):
-        """ Method to define list of Pyomo output arrays
-
-        This method extracts outputs from the Pyomo Dispatch model, converts them to numpy arrays
-        and saves them to `self`. 
-        """
-        
-        # Dispatch Model with results
-        dm = self.dm
-        u = self.u
-        
-        # lambda functions
-        extract_from_model = lambda name: getattr(dm.model, name)
-        extract_array      = lambda name: np.array([ pe.value(extract_from_model(name)[t]) for t in dm.model.T ])
-        extract_energy     = lambda name: (extract_array(name)*u.kWh).to('MWh') 
-        extract_power      = lambda name: (extract_array(name)*u.kW).to('MW') 
-        
-        # Time and Pricing Arrays
-        self.t_full = extract_array('Delta_e') * u.hr
-        self.p_array = extract_array('P')
-        
-        # marking the midway point
-        self.T = len(self.t_full)
-        self.time_midway = np.ones([self.T])*int(self.T/2)
-
-        # Energy Arrays
-        self.s_array     = extract_energy('s')
-        self.ucsu_array  = extract_energy('ucsu')
-        self.unsu_array  = extract_energy('unsu')
-        
-        # Power Arrays
-        self.wdot_array             = extract_power('wdot')
-        self.wdot_delta_plus_array  = extract_power('wdot_delta_plus')
-        self.wdot_delta_minus_array = extract_power('wdot_delta_minus')
-        self.wdot_v_plus_array      = extract_power('wdot_v_plus')
-        self.wdot_v_minus_array     = extract_power('wdot_v_minus')
-        self.wdot_s_array           = extract_power('wdot_s')
-        self.wdot_p_array           = extract_power('wdot_p')
-        self.x_array                = extract_power('x')
-        self.xn_array               = extract_power('xn')
-        self.xnsu_array             = extract_power('xnsu')
-
-        # Binary Arrays (Nuclear)
-        self.yn_array    = extract_array('yn') 
-        self.ynhsp_array = extract_array('ynhsp') 
-        self.ynsb_array  = extract_array('ynsb') 
-        self.ynsd_array  = extract_array('ynsu') 
-        self.ynsu_array  = extract_array('ynsu') 
-        self.ynsup_array = extract_array('ynsup') 
-        
-        # Binary Arrays (Cycle)
-        self.y_array     = extract_array('y') 
-        self.ychsp_array = extract_array('ychsp') 
-        self.ycsb_array  = extract_array('ycsb') 
-        self.ycsd_array  = extract_array('ycsd') 
-        self.ycsu_array  = extract_array('ycsu') 
-        self.ycsup_array = extract_array('ycsup') 
-        self.ycgb_array  = extract_array('ycgb')  
-        self.ycge_array  = extract_array('ycge') 
-    
-    
-    def overwrite_model(self, new_model):
-        """ Overwrites current dispatch model saved to self
-
-        This method deletes current model saved to object and overwrites it with new model that
-        is used as input to this method.
-
-        Inputs:
-            new_model (object)   : object representing Pyomo Dispatch Model with results
-        """
-        
-        # delete current Dispatch mode
-        del self.dm
-        
-        # save new model to self
-        self.dm = new_model
-        
-        # re-set the pyomo outputs from new model
-        self.set_pyomo_outputs()
 
 
     def plot_pyomo_energy(self, ax=None, title_label=None, plot_all_time=True, \
