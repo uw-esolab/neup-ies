@@ -204,13 +204,15 @@ class NuclearDispatch(GeneralDispatch):
         """
         def nuc_production_rule(model,t):
             """ Upper bound on thermal energy produced by NP """
-            return model.xn[t] + model.xnsu[t] + model.Qnsd*model.ynsd[t] <= model.Qin_nuc[t]
+            u = self.u_pyomo
+            return model.xn[t] + model.xnsu[t] + model.Qnsd*model.ynsd[t]/(1*u.hr) <= model.Qin_nuc[t]
         def nuc_generation_rule(model,t):
             """ Thermal energy production by NP only when operating """
             return model.xn[t] <= model.Qin_nuc[t] * model.yn[t]
         def min_generation_rule(model,t):
             """ Lower bound on thermal energy produced by NP """
-            return model.xn[t] >= model.Qnl * model.yn[t]
+            u = self.u_pyomo
+            return model.xn[t] >= model.Qnl/(1*u.hr) * model.yn[t]
         def nuc_gen_persist_rule(model,t):
             """ NP not able to operate if no thermal power (adapted from CSP) """
             return model.yn[t] <= model.Qin_nuc[t]/model.Qnl
@@ -315,9 +317,10 @@ class NuclearDispatch(GeneralDispatch):
         """
         def grid_sun_rule(model, t):
             """ Balance of power flow, i.e. sold vs purchased """
+            u = self.u_pyomo
             return (
                     model.wdot_s[t] - model.wdot_p[t] == (1-model.etac[t])*model.wdot[t]
-                		- model.Ln*(model.xn[t] + model.xnsu[t] + model.Qnl*model.ynsb[t])
+                		- model.Ln*(model.xn[t] + model.xnsu[t] + model.Qnl*model.ynsb[t]/(1*u.hr))
                 		- model.Lc*model.x[t] 
                         - model.Wb*model.ycsb[t] - model.Wnht*(model.ynsb[t]+model.ynsu[t])		#Is Wrsb energy [kWh] or power [kW]?  [az] Wrsb = Wht in the math?
             )
