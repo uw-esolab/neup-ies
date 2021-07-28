@@ -35,8 +35,6 @@ class GenericSSCModule(ABC):
     - PySAM modules : these are PySAM wrappers for the SSC modules (also Grid, Financial modules, etc.)
     - NE2 modules   : these are Python classes that create PySAM modules (e.g., *THIS* class)
     
-    TODO: can we convert this to an abstract class in Python?
-    
     """
     
     @abstractmethod
@@ -114,30 +112,20 @@ class GenericSSCModule(ABC):
             
         """
         
-        u = self.u
-        
         self.run_loop = run_loop
-        SSC_dict = self.SSC_dict
         
         #--- create Plant object and execute it
         self.create_Plant( )
         self.simulate_Plant( )
         
         # log final results from looping simulations
-        if self.run_loop:
-            self.log_SSC_arrays(log_final=True)
-        
-        #logging annual energy and capacity factor (sometimes doesn't get calculated)
-        annual_energy = np.sum(self.gen_log)*u.kWh
-        if 'P_ref' in SSC_dict.keys():
-            ref_energy    = SSC_dict['P_ref']*u.MW * SSC_dict['gross_net_conversion_factor']
-            self.capacity_factor = (annual_energy / (ref_energy * 1*u.yr) ).to(' ')
+        self.log_SSC_arrays(log_final=True)
         
         #--- use executed Plant object to create Grid object and execute it
         self.create_Grid( )
         # update gen and annual energy so SystemOutput is consistent, carried over to SO object
         self.Grid.SystemOutput.gen = tuple(self.gen_log)
-        self.Grid.SystemOutput.annual_energy = np.sum(annual_energy.magnitude)
+        self.Grid.SystemOutput.annual_energy = np.sum(self.annual_energy.magnitude)
         self.Grid.execute( )
         
         #--- use executed Plant object to create SingleOwner object and execute it
@@ -284,6 +272,7 @@ class GenericSSCModule(ABC):
         
         # first execution of Plant through SSC
         self.run_Plant_through_SSC( time_start , time_next )
+        self.log_SSC_arrays()
         
         # this loop should only be entered if run_loop == True
         while (time_next < time_end):
@@ -320,6 +309,7 @@ class GenericSSCModule(ABC):
             
             # run Plant again
             self.run_Plant_through_SSC( time_start, time_next )
+            self.log_SSC_arrays()
         
         print(' Plant Simulation successfully completed.')
         
@@ -341,21 +331,11 @@ class GenericSSCModule(ABC):
             
         """
 
-        
-        i_start = int( start_hr.to('hr').m )
-        i_end   = int( end_hr.to('hr').m )
-        
         # start and end times for full simulation
         self.Plant.SystemControl.time_start = start_hr.to('s').magnitude
         self.Plant.SystemControl.time_stop  = end_hr.to('s').magnitude
         
         self.Plant.execute()
-        
-        # logging SSC outputs to arrays that have already been initialized
-        if self.run_loop:
-            self.log_SSC_arrays()
-        else:
-            self.gen_log[i_start:i_end] = self.Plant.Outputs.gen[0:self.t_ind ]
         
         
     @abstractmethod
@@ -588,7 +568,9 @@ class GenericSSCModule(ABC):
                 'op_mode_1_log' :    'op_mode_1',        # Operating Mode
                 'defocus_log'   :    'defocus',          # Nuclear "Defocus" fraction
                 'eta_log'       :    'eta'               # PC efficiency, gross
-            }
+            } if self.run_loop \
+                 else {'gen_log':    'gen'  # electricity generation log
+                      }
         
         # empty array to initalize log arrays
         empty_array = np.zeros(N_sim)
@@ -615,7 +597,8 @@ class GenericSSCModule(ABC):
                 if true, save full outputs to Plant. else, log to member arrays of Plant
                 
         """
-
+        
+        # ==========================================================================
         # wanted to create a quick subclass that where I can extract things during PostProcessing steps
         if log_final:
             # don't try this at home...
@@ -623,14 +606,16 @@ class GenericSSCModule(ABC):
             # quick lambda to make things look pretty
             convert_output = lambda arr: tuple( arr.tolist() )
         
+        # ==========================================================================
         # Main Loop -- we're working with pointer magic here, tread carefully
-        #     Log_Arrays['key'] -> keyword for PySAM_Outputs
-        #                'key'  -> keyword for self
+        # ===== eval(Log_Arrays['key']) -> keyword for PySAM_Outputs
+        # ================ eval('key')  -> keyword for self
+        
         for key in self.Log_Arrays.keys():
             # get current key's value from NE2 module
             self_output  = getattr(self, key )
             
-            # if we're still running segmented simulations work
+            # if we're still running segmented simulations
             if not log_final:
                 # get what we have logged so far
                 plant_output = getattr(self.Plant.Outputs,  self.Log_Arrays[key] )
@@ -643,7 +628,21 @@ class GenericSSCModule(ABC):
                 self_output_tuple = convert_output( self_output )
                 # save array to the new PySAM_Outputs "subclass"
                 setattr( self.Plant.PySAM_Outputs, self.Log_Arrays[key], self_output_tuple )
-
+        
+        # ==========================================================================
+        # updating capacity factor if logging final OR running non-loop
+        if log_final or not self.run_loop:
+            u = self.u
+            # summing up energy for the full simulation and defining reference energy output
+            self.annual_energy = np.sum(self.gen_log)*u.kWh
+            ref_energy    = self.SSC_dict['P_ref']*u.MW * self.SSC_dict['gross_net_conversion_factor']
+            # setting capacity factor to self and (optionally) to PySAM outputs
+            self.capacity_factor = (self.annual_energy / (ref_energy * 1*u.yr) ).to(' ')
+            
+            if log_final:
+                setattr( self.Plant.PySAM_Outputs, 'capacity_factor', self.capacity_factor )
+                setattr( self.Plant.PySAM_Outputs, 'annual_energy',   self.annual_energy )
+                
     
     def export_results(self, filename):
         """ Exports final SSC outputs to a specified Excel file
@@ -704,7 +703,17 @@ class GenericSSCModule(ABC):
         
         """
         
-        del self.Plant
-        del self.Grid
-        del self.SO
+        def safe_del(x):
+            if hasattr(self, x):
+                delattr(self, x)
+                
+        safe_del('Plant')
+        safe_del('Grid')
+        safe_del('SO')
         
+        keys = self.Log_Arrays.keys()
+        
+        for k in keys:
+            safe_del(k)
+        
+        safe_del('Log_Arrays')
