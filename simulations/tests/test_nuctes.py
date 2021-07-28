@@ -7,7 +7,10 @@ Created on Thu Apr  1 14:36:02 2021
 """
 
 from modules.NuclearTES import NuclearTES
+from dispatch.NuclearDispatch import NuclearDispatch
 import unittest
+from pyomo.util.check_units import assert_units_consistent, assert_units_equivalent, check_units_equivalent
+
 
 class TestNuclearTES(unittest.TestCase):
     """
@@ -24,7 +27,7 @@ class TestNuclearTES(unittest.TestCase):
         """
         
         # creating instance of module
-        self.nuctes = NuclearTES(json_name='tests/test_nuctes')
+        self.nuctes = NuclearTES(json_name='tests/test_nuctes', is_dispatch=True)
         self.nuctes_name = self.nuctes.__class__.__name__
         
     
@@ -56,7 +59,63 @@ class TestNuclearTES(unittest.TestCase):
             # checking that the attribute exists
             self.assertTrue(hasattr(self.nuctes,attr) ,
                             "Something went wrong when {0} called 'store_csv_arrays method, {1} does not exist".format(self.nuctes_name, attr) )
+
+
+    def test_create_dispatch_params(self):
+        """ Testing the creation of a parameter dictionary for NuclearDispatch
+        """
+        
+        attr_list = ['Ec',        # from GeneralDispatch.set_power_cycle_parameters()
+                     'P',         # from GeneralDispatch.set_time_indexed_parameters()
+                     'Cpc',       # from GeneralDispatch.set_fixed_cost_parameters()
+                     'Cnuc',      # from NuclearDispatch.set_fixed_cost_parameters()
+                     'En',        # from NuclearDispatch.set_nuclear_parameters()
+                     'Qin_nuc',   # from NuclearDispatch.set_time_series_nuclear_parameters()
+                     'y0',        # from GeneralDispatch.set_initial_state()
+                     'yn0' ]      # from NuclearDispatch.set_initial_state()
+                 
+        
+        # feigning a pyomo horizon slice
+        time_slice = slice(0,48,1)
+        
+        # create the dictionary
+        params_dict = self.nuctes.create_dispatch_params( time_slice )
+        
+        # looping through all defined attributes
+        for attr in attr_list:
             
+            # checking that the attribute exists
+            self.assertIn( attr, params_dict.keys() ,
+                            "Parameter {0} is not found in dispatch parameter dictionary for {1}".format(attr, self.nuctes_name) )
+
+
+    def test_pyomo_model_units(self):
+        """ Testing the unit consistency of NuclearDispatch model
+        """
+        
+        # feigning a pyomo horizon slice
+        time_slice = slice(0,48,1)
+        
+        # create the dictionary
+        params_dict = self.nuctes.create_dispatch_params( time_slice )
+        
+        dispatch_model = NuclearDispatch( params_dict, self.nuctes.u )
+        
+        # actual pyomo model
+        model = dispatch_model.model
+        u_pyomo = dispatch_model.u_pyomo
+        
+        # ==============================================================
+        # testing units of Objective
+        
+        assert_units_consistent( dispatch_model.model.OBJ )
+
+        # ==============================================================
+        # testing units of Constraints
+        
+        assert_units_consistent( dispatch_model.model )
+        
+
 if __name__ == "__main__":
     unittest.main()
             
