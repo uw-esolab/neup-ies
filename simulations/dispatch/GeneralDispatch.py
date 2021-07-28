@@ -55,11 +55,15 @@ class GeneralDispatch(ABC):
             unitRegistry (pint.registry) : unique unit Pint unit registry
         """
         
+        self.u_pyomo = u_pyomo
+        
         self.model = pe.ConcreteModel()
         self.generate_params(params)
         self.generate_variables()
         self.add_objective()
         self.generate_constraints()
+        
+        # assert_units_consistent(self.model)
 
 
     def generate_params(self, params):
@@ -152,18 +156,18 @@ class GeneralDispatch(ABC):
         parameters. Here we define continuous and binary variables for the 
         Power Cycle. 
         """
-        
+        u = self.u_pyomo
         ### Decision Variables ###
         #------- Variables ---------
-        self.model.ucsu = pe.Var(self.model.T, domain=pe.NonNegativeReals)                             #u^{csu}: Cycle start-up energy inventory at period $t$ [kWt$\cdot$h]
-        self.model.wdot = pe.Var(self.model.T, domain=pe.NonNegativeReals)                             #\dot{w}: Power cycle electricity generation at period $t$ [kWe]
-        self.model.wdot_delta_plus = pe.Var(self.model.T, domain=pe.NonNegativeReals)	               #\dot{w}^{\Delta+}: Power cycle ramp-up in period $t$ [kWe]
-        self.model.wdot_delta_minus = pe.Var(self.model.T, domain=pe.NonNegativeReals)	               #\dot{w}^{\Delta-}: Power cycle ramp-down in period $t$ [kWe]
-        self.model.wdot_v_plus = pe.Var(self.model.T, domain=pe.NonNegativeReals, bounds = (0,self.model.W_v_plus))      #\dot{w}^{v+}: Power cycle ramp-up beyond designed limit in period $t$ [kWe]
-        self.model.wdot_v_minus = pe.Var(self.model.T, domain=pe.NonNegativeReals, bounds = (0,self.model.W_v_minus)) 	 #\dot{w}^{v-}: Power cycle ramp-down beyond designed limit in period $t$ [kWe]
-        self.model.wdot_s = pe.Var(self.model.T, domain=pe.NonNegativeReals)	                       #\dot{w}^s: Energy sold to grid in time t [kWe]
-        self.model.wdot_p = pe.Var(self.model.T, domain=pe.NonNegativeReals)	                       #\dot{w}^p: Energy purchased from the grid in time t [kWe]
-        self.model.x = pe.Var(self.model.T, domain=pe.NonNegativeReals)                                #x: Cycle thermal power utilization at period $t$ [kWt]
+        self.model.ucsu = pe.Var(self.model.T, domain=pe.NonNegativeReals, units=u.kWh)                             #u^{csu}: Cycle start-up energy inventory at period $t$ [kWt$\cdot$h]
+        self.model.wdot = pe.Var(self.model.T, domain=pe.NonNegativeReals, units=u.kW)                              #\dot{w}: Power cycle electricity generation at period $t$ [kWe]
+        self.model.wdot_delta_plus = pe.Var(self.model.T, domain=pe.NonNegativeReals, units=u.kW)	                #\dot{w}^{\Delta+}: Power cycle ramp-up in period $t$ [kWe]
+        self.model.wdot_delta_minus = pe.Var(self.model.T, domain=pe.NonNegativeReals, units=u.kW) 	                #\dot{w}^{\Delta-}: Power cycle ramp-down in period $t$ [kWe]
+        self.model.wdot_v_plus = pe.Var(self.model.T, domain=pe.NonNegativeReals, bounds = (0,self.model.W_v_plus), units=u.kW)      #\dot{w}^{v+}: Power cycle ramp-up beyond designed limit in period $t$ [kWe]
+        self.model.wdot_v_minus = pe.Var(self.model.T, domain=pe.NonNegativeReals, bounds = (0,self.model.W_v_minus), units=u.kW) 	 #\dot{w}^{v-}: Power cycle ramp-down beyond designed limit in period $t$ [kWe]
+        self.model.wdot_s = pe.Var(self.model.T, domain=pe.NonNegativeReals, units=u.kW)	                       #\dot{w}^s: Energy sold to grid in time t [kWe]
+        self.model.wdot_p = pe.Var(self.model.T, domain=pe.NonNegativeReals, units=u.kW)	                       #\dot{w}^p: Energy purchased from the grid in time t [kWe]
+        self.model.x = pe.Var(self.model.T, domain=pe.NonNegativeReals, units=u.kW)                                #x: Cycle thermal power utilization at period $t$ [kWt]
         
         #------- Binary Variables ---------
         self.model.y = pe.Var(self.model.T, domain=pe.Binary)         #y: 1 if cycle is generating electric power at period $t$; 0 otherwise
@@ -464,10 +468,12 @@ class GeneralDispatch(ABC):
             https://www.gurobi.com/resource/mip-basics/
         
         Inputs:
-            mipgap (float) : minimum gap to find optimal solution
+            mipgap (float): 
+                minimum gap to find optimal solution
         Outputs:
-            results (SolverResults) : dictionary of solver output after optimization,
-                                      contains information on convergence, etc.
+            results (SolverResults) : 
+                dictionary of solver output after optimization, contains 
+                information on convergence, etc.
         """
         
         # define solver (Coin-or branch and cut)

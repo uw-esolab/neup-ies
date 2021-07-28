@@ -109,12 +109,13 @@ class NuclearDispatch(GeneralDispatch):
         # generating GeneralDispatch variables first (PowerCycle, etc.)
         GeneralDispatch.generate_variables(self)
         
+        u = self.u_pyomo
         ### Decision Variables ###
         #------- Variables ---------
-        self.model.s = pe.Var(self.model.T, domain=pe.NonNegativeReals, bounds = (0,self.model.Eu))    #s: TES reserve quantity at period $t$  [kWt$\cdot$h]
-        self.model.unsu = pe.Var(self.model.T, domain=pe.NonNegativeReals)     #u^{nsu}: Nuclear start-up energy inventory at period $t$ [kWt$\cdot$h]
-        self.model.xn = pe.Var(self.model.T, domain=pe.NonNegativeReals)	   #x^n: Thermal power delivered by the nuclear at period $t$ [kWt]
-        self.model.xnsu = pe.Var(self.model.T, domain=pe.NonNegativeReals)     #x^{nsu}: Nuclear start-up power consumption at period $t$ [kWt]
+        self.model.s = pe.Var(self.model.T, domain=pe.NonNegativeReals, bounds = (0,self.model.Eu), units=u.kWh)    #s: TES reserve quantity at period $t$  [kWt$\cdot$h]
+        self.model.unsu = pe.Var(self.model.T, domain=pe.NonNegativeReals, units=u.kWh)     #u^{nsu}: Nuclear start-up energy inventory at period $t$ [kWt$\cdot$h]
+        self.model.xn = pe.Var(self.model.T, domain=pe.NonNegativeReals, units=u.kW)	    #x^n: Thermal power delivered by the nuclear at period $t$ [kWt]
+        self.model.xnsu = pe.Var(self.model.T, domain=pe.NonNegativeReals, units=u.kW)      #x^{nsu}: Nuclear start-up power consumption at period $t$ [kWt]
         
         #------- Binary Variables ---------
         self.model.yn = pe.Var(self.model.T, domain=pe.Binary)        #y^r: 1 if nuclear is generating ``usable'' thermal power at period $t$; 0 otherwise
@@ -142,10 +143,10 @@ class NuclearDispatch(GeneralDispatch):
                     - (model.Ccsu*model.ycsup[t] + 0.1*model.Cchsp*model.ychsp[t] + model.alpha*model.ycsd[t])
                     #obj_cost_cycle_ramping
                     - (model.C_delta_w*(model.wdot_delta_plus[t]+model.wdot_delta_minus[t])+model.C_v_w*(model.wdot_v_plus[t] + model.wdot_v_minus[t]))
-                    #obj_cost_rec_su_hs_sd
-                    - (model.Cnuc*model.ynsup[t] + model.Cnhsp*model.ynhsp[t] + model.alpha*model.ynsd[t])
+                    #obj_cost_nuc_su_hs_sd
+                    - (model.Cnsu*model.ynsup[t] + model.Cnhsp*model.ynhsp[t] + model.alpha*model.ynsd[t])
                     #obj_cost_ops
-                    - model.Delta[t]*(model.Cpc*model.wdot[t] + model.Ccsb*model.Qb*model.ycsb[t] + model.Cnuc*model.xn[t] )
+                    - model.Delta[t]*model.Cpc*model.wdot[t] - model.Delta[t]*model.Ccsb*model.Qb*model.ycsb[t] - model.Delta[t]*model.Cnuc*model.xn[t]
                     for t in model.T) 
                     )
         
@@ -427,7 +428,10 @@ class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
         C_nuc  = self.PySAM_dict['nuc_op_cost'] * u.USD / u.MWh  # value taken from Cory @ Westinghouse, later converted to $/kWh        
         C_nsu  = self.PySAM_dict['nuc_cold_su'] * u.USD
         C_nhsp = self.PySAM_dict['nuc_hot_su'] * u.USD
-
+        
+        # original nuc_op_cost given in MWh-electric rather than MWh-thermal
+        C_nuc *= self.eta_design # eta => electric/thermal conversion
+        
         ### Cost Parameters ###
         param_dict['Cnuc']   = C_nuc.to('USD/kWh')  #C^{nuc}: Operating cost of nuclear plant [\$/kWt$\cdot$h]
         param_dict['Cnsu']   = C_nsu.to('USD')      #C^{nsu}: Penalty for nuclear cold start-up [\$/start]
