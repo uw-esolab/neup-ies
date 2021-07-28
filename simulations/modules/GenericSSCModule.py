@@ -31,9 +31,9 @@ class GenericSSCModule(ABC):
     
     NOTE: I over-use the word "module" because everything is apparently a module.
     There are three hierarchies of modules at play here:
-        - SSC modules   : these are the cmod_<name>.cpp files from the SSC repository written in C++
-        - PySAM modules : these are PySAM wrappers for the SSC modules (also Grid, Financial modules, etc.)
-        - NE2 modules   : these are Python classes that create PySAM modules (e.g., *THIS* class)
+    - SSC modules   : these are the cmod_<name>.cpp files from the SSC repository written in C++
+    - PySAM modules : these are PySAM wrappers for the SSC modules (also Grid, Financial modules, etc.)
+    - NE2 modules   : these are Python classes that create PySAM modules (e.g., *THIS* class)
     
     TODO: can we convert this to an abstract class in Python?
     
@@ -44,11 +44,16 @@ class GenericSSCModule(ABC):
                        is_dispatch=False, dispatch_time_step=1):
         """ Initializes the GenericSSCModules
         
-        Inputs:
-            plant_name (str)         : name of SSC module to run 
-            json_name (str)          : name of JSON script with input data for module
-            is_dispatch (bool)       : boolean, if True runs Pyomo dispatch optimization
-            dispatch_time_step (int) : time step for dispatch (hours)
+        Args:
+            plant_name (str): 
+                name of SSC module to run 
+            json_name (str): 
+                name of JSON script with input data for module
+            is_dispatch (bool): 
+                boolean, if True runs Pyomo dispatch optimization
+            dispatch_time_step (int): 
+                time step for dispatch (hours)
+            
         """
         
         # grab names, either default here or from child class
@@ -99,10 +104,14 @@ class GenericSSCModule(ABC):
         run through SSC. The Plant has an optional boolean input to allow the running of a full
         simulation in a segmented loop.
         
-        Inputs:
-            run_loop (bool) : if true, runs simulation in segments. else, runs simulation all at once
-            export (bool)   : if true, exports results to an Excel sheet
-            filename (str)  : name for Excel sheet saved to the /outputs directory
+        Args:
+            run_loop (bool): 
+                if true, runs simulation in segments. else, runs simulation all at once
+            export (bool): 
+                if true, exports results to an Excel sheet
+            filename (str): 
+                name for Excel sheet saved to the /outputs directory
+            
         """
         
         u = self.u
@@ -148,8 +157,10 @@ class GenericSSCModule(ABC):
         or extract the data from the named csv file and save it to as a member attribute
         of this NE2 module class.
         
-        Inputs:
-            input_dict (dict) : dictionary with csc relative filepaths
+        Args:
+            input_dict (dict): 
+                dictionary with csc relative filepaths
+            
         """
         
         # saving location of solar resource file for SSC input
@@ -165,6 +176,7 @@ class GenericSSCModule(ABC):
         sort of data structure (pointer?) from SSC inputs found in the SSC_dict
         and the specified SSC module. That data structure is then used to create
         a PySAM module for the specified SSC Plant module (TCSMolten_Salt, etc.). 
+        
         """
         
         # create plant data encoding for generic system
@@ -182,6 +194,7 @@ class GenericSSCModule(ABC):
         listed in the SSC_dict. The Grid object, however, is first created
         from the existing Plant object and then the grid-specific input data
         is added to create a wrapper for the SSC Grid module.
+        
         """
         
         # create grid data encoding for grid
@@ -202,6 +215,7 @@ class GenericSSCModule(ABC):
         object, the SingleOwner object is created first from the existing
         Plant object and then SingleOwner-specific input data is added to create
         a wrapper for the SSC SingleOwner module. 
+        
         """
         
         # create singleowner data encoding for singleowner object
@@ -233,6 +247,7 @@ class GenericSSCModule(ABC):
         The Pyomo optimization is generally conducted over a "Pyomo Horizon" longer than
         the SSC Horizon, but results are only kept for that SSC Horizon to use in the next
         simulation segment. 
+        
         """
         
         u = self.u
@@ -318,11 +333,14 @@ class GenericSSCModule(ABC):
         full, un-segmented simulations. If running in segments, it stores outputs
         to member attributes of this NE2 module.
         
-        Inputs:
-            start_hr (float Quant) : starting time for next simulation (hours)
-            end_hr (float Quant)   : ending time for next simulation (hours)
+        Args:
+            start_hr (float Quant): 
+                starting time for next simulation (hours)
+            end_hr (float Quant): 
+                ending time for next simulation (hours)
+            
         """
-        
+
         
         i_start = int( start_hr.to('hr').m )
         i_end   = int( end_hr.to('hr').m )
@@ -344,14 +362,17 @@ class GenericSSCModule(ABC):
     def run_pyomo(self, params):
         """ Running Pyomo dispatch optimization
         
-        ** self.is_dispatch == True
+        Note:
+            self.is_dispatch == True
         
         This method strictly runs the Pyomo optimization before execution of an
         SSC segment. It creates a new Dispatch model for the segment, solves it,
         then returns results. Results are stored in a dictionary. 
         
-        Inputs:
-            params (dict) : dictionary of Pyomo dispatch parameters
+        Args:
+            params (dict): 
+                dictionary of Pyomo dispatch parameters
+            
         """
         
         # Creation of Dispatch model (could be overloaded)
@@ -377,13 +398,15 @@ class GenericSSCModule(ABC):
     def update_Plant_after_SSC(self):
         """ Update SSC Plant inputs with SSC outputs from previous segment simulation
         
-        ** self.run_loop == True
+        Note:
+            self.run_loop == True
         
         This method uses the SSC end results from the previous simulation segment
         and sets them as the initial conditions for the next SSC segment. As a 
         small note: some outputs are arrays that span the full year, however the
         only relevant parts are the first indeces corresponding to the SSC Horizon.
         All other values are typically 0. 
+        
         """
         
         self.Plant.SystemControl.rec_op_mode_initial              = self.Plant.Outputs.rec_op_mode_final
@@ -400,19 +423,23 @@ class GenericSSCModule(ABC):
     def update_Pyomo_after_SSC(self, params, current_pyomo_slice):
         """ Update Pyomo inputs with SSC outputs from previous segment simulation
         
-        ** self.run_loop    == True
-        ** self.is_dispatch == True 
+        Note:
+            self.run_loop    == True
+            self.is_dispatch == True 
                           
         This method uses the SSC end results from the previous simulation segment
         and uses them to update the existing Dispatch parameter dictionary that
         is ultimately sent to Pyomo. Essentially just updates the initial conditions
         of the Dispatch parameter dictionary. 
         
-        Inputs:
-            params (dict)               : dictionary of Pyomo dispatch parameters
-            current_pyomo_slice (slice) : range of current pyomo horizon (ints representing hours)
-        Outputs:
-            params (dict) : updated dictionary of Pyomo dispatch parameters
+        Args:
+            params (dict): 
+                dictionary of Pyomo dispatch parameters
+            current_pyomo_slice (slice): 
+                range of current pyomo horizon (ints representing hours)
+        Returns:
+            params (dict): 
+                updated dictionary of Pyomo dispatch parameters
         """
         return params
         
@@ -420,18 +447,20 @@ class GenericSSCModule(ABC):
     def update_Plant_after_Pyomo(self):
         """ Update SSC Plant inputs with Pyomo optimization outputs from current segment simulation
 
-        ** self.run_loop    == True (can be called outside loop)
-        ** self.is_dispatch == True 
+        Note:
+            self.run_loop    == True (can be called outside loop)
+            self.is_dispatch == True 
         
         This method uses the optimization results from Pyomo and ensures that 
         the next SSC segment uses them throughout the corresponding SSC Horizon.
         SSC normally takes single values for initial conditions (for the first hour
         of the SSC Horizon), but it can also take in an array of values for each
         step in the SSC Horizon. These are called "dispatch_targets". Steps are:
-            (1) extract solutions from Pyomo over the Pyomo Horizon, 
-            (2) keep the solutions for the shorter SSC Horizon and 
-            (3) save these "dispatch target" inputs to the Plant object for the 
-                   next SSC simulation segment. 
+        (1) extract solutions from Pyomo over the Pyomo Horizon, 
+        (2) keep the solutions for the shorter SSC Horizon and 
+        (3) save these "dispatch target" inputs to the Plant object for the 
+        next SSC simulation segment. 
+                   
         """
         
         # number of times in full simulation 
@@ -462,8 +491,9 @@ class GenericSSCModule(ABC):
     def create_dispatch_wrapper(self, PySAM_dict):
         """ Creating a wrapper object for calling a class that creates dispatch parameters
         
-        ** self.is_dispatch == True 
-        (Called in __init__ of NE2 module)
+        Note:
+            self.is_dispatch == True 
+            (Called in __init__ of NE2 module)
         
         This method creates an object whose class ultimately calculates and creates 
         parameters for Dispatch optimization. The reason this class exists separately
@@ -471,10 +501,13 @@ class GenericSSCModule(ABC):
         the PySAM module, this method calls on a different Dispatch Parameter class that 
         is specific to the module.
 
-        Inputs:
-            PySAM_dict (dict)   : dictionary of PySAM inputs from a script in /json directory
-        Outputs:
-            dispatch_wrap (obj) : wrapper object for the class that creates dispatch parameters
+        Args:
+            PySAM_dict (dict): 
+                dictionary of PySAM inputs from a script in /json directory
+        Returns:
+            dispatch_wrap (obj): 
+                wrapper object for the class that creates dispatch parameters
+                
         """
         
         self.DispatchParameterClass = GDP
@@ -488,18 +521,22 @@ class GenericSSCModule(ABC):
     def create_dispatch_params(self, current_pyomo_slice):
         """ Populating a dictionary with dispatch parameters before optimization
         
-        ** self.is_dispatch == True 
-        (Called within simulation)
+        Note:
+            self.is_dispatch == True 
+            (Called within simulation)
         
         This method is creates the Dispatch Parameter dictionary that will be 
         populated with static inputs from SSC_dict as well as initial conditions
         for Dispatch optimization. The initial conditions are continuously updated
         if simulation is segmented.
 
-        Inputs:
-            current_pyomo_slice (slice) : range of current pyomo horizon (ints representing hours)
-        Outputs:
-            dispatch_wrap (obj) : wrapper object for the class that creates dispatch parameters
+        Args:
+            current_pyomo_slice (slice): 
+                range of current pyomo horizon (ints representing hours)
+        Returns:
+            dispatch_wrap (obj): 
+                wrapper object for the class that creates dispatch parameters
+                
         """
         
         params = {}
@@ -518,6 +555,7 @@ class GenericSSCModule(ABC):
         
         This method creates empty arrays where SSC outputs will be written to.
         Also creates a list of str names for logged simulation outputs.
+        
         """
         
         u = self.u
@@ -572,10 +610,10 @@ class GenericSSCModule(ABC):
         member class gets a "dummy" subclass made from an empty lambda function but works as a
         class with attributes saved to it. 
         
-        Inputs:
-            i_start (int)    : starting index for current segment slice
-            i_end (int)      : ending index for current segment slice
-            log_final (bool) : if true, save full outputs to Plant. else, log to member arrays of Plant
+        Args:
+            log_final (bool): 
+                if true, save full outputs to Plant. else, log to member arrays of Plant
+                
         """
 
         # wanted to create a quick subclass that where I can extract things during PostProcessing steps
@@ -613,8 +651,9 @@ class GenericSSCModule(ABC):
         This method creates an .xlsx file with SSC output data from the full simulation.
         Outputs are specified by keywords in the JSON script supplied by the user. 
         
-        Inputs:
-            filename (str) : name of xlsx file to save results to within /output directory
+        Args:
+            filename (str): 
+                name of xlsx file to save results to within /output directory
         """
         
         # empty lists
@@ -662,6 +701,7 @@ class GenericSSCModule(ABC):
         This method resets all PySAM wrappers, deleting them from this NE2 class.
         Primarily done for unit testing, but could also have use if running 
         simulations in parallel. 
+        
         """
         
         del self.Plant
