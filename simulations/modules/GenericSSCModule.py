@@ -17,6 +17,7 @@ from util.SSCHelperMethods import SSCHelperMethods
 from dispatch.GeneralDispatch import GeneralDispatch as GD
 from dispatch.GeneralDispatch import GeneralDispatchParamWrap as GDP
 from dispatch.GeneralDispatch import GeneralDispatchOutputs as GDO
+from tqdm import tqdm
 import numpy as np
 import copy
 from abc import ABC, abstractmethod
@@ -274,12 +275,21 @@ class GenericSSCModule(ABC):
         self.run_Plant_through_SSC( time_start , time_next )
         self.log_SSC_arrays()
         
+        # setting up iterable time to cycle thorugh in for loop
+        p_time_next = int(np.round(time_next.to('d').m) )
+        p_time_end  = int(np.round(time_end.to('d').m) )
+        remaining_sim_time = range(p_time_next, p_time_end) if self.run_loop else range(0)
+        
         # this loop should only be entered if run_loop == True
-        while (time_next < time_end):
-            
+        for t in tqdm(remaining_sim_time):
+        
             # update time
             time_start += self.ssc_horizon.to('s')
             time_next  += self.ssc_horizon.to('s')
+            
+            # make sure we don't go over-time
+            if time_next > time_end:
+                time_next = time_end
             
             # update the current slice of SSC Horizon relative to full simulation
             self.slice_ssc_currentH = slice( int( time_start.to('hr').m ), 
@@ -287,10 +297,6 @@ class GenericSSCModule(ABC):
             # update the current slice of Pyomo Horizon relative to full simulation
             self.slice_pyo_currentH = slice( int( time_start.to('hr').m ), 
                                              int( (time_start + self.pyomo_horizon).to('hr').m  ), 1)  
-            
-            # time-printer
-            print_time = int(time_next.to('d').magnitude)
-            if not print_time % 10: print('   [%s / %s] completed.' % (print_time, np.round(time_end.to('d').m)) )
             
             # update: SSC(t) -> Plant(t+1)
             self.update_Plant_after_SSC( )
@@ -311,7 +317,7 @@ class GenericSSCModule(ABC):
             self.run_Plant_through_SSC( time_start, time_next )
             self.log_SSC_arrays()
         
-        print(' Plant Simulation successfully completed.')
+        print('\n Plant Simulation successfully completed.')
         
         
     def run_Plant_through_SSC(self, start_hr, end_hr):
@@ -600,6 +606,7 @@ class GenericSSCModule(ABC):
         
         # ==========================================================================
         # wanted to create a quick subclass that where I can extract things during PostProcessing steps
+        
         if log_final:
             # don't try this at home...
             self.Plant.PySAM_Outputs = lambda: None
@@ -631,6 +638,7 @@ class GenericSSCModule(ABC):
         
         # ==========================================================================
         # updating capacity factor if logging final OR running non-loop
+        
         if log_final or not self.run_loop:
             u = self.u
             # summing up energy for the full simulation and defining reference energy output
