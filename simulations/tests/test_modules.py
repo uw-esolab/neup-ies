@@ -141,6 +141,7 @@ class TestPySAMModules(unittest.TestCase):
         # looping through all modules
         for mod in self.mod_list:
             
+            # ======================================
             #---run full simulation for entire year
             mod.run_sim(run_loop=False)
             
@@ -159,7 +160,7 @@ class TestPySAMModules(unittest.TestCase):
                 self.assertTrue(hasattr(mod.SO.Outputs, s_attr) ,
                                 "{0} SO doesn't have Output {1}".format(mod.__class__.__name__ , s_attr) )
             
-
+            # ======================================
             #---run looped-simulation 
             # store results from full simulation
             annual_energy   = mod.Grid.SystemOutput.annual_energy
@@ -168,13 +169,119 @@ class TestPySAMModules(unittest.TestCase):
             # reset submodules
             mod.reset_all()
             
+            # ======================================
             #---run simulation in a loop
             mod.run_sim(run_loop=True)
             
             # check that results are in the same ballpark
-            self.assertTrue( math.isclose (mod.Grid.SystemOutput.annual_energy, annual_energy, rel_tol=1e-2) )
-            self.assertTrue( math.isclose (mod.SO.Outputs.ppa, ppa  , rel_tol=1e-2) )
+            self.assertTrue( math.isclose (mod.Grid.SystemOutput.annual_energy, annual_energy, rel_tol=1e-2) , 
+                             "Plant and Grid outputs are not within tolerance.")
+            self.assertTrue( math.isclose (mod.SO.Outputs.ppa, ppa  , rel_tol=1e-2) , 
+                             "Grid and SingleOwner outputs are not within tolerance.")
     
+    
+    def test_simulate_Plant(self):
+        """ Testing the simulate_Plant method
+        
+        Here we test the basic functionality of simulate Plant
+        """
+
+        # looping through all modules
+        for mod in self.mod_list:
+            
+            # =====================================================
+            #---first test what happens when not running in loop
+            mod.create_Plant( )
+            mod.run_loop = False
+            
+            # simulate Plant
+            mod.simulate_Plant( )
+            
+            # assert that sizing of time arrays are consistent
+            t_ind     = mod.t_ind * mod.u.hr
+            time_stop = mod.SSC_dict['time_stop'] * mod.u.s
+            self.assertTrue( t_ind == time_stop.to('hr') , "Time index not set to time_stop when running full sim time." )
+            
+            # reset submodules
+            del mod.Plant
+            
+            # =====================================================
+            #---next test what happens when running in loop
+            mod.create_Plant( )
+            mod.run_loop = True
+            
+            # simulate Plant
+            mod.simulate_Plant( )
+            
+            # assert that sizing of time arrays are consistent
+            t_ind     = mod.t_ind * mod.u.hr
+            time_stop = mod.ssc_horizon.to('s') 
+            self.assertTrue( t_ind.to('s') == time_stop , "Time index not set to SSC Horizon time when running sim in loop." )
+
+
+    def test_initialize_arrays(self):
+        """ Testing the initialize_arrays method
+        """
+
+        # looping through all modules
+        for mod in self.mod_list:
+            
+            # run the method
+            mod.initialize_arrays()
+            
+            # assert that a Log dictionary was created
+            self.assertTrue( hasattr(mod, 'Log_Arrays') , 
+                            "Log_Arrays dictionary not created in {0} module.".format(mod.__class__.__name__ ) )
+
+            keys = mod.Log_Arrays.keys()
+            
+            for k in keys:
+                self.assertTrue( hasattr(mod, k) , 
+                                "{0} Plant doesn't have Output {1}".format(mod.__class__.__name__ , k) )
+    
+
+    def test_reset_all(self):
+        """ Testing the reset_all method
+        """
+        
+        # looping through all modules
+        for mod in self.mod_list:
+            
+            # create PySAM modules
+            mod.create_Plant()
+            mod.create_Grid()
+            mod.create_SO()
+            
+            # run the method
+            mod.reset_all()
+            
+            # check that method worked
+            self.assertFalse( hasattr(mod,"Plant") ,
+                             "Plant not deleted in {0} module.".format(mod.__class__.__name__ ) )
+            self.assertFalse( hasattr(mod,"Grid") ,
+                             "Grid not deleted in {0} module.".format(mod.__class__.__name__ ) )
+            self.assertFalse( hasattr(mod,"SO") ,
+                             "SO not deleted in {0} module.".format(mod.__class__.__name__ ) )
+            
+            
+    # def test_log_SSC_arrays(self):
+    #     """ Testing the log_SSC_arrays method
+        
+    #     Here we test both instances of the method call, during simulations and
+    #     during the last simulation segment. 
+    #     """
+        
+    #     # looping through all modules
+    #     for mod in self.mod_list:
+                
+    #         # =====================================================
+    #         #---first, test that the method isn't called when run_loop is False
+    #         mod.run_sim(run_loop=False)
+
+    #         # assert that a Log dictionary was created
+    #         self.assertTrue( hasattr(mod, 'Log_Arrays') , 
+    #                         "Log_Arrays dictionary not created in {0} module.".format(mod.__class__.__name__ ) )
+
         
 if __name__ == "__main__":
     unittest.main()
