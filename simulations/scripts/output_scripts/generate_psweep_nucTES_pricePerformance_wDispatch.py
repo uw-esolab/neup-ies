@@ -23,13 +23,13 @@ print("PID = ", pid)
 # =============================================================================
 
 # setting up arrays to cycle through
-dispatch  = np.array([ True, True, False ])
-tshours   = np.array([ 10, 12, 14, 16, 18])
-p_mult    = np.array([ 1.05, 1.15, 1.25, 1.35, 1.45])
+dispatch  = np.array([ True, False ])
+tshours   = np.array([ 6, 9, 12, 15])
+p_mult    = np.array([ 500, 550, 600, 650, 700, 750, 800, 850, 900, 950, 1000])
 
 # SSC and dispatch horizons for each dispatch element above ^
-sscH = np.array([12, 24, 24])
-pyoH = np.array([24, 48, 48])
+sscH = np.array([24, 24])
+pyoH = np.array([48, 48])
 
 # baseline cycle power output
 P_ref = 465
@@ -81,7 +81,7 @@ for d,dp in enumerate(dispatch): #over dispatch type
             nuctes.dispatch_wrap = nuctes.create_dispatch_wrapper( nuctes.PySAM_dict )
             
             # update SSC dictionary parameters
-            nuctes.SSC_dict['P_ref'] = fm*P_ref
+            nuctes.SSC_dict['P_ref'] = fm
             nuctes.SSC_dict['tshours'] = th
             
             # update target IRR, nominal was 11% for CSP
@@ -155,7 +155,7 @@ Storage['simple_revenue']      = simple_revenue
 
 # locating output directory
 output_dir = FileMethods.output_dir
-filename   = 'pricePerfvsDispatch_sizingTESandCycle_irr11pct_simplerevenue.nuctes' 
+filename   = 'pricePerfvsDispatch_TES_6_15__Pref_500_1000_irr11pct.nuctes' 
 NTPath = os.path.join(output_dir, filename)
 
 # pickling
