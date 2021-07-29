@@ -185,8 +185,7 @@ class NuclearDispatch(GeneralDispatch):
             return model.xnsu[t] <= model.Qnu*model.ynsu[t]
         def nontrivial_solar_rule(model,t):
             """ NP trivial power prevents startup """
-            u = self.u_pyomo
-            return model.ynsu[t] <= model.Qin_nuc[t] / (1*u.kW)
+            return model.ynsu[t] <= model.Qin_nuc[t] / model.Qnl
         
         self.model.nuc_inventory_con = pe.Constraint(self.model.T,rule=nuc_inventory_rule)
         self.model.nuc_inv_nonzero_con = pe.Constraint(self.model.T,rule=nuc_inv_nonzero_rule)
@@ -205,19 +204,16 @@ class NuclearDispatch(GeneralDispatch):
         """
         def nuc_production_rule(model,t):
             """ Upper bound on thermal energy produced by NP """
-            u = self.u_pyomo
-            return model.xn[t] + model.xnsu[t] + model.Qnsd*model.ynsd[t]/(1*u.hr) <= model.Qin_nuc[t]
+            return model.xn[t] + model.xnsu[t] + model.Qnsd*model.ynsd[t] <= model.Qin_nuc[t]
         def nuc_generation_rule(model,t):
             """ Thermal energy production by NP only when operating """
             return model.xn[t] <= model.Qin_nuc[t] * model.yn[t]
         def min_generation_rule(model,t):
             """ Lower bound on thermal energy produced by NP """
-            u = self.u_pyomo
-            return model.xn[t] >= model.Qnl/(1*u.hr) * model.yn[t]
+            return model.xn[t] >= model.Qnl * model.yn[t]
         def nuc_gen_persist_rule(model,t):
             """ NP not able to operate if no thermal power (adapted from CSP) """
-            u = self.u_pyomo
-            return model.yn[t] <= model.Qin_nuc[t]/model.Qnl * (1*u.hr)
+            return model.yn[t] <= model.Qin_nuc[t] / model.Qnl 
         
         self.model.nuc_production_con = pe.Constraint(self.model.T,rule=nuc_production_rule)
         self.model.nuc_generation_con = pe.Constraint(self.model.T,rule=nuc_generation_rule)
@@ -286,10 +282,9 @@ class NuclearDispatch(GeneralDispatch):
         """
         def tes_balance_rule(model, t):
             """ Balance of energy to and from TES """
-            u = self.u_pyomo
             if t == 1:
-                return model.s[t] - model.s0 == model.Delta[t] * (model.xn[t] - (model.Qc[t]*model.ycsu[t] + model.Qb*model.ycsb[t] + model.x[t] + model.Qnsb*model.ynsb[t]/(1*u.hr)))
-            return model.s[t] - model.s[t-1] == model.Delta[t] * (model.xn[t] - (model.Qc[t]*model.ycsu[t] + model.Qb*model.ycsb[t] + model.x[t] + model.Qnsb*model.ynsb[t]/(1*u.hr)))
+                return model.s[t] - model.s0 == model.Delta[t] * (model.xn[t] - (model.Qc[t]*model.ycsu[t] + model.Qb*model.ycsb[t] + model.x[t] + model.Qnsb*model.ynsb[t]))
+            return model.s[t] - model.s[t-1] == model.Delta[t] * (model.xn[t] - (model.Qc[t]*model.ycsu[t] + model.Qb*model.ycsb[t] + model.x[t] + model.Qnsb*model.ynsb[t]))
         def tes_upper_rule(model, t):
             """ Upper bound to TES charge state """
             return model.s[t] <= model.Eu
@@ -320,10 +315,9 @@ class NuclearDispatch(GeneralDispatch):
         """
         def grid_sun_rule(model, t):
             """ Balance of power flow, i.e. sold vs purchased """
-            u = self.u_pyomo
             return (
                     model.wdot_s[t] - model.wdot_p[t] == (1-model.etac[t])*model.wdot[t]
-                		- model.Ln*(model.xn[t] + model.xnsu[t] + model.Qnl*model.ynsb[t]/(1*u.hr))
+                		- model.Ln*(model.xn[t] + model.xnsu[t] + model.Qnl*model.ynsb[t])
                 		- model.Lc*model.x[t] 
                         - model.Wb*model.ycsb[t] - model.Wnht*(model.ynsb[t]+model.ynsu[t])		#Is Wrsb energy [kWh] or power [kW]?  [az] Wrsb = Wht in the math?
             )
@@ -461,19 +455,18 @@ class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
         # grabbing unit registry set up in GeneralDispatch
         u = self.u 
         
-        time_fix = 1*u.hr                  # TODO: we're missing a time term to fix units
         dw_rec_pump             = self.PySAM_dict['dw_nuc_pump']*u.MW   # TODO: Pumping parasitic at design point reciever mass flow rate (MWe)
         tower_piping_ht_loss    = self.PySAM_dict['nuc_piping_ht_loss']*u.kW   # TODO: Tower piping heat trace full-load parasitic load (kWe) 
         q_nuc_standby_fraction  = self.PySAM_dict['q_nuc_standby_frac']        # TODO: Nuclear standby energy consumption (fraction of design point thermal power)
         q_nuc_shutdown_fraction = self.PySAM_dict['q_nuc_shutdown_frac']       # TODO: Nuclear shutdown energy consumption (fraction of design point thermal power)
         
         self.deltanl = self.SSC_dict['rec_su_delay']*u.hr
-        self.En     = self.SSC_dict['rec_qf_delay'] * self.q_nuc_design * time_fix
+        self.En     = (self.SSC_dict['rec_qf_delay'] * u.kWh / u.kW ) * self.q_nuc_design 
         self.Eu     = self.SSC_dict['tshours']*u.hr * self.q_pb_design
         self.Ln     = dw_rec_pump / self.q_nuc_design
-        self.Qnl    = self.SSC_dict['f_rec_min'] * self.q_nuc_design * time_fix
-        self.Qnsb   = q_nuc_standby_fraction  * self.q_nuc_design * time_fix
-        self.Qnsd   = q_nuc_shutdown_fraction * self.q_nuc_design * time_fix
+        self.Qnl    = self.SSC_dict['f_rec_min'] * self.q_nuc_design 
+        self.Qnsb   = q_nuc_standby_fraction  * self.q_nuc_design 
+        self.Qnsd   = q_nuc_shutdown_fraction * self.q_nuc_design 
         self.Qnu    = self.En / self.deltanl  
         self.Wnht    = tower_piping_ht_loss
         
@@ -482,9 +475,9 @@ class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
         param_dict['En']     = self.En.to('kWh')       #E^n: Required energy expended to start nuclear plant [kWt$\cdot$h]
         param_dict['Eu']     = self.Eu.to('kWh')       #E^u: Thermal energy storage capacity [kWt$\cdot$h]
         param_dict['Ln']     = self.Ln.to('')          #L^n: Nuclear pumping power per unit power produced [kWe/kWt]
-        param_dict['Qnl']    = self.Qnl.to('kWh')      #Q^{nl}: Minimum operational thermal power delivered by nuclear [kWt$\cdot$h]
-        param_dict['Qnsb']   = self.Qnsb.to('kWh')     #Q^{nsb}: Required thermal power for nuclear standby [kWt$\cdot$h]
-        param_dict['Qnsd']   = self.Qnsd.to('kWh')     #Q^{nsd}: Required thermal power for nuclear shut down [kWt$\cdot$h] 
+        param_dict['Qnl']    = self.Qnl.to('kW')      #Q^{nl}: Minimum operational thermal power delivered by nuclear [kWt$\cdot$h]
+        param_dict['Qnsb']   = self.Qnsb.to('kW')     #Q^{nsb}: Required thermal power for nuclear standby [kWt$\cdot$h]
+        param_dict['Qnsd']   = self.Qnsd.to('kW')     #Q^{nsd}: Required thermal power for nuclear shut down [kWt$\cdot$h] 
         param_dict['Qnu']    = self.Qnu.to('kW')       #Q^{nu}: Allowable power per period for nuclear start-up [kWt$\cdot$h]
         param_dict['Wnht']   = self.Wnht.to('kW')      #W^{nht}: Nuclear piping heat trace parasitic loss [kWe]
         

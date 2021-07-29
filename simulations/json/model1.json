@@ -1,7 +1,7 @@
 {
     "PySAM_inputs": {
         "ssc_lib":                   "build_ssc/ssc/libssc.so",
-        "solar_resource_rel_parent": "sam/deploy/solar_resource/tucson_az_32.116521_-110.933042_psmv3_60_tmy.csv",
+        "solar_resource_rel_parent": "sam/deploy/solar_resource/phoenix_az_33.450495_-111.983688_psmv3_60_tmy.csv",
         "dispatch_factors_file":     "data/dispatch_factors_ts.csv",
         "ud_file":                   "data/ud_ind_od.csv",
         "wlim_file":                 "data/wlim_series.csv",
