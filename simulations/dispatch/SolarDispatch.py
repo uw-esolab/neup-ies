@@ -112,12 +112,13 @@ class SolarDispatch(GeneralDispatch):
         # generating GeneralDispatch variables first (PowerCycle, etc.)
         GeneralDispatch.generate_variables(self)
         
+        u = self.u_pyomo
         ### Decision Variables ###
         #------- Variables ---------
-        self.model.s = pe.Var(self.model.T, domain=pe.NonNegativeReals, bounds = (0,self.model.Eu))    #s: TES reserve quantity at period $t$  [kWt$\cdot$h]
-        self.model.ursu = pe.Var(self.model.T, domain=pe.NonNegativeReals)     #u^{rsu}: Receiver start-up energy inventory at period $t$ [kWt$\cdot$h]
-        self.model.xr = pe.Var(self.model.T, domain=pe.NonNegativeReals)       #x^r: Thermal power delivered by the receiver at period $t$ [kWt]
-        self.model.xrsu = pe.Var(self.model.T, domain=pe.NonNegativeReals)     #x^{rsu}: Receiver start-up power consumption at period $t$ [kWt]
+        self.model.s = pe.Var(self.model.T, domain=pe.NonNegativeReals, bounds = (0,self.model.Eu), units=u.kWh)    #s: TES reserve quantity at period $t$  [kWt$\cdot$h]
+        self.model.ursu = pe.Var(self.model.T, domain=pe.NonNegativeReals, units=u.kWh)     #u^{rsu}: Receiver start-up energy inventory at period $t$ [kWt$\cdot$h]
+        self.model.xr = pe.Var(self.model.T, domain=pe.NonNegativeReals, units=u.kW)       #x^r: Thermal power delivered by the receiver at period $t$ [kWt]
+        self.model.xrsu = pe.Var(self.model.T, domain=pe.NonNegativeReals, units=u.kW)     #x^{rsu}: Receiver start-up power consumption at period $t$ [kWt]
         
         #------- Binary Variables ---------
         self.model.yr = pe.Var(self.model.T, domain=pe.Binary)        #y^r: 1 if receiver is generating ``usable'' thermal power at period $t$; 0 otherwise
@@ -184,7 +185,7 @@ class SolarDispatch(GeneralDispatch):
             return model.xrsu[t] <= model.Qru*model.yrsu[t]
         def nontrivial_solar_rule(model,t):
             """ CSP trivial power prevents startup """
-            return model.yrsu[t] <= model.Qin[t]
+            return model.yrsu[t] <= model.Qin[t]/model.Qrl
         
         self.model.rec_inventory_con = pe.Constraint(self.model.T,rule=rec_inventory_rule)
         self.model.rec_inv_nonzero_con = pe.Constraint(self.model.T,rule=rec_inv_nonzero_rule)
@@ -210,7 +211,7 @@ class SolarDispatch(GeneralDispatch):
             """ Lower bound on thermal energy produced by NP """
             return model.xr[t] >= model.Qrl * model.yr[t]
         def rec_gen_persist_rule(model,t):
-            """ NP not able to operate if no thermal power (adapted from CSP) """
+            """ CSP not able to operate if no thermal power  """
             return model.yr[t] <= model.Qin[t]/model.Qrl
         
         self.model.rec_production_con = pe.Constraint(self.model.T,rule=rec_production_rule)
@@ -454,21 +455,20 @@ class SolarDispatchParamWrap(GeneralDispatchParamWrap):
         
         # pumpimg parasitics for receiver
         wdot = SSCHelperMethods.estimate_receiver_pumping_parasitic(u, self.T_htf_avg, self.dm_rec_design, self.SSC_dict)
-        
-        time_fix = 1*u.hr         # TODO: we're missing a time term to fix units
         wdot     = wdot.to('MW')  
+        
         tower_piping_ht_loss    = self.PySAM_dict['tower_piping_ht_loss']*u.kW   # TODO: Tower piping heat trace full-load parasitic load (kWe) 
-        q_rec_standby_fraction  = self.PySAM_dict['q_rec_standby_frac']        # TODO: check this is correct
-        q_rec_shutdown_fraction = self.PySAM_dict['q_rec_shutdown_frac']       # TODO: check this is correct
+        q_rec_standby_fraction  = self.PySAM_dict['q_rec_standby_frac']        
+        q_rec_shutdown_fraction = self.PySAM_dict['q_rec_shutdown_frac']      
         
         self.deltal = self.SSC_dict['rec_su_delay']*u.hr
         self.Ehs    = self.SSC_dict['p_start']*u.kWh
-        self.Er     = self.SSC_dict['rec_qf_delay'] * self.q_rec_design * time_fix
+        self.Er     = (self.SSC_dict['rec_qf_delay'] * u.kWh / u.kW ) * self.q_rec_design 
         self.Eu     = self.SSC_dict['tshours']*u.hr * self.q_pb_design
         self.Lr     = wdot / self.q_rec_design
-        self.Qrl    = self.SSC_dict['f_rec_min'] * self.q_rec_design * time_fix
-        self.Qrsb   = q_rec_standby_fraction  * self.q_rec_design * time_fix
-        self.Qrsd   = q_rec_shutdown_fraction * self.q_rec_design * time_fix
+        self.Qrl    = self.SSC_dict['f_rec_min'] * self.q_rec_design 
+        self.Qrsb   = q_rec_standby_fraction  * self.q_rec_design 
+        self.Qrsd   = q_rec_shutdown_fraction * self.q_rec_design
         self.Qru    = self.Er / self.deltal  
         self.Wh     = self.SSC_dict['p_track']*u.kW
         self.Wht   = tower_piping_ht_loss
@@ -479,9 +479,9 @@ class SolarDispatchParamWrap(GeneralDispatchParamWrap):
         param_dict['Er']     = self.Er.to('kWh')       #E^r: Required energy expended to start receiver [kWt$\cdot$h]
         param_dict['Eu']     = self.Eu.to('kWh')       #E^u: Thermal energy storage capacity [kWt$\cdot$h]
         param_dict['Lr']     = self.Lr.to('')          #L^r: Receiver pumping power per unit power produced [kWe/kWt]
-        param_dict['Qrl']    = self.Qrl.to('kWh')      #Q^{rl}: Minimum operational thermal power delivered by receiver [kWt$\cdot$h]
-        param_dict['Qrsb']   = self.Qrsb.to('kWh')     #Q^{rsb}: Required thermal power for receiver standby [kWt$\cdot$h]
-        param_dict['Qrsd']   = self.Qrsd.to('kWh')     #Q^{rsd}: Required thermal power for receiver shut down [kWt$\cdot$h] 
+        param_dict['Qrl']    = self.Qrl.to('kW')      #Q^{rl}: Minimum operational thermal power delivered by receiver [kWt$\cdot$h]
+        param_dict['Qrsb']   = self.Qrsb.to('kW')     #Q^{rsb}: Required thermal power for receiver standby [kWt$\cdot$h]
+        param_dict['Qrsd']   = self.Qrsd.to('kW')     #Q^{rsd}: Required thermal power for receiver shut down [kWt$\cdot$h] 
         param_dict['Qru']    = self.Qru.to('kW')       #Q^{ru}: Allowable power per period for receiver start-up [kWt$\cdot$h]
         param_dict['Wh']     = self.Wh.to('kW')        #W^h: Heliostat field tracking parasitic loss [kWe]
         param_dict['Wht']    = self.Wht.to('kW')      #W^{ht}: Tower piping heat trace parasitic loss [kWe]
