@@ -185,7 +185,8 @@ class NuclearDispatch(GeneralDispatch):
             return model.xnsu[t] <= model.Qnu*model.ynsu[t]
         def nontrivial_solar_rule(model,t):
             """ NP trivial power prevents startup """
-            return model.ynsu[t] <= model.Qin_nuc[t]
+            u = self.u_pyomo
+            return model.ynsu[t] <= model.Qin_nuc[t] / (1*u.kW)
         
         self.model.nuc_inventory_con = pe.Constraint(self.model.T,rule=nuc_inventory_rule)
         self.model.nuc_inv_nonzero_con = pe.Constraint(self.model.T,rule=nuc_inv_nonzero_rule)
@@ -215,7 +216,8 @@ class NuclearDispatch(GeneralDispatch):
             return model.xn[t] >= model.Qnl/(1*u.hr) * model.yn[t]
         def nuc_gen_persist_rule(model,t):
             """ NP not able to operate if no thermal power (adapted from CSP) """
-            return model.yn[t] <= model.Qin_nuc[t]/model.Qnl
+            u = self.u_pyomo
+            return model.yn[t] <= model.Qin_nuc[t]/model.Qnl * (1*u.hr)
         
         self.model.nuc_production_con = pe.Constraint(self.model.T,rule=nuc_production_rule)
         self.model.nuc_generation_con = pe.Constraint(self.model.T,rule=nuc_generation_rule)
@@ -284,9 +286,10 @@ class NuclearDispatch(GeneralDispatch):
         """
         def tes_balance_rule(model, t):
             """ Balance of energy to and from TES """
+            u = self.u_pyomo
             if t == 1:
-                return model.s[t] - model.s0 == model.Delta[t] * (model.xn[t] - (model.Qc[t]*model.ycsu[t] + model.Qb*model.ycsb[t] + model.x[t] + model.Qnsb*model.ynsb[t]))
-            return model.s[t] - model.s[t-1] == model.Delta[t] * (model.xn[t] - (model.Qc[t]*model.ycsu[t] + model.Qb*model.ycsb[t] + model.x[t] + model.Qnsb*model.ynsb[t]))
+                return model.s[t] - model.s0 == model.Delta[t] * (model.xn[t] - (model.Qc[t]*model.ycsu[t] + model.Qb*model.ycsb[t] + model.x[t] + model.Qnsb*model.ynsb[t]/(1*u.hr)))
+            return model.s[t] - model.s[t-1] == model.Delta[t] * (model.xn[t] - (model.Qc[t]*model.ycsu[t] + model.Qb*model.ycsb[t] + model.x[t] + model.Qnsb*model.ynsb[t]/(1*u.hr)))
         def tes_upper_rule(model, t):
             """ Upper bound to TES charge state """
             return model.s[t] <= model.Eu
