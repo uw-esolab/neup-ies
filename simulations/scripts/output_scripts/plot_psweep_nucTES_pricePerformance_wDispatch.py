@@ -27,7 +27,7 @@ print("PID = ", pid)
 
 # locating output directory
 output_dir = FileMethods.output_dir
-filename   = 'pricePerfvsDispatch_sizingTESandCycle_irr11pct_simplerevenue.nuctes' 
+filename   = 'pricePerfvsDispatch_TES_6_15__Pref_500_1000_irr11pct.nuctes' 
 NTPath = os.path.join(output_dir, filename)
 
 # pickling
@@ -62,31 +62,30 @@ def print_string_header(header):
     print("=====================================================\n")
 
 # creating figure
-fig = plt.figure(figsize=[18.5,6])
+fig = plt.figure(figsize=[13,6])
 fig.suptitle("IRR: {0:.1f}".format(irr_mean), fontsize=14, fontweight='bold')
-ax1 = fig.add_subplot(131)
-ax2 = fig.add_subplot(132)
-ax3 = fig.add_subplot(133)
+ax1 = fig.add_subplot(121)
+ax2 = fig.add_subplot(122)
+
 
 # adjusting space between 
 plt.subplots_adjust(wspace=0.4)
 
 # names of dispatch scenarios
-dispatch_scenarios  = ['Pyomo - 24hr Horizon', 'Pyomo - 48hr Horizon', 'No Pyomo - SSC Only']  
+dispatch_scenarios  = ['Pyomo - 48hr Horizon', 'No Pyomo - SSC Only']  
 
 # specific performance metrics to plot 
-performance_metrics = [annual_energy_array, ppa_array, revenue]
+performance_metrics = [ppa_array, revenue]
 N              = len(performance_metrics)
-get_max        = [True, False, True] # whether each performance is optimized with max or min
-axes           = [ax1,ax2,ax3] # list of axes
-heat_cmap_list = ['Blues', 'Blues_r', 'Blues'] # colormaps used for each performance metric
-metric_labels  = ['Annual Energy Production \n(TWh)',
-                  'PPA Price \n(cents/kWh)',
+get_max        = [False, True] # whether each performance is optimized with max or min
+axes           = [ax1,ax2] # list of axes
+heat_cmap_list = ['Blues_r', 'Blues'] # colormaps used for each performance metric
+metric_labels  = ['PPA Price \n(cents/kWh)',
                   'Revenue - Simple Calculation \n($B)' ] # labels for each performance metric
 
 # some other arrays
-P_array  = P_ref * p_mult #actual power cycle reference outputs
-lp = 12 #labelpad
+P_array  = p_mult #actual power cycle reference outputs
+lp = 12 #labelpad'NPV \n($M)'
 
 # ========================================   
 # Looping!
@@ -135,7 +134,7 @@ for n in range(N):
     
     # plotting 2D heat map of the **Dispatch type** that leads to optimum value
     im = axes[n].imshow(performance_metric[Opt_D].T, origin='lower', 
-                        cmap=heat_cmap_list[n])
+                        cmap=heat_cmap_list[n], aspect=0.5)
 
     # setting axis labels
     axes[n].set_xlabel('tshours \n(hr)', fontweight='bold')
