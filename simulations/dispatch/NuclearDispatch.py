@@ -503,7 +503,7 @@ class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
         
         # thermal power and startup params
         self.Dnsu    = self.PySAM_dict['Dnsu']*u.hr   # Minimum time to start the nuclear plant (hr)
-        self.Qin_nuc = np.array([self.q_nuc_design.magnitude]*self.T)*self.q_nuc_design.units #TODO: update at each segment
+        self.Qin_nuc = np.array([self.q_nuc_design.m]*self.T)*self.q_nuc_design.u #TODO: update at each segment
         
         # instantiating arrays
         n  = len(self.Delta)
@@ -594,5 +594,103 @@ class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
         
         return param_dict
     
+    
+# =============================================================================
+# Dispatch Outputs
+# =============================================================================
+  
+class NuclearDispatchOutputs(object):
+    """
+    The NuclearDispatchOutputs class is meant to handle outputs from a given,
+    solved Pyomo Dispatch model. It returns desired outputs in appropriate formats
+    and syntaxes for PostProcessing and linking simulation segments between Pyomo
+    and SSC calls. 
+    """
+    
+    def get_dispatch_targets_from_Pyomo(dispatch_model, ssc_horizon, N_full, run_loop=False):
+        """ Method to set fixed costs of the Plant
+        
+        This method parses through the solved Pyomo model for Dispatch optimization
+        and extracts results that are used as Dispatch Targets in the *SAME* simulation
+        segment but in SSC rather than Pyomo. If we're not running a loop, we can
+        still update SSC only I guess this happens once for whatever Pyomo horizon
+        is defined (this might not be a feature we keep long-term, perhaps only for
+                    debugging). 
+        
+        Inputs:
+            dispatch_model (Pyomo model) : solved Pyomo Dispatch model (ConcreteModel)
+            ssc_horizon (float Quant)    : length of time of SSC horizon (in hours)
+            N_full (int)                 : length of full simulation time (in hours, no Quant)
+            run_loop (bool)              : flag to determine if simulation is segmented
+        Outputs:
+            disp_targs (dict) : dictionary of dispatch target arrays for use in SSC 
+        """
+        
+        dm = dispatch_model
+        
+        # range of pyomo and SSC horizon times
+        t_pyomo = dm.model.T
+        f_ind   = int( ssc_horizon.to('hr').m ) # index in hours of final horizon (e.g. 24)
+        t_horizon = range(f_ind)
+        
+        # if we're not running a loop, define a list of 0s to pad the output so it matches full array size
+        if not run_loop:
+            N_leftover = N_full - f_ind
+            empty_array = [0]*N_leftover
+        
+        #----Receiver Binary Outputs----
+        yn   = np.array([pe.value(dm.model.yn[t])   for t in t_pyomo])
+        ynsu = np.array([pe.value(dm.model.ynsu[t]) for t in t_pyomo])
+        ynsb = np.array([pe.value(dm.model.ynsb[t]) for t in t_pyomo])
+        
+        #----Cycle Binary Outputs----
+        y    = np.array([pe.value(dm.model.y[t])    for t in t_pyomo])
+        ycsu = np.array([pe.value(dm.model.ycsu[t]) for t in t_pyomo])
+        ycsb = np.array([pe.value(dm.model.ycsb[t]) for t in t_pyomo])
+    
+        #----Cycle Thermal Power Utilization----
+        x = np.array([pe.value(dm.model.x[t])   for t in t_pyomo])/1000. # from kWt -> MWt
+        
+        #----Thermal Capacity for Cycle Startup and Operation----
+        Qc = np.array([pe.value(dm.model.Qc[t]) for t in t_pyomo])/1000. # from kWt -> MWt
+        Qu = dm.model.Qu.value/1000. # from kWt -> MWt
+    
+        # dispatch target -- nuclear startup/standby binaries
+        is_nuc_su_allowed_in = [1 if (yn[t] + ynsu[t] + ynsb[t]) > 0.001 else 0 for t in t_horizon]  # Nuclear on, startup, or standby
+        is_nuc_sb_allowed_in = [1 if ynsb[t] > 0.001                     else 0 for t in t_horizon]  # Nuclear standby
+        
+        # dispatch target -- cycle startup/standby binaries
+        is_pc_su_allowed_in  = [1 if (y[t] + ycsu[t]) > 0.001 else 0 for t in t_horizon]  # Cycle on or startup
+        is_pc_sb_allowed_in  = [1 if ycsb[t] > 0.001          else 0 for t in t_horizon]  # Cycle standby
+    
+        # dispatch target -- cycle thermal inputs and capacities
+        q_pc_target_su_in    = [Qc[t] if ycsu[t] > 0.001 else 0.0 for t in t_horizon]
+        q_pc_target_on_in    = [x[t]                              for t in t_horizon]
+        q_pc_max_in          = [Qu                                for t in t_horizon]
+        
+        # empty dictionary for output
+        disp_targs = {}
+        
+        # if we're running full simulation in steps, save SSC horizon portion of Pyomo horizon results
+        if run_loop:
+            disp_targs['is_rec_su_allowed_in'] = is_nuc_su_allowed_in 
+            disp_targs['is_rec_sb_allowed_in'] = is_nuc_sb_allowed_in
+            disp_targs['is_pc_su_allowed_in']  = is_pc_su_allowed_in 
+            disp_targs['is_pc_sb_allowed_in']  = is_pc_sb_allowed_in  
+            disp_targs['q_pc_target_su_in']    = q_pc_target_su_in  
+            disp_targs['q_pc_target_on_in']    = q_pc_target_on_in
+            disp_targs['q_pc_max_in']          = q_pc_max_in
+        # if we're running full simulation all at once, need arrays to match size of full sim
+        # TODO: is this a feature we want in the long term? Or just for debugging the first Pyomo call?
+        else:
+            disp_targs['is_rec_su_allowed_in'] = np.hstack( [is_nuc_su_allowed_in , empty_array] ).tolist()
+            disp_targs['is_rec_sb_allowed_in'] = np.hstack( [is_nuc_sb_allowed_in , empty_array] ).tolist()
+            disp_targs['is_pc_su_allowed_in']  = np.hstack( [is_pc_su_allowed_in  , empty_array] ).tolist()
+            disp_targs['is_pc_sb_allowed_in']  = np.hstack( [is_pc_sb_allowed_in  , empty_array] ).tolist()
+            disp_targs['q_pc_target_su_in']    = np.hstack( [q_pc_target_su_in    , empty_array] ).tolist()
+            disp_targs['q_pc_target_on_in']    = np.hstack( [q_pc_target_on_in    , empty_array] ).tolist()
+            disp_targs['q_pc_max_in']          = np.hstack( [q_pc_max_in          , empty_array] ).tolist()
+            
+        return disp_targs
     
 

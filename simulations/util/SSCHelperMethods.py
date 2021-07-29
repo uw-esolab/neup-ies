@@ -250,6 +250,37 @@ class SSCHelperMethods(object):
         return rho 
 
 
+    def get_visc_htf( u, T, rec_htf):
+        """ Method to calculate viscosity of some heat transfer fluid (written by LORE team)
+        
+        Inputs:
+            u (unitRegistry) : Pint unit registry
+            T (float Quant)  : Temperature at which to find specific heat of HTF, in units of Kelvin
+            rec_htf (int)    : integer value representing HTF in SSC table
+        Outputs:
+            visc (float Quant) : viscosity value in Ns/m^2
+            
+        """
+        
+        # HTF: 17 = Salt (60% NaNO3, 40% KNO3)
+        if rec_htf != 17:
+            print ('HTF %d not recognized'%rec_htf)
+            return 0.0
+        
+        T = T.to('celsius')
+
+        a = -1.473302e-10 * u.N*u.s/u.m**2/u.delta_degC**3
+        b =  2.279989e-7  * u.N*u.s/u.m**2/u.delta_degC**2
+        c = -1.199514e-4  * u.N*u.s/u.m**2/u.delta_degC
+        d =  0.02270616   * u.N*u.s/u.m**2
+        max_visc = 1e-4   * u.N*u.s/u.m**2
+        
+        visc = (a*T**3 + b*T**2 + c*T + d).to('N*s/m^2')
+        visc = max(visc, max_visc)
+        
+        return visc 
+    
+    
     def get_ambient_T_corrections_from_udpc_inputs( u, Tamb, ud_array):
         """ Method to calculate specific heat of some heat transfer fluid (written by LORE team)
         
@@ -323,6 +354,80 @@ class SSCHelperMethods(object):
         b = q[1]*(eta[1] - etap)
         
         return etap, b
+
+
+    def estimate_receiver_pumping_parasitic( u, Tavg, dm_rec_design, SSC_dict, nonheated_length = 0.2):
+        """ Method to calculate pumping parasitic of receiver (written by LORE team)
+        
+        Inputs:
+            u (unitRegistry)            : Pint unit registry
+            Tavg (float Quant)          : average temperature of plant, K
+            dm_rec_design (float Quant) : power block thermal power input rating, units of MW
+            SSC_dict (dict)             : dictionary of SSC inputs
+            nonheated_length (float)    : non-heated length of total receiver height
+        Outputs:
+            etap (float) : slope of linearized eta_p
+            b (float)    : intercept of linearized eta_p
+            
+        """
+        
+        # flow parameters
+        rho  = SSCHelperMethods.get_rho_htf(  u, Tavg, SSC_dict['rec_htf'] )
+        visc = SSCHelperMethods.get_visc_htf( u, Tavg, SSC_dict['rec_htf'] )
+
+        # some design parameters
+        D_rec    = SSC_dict['D_rec'] * u.m
+        N_panels = SSC_dict['N_panels']
+        d_tube_out = SSC_dict['d_tube_out'] * u.mm
+        th_tube    = SSC_dict['th_tube'] * u.mm
+        rec_height = SSC_dict['rec_height'] * u.m
+        h_tower    = SSC_dict['h_tower'] * u.m
+        eta_pump   = SSC_dict['eta_pump'] 
+        g0 = 9.8 * u.m / u.s**2
+        
+        # number of flow paths
+        npath = 1
+        nperpath = SSC_dict['N_panels']
+        if SSC_dict['Flow_type'] == 1 or SSC_dict['Flow_type'] == 2:
+            npath = 2
+            nperpath = int(SSC_dict['N_panels']/2)
+        elif SSC_dict['Flow_type'] == 9:
+            npath = int(SSC_dict['N_panels']/2)
+            nperpath = 2
+        
+        # ============================
+        # fluid mechanics of the pump
+        
+        # tube dimensions
+        ntube = int(np.pi * D_rec / N_panels / d_tube_out)  # Number of tubes per panel
+        m_per_tube = dm_rec_design / npath / ntube  # kg/s per tube
+        tube_id = d_tube_out - 2*th_tube            # Tube ID in m
+        Ac = ( 0.25*np.pi*(tube_id**2) ).to('mm^2')
+        
+        # flow velocities and fluid mechanics
+        vel = (m_per_tube / rho / Ac).to('mm/s')  # HTF velocity
+        Re = (rho * vel * tube_id / visc).to('')  # Reynolds number
+        EoverD = (4.6e-5*u.m) / tube_id     # roughness factor (E/D)
+        
+        # friction factor
+        ff = (-1.737*np.log(0.269*EoverD - 2.185/Re*np.log(0.269*EoverD+14.5/Re)))**-2
+        fd = 4*ff 
+        
+        # total height and frictional pressure drop
+        Htot = rec_height * (1 + nonheated_length)
+        dp = 0.5*fd*rho*(vel**2) * (Htot/tube_id + 4*30 + 2*16) * nperpath  # Frictional pressure drop (Pa) (straight tube, 90deg bends, 45def bends)
+        dp = dp.to('N/m^2')
+        
+        # gravitational pressure drop
+        dp += rho * g0 * h_tower  # Add pressure drop from pumping up the tower
+        if nperpath%2 == 1:   
+            dp += rho * g0 * Htot  
+        
+        # pumpimh parasitic
+        wdot = dp * dm_rec_design / rho / eta_pump   # Pumping parasitic at design point reciever mass flow rate (MWe)
+        wdot = wdot.to('MW')
+        
+        return wdot
 
 
     def get_pc_persist_and_off_logs( param_dict, plant, npts ):

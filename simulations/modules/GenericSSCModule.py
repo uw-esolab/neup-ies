@@ -429,7 +429,7 @@ class GenericSSCModule(ABC):
         """
         return params
         
-        
+    @abstractmethod    
     def update_Plant_after_Pyomo(self):
         """ Update SSC Plant inputs with Pyomo optimization outputs from current segment simulation
 
