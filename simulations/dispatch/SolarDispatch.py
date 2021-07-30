@@ -428,7 +428,7 @@ class SolarDispatchParamWrap(GeneralDispatchParamWrap):
         # TODO: old values from LORE files
         C_rec  = self.PySAM_dict['rec_op_cost'] * u.USD / u.MWh #Q_ratio * 0.002  * u.USD/u.kWh        
         C_rsu  = self.PySAM_dict['rec_cold_su'] * u.USD
-        C_rhsp = self.PySAM_dict['rec_hot_su'] * u.USD
+        C_rhsp = self.PySAM_dict['rec_hot_su']  * u.USD
 
         ### Cost Parameters ###
         param_dict['Crec']   = C_rec.to('USD/kWh')  #C^{rec}: Operating cost of heliostat field and receiver [\$/kWt$\cdot$h]
@@ -455,23 +455,33 @@ class SolarDispatchParamWrap(GeneralDispatchParamWrap):
         
         # pumpimg parasitics for receiver
         wdot = SSCHelperMethods.estimate_receiver_pumping_parasitic(u, self.T_htf_avg, self.dm_rec_design, self.SSC_dict)
-        wdot     = wdot.to('MW')  
+        wdot = wdot.to('MW')  
         
-        tower_piping_ht_loss    = self.PySAM_dict['tower_piping_ht_loss']*u.kW   # TODO: Tower piping heat trace full-load parasitic load (kWe) 
+        # various pre-parameters and other inputs
+        N_hel = self.SSC_dict['N_hel']
+        
+        tower_piping_ht_loss    = self.PySAM_dict['tower_piping_ht_loss']*u.kW/u.MW   # (from LORE) Tower piping heat trace full-load parasitic load (kWe/MWt) 
         q_rec_standby_fraction  = self.PySAM_dict['q_rec_standby_frac']        
-        q_rec_shutdown_fraction = self.PySAM_dict['q_rec_shutdown_frac']      
+        q_rec_shutdown_fraction = self.PySAM_dict['q_rec_shutdown_frac']   
+        Drsu                    = self.SSC_dict['rec_su_delay']*u.hr
+        heliostat_SU_energy     = self.SSC_dict['p_start']*u.kWh
+        heliostat_track_energy  = self.SSC_dict['p_track']*u.kW
+        receiver_SU_ratio       = self.SSC_dict['rec_qf_delay'] * u.kWh / u.MW 
+        TES_load_hrs            = self.SSC_dict['tshours']*u.hr
+        min_massflow_td_frac    = self.SSC_dict['f_rec_min']
         
-        self.deltal = self.SSC_dict['rec_su_delay']*u.hr
-        self.Ehs    = self.SSC_dict['p_start']*u.kWh
-        self.Er     = (self.SSC_dict['rec_qf_delay'] * u.kWh / u.kW ) * self.q_rec_design 
-        self.Eu     = self.SSC_dict['tshours']*u.hr * self.q_pb_design
+        # second-to-last step before setting param_dict
+        self.deltal = Drsu
+        self.Ehs    = N_hel * heliostat_SU_energy
+        self.Er     = receiver_SU_ratio * self.q_rec_design 
+        self.Eu     = TES_load_hrs      * self.q_pb_design
         self.Lr     = wdot / self.q_rec_design
-        self.Qrl    = self.SSC_dict['f_rec_min'] * self.q_rec_design 
+        self.Qrl    = min_massflow_td_frac    * self.q_rec_design 
         self.Qrsb   = q_rec_standby_fraction  * self.q_rec_design 
         self.Qrsd   = q_rec_shutdown_fraction * self.q_rec_design
         self.Qru    = self.Er / self.deltal  
-        self.Wh     = self.SSC_dict['p_track']*u.kW
-        self.Wht   = tower_piping_ht_loss
+        self.Wh     = N_hel * heliostat_track_energy
+        self.Wht    = tower_piping_ht_loss * self.q_rec_design 
         
         ### CSP Field and Receiver Parameters ###
         param_dict['deltal'] = self.deltal.to('hr')    #\delta^l: Minimum time to start the receiver [hr]
@@ -489,7 +499,7 @@ class SolarDispatchParamWrap(GeneralDispatchParamWrap):
         return param_dict
 
 
-    def set_time_series_solar_parameters(self, param_dict, plant_dict, updated_dict=None):
+    def set_time_series_solar_parameters(self, param_dict, updated_dict=None):
         """ Method to set fixed costs of the Plant for Dispatch optimization
         
         This method calculates some time series parameters for the Plant operations, startup,
@@ -516,8 +526,9 @@ class SolarDispatchParamWrap(GeneralDispatchParamWrap):
             self.first_run = False
         
         # thermal power and startup params
-        self.Drsu  = self.current_Plant['rec_su_delay']*u.hr   # Minimum time to start the CSP plant (hr)
-        self.Qin   = plant_dict['Q_thermal']*u.MW              # value here taken from a previous Plant-SSC run
+        self.Drsu  = self.current_Plant['rec_su_delay'] * u.hr # Minimum time to start the CSP plant (hr)
+        self.Qin   = self.current_Plant['Q_thermal'] * u.MW    # value here taken from a previous Plant-SSC run
+        
         
         # instantiating arrays
         n  = len(self.Delta)
@@ -617,7 +628,7 @@ class SolarDispatchOutputs(object):
     and SSC calls. 
     """
     
-    def get_dispatch_targets_from_Pyomo(dispatch_model, ssc_horizon, N_full, run_loop=False):
+    def get_dispatch_targets_from_Pyomo(dispatch_model, horizon, N_full, run_loop=False):
         """ Method to set fixed costs of the Plant
         
         This method parses through the solved Pyomo model for Dispatch optimization
@@ -629,7 +640,7 @@ class SolarDispatchOutputs(object):
         
         Inputs:
             dispatch_model (Pyomo model) : solved Pyomo Dispatch model (ConcreteModel)
-            ssc_horizon (float Quant)    : length of time of SSC horizon (in hours)
+            horizon (float Quant)        : length of time of horizon, whether SSC or Pyomo (in hours)
             N_full (int)                 : length of full simulation time (in hours, no Quant)
             run_loop (bool)              : flag to determine if simulation is segmented
         Outputs:
@@ -640,7 +651,7 @@ class SolarDispatchOutputs(object):
         
         # range of pyomo and SSC horizon times
         t_pyomo = dm.model.T
-        f_ind   = int( ssc_horizon.to('hr').m ) # index in hours of final horizon (e.g. 24)
+        f_ind   = int( horizon.to('hr').m ) # index in hours of final horizon (e.g. 24)
         t_horizon = range(f_ind)
         
         # if we're not running a loop, define a list of 0s to pad the output so it matches full array size

@@ -115,12 +115,15 @@ class SolarTES(NuclearTES):
         # run the setters from the GenericSSCModule parent class
         params = GenericSSCModule.create_dispatch_params(self, current_pyomo_slice)
         
-        # set up Plant outputs dictionary
-        plant_dict = self.Plant.Outputs.export()
+        # set up copy of SSC dict
+        updated_SSC_dict = copy.deepcopy(self.SSC_dict)
+        
+        # extract time series from previous SSC run
+        updated_SSC_dict['Q_thermal'] = self.Plant.Outputs.Q_thermal[self.slice_pyo_firstH]
         
         # these are SolarTES-specific setters
         params = DW.set_solar_parameters( params )
-        params = DW.set_time_series_solar_parameters( params, plant_dict )
+        params = DW.set_time_series_solar_parameters( params, updated_SSC_dict )
         
         # this sets the initial states for the SolarTES
         params = DW.set_initial_state( params )
@@ -166,7 +169,10 @@ class SolarTES(NuclearTES):
         updated_SSC_dict['is_field_tracking_init']           = self.Plant.Outputs.is_field_tracking_final[self.t_ind-1]
         
         # these are specific to the initial states
-        updated_SSC_dict['wdot0'] = self.Plant.Outputs.P_cycle[self.t_ind-1]
+        updated_SSC_dict['wdot0']     = self.Plant.Outputs.P_cycle[self.t_ind-1]
+        
+        # extract time series from a previous SSC run
+        updated_SSC_dict['Q_thermal'] = self.Plant.Outputs.Q_thermal[self.slice_pyo_firstH]
         
         # TODO: removing w_dot_s_prev references in all of Dispatch for now, might need to revisit later
         # updated_SSC_dict['wdot_s_prev'] = 0 #np.array([pe.value(dm.model.wdot_s_prev[t]) for t in dm.model.T])[-1]
@@ -179,34 +185,42 @@ class SolarTES(NuclearTES):
         # updating the initial state and time series Nuclear params
         params = DW.set_time_indexed_parameters( params, self.df_array, self.ud_array, current_pyomo_slice )
         params = DW.set_initial_state( params, updated_SSC_dict, self.Plant, self.t_ind )
-        params = DW.set_time_series_solar_parameters( params, plant_dict )
+        params = DW.set_time_series_solar_parameters( params, updated_SSC_dict )
         
         return params
 
 
-    def update_Plant_after_Pyomo(self):
+    def update_Plant_after_Pyomo(self, pre_dispatch_run=False):
         """ Update SSC Plant inputs with Pyomo optimization outputs from current segment simulation
 
-        ** self.run_loop    == True (can be called outside loop)
-        ** self.is_dispatch == True 
+        Note:
+            self.run_loop    == True (can be called outside loop)
+            self.is_dispatch == True 
         
         This method uses the optimization results from Pyomo and ensures that 
         the next SSC segment uses them throughout the corresponding SSC Horizon.
         SSC normally takes single values for initial conditions (for the first hour
         of the SSC Horizon), but it can also take in an array of values for each
         step in the SSC Horizon. These are called "dispatch_targets". Steps are:
-            (1) extract solutions from Pyomo over the Pyomo Horizon, 
-            (2) keep the solutions for the shorter SSC Horizon and 
-            (3) save these "dispatch target" inputs to the Plant object for the 
-                   next SSC simulation segment. 
+        (1) extract solutions from Pyomo over the Pyomo Horizon, 
+        (2) keep the solutions for the shorter SSC Horizon and 
+        (3) save these "dispatch target" inputs to the Plant object for the 
+        next SSC simulation segment. 
+
+        Args:
+            pre_dispatch_run (bool): 
+                are we updating the Plant for a pre- or post- dispatch run.
+                Recall that we only log post-dispatch Plant runs
+                
         """
         
         # number of times in full simulation 
         N_full     = int((self.SSC_dict['time_stop']*self.u.s).to('hr').m)
         
         # the heavy-lifting happens here -> return a dictionary of dispatch target arrays from Pyomo optimization results
+        horizon = self.pyomo_horizon if pre_dispatch_run else self.ssc_horizon
         dispatch_targets = self.Dispatch_Outputs.get_dispatch_targets_from_Pyomo( \
-                                                self.current_disp_model, self.ssc_horizon, N_full, self.run_loop)
+                                                self.current_disp_model, horizon, N_full, self.run_loop)
         
         ### Set Dispatch Targets ### 
         # setting dispatch targets to True so that SSC can read in Pyomo inputs
