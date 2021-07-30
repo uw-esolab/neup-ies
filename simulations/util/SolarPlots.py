@@ -53,6 +53,7 @@ class SolarOutputExtraction(OutputExtraction):
         self.p_cycle      = np.asarray(mod_out.P_cycle) * u.MW
         self.gen          = (np.asarray(mod_out.gen) * u.kW).to('MW')
         self.q_dot_rec_in = np.asarray(mod_out.q_dot_rec_inc) * u.MW
+        self.q_thermal    = np.asarray(mod_out.Q_thermal) * u.MW
         self.q_pb         = np.asarray(mod_out.q_pb) * u.MW
         self.q_dot_pc_su  = np.asarray(mod_out.q_dot_pc_startup) * u.MW
         self.m_dot_pc     = np.asarray(mod_out.m_dot_pc) * u.kg/u.s
@@ -218,6 +219,87 @@ class SolarPlots(Plots):
             # extracting outputs
             SolarOutputExtraction.set_ssc_outputs(self, Outputs)
         
+        
+    def plot_SSC_power_and_energy(self, ax=None, title_label=None, plot_all_time=True, \
+                                  start_hr=0, end_hr=48, hide_x=False, x_legend=1.2, \
+                                  y_legend_L=1.0, y_legend_R=1.0):
+        """ Method to plot power and energy data on single plot
+
+        This method is used specifically to plot power and energy data from SSC simulation
+        results. Built-in options to plot legend off-axis. 
+
+        Inputs:
+            ax (object)         : axis object to plot on
+            plot_all_time(bool) : are we plotting all results or just a portion?
+            title_label(str)    : title name for plot
+            start_hr (int)      : (plot_all_time==False) hour used for starting index 
+            end_hr (int)        : (plot_all_time==False) hour used for ending index
+            hide_x(bool)        : hiding the x-axis from this particular plot
+            x_legend (float)    : (legend_offset==True) x-offset defining left-most side of legend
+            y_legend_L (float)  : (legend_offset==True) y-offset of left y-axis plot
+            y_legend_R (float)  : (legend_offset==True) y-offset of right y-axis plot
+        """
+        #========================#
+        #--- Creating Figure  ---#
+        #========================#
+
+        # if no axis object specified, create a figure and axis from it
+        if ax is None:
+            fig = plt.figure(figsize=[10, 5])
+            ax = fig.gca()   # this is the power plot
+
+        # twin axis to plot energy on opposite y-axis
+        ax2 = ax.twinx()  # this is the energy plot
+        
+        # custom y limits and ticks to be integers for Power
+        #TODO: add these as some sort of input, maybe dict?
+        ax.set_ylim(-100, 1100)
+        ax.set_yticks([0, 250, 500, 750, 1000])
+
+        # plot Power arrays
+        power_array_list = ['p_cycle', 'q_dot_rec_in', 'q_thermal', 'gen', 'q_dot_pc_su'] # list of array strings
+        power_label_list = ['P_cycle (Electric)',
+                            'Q_dot Incident (Thermal)',
+                            'Q_dot to Salt (Thermal)',
+                            'Power generated (Electric)',
+                            'PC startup thermal power (Thermal)'] # list of labels for each array string to extract from Outputs
+        power_ylabel = 'Power \n(MW)'
+        ax  = self.plot_SSC_generic(ax, array_list=power_array_list, \
+                                    label_list=power_label_list, \
+                                    y_label=power_ylabel, \
+                                    title_label=title_label, \
+                                    plot_all_time=plot_all_time, \
+                                    start_hr=start_hr, end_hr=end_hr, hide_x=hide_x)
+
+        # custom y limits and ticks to be integers for Energy
+        ax2.set_ylim(-0.05*self.e_tes_design.m, 0.7*self.e_tes_design.m)
+
+        # plot Energy array(s)
+        energy_array_list = ['e_ch_tes']
+        energy_label_list = ['Salt Charge Energy Level (Thermal)']
+        energy_ylabel = 'Energy \n(MWh)'
+        ax2 = self.plot_SSC_generic(ax2, array_list=energy_array_list, \
+                                    label_list=energy_label_list, \
+                                    y_label=energy_ylabel, \
+                                    title_label=None, \
+                                    plot_all_time=plot_all_time, \
+                                    start_hr=start_hr, end_hr=end_hr, hide_x=hide_x, left_axis=False)
+        
+        # set line color to default C4 (purple)
+        ax2.get_lines()[0].set_color("C6")
+        
+        #========================#
+        #---- Setting Labels ----#
+        #========================#
+        
+        # customizing legend(s)
+        if self.legend_offset:
+            ax.legend( loc=self.loc_ul, fontsize=self.fsl, bbox_to_anchor=(x_legend, y_legend_L)) # plot legend for Power arrays
+            ax2.legend(loc=self.loc_ul, fontsize=self.fsl, bbox_to_anchor=(x_legend, y_legend_R)) # plot legend for Energy arrays and also 
+        else:
+            ax.legend( loc=self.loc_ul, fontsize=self.fsl) # plot legend for Power arrays
+            ax2.legend(loc=self.loc_ul, fontsize=self.fsl) # plot legend for Energy arrays and also 
+
 
     def set_operating_modes_list(self):
         """ Method to define list of operating modes

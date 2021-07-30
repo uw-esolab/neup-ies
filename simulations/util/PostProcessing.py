@@ -73,6 +73,7 @@ class OutputExtraction(object):
         self.p_cycle      = np.asarray(mod_out.P_cycle) * u.MW
         self.gen          = (np.asarray(mod_out.gen) * u.kW).to('MW')
         self.q_dot_rec_in = np.asarray(mod_out.q_dot_rec_inc) * u.MW
+        self.q_thermal    = np.asarray(mod_out.Q_thermal) * u.MW
         self.q_pb         = np.asarray(mod_out.q_pb) * u.MW
         self.q_dot_pc_su  = np.asarray(mod_out.q_dot_pc_startup) * u.MW
         self.m_dot_pc     = np.asarray(mod_out.m_dot_pc) * u.kg/u.s
@@ -466,7 +467,7 @@ class Plots(object):
         ax.set_yticks([0, 250, 500, 750, 1000])
 
         # plot Power arrays
-        power_array_list = ['p_cycle', 'q_dot_rec_in', 'gen', 'q_dot_pc_su'] # list of array strings
+        power_array_list = ['p_cycle', 'q_thermal', 'gen', 'q_dot_pc_su'] # list of array strings
         power_label_list = ['P_cycle (Electric)',
                             'Q_dot to Salt (Thermal)',
                             'Power generated (Electric)',
