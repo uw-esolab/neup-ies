@@ -280,29 +280,37 @@ class NuclearTES(GenericSSCModule):
         return params
 
 
-    def update_Plant_after_Pyomo(self):
+    def update_Plant_after_Pyomo(self, pre_dispatch_run=False):
         """ Update SSC Plant inputs with Pyomo optimization outputs from current segment simulation
 
-        ** self.run_loop    == True (can be called outside loop)
-        ** self.is_dispatch == True 
+        Note:
+            self.run_loop    == True (can be called outside loop)
+            self.is_dispatch == True 
         
         This method uses the optimization results from Pyomo and ensures that 
         the next SSC segment uses them throughout the corresponding SSC Horizon.
         SSC normally takes single values for initial conditions (for the first hour
         of the SSC Horizon), but it can also take in an array of values for each
         step in the SSC Horizon. These are called "dispatch_targets". Steps are:
-            (1) extract solutions from Pyomo over the Pyomo Horizon, 
-            (2) keep the solutions for the shorter SSC Horizon and 
-            (3) save these "dispatch target" inputs to the Plant object for the 
-                   next SSC simulation segment. 
+        (1) extract solutions from Pyomo over the Pyomo Horizon, 
+        (2) keep the solutions for the shorter SSC Horizon and 
+        (3) save these "dispatch target" inputs to the Plant object for the 
+        next SSC simulation segment. 
+
+        Args:
+            pre_dispatch_run (bool): 
+                are we updating the Plant for a pre- or post- dispatch run.
+                Recall that we only log post-dispatch Plant runs
+                
         """
         
         # number of times in full simulation 
         N_full     = int((self.SSC_dict['time_stop']*self.u.s).to('hr').m)
         
         # the heavy-lifting happens here -> return a dictionary of dispatch target arrays from Pyomo optimization results
+        horizon = self.pyomo_horizon if pre_dispatch_run else self.ssc_horizon
         dispatch_targets = self.Dispatch_Outputs.get_dispatch_targets_from_Pyomo( \
-                                                self.current_disp_model, self.ssc_horizon, N_full, self.run_loop)
+                                                self.current_disp_model, horizon, N_full, self.run_loop)
         
         ### Set Dispatch Targets ### 
         # setting dispatch targets to True so that SSC can read in Pyomo inputs

@@ -607,7 +607,7 @@ class NuclearDispatchOutputs(object):
     and SSC calls. 
     """
     
-    def get_dispatch_targets_from_Pyomo(dispatch_model, ssc_horizon, N_full, run_loop=False):
+    def get_dispatch_targets_from_Pyomo(dispatch_model, horizon, N_full, run_loop=False):
         """ Method to set fixed costs of the Plant
         
         This method parses through the solved Pyomo model for Dispatch optimization
@@ -619,7 +619,7 @@ class NuclearDispatchOutputs(object):
         
         Inputs:
             dispatch_model (Pyomo model) : solved Pyomo Dispatch model (ConcreteModel)
-            ssc_horizon (float Quant)    : length of time of SSC horizon (in hours)
+            horizon (float Quant)        : length of time of horizon, whether SSC or Pyomo (in hours)
             N_full (int)                 : length of full simulation time (in hours, no Quant)
             run_loop (bool)              : flag to determine if simulation is segmented
         Outputs:
@@ -630,7 +630,7 @@ class NuclearDispatchOutputs(object):
         
         # range of pyomo and SSC horizon times
         t_pyomo = dm.model.T
-        f_ind   = int( ssc_horizon.to('hr').m ) # index in hours of final horizon (e.g. 24)
+        f_ind   = int( horizon.to('hr').m ) # index in hours of final horizon (e.g. 24)
         t_horizon = range(f_ind)
         
         # if we're not running a loop, define a list of 0s to pad the output so it matches full array size

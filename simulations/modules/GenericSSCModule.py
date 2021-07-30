@@ -253,7 +253,8 @@ class GenericSSCModule(ABC):
         self.t_ind = int(time_next.to('hr').m)
         
         # slice for the first indeces of the SSC Horizon, also initializing current Horizon (updated in loop)
-        self.slice_ssc_firstH   = slice( 0, self.t_ind,1)
+        self.slice_ssc_firstH   = slice( 0, self.t_ind, 1)
+        self.slice_pyo_firstH   = slice( 0, int( self.pyomo_horizon.to('hr').m ),  1)
         self.slice_ssc_currentH = slice( int( time_start.to('hr').m ), self.t_ind, 1)  
         self.slice_pyo_currentH = slice( int( time_start.to('hr').m ), int( self.pyomo_horizon.to('hr').m ), 1) 
         
@@ -265,7 +266,7 @@ class GenericSSCModule(ABC):
             
             # one pre-run of Plant, used to grab inputs to dispatch in some modules
             # runs for the Pyomo Horizon, not the SSC Horizon
-            ssc_run_success = self.run_Plant_through_SSC( time_start , self.pyomo_horizon.to('s') )
+            ssc_run_success = self.run_Plant_through_SSC( time_start , time_start + self.pyomo_horizon )
             
             # create dispatch parameters for the first time
             disp_params = self.create_dispatch_params( self.slice_pyo_currentH )
@@ -274,7 +275,7 @@ class GenericSSCModule(ABC):
             self.run_pyomo( disp_params )
             
             # update: Pyomo(t) -> Plant(t) 
-            self.update_Plant_after_Pyomo()
+            self.update_Plant_after_Pyomo( pre_dispatch_run=False )
         
         # first real execution of Plant through SSC
         ssc_run_success = self.run_Plant_through_SSC( time_start , time_next )
@@ -310,6 +311,14 @@ class GenericSSCModule(ABC):
             # run dispatch optimization
             if self.is_dispatch:
                 
+                # update Plant to gather Pyomo inputs... 
+                # TODO: this nomenclature is a bit confusing
+                self.update_Plant_after_Pyomo( pre_dispatch_run=True )
+            
+                # one pre-run of Plant, used to grab inputs to dispatch in some modules
+                # runs for the Pyomo Horizon, not the SSC Horizon
+                ssc_run_success = self.run_Plant_through_SSC( time_start , time_start + self.pyomo_horizon )
+                
                 # update: SSC(t) -> Pyomo(t+1)
                 disp_params = self.update_Pyomo_after_SSC(disp_params, self.slice_pyo_currentH)
                 
@@ -317,13 +326,13 @@ class GenericSSCModule(ABC):
                 self.run_pyomo(disp_params)
             
                 # update: Pyomo(t+1) -> Plant(t+1)
-                self.update_Plant_after_Pyomo( )
+                self.update_Plant_after_Pyomo( pre_dispatch_run=False )
             
             # run Plant again
             ssc_run_success = self.run_Plant_through_SSC( time_start, time_next )
             if not ssc_run_success:
                 print('\n Plant Simulation ended prematurely.')
-                self.log_SSC_arrays(log_final=True)
+                self.log_SSC_arrays( log_final=True )
                 break
             
             self.log_SSC_arrays()
@@ -451,7 +460,7 @@ class GenericSSCModule(ABC):
         return params
         
     @abstractmethod    
-    def update_Plant_after_Pyomo(self):
+    def update_Plant_after_Pyomo(self, pre_dispatch_run=False):
         """ Update SSC Plant inputs with Pyomo optimization outputs from current segment simulation
 
         Note:
@@ -467,7 +476,12 @@ class GenericSSCModule(ABC):
         (2) keep the solutions for the shorter SSC Horizon and 
         (3) save these "dispatch target" inputs to the Plant object for the 
         next SSC simulation segment. 
-                   
+
+        Args:
+            pre_dispatch_run (bool): 
+                are we updating the Plant for a pre- or post- dispatch run.
+                Recall that we only log post-dispatch Plant runs
+                
         """
         
         # number of times in full simulation 
@@ -475,7 +489,8 @@ class GenericSSCModule(ABC):
         
         # the heavy-lifting happens here -> return a dictionary of dispatch target arrays from Pyomo optimization results
         # NOTE: will need to overload GDO if this somehow gets overloaded by Nuclear Dispatch Outputs class
-        dispatch_targets = GDO.get_dispatch_targets_from_Pyomo(self.current_disp_model, self.ssc_horizon, N_full, self.run_loop)
+        horizon = self.pyomo_horizon if pre_dispatch_run else self.ssc_horizon
+        dispatch_targets = GDO.get_dispatch_targets_from_Pyomo(self.current_disp_model, horizon, N_full, self.run_loop)
         
         ### Set Dispatch Targets ### 
         # setting dispatch targets to True so that SSC can read in Pyomo inputs
