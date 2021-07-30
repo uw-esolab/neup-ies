@@ -262,20 +262,26 @@ class GenericSSCModule(ABC):
         
         # run dispatch optimization for the first time
         if self.is_dispatch:
+            
+            # one pre-run of Plant, used to grab inputs to dispatch in some modules
+            # runs for the Pyomo Horizon, not the SSC Horizon
+            ssc_run_success = self.run_Plant_through_SSC( time_start , self.pyomo_horizon.to('s') )
+            
             # create dispatch parameters for the first time
             disp_params = self.create_dispatch_params( self.slice_pyo_currentH )
             
             # run pyomo optimization
-            self.run_pyomo(disp_params)
+            self.run_pyomo( disp_params )
             
             # update: Pyomo(t) -> Plant(t) 
             self.update_Plant_after_Pyomo()
         
-        # first execution of Plant through SSC
-        self.run_Plant_through_SSC( time_start , time_next )
+        # first real execution of Plant through SSC
+        ssc_run_success = self.run_Plant_through_SSC( time_start , time_next )
         self.log_SSC_arrays()
         
         # setting up iterable time to cycle thorugh in for loop
+        # TODO: this needs to be variable with SSC Horizon
         p_time_next = int(np.round(time_next.to('d').m) )
         p_time_end  = int(np.round(time_end.to('d').m) )
         remaining_sim_time = range(p_time_next, p_time_end) if self.run_loop else range(0)
@@ -314,10 +320,16 @@ class GenericSSCModule(ABC):
                 self.update_Plant_after_Pyomo( )
             
             # run Plant again
-            self.run_Plant_through_SSC( time_start, time_next )
+            ssc_run_success = self.run_Plant_through_SSC( time_start, time_next )
+            if not ssc_run_success:
+                print('\n Plant Simulation ended prematurely.')
+                self.log_SSC_arrays(log_final=True)
+                break
+            
             self.log_SSC_arrays()
         
-        print('\n Plant Simulation successfully completed.')
+        if ssc_run_success:
+            print('\n Plant Simulation successfully completed.')
         
         
     def run_Plant_through_SSC(self, start_hr, end_hr):
@@ -334,15 +346,24 @@ class GenericSSCModule(ABC):
                 starting time for next simulation (hours)
             end_hr (float Quant): 
                 ending time for next simulation (hours)
-            
+        Returns:
+            exec_success (bool): 
+                True if SSC execution is successful
         """
 
         # start and end times for full simulation
-        self.Plant.SystemControl.time_start = start_hr.to('s').magnitude
-        self.Plant.SystemControl.time_stop  = end_hr.to('s').magnitude
+        self.Plant.SystemControl.time_start = start_hr.to('s').m
+        self.Plant.SystemControl.time_stop  = end_hr.to('s').m
         
-        self.Plant.execute()
-        
+        exec_success = True
+        try:
+            self.Plant.execute()
+        except Exception as err:
+            exec_success = False
+            print("\n SSC error: {0}".format(err))
+            
+        return exec_success
+
         
     @abstractmethod
     def run_pyomo(self, params):

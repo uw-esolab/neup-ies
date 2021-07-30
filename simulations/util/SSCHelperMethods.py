@@ -9,6 +9,7 @@ Created on Fri May  7 10:50:27 2021
 import numpy as np
 import pint
 from pyomo.environ import units
+from util.FileMethods import FileMethods
 
 class SSCHelperMethods(object):
     """
@@ -238,14 +239,14 @@ class SSCHelperMethods(object):
         
         T = T.to('kelvin')
 
-        a = -1.0e-07 * u.kg/u.m**3/u.kelvin**3
-        b =  0.0002  * u.kg/u.m**3/u.kelvin**2
-        c = -0.7875  * u.kg/u.m**3/u.kelvin
-        d =  2299.4  * u.kg/u.m**3
+        a = -1.0e-07     * u.kg/u.m**3/u.kelvin**3
+        b =  0.0002      * u.kg/u.m**3/u.kelvin**2
+        c = -0.7875      * u.kg/u.m**3/u.kelvin
+        d =  2299.4      * u.kg/u.m**3
+        max_rho = 1000.0 *u.kg/u.m**3
         
         rho = (a*T**3 + b*T**2 + c*T + d).to('kg/m^3')
-        
-        # rho = np.max(rho, 1000.0*u.kg/u.m**3)
+        rho = max(rho, max_rho)
         
         return rho 
 
@@ -423,12 +424,12 @@ class SSCHelperMethods(object):
         if nperpath%2 == 1:   
             dp += rho * g0 * Htot  
         
-        # pumpimh parasitic
+        # pumpimg parasitic
         wdot = dp * dm_rec_design / rho / eta_pump   # Pumping parasitic at design point reciever mass flow rate (MWe)
         wdot = wdot.to('MW')
         
         return wdot
-
+    
 
     def get_pc_persist_and_off_logs( param_dict, plant, npts ):
         """ Method to log the amount of time Power Cycle has been ON and OFF
@@ -452,7 +453,9 @@ class SSCHelperMethods(object):
         # cycle state before start of most recent set of simulation calls
         previous_pc_state = plant.SystemControl.pc_op_mode_initial
         # cycle state after most recent set of simulation calls
-        current_pc_state  = plant.Outputs.pc_op_mode_final
+        tmp_final_op_mode = plant.Outputs.pc_op_mode_final
+        current_pc_state  = tmp_final_op_mode if type(tmp_final_op_mode) == float \
+                                else tmp_final_op_mode[npts-1]
         # times when cycle is not generating power
         is_pc_not_on = np.array( plant.Outputs.P_cycle[0:npts-1] ) <= 1.e-3
         
