@@ -50,9 +50,12 @@ The CSP cycles modeled in this paper are composed of the hot and cold thermal en
 \linenumbers
 \switchcolumn
 
-The salt CSP cycle can be either in charging mode or electrical generation mode. When the CSP cycle is in charging mode, excess heat is transfered from the sCO$_{2}$ Brayton cycle through the SALT HX. The heated salt is then stored in the hot storage until grid demand increases.   
+The salt CSP cycle can be either in charging mode or electrical generation mode. 
+%Here you need to explain what a conventional CSP cycle looks like (briefly). I.e. CSP charges salt, it can discharge when you want it to. Now with our configuration we introduce a 'new' charging mode where heat comes in from the SALT HX as well as from the sun, via the sCO2 Brayton as you say
+When the CSP cycle is in charging mode, excess heat is transfered from the sCO$_{2}$ Brayton cycle through the SALT HX. The heated salt is then stored in the hot storage until grid demand increases.   
+%Explain why there is no charging and discharging at same time - because if there is electricity demand heat from LFR would be dispatched direclty rather than thru the SALT HX
 
-When electrical generation is occuring, the heat input in this cycle is accomplished through a black box energy balance across states S6-A and S1-A with a heat addition of 7.5e8 W from the heliostat field. The hot storage is moved through Pump 3 and transfers heat into the sCO$_{2}$ Brayton cycle to be converted into electricity. The cooled salt is stored in cold storage and moved through Pump 2 where the heat addition from the heliostat field is added.
+When electrical generation is occuring, the heat input in this cycle is modelled through a black box energy balance across states S6-A and S1-A with a heat addition of 7.5e8 W from the heliostat field. The hot storage is moved through Pump 3 and transfers heat into the sCO$_{2}$ Brayton cycle to be converted into electricity. The cooled salt is stored in cold storage and moved through Pump 2 where the heat addition from the heliostat field is added.
 
 
 
@@ -98,12 +101,12 @@ The cycles presented are generalized in order to draw a more direct comparison. 
     \end{tabular}
 \end{specialtable}
 
-The values displayed in Table \ref{cycle-constants} are representative of LFR and CSP design while being consistent with design parameters given by our industry partner, Westinghouse Electric Corporation.
+The values displayed in Table \ref{cycle-constants} are representative of LFR and CSP design while being consistent with design parameters given by our industry partner, Westinghouse Electric Company. 
 
 In addition to generalized parameters, all cycles have identical recompression sides. The recompression side contains a PreCooler, Low Temperature Recuperator, and two compressors; Main Compressor and ReCompressor.
 
 \subsection{Non-Charging Cycle Configurations}%===================================
-Various cycles are modeled to test their advantages and disadvantages. These cycle models fall into two categories: non-charging and charging. The non-charging category decides the configuration of the cycle with a focus on electricity generation. This includes the number and location of turbines, recuperators, and heat input to the system by the CSP and LFR. To quantify the effectiveness of the non-charging configurations, a cycle efficiency, $\eta_{cycle}$, is defined in Equation \ref{eq-eta-cycle}.
+Various cycles are modeled to test their advantages and disadvantages. These cycle models fall into two categories: non-charging and charging. The non-charging category is used to determine the configuration of the cycle with a focus on electricity generation. This includes the number and location of turbines, recuperators, and heat input to the system by the CSP and LFR. To quantify the effectiveness of the non-charging configurations, a cycle efficiency, $\eta_{cycle}$, is defined in Equation \ref{eq-eta-cycle}.
 
 \begin{equation}
     \label{eq-eta-cycle}
@@ -112,6 +115,7 @@ Various cycles are modeled to test their advantages and disadvantages. These cyc
 
 The numerator in Equation \ref{eq-eta-cycle} is the Alternator power, or the power produced from the turbines, $\dot{W}_{T}$, minus the required power of the compressors, $\dot{W}_{MC}$ and $\dot{W}_{RC}$. The denominator is the total power input into the system from the LFR, $\dot{Q}_{LFRHX}$, and CSP, $\dot{Q}_{CSPHX}$.
 
+%BL: I would include the naming scheme upfront and give a table (C-LFR-ON etc.)
 
 \subsubsection{Two-Cycle Configuration: C-LFR-ON and C-CSP-ON} %--------------------------------------------------------
 
@@ -129,7 +133,8 @@ The LFR cycle for this two-cycle configuration is labeled as C-LFR-ON and the cy
 \linenumbers
 \switchcolumn
 
-Two seperate sensitivity studies on the LFR inlet temperature are completed for C-LFR-ON. The unconstrained study is performed by gradually increasing the mass flow to the main compressor while maximizing cycle efficiency. The constrained study is calculated by setting the LFR inlet temperature to the design value of 673.2 K. 
+Two seperate sensitivity studies on the LFR inlet temperature are completed for C-LFR-ON. The unconstrained study is performed by gradually increasing the mass flow to the main compressor while maximizing cycle efficiency. The constrained study is calculated by setting the LFR inlet temperature to the design value of 673.2 K (400^${circ}C), which is a requirement of the LFR primary circuit to maximize power output within material limits.
+%BL: flip the order of this para: constrained then unconstrained. State that the unconstrained is a 'sensitivty' case to determine the penalty of the constraint
 
 The CSP cycle for this two-cycle configuration is labeled C-CSP-ON and the cycle diagram is shown in Figure \ref{c-csp-on}. The diagram has the necessary pumps, TES tanks, and salt heat exchangers to be representative of a relizable salt CSP cycle.
 
@@ -150,6 +155,8 @@ The CSP cycle for this two-cycle configuration is labeled C-CSP-ON and the cycle
 
 One drawback of having a two-cycle design, as seen in the C-LFR-ON and C-CSP-ON, is doubling the number of system components. Combining the two cycles into one would reduce redundancy and complexity. Heat addition from the CSP and LFR in parallel orientation is therefore studied in the C-1HTR1T-ON model. This model studies what impact mixing different temperature flows prior to the turbine has on cycle efficiency. The diagram for this cycle is illustrated in Figure \ref{c-1htr1t-on}.
 
+%BL: be clear that Salt HX links back into the sCO2 cycle (e.g. parallel to 5-6) but is not shown to simplify the diagram. Otherwise people will wonder where it is coming from
+
 \end{paracol}
 \begin{figure}[H] 
     \widefigure
@@ -160,12 +167,14 @@ One drawback of having a two-cycle design, as seen in the C-LFR-ON and C-CSP-ON,
 \linenumbers
 \switchcolumn
 
-In this cycle, the LFR and CSP have identical inlet temperatures due to splitting the flow prior to their parallel orientation. Therefore, three sensitivity studies are done on the C-1HTR1T-ON EES model. The initial two studies have the low LFR temperature constrained to the value of 673.2 K with varied cold CSP TES and maximized cycle efficiency. The two tested values for cold CSP TES with constrained LFR low temperature are 683.2 K and 713.2 K. The desired cold CSP TES temperature of 663.2 K is not possible with the constraint on the LFR low temperature. To obtain the desired cold CSP TES temperature, the constraint on the LFR low temperature is removed, droping the temperature of the LFR inlet to 653.2 K. 
+In this cycle, the LFR and CSP have identical inlet temperatures due to splitting the flow prior to their parallel orientation. Therefore, three sensitivity studies are done on the C-1HTR1T-ON EES model. The initial two studies have the low LFR temperature constrained to the value of 673.2 K with varied cold CSP TES and maximized cycle efficiency. The two tested values for cold CSP TES with constrained LFR low temperature are 683.2 K and 713.2 K. The desired cold CSP TES temperature of 663.2 K is not possible with the constraint on the LFR low temperature (because it cannot be colder than the sCO$_2$ that removes heat from the salt). In this case, to obtain the desired cold CSP TES temperature, the constraint on the LFR low temperature is removed, droping the temperature of the LFR inlet to 653.2 K. 
+%BL: I think I understand what you're talking about but the above para could spell out all the sensitivity cases a bit more clearly, perhaps as bullets. Asp you will want to explain the criteria that go into cold storage temp. Lower = more delta T = more dispatchability
 
 
 \subsubsection{C-2HTR3T-ON} %-----------------------------------------------------
 
 Mixing two different temperature flows before the turbine in a Brayton cycle has a negative effect on cycle efficiency. To quantify the reduction in cycle efficiency, another cycle with no mixing prior to the turbine is desired. This cycle, C-2HTR3T-ON, can be seen in Figure \ref{c-2htr3t-on} and has two high temperature recuperators and three turbines. The LFR is powering one turbine, T1, and recuperating heat through a dedicated high temperature recuperator, HTR1. The CSP cycle also contains two seperate turbines, T2, while having a dedicated high temperature recuperator, HTR2. After the high temperature recuperators, the two flows are combined and sent to the LTR hot side. 
+%BL: this is more about having a compromise option of intermediate complexity and efficiency
 
 \end{paracol}
 \begin{figure}[H]
@@ -178,12 +187,15 @@ Mixing two different temperature flows before the turbine in a Brayton cycle has
 \switchcolumn
 
 Three sensitivity studies are done on the C-2HTR3T-ON model. Two with the LFR low temperature constrained and one without this constraint. The two constrained studies had varied cold CSP TES temperature with the lowest temperature of 663.2 K and highest temperature of 713.2 K. The unconstrained low LFR inlet study is calculated at a cold CSP TES temperature of 663.2 K.  
+%BL: this is clearer than the previous one but bullets could still be useful
 
 
 
 \subsection{Thermal Energy Storage Charging Techniques} %=========================
 
 Charging cycle configurations focus on an energy storage operating mode. These configurations test the optimal location of LFR heat extraction through the SALT HX. To maximize the available heat for extraction, alternator power is set to zero and turbine power is therefore equal to the compressors' demand. The excess energy from the LFR is thermally stored in the TES for later use when grid demand increases. Comparison of where thermal energy is extracted in the cycle is done by using the same Brayton cycle, C-LFR-ON, and configuring the salt heat exchanger in different locations around the turbine. To quantify the effectiveness of TES charging techniques a heat storage efficiency, $\eta_{heatstorage}$, is defined by Equation \ref{eq-eta-heatstorage}.
+%BL: explain that as a (re)compression cycle is still being run for the LFR and the components are not perfectly efficient, it will consume power moving the fluid around that needs to be balanced with some of the thermal output
+%BL: SALT HX could perhaps be better named sCO2-to-Salt or C2S for short perhaps! Np if you dont want to change it at this late stage
 
 \begin{equation}
     \label{eq-eta-heatstorage}
@@ -224,7 +236,7 @@ Moving the heat extraction prior to the turbine is analyzed in C-LFR-POST. This 
 \linenumbers
 \switchcolumn
 
-This TES charging cycle extracts heat before the turbine and therefore would have a large negative effect on the amount of work that the turbine could produce. The turbine needs to offset the requirements of both compressors and this would require the inlet temperature to be high. The amount of energy that could be extracted before the turbine would be small and therefore the heat storage efficiency would be small. There is no quantitative study done on this diagram because, due to the efficiency losses, it is non-viable. 
+This TES charging cycle extracts heat before the turbine and therefore would have a large negative effect on the amount of work that the turbine could produce. The turbine needs to offset the requirements of both compressors and this would require the inlet temperature to be high. The amount of energy that could be extracted before the turbine would be small and therefore the heat storage efficiency would be small. There is no quantitative study done on this case because, due to the efficiency losses, it is non-viable. 
 
 \subsubsection{C-LFR-PAR} %-------------------------------------------------------
 
@@ -258,6 +270,7 @@ The full diagram for C-LFR-CIRC is shown in Figure \ref{c-lfr-circ}.
 
 The charging subsection of this diagram is composed of a circulation cycle that has heat inputed through the LFR heat exchanger. This subsection is encircled in blue and can be seen in Figure \ref{c-lfr-circ-sub}.
 
+%BL: explain why you are considering this case (avoid losing useful energy in compressor and turbine inefficiencies)
 
 \end{paracol}
 \begin{figure}[H]
@@ -269,7 +282,7 @@ The charging subsection of this diagram is composed of a circulation cycle that 
 \linenumbers
 \switchcolumn
 
-The flow continues through a circulator which is assumed to have neglegible pressure rise. A heat exchanger, SALT HX, extracts heat from the flow, storing the thermal energy in the hot TES for later use. Excess heat that is not extracted is then dumped into a reservior through the chiller to bring the temperature of the flow down to LFR cool side operating temperature of 673.2 K. Three different temperatures; 663.2 K, 683.2 K, and 713.2 K, are compared in a sensitivity study. 
+The flow continues through a circulator which is assumed to have neglegible pressure rise (i.e. there is assumed to be negligible pressure drop in this case). A heat exchanger, SALT HX, extracts heat from the flow, storing the thermal energy in the hot TES for later use. Excess heat that is not extracted is then dumped into a reservior through the chiller to bring the temperature of the flow down to LFR cool side operating temperature of 673.2 K. Three different temperatures; 663.2 K, 683.2 K, and 713.2 K, are compared in a sensitivity study. 
 
 
 
