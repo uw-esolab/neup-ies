@@ -489,7 +489,7 @@ class SolarDispatchParamWrap(GeneralDispatchParamWrap):
         return param_dict
 
 
-    def set_time_series_solar_parameters(self, param_dict, updated_dict=None):
+    def set_time_series_solar_parameters(self, param_dict, plant_dict, updated_dict=None):
         """ Method to set fixed costs of the Plant for Dispatch optimization
         
         This method calculates some time series parameters for the Plant operations, startup,
@@ -517,8 +517,7 @@ class SolarDispatchParamWrap(GeneralDispatchParamWrap):
         
         # thermal power and startup params
         self.Drsu  = self.current_Plant['rec_su_delay']*u.hr   # Minimum time to start the CSP plant (hr)
-        self.Qin   = np.array([self.q_rec_design.m]*self.T)*self.q_rec_design.u if self.first_run \
-                                else self.current_Plant['q_dot_rec_inc']
+        self.Qin   = plant_dict['Q_thermal']*u.MW              # value here taken from a previous Plant-SSC run
         
         # instantiating arrays
         n  = len(self.Delta)

@@ -787,7 +787,7 @@ class GeneralDispatchParamWrap(object):
         if np.isnan(e_pb_suinitremain): # SSC seems to report NaN when startup is completed
             self.ucsu0 = self.Ec
         else:   
-            self.ucsu0 = max(0.0, self.Ec - e_pb_suinitremain ) 
+            self.ucsu0 = max(0.0*u.MWh, self.Ec - e_pb_suinitremain ) 
             if self.ucsu0 > (1.0 - tol)*self.Ec:
                 self.ucsu0 = self.Ec
         
