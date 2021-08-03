@@ -493,8 +493,8 @@ class SSCHelperMethods(object):
             # returning 0 for OFF log
             disp_pc_off0 = 0.0
         
-        # if PC is OFF for full simulation
-        elif is_pc_not_on.min() == 1:  
+        # if PC is OFF for full simulated horizon
+        elif is_pc_not_on.sum() == 0:  
             # add all OFF positions in this current horizon to existing OFF log
             disp_pc_off0 = param_dict['Yd0'].to('hr').m + n*ssc_time_step  
         
