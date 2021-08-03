@@ -285,25 +285,27 @@ class GenericSSCModule(ABC):
         # run dispatch optimization for the first time
         if self.is_dispatch:
             
-            print("\nRunning with Dispatch Optimization.")
-            
             # one pre-run of Plant, used to grab inputs to dispatch in some modules
+            prePlant = self.duplicate_Plant( self.Plant )
+            
             # runs for the Pyomo Horizon, not the SSC Horizon
-            ssc_run_success = self.run_Plant_through_SSC( time_start , time_start + self.pyomo_horizon )
-            print("First pre-Pyomo SSC run status : {0}".format("Success" if ssc_run_success else "Failed") )
+            ssc_run_success, prePlant = self.run_Plant_through_SSC( \
+                                                prePlant, time_start , time_start + self.pyomo_horizon )
             
             # create dispatch parameters for the first time
-            disp_params = self.create_dispatch_params( self.slice_pyo_currentH )
+            disp_params = self.create_dispatch_params( prePlant, self.slice_pyo_currentH )
             
             # run pyomo optimization
             self.run_pyomo( disp_params )
             
             # update: Pyomo(t) -> Plant(t) 
-            self.update_Plant_after_Pyomo( pre_dispatch_run=False )
+            self.Plant = self.update_Plant_after_Pyomo( self.Plant, pre_dispatch_run=False )
+            
+            del prePlant
         
         # first real execution of Plant through SSC
-        ssc_run_success = self.run_Plant_through_SSC( time_start , time_next )
-        print("First SSC run status : {0}".format("Success" if ssc_run_success else "Failed") )
+        ssc_run_success, self.Plant = self.run_Plant_through_SSC( \
+                                                self.Plant, time_start , time_next )
         self.log_SSC_arrays()
         
         # setting up iterable time to cycle thorugh in for loop
@@ -335,26 +337,29 @@ class GenericSSCModule(ABC):
             
             # run dispatch optimization
             if self.is_dispatch:
-                
-                # update Plant to gather Pyomo inputs... 
-                # TODO: this nomenclature is a bit confusing
-                self.update_Plant_after_Pyomo( pre_dispatch_run=True )
             
                 # one pre-run of Plant, used to grab inputs to dispatch in some modules
+                prePlant = self.duplicate_Plant( self.Plant )
+                prePlant.SystemControl.is_dispatch_targets = False # just want DNI
+
                 # runs for the Pyomo Horizon, not the SSC Horizon
-                ssc_run_success = self.run_Plant_through_SSC( time_start , time_start + self.pyomo_horizon )
+                ssc_run_success, prePlant = self.run_Plant_through_SSC( \
+                                    prePlant, time_start , time_start + self.pyomo_horizon )
                 
                 # update: SSC(t) -> Pyomo(t+1)
-                disp_params = self.update_Pyomo_after_SSC(disp_params, self.slice_pyo_currentH)
+                disp_params = self.update_Pyomo_after_SSC( prePlant, disp_params, self.slice_pyo_currentH)
                 
                 # run pyomo optimization again
                 self.run_pyomo(disp_params)
             
                 # update: Pyomo(t+1) -> Plant(t+1)
-                self.update_Plant_after_Pyomo( pre_dispatch_run=False )
+                self.Plant = self.update_Plant_after_Pyomo( self.Plant, pre_dispatch_run=False )
+                
+                del prePlant
             
             # run Plant again
-            ssc_run_success = self.run_Plant_through_SSC( time_start, time_next )
+            ssc_run_success, self.Plant = self.run_Plant_through_SSC( \
+                                                    self.Plant, time_start , time_next )
             if not ssc_run_success:
                 print('\n Plant Simulation ended prematurely.')
                 self.log_SSC_arrays( log_final=True )
@@ -366,7 +371,7 @@ class GenericSSCModule(ABC):
             print('\n Plant Simulation successfully completed.')
         
         
-    def run_Plant_through_SSC(self, start_hr, end_hr):
+    def run_Plant_through_SSC(self, Plant, start_hr, end_hr):
         """ Simulation of Plant through SSC for given times
         
         This method strictly executes the Plant object in SSC through the PySAM
@@ -376,6 +381,8 @@ class GenericSSCModule(ABC):
         to member attributes of this NE2 module.
         
         Args:
+            Plant (obj): 
+                original PySAM Plant module to be executed
             start_hr (float Quant): 
                 starting time for next simulation (hours)
             end_hr (float Quant): 
@@ -383,20 +390,22 @@ class GenericSSCModule(ABC):
         Returns:
             exec_success (bool): 
                 True if SSC execution is successful
+            Plant (obj): 
+                original PySAM Plant module after execution
         """
 
         # start and end times for full simulation
-        self.Plant.SystemControl.time_start = start_hr.to('s').m
-        self.Plant.SystemControl.time_stop  = end_hr.to('s').m
+        Plant.SystemControl.time_start = start_hr.to('s').m
+        Plant.SystemControl.time_stop  = end_hr.to('s').m
         
         exec_success = True
         try:
-            self.Plant.execute()
+            Plant.execute()
         except Exception as err:
             exec_success = False
             print("\n SSC error: {0}".format(err))
             
-        return exec_success
+        return exec_success, Plant
 
         
     @abstractmethod
@@ -461,7 +470,7 @@ class GenericSSCModule(ABC):
         self.Plant.SystemControl.pc_startup_time_remain_init      = self.Plant.Outputs.pc_startup_energy_remain_final
       
     @abstractmethod    
-    def update_Pyomo_after_SSC(self, params, current_pyomo_slice):
+    def update_Pyomo_after_SSC(self, Plant, params, current_pyomo_slice):
         """ Update Pyomo inputs with SSC outputs from previous segment simulation
         
         Note:
@@ -474,6 +483,8 @@ class GenericSSCModule(ABC):
         of the Dispatch parameter dictionary. 
         
         Args:
+            Plant (obj): 
+                original PySAM Plant module
             params (dict): 
                 dictionary of Pyomo dispatch parameters
             current_pyomo_slice (slice): 
@@ -481,11 +492,12 @@ class GenericSSCModule(ABC):
         Returns:
             params (dict): 
                 updated dictionary of Pyomo dispatch parameters
+                
         """
         return params
         
     @abstractmethod    
-    def update_Plant_after_Pyomo(self, pre_dispatch_run=False):
+    def update_Plant_after_Pyomo(self, Plant, pre_dispatch_run=False):
         """ Update SSC Plant inputs with Pyomo optimization outputs from current segment simulation
 
         Note:
@@ -503,9 +515,14 @@ class GenericSSCModule(ABC):
         next SSC simulation segment. 
 
         Args:
+            Plant (obj): 
+                original PySAM Plant module to be updated
             pre_dispatch_run (bool): 
                 are we updating the Plant for a pre- or post- dispatch run.
                 Recall that we only log post-dispatch Plant runs
+        Returns:
+            Plant (obj): 
+                updated PySAM Plant module
                 
         """
         
@@ -519,20 +536,22 @@ class GenericSSCModule(ABC):
         
         ### Set Dispatch Targets ### 
         # setting dispatch targets to True so that SSC can read in Pyomo inputs
-        self.Plant.SystemControl.is_dispatch_targets = True
+        Plant.SystemControl.is_dispatch_targets = True
         
         # extract binary arrays for receiver startup and standby
-        self.Plant.SystemControl.is_rec_su_allowed_in = dispatch_targets['is_rec_su_allowed_in']
-        self.Plant.SystemControl.is_rec_sb_allowed_in = dispatch_targets['is_rec_sb_allowed_in']
+        Plant.SystemControl.is_rec_su_allowed_in = dispatch_targets['is_rec_su_allowed_in']
+        Plant.SystemControl.is_rec_sb_allowed_in = dispatch_targets['is_rec_sb_allowed_in']
         
         # extract binary arrays for cycle startup and standby
-        self.Plant.SystemControl.is_pc_su_allowed_in  = dispatch_targets['is_pc_su_allowed_in']
-        self.Plant.SystemControl.is_pc_sb_allowed_in  = dispatch_targets['is_pc_sb_allowed_in']
+        Plant.SystemControl.is_pc_su_allowed_in  = dispatch_targets['is_pc_su_allowed_in']
+        Plant.SystemControl.is_pc_sb_allowed_in  = dispatch_targets['is_pc_sb_allowed_in']
         
         # extract power arrays for power cycle
-        self.Plant.SystemControl.q_pc_target_su_in    = dispatch_targets['q_pc_target_su_in']
-        self.Plant.SystemControl.q_pc_target_on_in    = dispatch_targets['q_pc_target_on_in']
-        self.Plant.SystemControl.q_pc_max_in          = dispatch_targets['q_pc_max_in']
+        Plant.SystemControl.q_pc_target_su_in    = dispatch_targets['q_pc_target_su_in']
+        Plant.SystemControl.q_pc_target_on_in    = dispatch_targets['q_pc_target_on_in']
+        Plant.SystemControl.q_pc_max_in          = dispatch_targets['q_pc_max_in']
+        
+        return Plant
         
     @abstractmethod
     def create_dispatch_wrapper(self, PySAM_dict):
@@ -565,7 +584,7 @@ class GenericSSCModule(ABC):
         return dispatch_wrap
 
     @abstractmethod
-    def create_dispatch_params(self, current_pyomo_slice):
+    def create_dispatch_params(self, Plant, current_pyomo_slice):
         """ Populating a dictionary with dispatch parameters before optimization
         
         Note:
@@ -578,6 +597,8 @@ class GenericSSCModule(ABC):
         if simulation is segmented.
 
         Args:
+            Plant (obj): 
+                original PySAM Plant module
             current_pyomo_slice (slice): 
                 range of current pyomo horizon (ints representing hours)
         Returns:
@@ -687,7 +708,7 @@ class GenericSSCModule(ABC):
             if not log_final:
                 # get what we have logged so far
                 plant_output = getattr(self.Plant.Outputs,  self.Log_Arrays[key] )
-                # grab and save corresponding slices to self (this should be some sort of pointer, so should)
+                # grab and save corresponding slices to self (this should be some sort of pointer)
                 self_output[self.slice_ssc_currentH] = plant_output[self.slice_ssc_firstH]
             
             # we're done with the full simulation

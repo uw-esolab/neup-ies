@@ -219,10 +219,10 @@ class NuclearTES(GenericSSCModule):
         return dispatch_wrap
 
     
-    def create_dispatch_params(self, current_pyomo_slice):
+    def create_dispatch_params(self, Plant, current_pyomo_slice):
         """ Populating a dictionary with dispatch parameters before optimization
         
-        Note: 
+        Note:
             self.is_dispatch == True 
             (Called within simulation)
         
@@ -232,6 +232,8 @@ class NuclearTES(GenericSSCModule):
         if simulation is segmented.
 
         Args:
+            Plant (obj): 
+                original PySAM Plant module
             current_pyomo_slice (slice): 
                 range of current pyomo horizon (ints representing hours)
         Returns:
@@ -244,7 +246,7 @@ class NuclearTES(GenericSSCModule):
         DW = self.dispatch_wrap
         
         # run the setters from the GenericSSCModule parent class
-        params = GenericSSCModule.create_dispatch_params(self, current_pyomo_slice)
+        params = GenericSSCModule.create_dispatch_params(self, Plant, current_pyomo_slice)
         
         # these are NuclearTES-specific setters
         params = DW.set_nuclear_parameters( params )
@@ -256,7 +258,7 @@ class NuclearTES(GenericSSCModule):
         return params
 
 
-    def update_Pyomo_after_SSC(self, params, current_pyomo_slice):
+    def update_Pyomo_after_SSC(self, Plant, params, current_pyomo_slice):
         """ Update Pyomo inputs with SSC outputs from previous segment simulation
         
         Note:
@@ -269,6 +271,8 @@ class NuclearTES(GenericSSCModule):
         of the Dispatch parameter dictionary. 
         
         Args:
+            Plant (obj): 
+                original PySAM Plant module
             params (dict): 
                 dictionary of Pyomo dispatch parameters
             current_pyomo_slice (slice): 
@@ -282,18 +286,18 @@ class NuclearTES(GenericSSCModule):
         updated_SSC_dict = copy.deepcopy(self.SSC_dict)
         
         # saving relevant end-of-sim outputs from the last simulation segment
-        updated_SSC_dict['rec_op_mode_initial']              = self.Plant.Outputs.rec_op_mode_final
-        updated_SSC_dict['rec_startup_time_remain_init']     = self.Plant.Outputs.rec_startup_time_remain_final
-        updated_SSC_dict['rec_startup_energy_remain_init']   = self.Plant.Outputs.rec_startup_energy_remain_final
-        updated_SSC_dict['T_tank_cold_init']                 = self.Plant.Outputs.T_tes_cold[self.t_ind-1]
-        updated_SSC_dict['T_tank_hot_init']                  = self.Plant.Outputs.T_tes_hot[self.t_ind-1]
-        updated_SSC_dict['csp.pt.tes.init_hot_htf_percent']  = self.Plant.Outputs.hot_tank_htf_percent_final
-        updated_SSC_dict['pc_op_mode_initial']               = self.Plant.Outputs.pc_op_mode_final
-        updated_SSC_dict['pc_startup_time_remain_init']      = self.Plant.Outputs.pc_startup_time_remain_final
-        updated_SSC_dict['pc_startup_energy_remain_initial'] = self.Plant.Outputs.pc_startup_energy_remain_final
+        updated_SSC_dict['rec_op_mode_initial']              = Plant.Outputs.rec_op_mode_final
+        updated_SSC_dict['rec_startup_time_remain_init']     = Plant.Outputs.rec_startup_time_remain_final
+        updated_SSC_dict['rec_startup_energy_remain_init']   = Plant.Outputs.rec_startup_energy_remain_final
+        updated_SSC_dict['T_tank_cold_init']                 = Plant.Outputs.T_tes_cold[self.t_ind-1]
+        updated_SSC_dict['T_tank_hot_init']                  = Plant.Outputs.T_tes_hot[self.t_ind-1]
+        updated_SSC_dict['csp.pt.tes.init_hot_htf_percent']  = Plant.Outputs.hot_tank_htf_percent_final
+        updated_SSC_dict['pc_op_mode_initial']               = Plant.Outputs.pc_op_mode_final
+        updated_SSC_dict['pc_startup_time_remain_init']      = Plant.Outputs.pc_startup_time_remain_final
+        updated_SSC_dict['pc_startup_energy_remain_initial'] = Plant.Outputs.pc_startup_energy_remain_final
         
         # these are specific to the initial states
-        updated_SSC_dict['wdot0'] = self.Plant.Outputs.P_cycle[self.t_ind-1]
+        updated_SSC_dict['wdot0'] = Plant.Outputs.P_cycle[self.t_ind-1]
         
         # TODO: removing w_dot_s_prev references in all of Dispatch for now, might need to revisit later
         # updated_SSC_dict['wdot_s_prev'] = 0 #np.array([pe.value(dm.model.wdot_s_prev[t]) for t in dm.model.T])[-1]
@@ -302,13 +306,13 @@ class NuclearTES(GenericSSCModule):
         
         # updating the initial state and time series Nuclear params
         params = DW.set_time_indexed_parameters( params, self.df_array, self.ud_array, current_pyomo_slice )
-        params = DW.set_initial_state( params, updated_SSC_dict, self.Plant, self.t_ind )
+        params = DW.set_initial_state( params, updated_SSC_dict, Plant, self.t_ind )
         params = DW.set_time_series_nuclear_parameters( params )
         
         return params
 
 
-    def update_Plant_after_Pyomo(self, pre_dispatch_run=False):
+    def update_Plant_after_Pyomo(self, Plant, pre_dispatch_run=False):
         """ Update SSC Plant inputs with Pyomo optimization outputs from current segment simulation
 
         Note:
@@ -326,9 +330,14 @@ class NuclearTES(GenericSSCModule):
         next SSC simulation segment. 
 
         Args:
+            Plant (obj): 
+                original PySAM Plant module to be updated
             pre_dispatch_run (bool): 
                 are we updating the Plant for a pre- or post- dispatch run.
                 Recall that we only log post-dispatch Plant runs
+        Returns:
+            Plant (obj): 
+                updated PySAM Plant module
                 
         """
         
@@ -342,18 +351,20 @@ class NuclearTES(GenericSSCModule):
         
         ### Set Dispatch Targets ### 
         # setting dispatch targets to True so that SSC can read in Pyomo inputs
-        self.Plant.SystemControl.is_dispatch_targets = True
+        Plant.SystemControl.is_dispatch_targets = True
         
         # extract binary arrays for receiver startup and standby
-        self.Plant.SystemControl.is_rec_su_allowed_in = dispatch_targets['is_rec_su_allowed_in']
-        self.Plant.SystemControl.is_rec_sb_allowed_in = dispatch_targets['is_rec_sb_allowed_in']
+        Plant.SystemControl.is_rec_su_allowed_in = dispatch_targets['is_rec_su_allowed_in']
+        Plant.SystemControl.is_rec_sb_allowed_in = dispatch_targets['is_rec_sb_allowed_in']
         
         # extract binary arrays for cycle startup and standby
-        self.Plant.SystemControl.is_pc_su_allowed_in  = dispatch_targets['is_pc_su_allowed_in']
-        self.Plant.SystemControl.is_pc_sb_allowed_in  = dispatch_targets['is_pc_sb_allowed_in']
+        Plant.SystemControl.is_pc_su_allowed_in  = dispatch_targets['is_pc_su_allowed_in']
+        Plant.SystemControl.is_pc_sb_allowed_in  = dispatch_targets['is_pc_sb_allowed_in']
         
         # extract power arrays for power cycle
-        self.Plant.SystemControl.q_pc_target_su_in    = dispatch_targets['q_pc_target_su_in']
-        self.Plant.SystemControl.q_pc_target_on_in    = dispatch_targets['q_pc_target_on_in']
-        self.Plant.SystemControl.q_pc_max_in          = dispatch_targets['q_pc_max_in']
+        Plant.SystemControl.q_pc_target_su_in    = dispatch_targets['q_pc_target_su_in']
+        Plant.SystemControl.q_pc_target_on_in    = dispatch_targets['q_pc_target_on_in']
+        Plant.SystemControl.q_pc_max_in          = dispatch_targets['q_pc_max_in']
+        
+        return Plant
     
