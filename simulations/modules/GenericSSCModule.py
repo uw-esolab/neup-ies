@@ -216,7 +216,28 @@ class GenericSSCModule(ABC):
         # import Singleowner-specific data to Singleowner object
         self.SO.assign(Singleowner.wrap(so_dat).export())
 
-
+    @abstractmethod
+    def duplicate_Plant(self, Plant):
+        """ Method to create Plant object as a duplicate of existing Plant
+        
+        This method creates a Plant object from an existing Plant. The new 
+        Plant object will have a copy of the original Plant's subclasses
+        EXCEPT the Output subclass. The two plant's outputs will NOT be linked.
+        
+        Note:
+            Verified in imulations/scripts/sanity_check_scripts
+        
+        Args:
+            Plant (obj): 
+                original PySAM Plant module to be copied
+        Returns:
+            newPlant (obj): 
+                duplicate PySAM Plant module, unlinked from original
+        """
+        
+        return Plant
+        
+        
     def simulate_Plant(self):
         """ Method to run full simulation of Plant
         
@@ -264,9 +285,12 @@ class GenericSSCModule(ABC):
         # run dispatch optimization for the first time
         if self.is_dispatch:
             
+            print("\nRunning with Dispatch Optimization.")
+            
             # one pre-run of Plant, used to grab inputs to dispatch in some modules
             # runs for the Pyomo Horizon, not the SSC Horizon
             ssc_run_success = self.run_Plant_through_SSC( time_start , time_start + self.pyomo_horizon )
+            print("First pre-Pyomo SSC run status : {0}".format("Success" if ssc_run_success else "Failed") )
             
             # create dispatch parameters for the first time
             disp_params = self.create_dispatch_params( self.slice_pyo_currentH )
@@ -279,6 +303,7 @@ class GenericSSCModule(ABC):
         
         # first real execution of Plant through SSC
         ssc_run_success = self.run_Plant_through_SSC( time_start , time_next )
+        print("First SSC run status : {0}".format("Success" if ssc_run_success else "Failed") )
         self.log_SSC_arrays()
         
         # setting up iterable time to cycle thorugh in for loop

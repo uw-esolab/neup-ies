@@ -122,6 +122,34 @@ class NuclearTES(GenericSSCModule):
         
         #set curtailment to be really high
         self.Grid.GridLimits.grid_curtailment = self.gc_array  
+
+
+    def duplicate_Plant(self, Plant):
+        """ Method to create Plant object as a duplicate of existing Plant
+        
+        This method creates a Plant object from an existing Plant. The new 
+        Plant object will have a copy of the original Plant's subclasses
+        EXCEPT the Output subclass. The two plant's outputs will NOT be linked.
+        
+        Note:
+            Verified in imulations/scripts/sanity_check_scripts
+        
+        Args:
+            Plant (obj): 
+                original PySAM Plant module to be copied
+        Returns:
+            newPlant (obj): 
+                duplicate PySAM Plant module, unlinked from original
+                
+        """
+        # retrieve Plant dictionary
+        plant_dict = Plant.export()
+        
+        # create new Plant object from dictionary
+        newPlant = self.PySAM_Module.new()
+        newPlant.assign(plant_dict)
+        
+        return newPlant
         
         
     def run_pyomo(self, params):
