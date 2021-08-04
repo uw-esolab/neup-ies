@@ -312,7 +312,7 @@ class GenericSSCModule(ABC):
         
         # if running loop -> next 'time stop' is ssc_horizon time
         #            else -> next 'time stop' is full sim end time
-        time_next  = self.ssc_horizon.to('s') if self.run_loop 
+        time_next  = self.ssc_horizon.to('s') if self.run_loop \
                         else copy.deepcopy(time_end)
         
         # setting index for subsequent calls, it's just a static index for log arrays

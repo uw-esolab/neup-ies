@@ -571,8 +571,9 @@ class GeneralDispatchParamWrap(object):
         u = self.u
         
         # time parameters
-        self.T       = int( self.pyomo_horizon.to('hr').magnitude )
-        self.Delta   = np.array([self.dispatch_time_step.to('hr').magnitude]*self.T)*u.hr
+        pyoH   = self.pyomo_horizon.to('hr').m
+        self.T       = int( pyoH )
+        self.Delta   = np.array([self.dispatch_time_step.to('hr').m]*self.T)*u.hr
         self.Delta_e = np.cumsum(self.Delta)
         
         # weight parameter
@@ -582,11 +583,19 @@ class GeneralDispatchParamWrap(object):
         Tdry  = self.Tdry # dry bulb temperature from solar resource file 
         Price = df_array  # pricing multipliers
         
+        # we now curtail any pyomo slice that goes above the full sim time
+        length_of_pyoH = current_pyomo_slice.stop - current_pyomo_slice.start
+        
         # if we're at the last segment, we won't have 48 hour data for the sim. here is a quick fix
-        if current_pyomo_slice.stop > len(Tdry):
-            # double-stacking
+        if length_of_pyoH < pyoH:
+            # double-stacking arrays so we can get a slice past full sim time
             Tdry  = np.hstack([Tdry,  Tdry])
             Price = np.hstack([Price, Price])
+            
+            # restructuring the pyomo slice
+            start   = current_pyomo_slice.start
+            newstop = start + pyoH
+            current_pyomo_slice = slice( start, newstop, 1)
             
         # grabbing relevant dry temperatures
         Tdry   = Tdry[current_pyomo_slice]
