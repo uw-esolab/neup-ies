@@ -28,7 +28,7 @@ print("PID = ", pid)
 # =============================================================================
 
 # defining directories
-nuctes = NuclearTES.NuclearTES(is_dispatch=False)
+nuctes = NuclearTES.NuclearTES(is_dispatch=True)
 output_file = 'output.csv'
 nuctes.run_sim( run_loop=True, export=False, filename=output_file )
 nt = nuctes.Plant
@@ -79,7 +79,7 @@ print ('Size of debt                  =  $', size_of_debt, ' M')
 # =============================================================================
 
 from util.PostProcessing import Plots
-upl = Plots(soltes, legend_offset = True, x_shrink=0.7)
+upl = Plots(nuctes, legend_offset = True, x_shrink=0.7)
 
 # 48 hour plot
 fig = plt.figure(figsize=[14,6])
