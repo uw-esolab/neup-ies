@@ -225,7 +225,7 @@ class GenericSSCModule(ABC):
         EXCEPT the Output subclass. The two plant's outputs will NOT be linked.
         
         Note:
-            Verified in imulations/scripts/sanity_check_scripts
+            Currently verified in simulations/scripts/sanity_check_scripts
         
         Args:
             Plant (obj): 
@@ -236,6 +236,49 @@ class GenericSSCModule(ABC):
         """
         
         return Plant
+    
+    
+    def advance_time_segment(self, prev_time_start, prev_time_next):
+        """ Method to advance time segment to the next horizon
+        
+
+        This method updates the current time segment bookends and slices to
+        reflect the next time segment horizon. 
+        
+        Args:
+            prev_time_start (float Quant): 
+                starting time of previous time segment
+            prev_time_next (float Quant): 
+                ending time of previous time segment
+        Returns:
+            time_start (float Quant): 
+                starting time of current SSC horizon
+            time_sscH (float Quant): 
+                ending time of current SSC horizon
+            time_pyoH (float Quant): 
+                ending time of current SSC horizon
+        """
+        
+        # advance time segment to next SSC horizon
+        time_start = prev_time_start + self.ssc_horizon.to('s')
+        time_sscH  = prev_time_next  + self.ssc_horizon.to('s')
+        
+        # calculate end time for next Pyomo horizon
+        time_pyoH = time_start + self.pyomo_horizon.to('s')
+        
+        # check if the horizon end times exceed the full simulation time
+        time_sscH = self.sim_time_end if time_sscH > self.sim_time_end else time_sscH
+        time_pyoH = self.sim_time_end if time_pyoH > self.sim_time_end else time_pyoH
+        
+        # time index for each bookend
+        ind_t_start = int( time_start.to('hr').m )
+        ind_t_sscH  = int( time_sscH.to('hr').m  )
+        ind_t_pyoH  = int( time_pyoH.to('hr').m  )
+        
+        self.slice_ssc_currentH = slice( ind_t_start, ind_t_sscH, 1)  
+        self.slice_pyo_currentH = slice( ind_t_start, ind_t_pyoH, 1) 
+        
+        return time_start, time_sscH, time_pyoH
         
         
     def simulate_Plant(self):
@@ -265,10 +308,12 @@ class GenericSSCModule(ABC):
         # start and end times for full simulation
         time_start = self.SSC_dict['time_start'] * u.s
         time_end   = self.SSC_dict['time_stop']  * u.s
+        self.sim_time_end = time_end.to('s')
         
         # if running loop -> next 'time stop' is ssc_horizon time
         #            else -> next 'time stop' is full sim end time
-        time_next  = self.ssc_horizon.to('s') if self.run_loop else copy.deepcopy(time_end)
+        time_next  = self.ssc_horizon.to('s') if self.run_loop 
+                        else copy.deepcopy(time_end)
         
         # setting index for subsequent calls, it's just a static index for log arrays
         self.t_ind = int(time_next.to('hr').m)
@@ -289,8 +334,10 @@ class GenericSSCModule(ABC):
             prePlant = self.duplicate_Plant( self.Plant )
             
             # runs for the Pyomo Horizon, not the SSC Horizon
-            ssc_run_success, prePlant = self.run_Plant_through_SSC( \
-                                                prePlant, time_start , time_start + self.pyomo_horizon )
+            ssc_run_success, prePlant = self.run_Plant_through_SSC(
+                                                prePlant, time_start , 
+                                                time_start + self.pyomo_horizon 
+                                                )
             
             # create dispatch parameters for the first time
             disp_params = self.create_dispatch_params( prePlant, self.slice_pyo_currentH )
@@ -304,11 +351,13 @@ class GenericSSCModule(ABC):
             del prePlant
         
         # first real execution of Plant through SSC
-        ssc_run_success, self.Plant = self.run_Plant_through_SSC( \
-                                                self.Plant, time_start , time_next )
+        ssc_run_success, self.Plant = self.run_Plant_through_SSC( 
+                                                self.Plant, time_start , 
+                                                time_next 
+                                                )
         self.log_SSC_arrays()
         
-        # setting up iterable time to cycle thorugh in for loop
+        # setting up iterable time to cycle through in for loop
         # TODO: this needs to be variable with SSC Horizon
         p_time_next = int(np.round(time_next.to('d').m) )
         p_time_end  = int(np.round(time_end.to('d').m) )
@@ -317,20 +366,8 @@ class GenericSSCModule(ABC):
         # this loop should only be entered if run_loop == True
         for t in tqdm(remaining_sim_time):
         
-            # update time
-            time_start += self.ssc_horizon.to('s')
-            time_next  += self.ssc_horizon.to('s')
-            
-            # make sure we don't go over-time
-            if time_next > time_end:
-                time_next = time_end
-            
-            # update the current slice of SSC Horizon relative to full simulation
-            self.slice_ssc_currentH = slice( int( time_start.to('hr').m ), 
-                                             int( time_next.to('hr').m  ), 1)  
-            # update the current slice of Pyomo Horizon relative to full simulation
-            self.slice_pyo_currentH = slice( int( time_start.to('hr').m ), 
-                                             int( (time_start + self.pyomo_horizon).to('hr').m  ), 1)  
+            # advance to the next time segment
+            time_start, time_next, time_pyoH = self.advance_time_segment( time_start, time_next )
             
             # update: SSC(t) -> Plant(t+1)
             self.update_Plant_after_SSC( )
@@ -343,14 +380,13 @@ class GenericSSCModule(ABC):
                 prePlant.SystemControl.is_dispatch_targets = False # just want DNI
 
                 # runs for the Pyomo Horizon, not the SSC Horizon
-                ssc_run_success, prePlant = self.run_Plant_through_SSC( \
-                                    prePlant, time_start , time_start + self.pyomo_horizon )
+                ssc_run_success, prePlant = self.run_Plant_through_SSC( prePlant, time_start , time_pyoH )
                 
                 # update: SSC(t) -> Pyomo(t+1)
-                disp_params = self.update_Pyomo_after_SSC( prePlant, disp_params, self.slice_pyo_currentH)
+                disp_params = self.update_Pyomo_after_SSC( prePlant, disp_params, self.slice_pyo_currentH )
                 
                 # run pyomo optimization again
-                self.run_pyomo(disp_params)
+                self.run_pyomo( disp_params )
             
                 # update: Pyomo(t+1) -> Plant(t+1)
                 self.Plant = self.update_Plant_after_Pyomo( self.Plant, pre_dispatch_run=False )
