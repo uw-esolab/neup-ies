@@ -79,19 +79,22 @@ print ('Size of debt                  =  $', size_of_debt, ' M')
 # =============================================================================
 
 from util.PostProcessing import Plots
-upl = Plots(nuctes)
+upl = Plots(soltes, legend_offset = True, x_shrink=0.7)
 
 # 48 hour plot
-fig = plt.figure(figsize=[10,8])
+fig = plt.figure(figsize=[14,6])
 ax1 = fig.add_subplot(311)
 ax2 = fig.add_subplot(312)
 ax3 = fig.add_subplot(313)
 
-plot_all_time = True
+plt_allTime = False
+title = 'SSC Results - 48 hrs'
+start = 0
+end   = start + 72*2
 
-upl.plot_SSC_power_and_energy(ax1 , plot_all_time=plot_all_time, title_label='SSC Results - 48 hrs')
-upl.plot_SSC_op_modes(ax2, plot_all_time=plot_all_time)
-upl.plot_SSC_massflow(ax3, plot_all_time=plot_all_time)
+upl.plot_SSC_power_and_energy(ax1 , plot_all_time=plt_allTime, title_label=title, start_hr=start, end_hr=end, hide_x=True, x_legend=1.2, y_legend_L=1.0, y_legend_R=0.3)
+upl.plot_SSC_op_modes(ax2, plot_all_time=plt_allTime, start_hr=start, end_hr=end, hide_x=True )
+upl.plot_SSC_massflow(ax3, plot_all_time=plt_allTime, start_hr=start, end_hr=end, y_legend_L=0.8, y_legend_R=0.3)
 
 
 
