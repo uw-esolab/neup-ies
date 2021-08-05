@@ -123,7 +123,7 @@ class SolarDispatch(GeneralDispatch):
         #------- Binary Variables ---------
         self.model.yr = pe.Var(self.model.T, domain=pe.Binary)        #y^r: 1 if receiver is generating ``usable'' thermal power at period $t$; 0 otherwise
         self.model.yrhsp = pe.Var(self.model.T, domain=pe.Binary)	  #y^{rhsp}: 1 if receiver hot start-up penalty is incurred at period $t$ (from standby); 0 otherwise
-        self.model.yrsb = pe.Var(self.model.T, domain=pe.Binary)	  #y^{rsb}: 1 if receiver is in standby mode at period $t$; 0 otherwise
+        self.model.yrsb = pe.Var(self.model.T, domain=pe.Binary, bounds=(0,0.2))	  #y^{rsb}: 1 if receiver is in standby mode at period $t$; 0 otherwise
         self.model.yrsd = pe.Var(self.model.T, domain=pe.Binary)	  #y^{rsd}: 1 if receiver is shut down at period $t$; 0 otherwise
         self.model.yrsu = pe.Var(self.model.T, domain=pe.Binary)      #y^{rsu}: 1 if receiver is starting up at period $t$; 0 otherwise
         self.model.yrsup = pe.Var(self.model.T, domain=pe.Binary)     #y^{rsup}: 1 if receiver cold start-up penalty is incurred at period $t$ (from off); 0 otherwise
@@ -529,6 +529,8 @@ class SolarDispatchParamWrap(GeneralDispatchParamWrap):
         self.Drsu  = self.current_Plant['rec_su_delay'] * u.hr # Minimum time to start the CSP plant (hr)
         self.Qin   = self.current_Plant['Q_thermal'] * u.MW    # value here taken from a previous Plant-SSC run
         
+        if len(self.Qin) < len(param_dict['Delta']):
+            self.Qin = np.hstack( [self.current_Plant['Q_thermal'], self.current_Plant['Q_thermal']] ) * u.MW
         
         # instantiating arrays
         n  = len(self.Delta)
