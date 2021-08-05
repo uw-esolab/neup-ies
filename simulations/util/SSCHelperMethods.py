@@ -457,31 +457,32 @@ class SSCHelperMethods(object):
         current_pc_state  = tmp_final_op_mode if type(tmp_final_op_mode) == float \
                                 else tmp_final_op_mode[npts-1]
         # times when cycle is not generating power
-        is_pc_not_on = np.array( plant.Outputs.P_cycle[0:npts-1] ) <= 1.e-3
+        tslice = slice(0,npts,1)
+        is_pc_not_on = np.array( plant.Outputs.P_cycle[tslice] ) <= 1.e-3
         
         ###=== Persist Log ===### 
         # if PC is ON
         if current_pc_state == 1:
             # array of times (PC was generating power == True)
-            is_pc_current = np.array( plant.Outputs.P_cycle[0:npts-1] ) > 1.e-3 
+            is_pc_current = np.array( plant.Outputs.P_cycle[tslice] ) > 1.e-3 
             
         # if PC is STANDBY
         elif current_pc_state == 2:
             # array of times (PC was generating power == False) + (PC getting input energy == True) + (PC using startup power == False)
             is_pc_current = np.logical_and( \
                                 np.logical_and( \
-                                    np.array( plant.Outputs.P_cycle[0:npts-1] ) <= 1.e-3, np.array( plant.Outputs.q_pb[0:npts-1] ) >= 1.e-3 ), \
-                                    np.array( plant.Outputs.q_dot_pc_startup[0:npts-1] ) <= 1.e-3 )
+                                    np.array( plant.Outputs.P_cycle[tslice] ) <= 1.e-3, np.array( plant.Outputs.q_pb[tslice] ) >= 1.e-3 ), \
+                                    np.array( plant.Outputs.q_dot_pc_startup[tslice] ) <= 1.e-3 )
         
         # if PC is STARTUP
         elif current_pc_state == 0:
             # array of times (PC using startup power == True)
-            is_pc_current = np.array( plant.Outputs.q_dot_pc_startup[0:npts-1] ) > 1.e-3
+            is_pc_current = np.array( plant.Outputs.q_dot_pc_startup[tslice] ) > 1.e-3
         
         # if PC is OFF
         elif current_pc_state == 3:
             # array of times (PC getting input energy + PC using startup power == False)
-            is_pc_current = (np.array( plant.Outputs.q_dot_pc_startup[0:npts-1] ) + np.array( plant.Outputs.q_pb[0:npts-1] ) ) <= 1.e-3
+            is_pc_current = (np.array( plant.Outputs.q_dot_pc_startup[tslice] ) + np.array( plant.Outputs.q_pb[tslice] ) ) <= 1.e-3
         
         ###=== Indexing ===###
         ssc_time_step = 1   # 1 hour per time step
@@ -494,7 +495,7 @@ class SSCHelperMethods(object):
             disp_pc_off0 = 0.0
         
         # if PC is OFF for full simulated horizon
-        elif is_pc_not_on.sum() == 0:  
+        elif is_pc_not_on.sum() == n:  
             # add all OFF positions in this current horizon to existing OFF log
             disp_pc_off0 = param_dict['Yd0'].to('hr').m + n*ssc_time_step  
         
@@ -503,7 +504,7 @@ class SSCHelperMethods(object):
             # find indeces of changed OFF state
             i = np.where(np.abs(np.diff(is_pc_not_on)) == 1)[0][-1]
             # use index to find length of times PC was oFF
-            disp_pc_off0 = int(n-1-i)*ssc_time_step          
+            disp_pc_off0 = int(n-1-i)*ssc_time_step         
         
         ###=== Final Indexing and Logging ===###
         # Plant has not changed state over this simulation window:
