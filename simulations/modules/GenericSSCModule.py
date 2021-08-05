@@ -308,10 +308,9 @@ class GenericSSCModule(ABC):
         # start and end times for full simulation
         time_start = self.SSC_dict['time_start'] * u.s
         time_end   = self.SSC_dict['time_stop']  * u.s
-        self.sim_time_end = time_end.to('s')
+        self.sim_time_end = time_end.to('s') 
         
-        # if running loop -> next 'time stop' is ssc_horizon time
-        #            else -> next 'time stop' is full sim end time
+        # determining whether next time segment end is the SSC horizon or full sim time
         time_next  = self.ssc_horizon.to('s') if self.run_loop \
                         else copy.deepcopy(time_end)
         
@@ -333,14 +332,15 @@ class GenericSSCModule(ABC):
             # one pre-run of Plant, used to grab inputs to dispatch in some modules
             prePlant = self.duplicate_Plant( self.Plant )
             
-            # runs for the Pyomo Horizon, not the SSC Horizon
+            # runs for the full simulation to gather some SSC-specific array calculations
             ssc_run_success, prePlant = self.run_Plant_through_SSC(
-                                                prePlant, time_start , 
-                                                time_start + self.pyomo_horizon 
+                                                prePlant, time_start , time_end 
                                                 )
+            print("Attempting to run full simulation to gather predictions for Pyomo:  {0}".format(
+                            "success!" if ssc_run_success else "failed :("))
             
             # create dispatch parameters for the first time
-            disp_params = self.create_dispatch_params( prePlant, self.slice_pyo_currentH )
+            disp_params = self.create_dispatch_params( prePlant )
             
             # run pyomo optimization
             self.run_pyomo( disp_params )
@@ -375,23 +375,14 @@ class GenericSSCModule(ABC):
             # run dispatch optimization
             if self.is_dispatch:
             
-                # one pre-run of Plant, used to grab inputs to dispatch in some modules
-                prePlant = self.duplicate_Plant( self.Plant )
-                prePlant.SystemControl.is_dispatch_targets = False # just want DNI
-
-                # runs for the Pyomo Horizon, not the SSC Horizon
-                ssc_run_success, prePlant = self.run_Plant_through_SSC( prePlant, time_start , time_pyoH )
-                
                 # update: SSC(t) -> Pyomo(t+1)
-                disp_params = self.update_Pyomo_after_SSC( prePlant, disp_params, self.slice_pyo_currentH )
+                disp_params = self.update_Pyomo_after_SSC( self.Plant, disp_params )
                 
                 # run pyomo optimization again
                 self.run_pyomo( disp_params )
             
                 # update: Pyomo(t+1) -> Plant(t+1)
                 self.Plant = self.update_Plant_after_Pyomo( self.Plant, pre_dispatch_run=False )
-                
-                del prePlant
             
             # run Plant again
             ssc_run_success, self.Plant = self.run_Plant_through_SSC( \
@@ -506,7 +497,7 @@ class GenericSSCModule(ABC):
         self.Plant.SystemControl.pc_startup_time_remain_init      = self.Plant.Outputs.pc_startup_energy_remain_final
       
     @abstractmethod    
-    def update_Pyomo_after_SSC(self, Plant, params, current_pyomo_slice):
+    def update_Pyomo_after_SSC(self, Plant, params ):
         """ Update Pyomo inputs with SSC outputs from previous segment simulation
         
         Note:
@@ -523,8 +514,6 @@ class GenericSSCModule(ABC):
                 original PySAM Plant module
             params (dict): 
                 dictionary of Pyomo dispatch parameters
-            current_pyomo_slice (slice): 
-                range of current pyomo horizon (ints representing hours)
         Returns:
             params (dict): 
                 updated dictionary of Pyomo dispatch parameters
@@ -620,7 +609,7 @@ class GenericSSCModule(ABC):
         return dispatch_wrap
 
     @abstractmethod
-    def create_dispatch_params(self, Plant, current_pyomo_slice):
+    def create_dispatch_params(self, Plant ):
         """ Populating a dictionary with dispatch parameters before optimization
         
         Note:
@@ -635,8 +624,6 @@ class GenericSSCModule(ABC):
         Args:
             Plant (obj): 
                 original PySAM Plant module
-            current_pyomo_slice (slice): 
-                range of current pyomo horizon (ints representing hours)
         Returns:
             dispatch_wrap (obj): 
                 wrapper object for the class that creates dispatch parameters
@@ -648,7 +635,7 @@ class GenericSSCModule(ABC):
         
         # setting parameters for the first time
         params = DW.set_power_cycle_parameters( params, self.ud_array )
-        params = DW.set_time_indexed_parameters( params, self.df_array, self.ud_array, current_pyomo_slice )
+        params = DW.set_time_indexed_parameters( params, self.df_array, self.ud_array, self.slice_pyo_firstH )
         params = DW.set_fixed_cost_parameters( params )
 
         return params
