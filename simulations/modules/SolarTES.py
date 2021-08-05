@@ -54,16 +54,19 @@ class SolarTES(NuclearTES):
         only relevant parts are the first indeces corresponding to the SSC Horizon.
         All other values are typically 0. 
         """
-        self.Plant.SystemControl.rec_op_mode_initial              = self.Plant.Outputs.rec_op_mode_final[self.t_ind-1]
-        self.Plant.SystemControl.rec_startup_time_remain_init     = self.Plant.Outputs.rec_startup_time_remain_final[self.t_ind-1]
-        self.Plant.SystemControl.rec_startup_energy_remain_init   = self.Plant.Outputs.rec_startup_energy_remain_final[self.t_ind-1]
-        self.Plant.SystemControl.T_tank_cold_init                 = self.Plant.Outputs.T_tes_cold[self.t_ind-1]
-        self.Plant.SystemControl.T_tank_hot_init                  = self.Plant.Outputs.T_tes_hot[self.t_ind-1]
-        self.Plant.ThermalStorage.csp_pt_tes_init_hot_htf_percent = self.Plant.Outputs.hot_tank_htf_percent_final[self.t_ind-1]
-        self.Plant.SystemControl.pc_op_mode_initial               = self.Plant.Outputs.pc_op_mode_final[self.t_ind-1]
-        self.Plant.SystemControl.pc_startup_energy_remain_initial = self.Plant.Outputs.pc_startup_time_remain_final[self.t_ind-1]
-        self.Plant.SystemControl.pc_startup_time_remain_init      = self.Plant.Outputs.pc_startup_energy_remain_final[self.t_ind-1]
-        self.Plant.SystemControl.is_field_tracking_init           = self.Plant.Outputs.is_field_tracking_final[self.t_ind-1]
+        
+        ssc_slice = self.slice_ssc_firstH
+        
+        self.Plant.SystemControl.rec_op_mode_initial              = self.Plant.Outputs.rec_op_mode_final[ssc_slice][-1]
+        self.Plant.SystemControl.rec_startup_time_remain_init     = self.Plant.Outputs.rec_startup_time_remain_final[ssc_slice][-1]
+        self.Plant.SystemControl.rec_startup_energy_remain_init   = self.Plant.Outputs.rec_startup_energy_remain_final[ssc_slice][-1]
+        self.Plant.SystemControl.T_tank_cold_init                 = self.Plant.Outputs.T_tes_cold[ssc_slice][-1]
+        self.Plant.SystemControl.T_tank_hot_init                  = self.Plant.Outputs.T_tes_hot[ssc_slice][-1]
+        self.Plant.ThermalStorage.csp_pt_tes_init_hot_htf_percent = self.Plant.Outputs.hot_tank_htf_percent_final[ssc_slice][-1]
+        self.Plant.SystemControl.pc_op_mode_initial               = self.Plant.Outputs.pc_op_mode_final[ssc_slice][-1]
+        self.Plant.SystemControl.pc_startup_energy_remain_initial = self.Plant.Outputs.pc_startup_time_remain_final[ssc_slice][-1]
+        self.Plant.SystemControl.pc_startup_time_remain_init      = self.Plant.Outputs.pc_startup_energy_remain_final[ssc_slice][-1]
+        self.Plant.SystemControl.is_field_tracking_init           = self.Plant.Outputs.is_field_tracking_final[ssc_slice][-1]
 
 
     def create_dispatch_wrapper(self, PySAM_dict):
@@ -92,7 +95,7 @@ class SolarTES(NuclearTES):
         return dispatch_wrap
 
 
-    def create_dispatch_params(self, Plant, current_pyomo_slice):
+    def create_dispatch_params(self, Plant ):
         """ Populating a dictionary with dispatch parameters before optimization
         
         Note:
@@ -107,8 +110,6 @@ class SolarTES(NuclearTES):
         Args:
             Plant (obj): 
                 original PySAM Plant module
-            current_pyomo_slice (slice): 
-                range of current pyomo horizon (ints representing hours)
         Returns:
             dispatch_wrap (obj): 
                 wrapper object for the class that creates dispatch parameters
@@ -118,13 +119,15 @@ class SolarTES(NuclearTES):
         DW = self.dispatch_wrap
         
         # run the setters from the GenericSSCModule parent class
-        params = GenericSSCModule.create_dispatch_params(self, Plant, current_pyomo_slice)
+        params = GenericSSCModule.create_dispatch_params(self, Plant )
+        
+        # extract array from full run of Plant
+        assert hasattr(Plant.Outputs, "Q_thermal"), "Q_thermal was not found in the outputs of Plant."
+        self.Q_rec_guess = Plant.Outputs.Q_thermal
         
         # set up copy of SSC dict
         updated_SSC_dict = copy.deepcopy(self.SSC_dict)
-        
-        # extract time series from previous SSC run
-        updated_SSC_dict['Q_thermal'] = Plant.Outputs.Q_thermal[self.slice_pyo_firstH]
+        updated_SSC_dict['Q_thermal'] = self.Q_rec_guess[self.slice_pyo_firstH]
         
         # these are SolarTES-specific setters
         params = DW.set_solar_parameters( params )
@@ -136,7 +139,7 @@ class SolarTES(NuclearTES):
         return params
 
 
-    def update_Pyomo_after_SSC(self, Plant, params, current_pyomo_slice):
+    def update_Pyomo_after_SSC(self, Plant, params ):
         """ Update Pyomo inputs with SSC outputs from previous segment simulation
         
         Note:
@@ -153,33 +156,33 @@ class SolarTES(NuclearTES):
                 original PySAM Plant module
             params (dict): 
                 dictionary of Pyomo dispatch parameters
-            current_pyomo_slice (slice): 
-                range of current pyomo horizon (ints representing hours)
         Returns:
             params (dict): 
                 updated dictionary of Pyomo dispatch parameters
                 
         """
         
+        ssc_slice = self.slice_ssc_firstH
+        
         updated_SSC_dict = copy.deepcopy(self.SSC_dict)
         
         # saving relevant end-of-sim outputs from the last simulation segment
-        updated_SSC_dict['rec_op_mode_initial']              = Plant.Outputs.rec_op_mode_final[self.t_ind-1]
-        updated_SSC_dict['rec_startup_time_remain_init']     = Plant.Outputs.rec_startup_time_remain_final[self.t_ind-1]
-        updated_SSC_dict['rec_startup_energy_remain_init']   = Plant.Outputs.rec_startup_energy_remain_final[self.t_ind-1]
-        updated_SSC_dict['T_tank_cold_init']                 = Plant.Outputs.T_tes_cold[self.t_ind-1]
-        updated_SSC_dict['T_tank_hot_init']                  = Plant.Outputs.T_tes_hot[self.t_ind-1]
-        updated_SSC_dict['csp.pt.tes.init_hot_htf_percent']  = Plant.Outputs.hot_tank_htf_percent_final[self.t_ind-1]
-        updated_SSC_dict['pc_op_mode_initial']               = Plant.Outputs.pc_op_mode_final[self.t_ind-1]
-        updated_SSC_dict['pc_startup_time_remain_init']      = Plant.Outputs.pc_startup_time_remain_final[self.t_ind-1]
-        updated_SSC_dict['pc_startup_energy_remain_initial'] = Plant.Outputs.pc_startup_energy_remain_final[self.t_ind-1]
-        updated_SSC_dict['is_field_tracking_init']           = Plant.Outputs.is_field_tracking_final[self.t_ind-1]
+        updated_SSC_dict['rec_op_mode_initial']              = Plant.Outputs.rec_op_mode_final[ssc_slice][-1]
+        updated_SSC_dict['rec_startup_time_remain_init']     = Plant.Outputs.rec_startup_time_remain_final[ssc_slice][-1]
+        updated_SSC_dict['rec_startup_energy_remain_init']   = Plant.Outputs.rec_startup_energy_remain_final[ssc_slice][-1]
+        updated_SSC_dict['T_tank_cold_init']                 = Plant.Outputs.T_tes_cold[ssc_slice][-1]
+        updated_SSC_dict['T_tank_hot_init']                  = Plant.Outputs.T_tes_hot[ssc_slice][-1]
+        updated_SSC_dict['csp.pt.tes.init_hot_htf_percent']  = Plant.Outputs.hot_tank_htf_percent_final[ssc_slice][-1]
+        updated_SSC_dict['pc_op_mode_initial']               = Plant.Outputs.pc_op_mode_final[ssc_slice][-1]
+        updated_SSC_dict['pc_startup_time_remain_init']      = Plant.Outputs.pc_startup_time_remain_final[ssc_slice][-1]
+        updated_SSC_dict['pc_startup_energy_remain_initial'] = Plant.Outputs.pc_startup_energy_remain_final[ssc_slice][-1]
+        updated_SSC_dict['is_field_tracking_init']           = Plant.Outputs.is_field_tracking_final[ssc_slice][-1]
         
         # these are specific to the initial states
-        updated_SSC_dict['wdot0']     = Plant.Outputs.P_cycle[self.t_ind-1]
+        updated_SSC_dict['wdot0']     = Plant.Outputs.P_cycle[ssc_slice][-1]
         
         # extract time series from a previous SSC run
-        updated_SSC_dict['Q_thermal'] = Plant.Outputs.Q_thermal[self.slice_pyo_firstH]
+        updated_SSC_dict['Q_thermal'] = self.Q_rec_guess[self.slice_pyo_currentH]
         
         # TODO: removing w_dot_s_prev references in all of Dispatch for now, might need to revisit later
         # updated_SSC_dict['wdot_s_prev'] = 0 #np.array([pe.value(dm.model.wdot_s_prev[t]) for t in dm.model.T])[-1]
@@ -190,7 +193,7 @@ class SolarTES(NuclearTES):
         plant_dict = Plant.Outputs.export()
         
         # updating the initial state and time series Nuclear params
-        params = DW.set_time_indexed_parameters( params, self.df_array, self.ud_array, current_pyomo_slice )
+        params = DW.set_time_indexed_parameters( params, self.df_array, self.ud_array, self.slice_pyo_currentH )
         params = DW.set_initial_state( params, updated_SSC_dict, Plant, self.t_ind )
         params = DW.set_time_series_solar_parameters( params, updated_SSC_dict )
         

@@ -219,7 +219,7 @@ class NuclearTES(GenericSSCModule):
         return dispatch_wrap
 
     
-    def create_dispatch_params(self, Plant, current_pyomo_slice):
+    def create_dispatch_params(self, Plant ):
         """ Populating a dictionary with dispatch parameters before optimization
         
         Note:
@@ -234,8 +234,6 @@ class NuclearTES(GenericSSCModule):
         Args:
             Plant (obj): 
                 original PySAM Plant module
-            current_pyomo_slice (slice): 
-                range of current pyomo horizon (ints representing hours)
         Returns:
             dispatch_wrap (obj): 
                 wrapper object for the class that creates dispatch parameters
@@ -246,7 +244,7 @@ class NuclearTES(GenericSSCModule):
         DW = self.dispatch_wrap
         
         # run the setters from the GenericSSCModule parent class
-        params = GenericSSCModule.create_dispatch_params(self, Plant, current_pyomo_slice)
+        params = GenericSSCModule.create_dispatch_params(self, Plant )
         
         # these are NuclearTES-specific setters
         params = DW.set_nuclear_parameters( params )
@@ -258,7 +256,7 @@ class NuclearTES(GenericSSCModule):
         return params
 
 
-    def update_Pyomo_after_SSC(self, Plant, params, current_pyomo_slice):
+    def update_Pyomo_after_SSC(self, Plant, params ):
         """ Update Pyomo inputs with SSC outputs from previous segment simulation
         
         Note:
@@ -275,8 +273,6 @@ class NuclearTES(GenericSSCModule):
                 original PySAM Plant module
             params (dict): 
                 dictionary of Pyomo dispatch parameters
-            current_pyomo_slice (slice): 
-                range of current pyomo horizon (ints representing hours)
         Returns:
             params (dict): 
                 updated dictionary of Pyomo dispatch parameters
@@ -305,7 +301,7 @@ class NuclearTES(GenericSSCModule):
         DW = self.dispatch_wrap
         
         # updating the initial state and time series Nuclear params
-        params = DW.set_time_indexed_parameters( params, self.df_array, self.ud_array, current_pyomo_slice )
+        params = DW.set_time_indexed_parameters( params, self.df_array, self.ud_array, self.slice_pyo_currentH )
         params = DW.set_initial_state( params, updated_SSC_dict, Plant, self.t_ind )
         params = DW.set_time_series_nuclear_parameters( params )
         
