@@ -1,5 +1,63 @@
 \begin{thebibliography}{999}
 
+\bibitem[Klein and Nellis(2011)]{klein_nellis_2011}
+Klein, S.; Nellis, G.
+\newblock {\em Thermodynamics}; Cambridge University Press,  2011.
+\newblock
+  doi:{\changeurlcolor{black}\href{https://doi.org/10.1017/CBO9780511994883}{\detokenize{10.1017/CBO9780511994883}}}.
+
+\bibitem[Pacheco \em{et~al.}(1995)Pacheco, Ralph, Chavez, Dunkin, Rush,
+  Ghanbari, and Matthews]{pacheco_1995_salt_properties}
+Pacheco, J.E.; Ralph, M.E.; Chavez, J.M.; Dunkin, S.R.; Rush, E.E.; Ghanbari,
+  C.M.; Matthews, M.W.
+\newblock Results of molten salt panel and component experiments for solar
+  central receivers: Cold fill, freeze/thaw, thermal cycling and shock, and
+  instrumentation tests {\bf 1995}.
+\newblock
+  doi:{\changeurlcolor{black}\href{https://doi.org/10.2172/46671}{\detokenize{10.2172/46671}}}.
+
+\bibitem[Span and Wagner(1996)]{roland_1996_co2_properties}
+Span, R.; Wagner, W.
+\newblock A New Equation of State for Carbon Dioxide Covering the Fluid Region
+  from the Triple‐Point Temperature to 1100 K at Pressures up to 800 MPa.
+\newblock {\em Journal of Physical and Chemical Reference Data} {\bf 1996},
+  {\em 25},~1509--1596,
+  \href{http://xxx.lanl.gov/abs/https://doi.org/10.1063/1.555991}{{\normalfont
+  [https://doi.org/10.1063/1.555991]}}.
+\newblock
+  doi:{\changeurlcolor{black}\href{https://doi.org/10.1063/1.555991}{\detokenize{10.1063/1.555991}}}.
+
+\bibitem[Smith and Cinotti(2016)]{smith_2016_lfr_background}
+Smith, C.; Cinotti, L.
+\newblock 6 - Lead-cooled fast reactor. In {\em Handbook of Generation IV
+  Nuclear Reactors}; Pioro, I.L., Ed.; Woodhead Publishing Series in Energy,
+  Woodhead Publishing,  2016; pp. 119--155.
+\newblock
+  doi:{\changeurlcolor{black}\href{https://doi.org/https://doi.org/10.1016/B978-0-08-100149-3.00006-9}{\detokenize{https://doi.org/10.1016/B978-0-08-100149-3.00006-9}}}.
+
+\bibitem[Alemberti \em{et~al.}(2014)Alemberti, Smirnov, Smith, and
+  Takahashi]{alemberti_2013_lfr_overview}
+Alemberti, A.; Smirnov, V.; Smith, C.F.; Takahashi, M.
+\newblock Overview of lead-cooled fast reactor activities.
+\newblock {\em Progress in Nuclear Energy} {\bf 2014}, {\em 77},~300--307.
+\newblock
+  doi:{\changeurlcolor{black}\href{https://doi.org/https://doi.org/10.1016/j.pnucene.2013.11.011}{\detokenize{https://doi.org/10.1016/j.pnucene.2013.11.011}}}.
+
+\bibitem[Mehos \em{et~al.}(2017)Mehos, Turchi, Vidal, Wagner, Ma, Ho, Kolb,
+  Andraka, and Kruizenga]{mehos2017concentrating}
+Mehos, M.; Turchi, C.; Vidal, J.; Wagner, M.; Ma, Z.; Ho, C.; Kolb, W.;
+  Andraka, C.; Kruizenga, A.
+\newblock Concentrating solar power Gen3 demonstration roadmap.
+\newblock Technical report, National Renewable Energy Lab.(NREL), Golden, CO
+  (United States),  2017.
+
+\bibitem[Hamilton \em{et~al.}(2020)Hamilton, Husted, Newman, Braun, and
+  Wagner]{hamilton2020dispatch}
+Hamilton, W.T.; Husted, M.A.; Newman, A.M.; Braun, R.J.; Wagner, M.J.
+\newblock Dispatch optimization of concentrating solar power with utility-scale
+  photovoltaics.
+\newblock {\em Optimization and Engineering} {\bf 2020}, {\em 21},~335--369.
+
 \bibitem[Wagner(2017)]{wagner2017optimization}
 Wagner, M.J.
 \newblock Optimization of stored energy dispatch for concentrating solar power
