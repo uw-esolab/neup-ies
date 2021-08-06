@@ -484,7 +484,7 @@ class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
         return param_dict
     
     
-    def set_time_series_nuclear_parameters(self, param_dict):
+    def set_time_series_nuclear_parameters(self, param_dict, updated_dict=None):
         """ Method to set fixed costs of the Plant for Dispatch optimization
         
         This method calculates some time series parameters for the Plant operations, startup,
@@ -494,6 +494,7 @@ class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
         
         Inputs:
             param_dict (dict) : dictionary of Pyomo dispatch parameters
+            updated_dict (dict) : dictionary with updated SSC initial conditions from previous run  
         Outputs:
             param_dict (dict) : updated dictionary of Pyomo dispatch parameters
         """
@@ -501,9 +502,20 @@ class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
         #MAKE SURE TO CALL THIS METHOD AFTER THE NUCLEAR PARAMETERS 
         u = self.u
         
+        # differentiating between first and updated runs
+        if updated_dict is None:
+            self.current_Plant = copy.deepcopy(self.SSC_dict)
+            self.first_run = True
+        else:
+            self.current_Plant = updated_dict
+            self.first_run = False
+        
         # thermal power and startup params
         self.Dnsu    = self.PySAM_dict['Dnsu']*u.hr   # Minimum time to start the nuclear plant (hr)
-        self.Qin_nuc = np.array([self.q_nuc_design.m]*self.T)*self.q_nuc_design.u #TODO: update at each segment
+        self.Qin_nuc = self.current_Plant['Q_thermal'] * u.MW    # value here taken from a previous Plant-SSC run
+
+        if len(self.Qin_nuc) < len(param_dict['Delta']):
+            self.Qin_nuc = np.hstack( [self.current_Plant['Q_thermal'], self.current_Plant['Q_thermal']] ) * u.MW
         
         # instantiating arrays
         n  = len(self.Delta)

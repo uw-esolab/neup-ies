@@ -239,16 +239,23 @@ class NuclearTES(GenericSSCModule):
                 wrapper object for the class that creates dispatch parameters
                 
         """
-        
         # get the object
         DW = self.dispatch_wrap
         
         # run the setters from the GenericSSCModule parent class
         params = GenericSSCModule.create_dispatch_params(self, Plant )
+
+        # extract array from full run of Plant
+        assert hasattr(Plant.Outputs, "Q_thermal"), "Q_thermal was not found in the outputs of Plant."
+        self.Q_nuc_guess = Plant.Outputs.Q_thermal
+        
+        # set up copy of SSC dict
+        updated_SSC_dict = copy.deepcopy(self.SSC_dict)
+        updated_SSC_dict['Q_thermal'] = self.Q_nuc_guess[self.slice_pyo_firstH]
         
         # these are NuclearTES-specific setters
         params = DW.set_nuclear_parameters( params )
-        params = DW.set_time_series_nuclear_parameters( params )
+        params = DW.set_time_series_nuclear_parameters( params, updated_SSC_dict )
         
         # this sets the initial set for the NuclearTES
         params = DW.set_initial_state( params )
@@ -294,6 +301,9 @@ class NuclearTES(GenericSSCModule):
         
         # these are specific to the initial states
         updated_SSC_dict['wdot0'] = Plant.Outputs.P_cycle[self.t_ind-1]
+
+        # extract time series from a previous SSC run
+        updated_SSC_dict['Q_thermal'] = self.Q_nuc_guess[self.slice_pyo_currentH]
         
         # TODO: removing w_dot_s_prev references in all of Dispatch for now, might need to revisit later
         # updated_SSC_dict['wdot_s_prev'] = 0 #np.array([pe.value(dm.model.wdot_s_prev[t]) for t in dm.model.T])[-1]
@@ -303,7 +313,7 @@ class NuclearTES(GenericSSCModule):
         # updating the initial state and time series Nuclear params
         params = DW.set_time_indexed_parameters( params, self.df_array, self.ud_array, self.slice_pyo_currentH )
         params = DW.set_initial_state( params, updated_SSC_dict, Plant, self.t_ind )
-        params = DW.set_time_series_nuclear_parameters( params )
+        params = DW.set_time_series_nuclear_parameters( params, updated_SSC_dict )
         
         return params
 
