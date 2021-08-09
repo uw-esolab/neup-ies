@@ -175,7 +175,8 @@ class Plots(object):
     """
 
     def __init__(self, module, fsl='x-small', loc='best', legend_offset=False,
-                 lp=16, lps=12, fs=12, lw=2, x_shrink=0.85, x_legend=12):
+                 lp=16, lps=12, fs=12, lw=2, x_shrink=0.85, x_legend=12,
+                 fE_min=-0.05, fE_max=0.7):
         """ Initializes the Plots module
 
         The instantiation of this class receives a full module object, the module
@@ -193,6 +194,8 @@ class Plots(object):
             fs (int)            : fontsize for labels, titles, etc.
             lw (int)            : linewidth for plotting
             x_shrink (float)    : (legend_offset==True) amount to shrink axis to make room for legend
+            fE_min (float)      : minimum fraction of TES energy for ylim
+            fE_max (float)      : maximum fraction of TES energy for ylim
         """
         
         self.u = u
@@ -204,6 +207,10 @@ class Plots(object):
         self.lw  = lw   # linewidth
         self.fsl = fsl  # fontsize legend
         self.loc = loc  # location of legend
+        
+        # ylims
+        self.fE_min = fE_min
+        self.fE_max = fE_max
 
         # offsetting legend
         self.legend_offset = legend_offset # boolean - are we plotting legends off-axis?
@@ -481,7 +488,7 @@ class Plots(object):
                                     start_hr=start_hr, end_hr=end_hr, hide_x=hide_x)
 
         # custom y limits and ticks to be integers for Energy
-        ax2.set_ylim(-0.05*self.e_tes_design.m, 0.7*self.e_tes_design.m)
+        ax2.set_ylim(self.fE_min*self.e_tes_design.m, self.fE_max*self.e_tes_design.m)
 
         # plot Energy array(s)
         energy_array_list = ['e_ch_tes']
@@ -616,8 +623,11 @@ class Plots(object):
         ax2 = ax.twinx()  # this is the pricing plot
 
         # custom y limits and ticks to be integers
-        ax2.set_ylim(0, 2.5)
-        ax2.set_yticks(np.arange(0, 2.5, 0.5))
+        price = self.price[ start_hr:end_hr  ]
+        minP = 1.05*price.min() if price.min() < 0 else 0
+        maxP = 1.05*price.max()
+        ax2.set_ylim(minP, maxP)
+        ax2.set_yticks(np.arange(minP, maxP, 0.5))
         
         # plot price array(s)
         price_array_list = ['price']
