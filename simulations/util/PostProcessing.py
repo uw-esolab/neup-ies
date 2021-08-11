@@ -408,7 +408,10 @@ class Plots(object):
 
         # plotting data from list
         for a, l, w in zip(array_list, label_list, lw_list):
-            plot_data_on_axis(ax, get_array(a), l, w)
+            extracted_array = get_array(a)
+            plot_data_on_axis(ax, extracted_array, l, w)
+            if is_bar_graph and extracted_array.min() < 0:
+                plot_data_on_axis(ax, -extracted_array, l, w)
 
         #========================#
         #---- Setting Labels ----#
