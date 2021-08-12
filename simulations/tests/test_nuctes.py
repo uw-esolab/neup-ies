@@ -9,7 +9,6 @@ Created on Thu Apr  1 14:36:02 2021
 from modules.NuclearTES import NuclearTES
 from dispatch.NuclearDispatch import NuclearDispatch
 import unittest
-from pyomo.util.check_units import assert_units_consistent, assert_units_equivalent, check_units_equivalent
 
 
 class TestNuclearTES(unittest.TestCase):
@@ -121,54 +120,6 @@ class TestNuclearTES(unittest.TestCase):
             
         # erase mod
         del mod
-
-
-    def test_pyomo_model_units(self):
-        """ Testing the unit consistency of NuclearDispatch model
-        """
-        
-        mod = self.nuctes
-
-        # ==============================================================
-        # creating a duplicate Plant (with setup steps for time elements)
-        
-        # initialize times
-        mod.run_loop = False
-        time_start, time_next = mod.initialize_time_elements()
-        mod.initialize_time_slices( time_start )
-        mod.initialize_arrays()
-        
-        # create Plant
-        mod.create_Plant()
-        prePlant = mod.duplicate_Plant( mod.Plant )
-
-        # ==============================================================
-        # pre-run the duplicate plant to gather guesses for Q_nuc
-        
-        # runs for the full simulation to gather some SSC-specific array calculations
-        ssc_run_success, prePlant = mod.run_Plant_through_SSC(
-                                            prePlant, time_start , mod.sim_time_end 
-                                            )
-        
-        # ==============================================================
-        # create dispatch model
-        
-        params_dict = mod.create_dispatch_params( prePlant  )
-        dispatch_model = NuclearDispatch( params_dict, mod.u )
-        
-        # actual pyomo model
-        model = dispatch_model.model
-        u_pyomo = dispatch_model.u_pyomo
-        
-        # ==============================================================
-        # testing units of Objective
-        
-        assert_units_consistent( dispatch_model.model.OBJ )
-
-        # ==============================================================
-        # testing units of Constraints
-        
-        assert_units_consistent( dispatch_model.model )
         
 
 if __name__ == "__main__":

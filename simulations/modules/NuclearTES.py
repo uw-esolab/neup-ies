@@ -132,7 +132,7 @@ class NuclearTES(GenericSSCModule):
         EXCEPT the Output subclass. The two plant's outputs will NOT be linked.
         
         Note:
-            Verified in imulations/scripts/sanity_check_scripts
+            Verified in simulations/scripts/sanity_check_scripts
         
         Args:
             Plant (obj): 
