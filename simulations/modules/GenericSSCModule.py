@@ -238,6 +238,59 @@ class GenericSSCModule(ABC):
         return Plant
     
     
+    def initialize_time_elements(self):
+        """ Method to initialize time elements
+        
+        This method initiliazes start and end times for full simulation and
+        conducts logic for end of next time segment (could be SSC horizon, or
+        could be end time).
+
+        Returns:
+            time_start (float Quant): 
+                starting time of current SSC horizon
+            time_sscH (float Quant): 
+                ending time of current SSC horizon
+        """
+        u = self.u
+        
+        # start and end times for full simulation
+        time_start = self.SSC_dict['time_start'] * u.s
+        time_end   = self.SSC_dict['time_stop']  * u.s
+        
+        # storing full simulation end time
+        self.sim_time_end = time_end.to('s') 
+        
+        # determining whether next time segment end is the SSC horizon or full sim time
+        time_sscH  = self.ssc_horizon.to('s') if self.run_loop \
+                        else copy.deepcopy(time_end)
+        
+        # setting index for subsequent calls, it's just a static index for log arrays
+        self.t_ind = int(time_sscH.to('hr').m)
+        
+        return time_start, time_sscH
+
+
+    def initialize_time_slices(self, time_start):
+        """ Method to advance time segment to the next horizon
+        
+
+        This method updates the current time segment bookends and slices to
+        reflect the next time segment horizon. 
+        
+        Args:
+            time_start (float Quant): 
+                starting time of current SSC horizon
+        """
+        
+        # setting time slices for first horizon slices
+        self.slice_ssc_firstH   = slice( 0, self.t_ind, 1)
+        self.slice_pyo_firstH   = slice( 0, int( self.pyomo_horizon.to('hr').m ),  1)
+        
+        # initialize current horizon slices, to be updated after each time iteration
+        self.slice_ssc_currentH = slice( int( time_start.to('hr').m ), self.t_ind, 1)  
+        self.slice_pyo_currentH = slice( int( time_start.to('hr').m ), int( self.pyomo_horizon.to('hr').m ), 1) 
+        
+    
     def advance_time_segment(self, prev_time_start, prev_time_next):
         """ Method to advance time segment to the next horizon
         
@@ -305,23 +358,11 @@ class GenericSSCModule(ABC):
         
         u = self.u
         
-        # start and end times for full simulation
-        time_start = self.SSC_dict['time_start'] * u.s
-        time_end   = self.SSC_dict['time_stop']  * u.s
-        self.sim_time_end = time_end.to('s') 
-        
-        # determining whether next time segment end is the SSC horizon or full sim time
-        time_next  = self.ssc_horizon.to('s') if self.run_loop \
-                        else copy.deepcopy(time_end)
-        
-        # setting index for subsequent calls, it's just a static index for log arrays
-        self.t_ind = int(time_next.to('hr').m)
+        # initialize time start, next time, end times, and indeces of SSC horizon
+        time_start, time_next = self.initialize_time_elements()
         
         # slice for the first indeces of the SSC Horizon, also initializing current Horizon (updated in loop)
-        self.slice_ssc_firstH   = slice( 0, self.t_ind, 1)
-        self.slice_pyo_firstH   = slice( 0, int( self.pyomo_horizon.to('hr').m ),  1)
-        self.slice_ssc_currentH = slice( int( time_start.to('hr').m ), self.t_ind, 1)  
-        self.slice_pyo_currentH = slice( int( time_start.to('hr').m ), int( self.pyomo_horizon.to('hr').m ), 1) 
+        self.initialize_time_slices( time_start )
         
         # setting up empty log array for log arrays
         self.initialize_arrays()
@@ -334,7 +375,7 @@ class GenericSSCModule(ABC):
             
             # runs for the full simulation to gather some SSC-specific array calculations
             ssc_run_success, prePlant = self.run_Plant_through_SSC(
-                                                prePlant, time_start , time_end 
+                                                prePlant, time_start , self.sim_time_end 
                                                 )
             print("Attempting to run full simulation to gather predictions for Pyomo:  {0}".format(
                             "success!" if ssc_run_success else "failed :("))
@@ -360,7 +401,7 @@ class GenericSSCModule(ABC):
         # setting up iterable time to cycle through in for loop
         # TODO: this needs to be variable with SSC Horizon
         p_time_next = time_next.to('d').m
-        p_time_end  = time_end.to('d').m
+        p_time_end  = self.sim_time_end.to('d').m
         remaining_sim_time = np.arange(p_time_next, p_time_end, self.ssc_horizon.to('d').m ) if self.run_loop else range(0)
         
         # this loop should only be entered if run_loop == True
