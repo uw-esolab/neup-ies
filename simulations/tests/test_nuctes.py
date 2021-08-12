@@ -32,7 +32,7 @@ class TestNuclearTES(unittest.TestCase):
         
     
     def tearDown(self):
-        """ Deleting instance of NuclearTES at end of each test
+        """ Deleting instance oself.nuctesf NuclearTES at end of each test
         """
         
         # deleting each module
@@ -75,31 +75,86 @@ class TestNuclearTES(unittest.TestCase):
                      'yn0' ]      # from NuclearDispatch.set_initial_state()
                  
         
-        # feigning a pyomo horizon slice
-        time_slice = slice(0,48,1)
+        mod = self.nuctes
+        
+        # ==============================================================
+        # creating a duplicate Plant (with setup steps for time elements)
+        
+        # initialize times
+        mod.run_loop = False
+        time_start, time_next = mod.initialize_time_elements()
+        mod.initialize_time_slices( time_start )
+        mod.initialize_arrays()
+        
+        # create Plant
+        mod.create_Plant()
+        prePlant = mod.duplicate_Plant( mod.Plant )
+
+        # ==============================================================
+        # pre-run the duplicate plant to gather guesses for Q_nuc
+        
+        ssc_run_success, prePlant = mod.run_Plant_through_SSC(
+                                            prePlant, time_start , mod.sim_time_end 
+                                            )
+        self.assertTrue( ssc_run_success , 
+                            "Pre-run of simulation failed for {0}".format( mod ) )
+        
+        # ==============================================================
+        # actually run the create_dispatch_params method
         
         # create the dictionary
-        params_dict = self.nuctes.create_dispatch_params( time_slice )
+        params_dict = mod.create_dispatch_params( prePlant )
+        
+        # check that pre-run worked
+        self.assertTrue( hasattr(mod, 'Q_nuc_guess'), 
+                          "Guess for nuclear q_dot profile is not saved to {0} from simulation pre-run".format( mod ))
+
+        self.assertTrue( sum( mod.Q_nuc_guess ) > 0, 
+                          "Nuclear q_dot profile values are all 0 for {0}".format( mod ))
         
         # looping through all defined attributes
         for attr in attr_list:
             
             # checking that the attribute exists
             self.assertIn( attr, params_dict.keys() ,
-                            "Parameter {0} is not found in dispatch parameter dictionary for {1}".format(attr, self.nuctes_name) )
+                            "Parameter {0} is not found in dispatch parameter dictionary for {1}".format(attr, mod) )
+            
+        # erase mod
+        del mod
 
 
     def test_pyomo_model_units(self):
         """ Testing the unit consistency of NuclearDispatch model
         """
         
-        # feigning a pyomo horizon slice
-        time_slice = slice(0,48,1)
+        mod = self.nuctes
+
+        # ==============================================================
+        # creating a duplicate Plant (with setup steps for time elements)
         
-        # create the dictionary
-        params_dict = self.nuctes.create_dispatch_params( time_slice )
+        # initialize times
+        mod.run_loop = False
+        time_start, time_next = mod.initialize_time_elements()
+        mod.initialize_time_slices( time_start )
+        mod.initialize_arrays()
         
-        dispatch_model = NuclearDispatch( params_dict, self.nuctes.u )
+        # create Plant
+        mod.create_Plant()
+        prePlant = mod.duplicate_Plant( mod.Plant )
+
+        # ==============================================================
+        # pre-run the duplicate plant to gather guesses for Q_nuc
+        
+        # runs for the full simulation to gather some SSC-specific array calculations
+        ssc_run_success, prePlant = mod.run_Plant_through_SSC(
+                                            prePlant, time_start , mod.sim_time_end 
+                                            )
+        
+        # ==============================================================
+        # create dispatch model
+        
+        params_dict = mod.create_dispatch_params( prePlant  )
+        dispatch_model = NuclearDispatch( params_dict, mod.u )
         
         # actual pyomo model
         model = dispatch_model.model

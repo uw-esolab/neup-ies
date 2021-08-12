@@ -277,7 +277,7 @@ class TestPySAMModules(unittest.TestCase):
             mod.initialize_arrays()
             
             # first execution of Plant through SSC
-            mod.run_Plant_through_SSC( time_start , time_next )
+            mod.run_Plant_through_SSC( mod.Plant, time_start , time_next )
             mod.log_SSC_arrays()
             
             # logged arrays
@@ -315,7 +315,7 @@ class TestPySAMModules(unittest.TestCase):
             mod.initialize_arrays()
             
             # first execution of Plant through SSC
-            mod.run_Plant_through_SSC( time_start , time_next )
+            mod.run_Plant_through_SSC( mod.Plant, time_start , time_next )
             
             # check attributes 
             for a in attrs:
