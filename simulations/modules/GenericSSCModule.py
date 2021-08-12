@@ -359,9 +359,9 @@ class GenericSSCModule(ABC):
         
         # setting up iterable time to cycle through in for loop
         # TODO: this needs to be variable with SSC Horizon
-        p_time_next = int(np.round(time_next.to('d').m) )
-        p_time_end  = int(np.round(time_end.to('d').m) )
-        remaining_sim_time = range(p_time_next, p_time_end) if self.run_loop else range(0)
+        p_time_next = time_next.to('d').m
+        p_time_end  = time_end.to('d').m
+        remaining_sim_time = np.arange(p_time_next, p_time_end, self.ssc_horizon.to('d').m ) if self.run_loop else range(0)
         
         # this loop should only be entered if run_loop == True
         for t in tqdm(remaining_sim_time):
