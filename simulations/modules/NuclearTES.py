@@ -13,6 +13,7 @@ from modules.GenericSSCModule import GenericSSCModule
 from dispatch.NuclearDispatch import NuclearDispatch as ND
 from dispatch.NuclearDispatch import NuclearDispatchParamWrap as NDP
 from dispatch.NuclearDispatch import NuclearDispatchOutputs as NDO
+from pyomo.opt import SolverStatus, TerminationCondition
 import PySAM.PySSC as pssc
 from util.FileMethods import FileMethods
 import copy
@@ -160,11 +161,15 @@ class NuclearTES(GenericSSCModule):
         
         This method strictly runs the Pyomo optimization before execution of an
         SSC segment. It creates a new Dispatch model for the segment, solves it,
-        then returns results. Results are stored in a dictionary. 
+        then returns results. Results are stored in a dictionary. Help with failure
+        modes was found through here: https://www.pyomo.org/blog/2015/1/8/accessing-solver
         
         Args:
             params (dict): 
                 dictionary of Pyomo dispatch parameters
+        Returns:
+            dispatch_success (bool): 
+                if dispatch model was solved successfully, returns True
                 
         """
         
@@ -172,8 +177,26 @@ class NuclearTES(GenericSSCModule):
         dispatch_model = self.Dispatch_Module(params, self.u)
         
         # Solving Dispatch optimization model
-        rt_results = dispatch_model.solve_model()
+        dispatch_success = True
+        try:
+            rt_results = dispatch_model.solve_model()
+        except Exception as err:
+            # usually this gets triggered if cbc solver fails
+            dispatch_success = False
+            print("Dispatch solver failed with error message: \n{0}".format(err))
         
+        # check results to see if saved solution is optimal and feasible (cbc didn't crash)
+        if dispatch_success:
+            # check if solver status ended normally
+            if rt_results.solver.status != SolverStatus.ok:
+                dispatch_success = False
+                print('Solver solution status was not normal.')
+            
+            # check if termination condition was not optimal
+            if rt_results.solver.termination_condition != TerminationCondition.optimal:
+                dispatch_success = False
+                print('Solver solution termination condition not optimal: {0}'.format(rt_results.solver.termination_condition) )
+
         # saving current model to self
         self.current_disp_model = dispatch_model
         
@@ -182,11 +205,12 @@ class NuclearTES(GenericSSCModule):
         
         # saving model and results to dictionaries with entries being the current counter value
         self.disp_models[count]  = dispatch_model    
-        self.disp_results[count] = rt_results
+        self.disp_results[count] = rt_results if dispatch_success else {}
         
         # increasing dispatch counter value by 1
         self.disp_count += 1
-
+        
+        return dispatch_success
 
 
     def create_dispatch_wrapper(self, PySAM_dict):

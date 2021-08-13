@@ -384,10 +384,11 @@ class GenericSSCModule(ABC):
             disp_params = self.create_dispatch_params( prePlant )
             
             # run pyomo optimization
-            self.run_pyomo( disp_params )
+            dispatch_success = self.run_pyomo( disp_params )
             
             # update: Pyomo(t) -> Plant(t) 
-            self.Plant = self.update_Plant_after_Pyomo( self.Plant, pre_dispatch_run=False )
+            if dispatch_success:
+                self.Plant = self.update_Plant_after_Pyomo( self.Plant, pre_dispatch_run=False )
             
             del prePlant
         
@@ -420,10 +421,11 @@ class GenericSSCModule(ABC):
                 disp_params = self.update_Pyomo_after_SSC( self.Plant, disp_params )
                 
                 # run pyomo optimization again
-                self.run_pyomo( disp_params )
+                dispatch_success = self.run_pyomo( disp_params )
             
                 # update: Pyomo(t+1) -> Plant(t+1)
-                self.Plant = self.update_Plant_after_Pyomo( self.Plant, pre_dispatch_run=False )
+                if dispatch_success:
+                    self.Plant = self.update_Plant_after_Pyomo( self.Plant, pre_dispatch_run=False )
             
             # run Plant again
             ssc_run_success, self.Plant = self.run_Plant_through_SSC( \
