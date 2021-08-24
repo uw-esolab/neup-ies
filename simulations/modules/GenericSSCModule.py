@@ -91,6 +91,7 @@ class GenericSSCModule(ABC):
             # empty dictionaries to store each dispatch run
             self.disp_models  = {}
             self.disp_results = {}
+            self.disp_success = {}
             
             # initialize dispatch wrap class
             self.dispatch_wrap = self.create_dispatch_wrapper( self.PySAM_dict )
@@ -385,6 +386,7 @@ class GenericSSCModule(ABC):
             
             # run pyomo optimization
             dispatch_success = self.run_pyomo( disp_params )
+            self.disp_success[self.disp_count-1] = dispatch_success
             
             # update: Pyomo(t) -> Plant(t) 
             if dispatch_success:
@@ -422,6 +424,7 @@ class GenericSSCModule(ABC):
                 
                 # run pyomo optimization again
                 dispatch_success = self.run_pyomo( disp_params )
+                self.disp_success[self.disp_count-1] = dispatch_success
             
                 # update: Pyomo(t+1) -> Plant(t+1)
                 if dispatch_success:
@@ -717,6 +720,8 @@ class GenericSSCModule(ABC):
                 'T_pc_out_log'   :   'T_pc_out',         # PC HTF outlet temperature
                 'T_tes_cold_log':    'T_tes_cold',       # TES cold temperature
                 'T_tes_hot_log'  :   'T_tes_hot',        # TES hot temperature
+                'T_rec_in_log':      'T_rec_in',         # Plant inlet temperature
+                'T_rec_out_log'  :   'T_rec_out',        # Plant outlet temperature
                 'T_cond_out_log':    'T_cond_out',       # PC condenser water outlet temperature
                 'e_ch_tes_log'  :    'e_ch_tes',         # TES charge state
                 'op_mode_1_log' :    'op_mode_1',        # Operating Mode
