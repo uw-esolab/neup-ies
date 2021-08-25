@@ -577,12 +577,12 @@ class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
         # important parameters
         s_current          = m_hot * cp_tes_init * (T_tes_hot_init - self.T_htf_cold) # TES capacity
         s0                 = min(self.Eu.to('kWh'), s_current.to('kWh')  )
-        yn0                = (self.current_Plant['rec_op_mode_initial'] == 2)
+        yn0                = (self.current_Plant['nuc_op_mode_initial'] == 2)
         ynsb0              = False   # We don't have standby mode for either Nuclear or CSP
-        ynsu0              = (self.current_Plant['rec_op_mode_initial'] == 1)
-        t_nuc              = self.current_Plant['rec_startup_time_remain_init']
+        ynsu0              = (self.current_Plant['nuc_op_mode_initial'] == 1)
+        t_nuc              = self.current_Plant['nuc_startup_time_remain_init']
         t_nuc_suinitremain = t_nuc if not np.isnan( t_nuc ) else 0.0
-        e_nuc              = self.current_Plant['rec_startup_energy_remain_init']
+        e_nuc              = self.current_Plant['nuc_startup_energy_remain_init']
         e_nuc_suinitremain = e_nuc if not np.isnan( e_nuc ) else 0.0
         nuc_accum_time     = max(0.0*u.hr, self.Dnsu - t_nuc_suinitremain*u.hr )
         nuc_accum_energy   = max(0.0*u.Wh, self.En   - e_nuc_suinitremain*u.Wh )

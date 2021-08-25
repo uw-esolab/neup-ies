@@ -72,12 +72,12 @@ class OutputExtraction(object):
         # saving some outputs for plotting
         self.p_cycle      = np.asarray(mod_out.P_cycle) * u.MW
         self.gen          = (np.asarray(mod_out.gen) * u.kW).to('MW')
-        self.q_dot_rec_in = np.asarray(mod_out.q_dot_rec_inc) * u.MW
-        self.q_thermal    = np.asarray(mod_out.Q_thermal) * u.MW
+        self.q_dot_nuc_in = np.asarray(mod_out.q_dot_nuc_inc) * u.MW
+        self.q_nuc_thermal    = np.asarray(mod_out.Q_nuc_thermal) * u.MW
         self.q_pb         = np.asarray(mod_out.q_pb) * u.MW
         self.q_dot_pc_su  = np.asarray(mod_out.q_dot_pc_startup) * u.MW
         self.m_dot_pc     = np.asarray(mod_out.m_dot_pc) * u.kg/u.s
-        self.m_dot_rec    = np.asarray(mod_out.m_dot_rec) * u.kg/u.s
+        self.m_dot_nuc    = np.asarray(mod_out.m_dot_nuc) * u.kg/u.s
         self.T_pc_in      = np.asarray(mod_out.T_pc_in) * u.degC
         self.T_pc_out     = np.asarray(mod_out.T_pc_out) * u.degC
         self.T_tes_cold   = np.asarray(mod_out.T_tes_cold) * u.degC
@@ -89,7 +89,7 @@ class OutputExtraction(object):
         self.price        = np.asarray(self.mod.TimeOfDeliveryFactors.dispatch_factors_ts)
 
         # setting static inputs
-        self.q_rec_design  = self.mod.SystemDesign.q_dot_nuclear_des * u.MW  # receiver design thermal power
+        self.q_nuc_design  = self.mod.SystemDesign.q_dot_nuclear_des * u.MW  # receiver design thermal power
         self.p_pb_design   = self.mod.SystemDesign.P_ref * u.MW              # power block design electrical power
         self.eta_design    = self.mod.SystemDesign.design_eff                # power block design efficiency
         self.q_pb_design  = (self.p_pb_design / self.eta_design).to('MW')    # power block design thermal rating
@@ -477,7 +477,7 @@ class Plots(object):
         ax.set_yticks([0, 250, 500, 750, 1000])
 
         # plot Power arrays
-        power_array_list = ['p_cycle', 'q_thermal', 'gen', 'q_dot_pc_su'] # list of array strings
+        power_array_list = ['p_cycle', 'q_nuc_thermal', 'gen', 'q_dot_pc_su'] # list of array strings
         power_label_list = ['P_cycle (Electric)',
                             'Q_dot to Salt (Thermal)',
                             'Power generated (Electric)',
@@ -552,7 +552,7 @@ class Plots(object):
         ax2 = ax.twinx()  # this is the defocus plot
 
         # plot mass flow arrays
-        mass_array_list = ['m_dot_pc', 'm_dot_rec'] # list of array strings
+        mass_array_list = ['m_dot_pc', 'm_dot_nuc'] # list of array strings
         mass_label_list = ['PC HTF mass flow rate',
                            'Receiver Mass Flow Rate'] # list of labels for each array string to extract from Outputs
         mass_ylabel = 'Mass Flow \n(kg/s)'

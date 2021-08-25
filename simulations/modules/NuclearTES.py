@@ -270,8 +270,8 @@ class NuclearTES(GenericSSCModule):
         params = GenericSSCModule.create_dispatch_params(self, Plant )
 
         # extract array from full run of Plant
-        assert hasattr(Plant.Outputs, "Q_thermal"), "Q_thermal was not found in the outputs of Plant."
-        self.Q_nuc_guess = Plant.Outputs.Q_thermal
+        assert hasattr(Plant.Outputs, "Q_nuc_thermal"), "Q_thermal was not found in the outputs of Plant."
+        self.Q_nuc_guess = Plant.Outputs.Q_nuc_thermal
         
         # set up copy of SSC dict
         updated_SSC_dict = copy.deepcopy(self.SSC_dict)
@@ -313,9 +313,9 @@ class NuclearTES(GenericSSCModule):
         updated_SSC_dict = copy.deepcopy(self.SSC_dict)
         
         # saving relevant end-of-sim outputs from the last simulation segment
-        updated_SSC_dict['rec_op_mode_initial']              = Plant.Outputs.rec_op_mode_final
-        updated_SSC_dict['rec_startup_time_remain_init']     = Plant.Outputs.rec_startup_time_remain_final
-        updated_SSC_dict['rec_startup_energy_remain_init']   = Plant.Outputs.rec_startup_energy_remain_final
+        updated_SSC_dict['nuc_op_mode_initial']              = Plant.Outputs.nuc_op_mode_final
+        updated_SSC_dict['nuc_startup_time_remain_init']     = Plant.Outputs.nuc_startup_time_remain_final
+        updated_SSC_dict['nuc_startup_energy_remain_init']   = Plant.Outputs.nuc_startup_energy_remain_final
         updated_SSC_dict['T_tank_cold_init']                 = Plant.Outputs.T_tes_cold[self.t_ind-1]
         updated_SSC_dict['T_tank_hot_init']                  = Plant.Outputs.T_tes_hot[self.t_ind-1]
         updated_SSC_dict['csp.pt.tes.init_hot_htf_percent']  = Plant.Outputs.hot_tank_htf_percent_final
