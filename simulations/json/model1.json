@@ -69,6 +69,7 @@
         "mat_nuc_tube" :    2,
         "nuc_htf" :         17,
         "nuc_core_max_oper_frac" :   1.0,
+        "f_nuc_min" :     0.15,
         "eta_nuc_pump" :     0.84999999999999998,
         "time_start" :          0,
         "time_stop" :           31536000,
