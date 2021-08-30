@@ -108,8 +108,9 @@ $^{4}$ \quad Westinghouse Electric Company, Lead Fast Reactor Systems Developmen
 %\conference{} % An extended version of a conference paper
 
 % Abstract (Do not insert blank lines, i.e. \\) 
-\abstract{Separate cycles for solar concentrating power and lead fast reactors, which innately have issues with weather, grid demand, and time of day, have potential to benefit when coupled together in a supercritical CO2 Brayton cycle. Combining these cycles could allow for the lead fast reactor cycle to thermally charge the salt storage in the solar concentrating power cycle during low demand periods and be utilized when grid demand increases. The implementation of the independent cycles into one cycle is modeled to find the preferred location of the lead fast reactor heat exchanger, concentrating solar power heat exchanger, salt charging heat exchanger, turbines, and recuperators within the supercritical CO2 Brayton cycle. Three cycle configurations have been studied: a two-cycle configuration which uses CSP and LFR heat for dedicated turbocompressors, combined cycle with two high temperature recuperators for both the CSP and LFR, and a combined cycle with CSP and LFR heat sources in parallel. 
+\abstract{Separate cycles for solar concentrating power (CSP) and lead-cooled fast reactors (LFRs), which innately have issues with weather, grid demand, and time of day, have potential to benefit when coupled together to a supercritical CO$_2$ Brayton cycle. Combining these cycles could allow for the LFR to thermally charge the salt storage in the solar concentrating power cycle during low demand periods and be utilized when grid demand increases. The LFR and CSP can use separate power conversion cycles or be combined into a single cycle. The LFR/CSP coupling into one cycle is modeled to find the preferred location of the LFR heat exchanger, CSP heat exchanger, salt charging heat exchanger, turbines, and recuperators within the supercritical CO$_2$ Brayton cycle. Three cycle configurations have been studied: a two-cycle configuration which uses CSP and LFR heat for dedicated turbocompressors, combined cycle with separate high temperature recuperators for both the CSP and LFR, and a combined cycle with CSP and LFR heat sources in parallel. 
 [CONCLUSION]
+%BL: combining into single cycle is feasible without significant efficiency penalty - therefore efficient use of components. Use of LFR to charge salt is also feasible but this either requires additional components or there is a substantial efficiency hit.
 }
 
 %{A single paragraph of about 200 words maximum. For research articles, abstracts should give a pertinent overview of the work. We strongly encourage authors to use the following style of structured abstracts, but without headings: (1) Background: place the question addressed in a broad context and highlight the purpose of the study; (2) Methods: describe briefly the main methods or treatments applied; (3) Results: summarize the article's main findings; (4) Conclusion: indicate the main conclusions or interpretations. The abstract should be an objective representation of the article, it must not contain results which are not presented and substantiated in the main text and should not exaggerate the main conclusions.}
@@ -147,6 +148,40 @@ $^{4}$ \quad Westinghouse Electric Company, Lead Fast Reactor Systems Developmen
 %\encyclopediadef{Instead of the abstract}
 %\entrylink{The Link to this entry published on the encyclopedia platform.}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+% Define fixed-width column types. Use as:
+% \begin{tabular}{L{0.5\linewidth}cc}
+% ... for example
+\newcolumntype{L}[1]%
+{>{\raggedright\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+\newcolumntype{C}[1]%
+{>{\centering\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+\newcolumntype{R}[1]%
+{>{\raggedleft\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+
+
+\usepackage[commentmarkup=uwave%
+%,final%    <<< uncomment this line to render with changes and remove comments
+]{changes}
+\usepackage{xspace}
+
+\definechangesauthor[color=blue!80!black]{MW}
+\definechangesauthor[color=red!80!black]{BL}
+\newcommand{\mw}[1]{\comment[id=MW]{#1}}
+\newcommand{\bl}[1]{\comment[id=BL]{#1}}
+
+
+% \renewcommand{\added}[1]{\xspace{#1}\xspace}
+% \renewcommand{\mw}[1]{\xspace}
+% \renewcommand{\bl}[1]{\xspace}
+% \renewcommand{\deleted}[1]{\xspace}
+% \renewcommand{\replaced}[2]{\xspace{#1}\xspace}
+
+
+
+\usepackage{subcaption}
+
 \begin{document}
 
 \input{content.tex}
