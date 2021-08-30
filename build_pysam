@@ -67,7 +67,7 @@ fi
 # checking out a stable tag or release from our modified SSC
 # this can be updated, maybe added as flag
 cd ssc
-git checkout NE2-model1-v1.4 #NE2-model1-v1.3
+git checkout NE2-model1-v1.5
 
 #====================================================#
 #---- cloning sam ------------------------------------
