@@ -18,6 +18,7 @@ from dispatch.GeneralDispatch import GeneralDispatch as GD
 from dispatch.GeneralDispatch import GeneralDispatchParamWrap as GDP
 from dispatch.GeneralDispatch import GeneralDispatchOutputs as GDO
 from tqdm import tqdm
+import pickle as pickle
 import numpy as np
 import copy
 from abc import ABC, abstractmethod
@@ -40,7 +41,8 @@ class GenericSSCModule(ABC):
     
     @abstractmethod
     def __init__(self, plant_name="abstract", json_name="abstract", 
-                       is_dispatch=False, dispatch_time_step=1):
+                       is_dispatch=False, dispatch_time_step=1,
+                       log_dispatch_targets=False):
         """ Initializes the GenericSSCModules
         
         Args:
@@ -52,6 +54,8 @@ class GenericSSCModule(ABC):
                 boolean, if True runs Pyomo dispatch optimization
             dispatch_time_step (int): 
                 time step for dispatch (hours)
+            log_dispatch_targets (bool): 
+                boolean, if True logs dispatch targets calculated by Pyomo at each segment
             
         """
         
@@ -81,6 +85,9 @@ class GenericSSCModule(ABC):
         
         # save flag for dispatch 
         self.is_dispatch = is_dispatch
+
+        # save flag for logging dispatch targets 
+        self.log_dispatch_targets = log_dispatch_targets
         
         # initialize dispatch-specific parameters and loggers
         if self.is_dispatch:
@@ -95,7 +102,12 @@ class GenericSSCModule(ABC):
             
             # initialize dispatch wrap class
             self.dispatch_wrap = self.create_dispatch_wrapper( self.PySAM_dict )
-
+            
+            if self.log_dispatch_targets:
+                hash_exists, hash_filepath = self.generate_hash()
+                self.hash_exists   = hash_exists
+                self.hash_filepath = hash_filepath
+            
 
     def run_sim(self, run_loop=False, export=False, filename='temp.csv'):
         """ Method to run single simulation for Generic System
@@ -156,6 +168,51 @@ class GenericSSCModule(ABC):
         # saving location of solar resource file for SSC input
         parent_dir = FileMethods.parent_dir
         self.solar_resource_file = os.path.join(parent_dir, input_dict['solar_resource_rel_parent']) #os.path.join
+
+    @abstractmethod
+    def generate_hash(self):
+        """ Method to create unique hash for given JSON inputs
+        
+        This method creates a unique, permanent hash for a given JSON script.
+        That is, it gathers all of the JSON inputs (including SSC and PySAM inputs)
+        from the designated script and converts both their keynames and values
+        to strings. It collects all of these into a single string variable and
+        then creates a new hexadecimal string or "hash" for that giant string. 
+        This serves as a unique identifier or "fingerprint" for all the values 
+        in the JSON script. This is then used later on as the file name containing
+        outputs from this particular run. Any small changes to the JSON script 
+        will result in a drastically different hash, and therefore a new output file.
+        If a simulation has already been run with the given JSON script, it can
+        just pull results from the already created hash file instead of needlessly
+        repeating the simulation. 
+
+        Returns:
+            hash_exists (bool): 
+                if True, a hash file currently exists with all given JSON inputs
+            filepath (str): 
+                absolute filepath to the hash file in outputs directory
+        """
+        
+        filename = "generic__"
+        extstr = ''
+        
+        sscdict = self.SSC_dict
+        for s in sscdict.keys():
+            extstr += "{0}: {1} ".format( s, str(sscdict[s]) )
+        
+        pysamdict = self.PySAM_dict
+        for p in pysamdict.keys():
+            extstr += "{0}: {1} ".format( p, str(pysamdict[p]) )
+        
+        json_hash = hashlib.md5( extstr.encode('utf-8') ).hexdigest()
+        
+        filename += json_hash
+        
+        filepath = os.path.join( FileMethods.output_dir , filename + '.dispatchTargets')
+        
+        hash_exists = os.path.exists(filepath)
+        
+        return hash_exists, filepath
         
     @abstractmethod    
     def create_Plant(self):
@@ -686,7 +743,7 @@ class GenericSSCModule(ABC):
 
         return params
 
-
+    @abstractmethod
     def initialize_arrays(self):
         """ Initializing empty arrays to log SSC outputs after segment simulations
         
@@ -709,23 +766,6 @@ class GenericSSCModule(ABC):
         #    name of NE2 variable || name of SSC module variable
                 'time_log':          'time_hr',          # logging time
                 'gen_log':           'gen',              # electricity generation log
-                'q_thermal_log':     'Q_nuc_thermal',    # thermal power from nuclear to HTF 
-                'p_cycle_log' :      'P_cycle',          # PC electrical power output (gross)
-                'q_dot_rec_inc_log': 'q_dot_nuc_inc',    # Nuclear incident thermal power
-                'q_pb_log':          'q_pb',             # PC input energy
-                'q_dot_pc_su_log' :  'q_dot_pc_startup', # PC startup thermal power
-                'm_dot_pc_log' :     'm_dot_pc',         # PC HTF mass flow rate
-                'm_dot_rec_log'  :   'm_dot_nuc',        # Nuc mass flow rate
-                'T_pc_in_log' :      'T_pc_in',          # PC HTF inlet temperature 
-                'T_pc_out_log'   :   'T_pc_out',         # PC HTF outlet temperature
-                'T_tes_cold_log':    'T_tes_cold',       # TES cold temperature
-                'T_tes_hot_log'  :   'T_tes_hot',        # TES hot temperature
-                'T_rec_in_log':      'T_nuc_in',         # Plant inlet temperature
-                'T_rec_out_log'  :   'T_nuc_out',        # Plant outlet temperature
-                'T_cond_out_log':    'T_cond_out',       # PC condenser water outlet temperature
-                'e_ch_tes_log'  :    'e_ch_tes',         # TES charge state
-                'op_mode_1_log' :    'op_mode_1',        # Operating Mode
-                'defocus_log'   :    'defocus',          # Nuclear "Defocus" fraction
                 'eta_log'       :    'eta'               # PC efficiency, gross
             } if self.run_loop \
                  else {'gen_log':    'gen'  # electricity generation log
@@ -758,7 +798,7 @@ class GenericSSCModule(ABC):
         """
         
         # ==========================================================================
-        # wanted to create a quick subclass that where I can extract things during PostProcessing steps
+        # wanted to create a quick subclass where I can extract things during PostProcessing steps
         
         if log_final:
             # don't try this at home...
@@ -803,6 +843,28 @@ class GenericSSCModule(ABC):
             if log_final:
                 setattr( self.Plant.PySAM_Outputs, 'capacity_factor', self.capacity_factor )
                 setattr( self.Plant.PySAM_Outputs, 'annual_energy',   self.annual_energy )
+
+        # ==========================================================================
+        # logging dispatch targets for a debugging run if specified
+        
+        if self.log_dispatch_targets:
+
+            if not log_final:
+                for l in self.Log_Target_Arrays.keys():
+                    # get what we have logged so far
+                    disp_targ = getattr(self.Plant.SystemControl, l )
+                    # grab and save corresponding slices to self (this should be some sort of pointer)
+                    self.Log_Target_Arrays[l][self.slice_ssc_currentH] = disp_targ[self.slice_ssc_firstH]
+            
+            else:
+                
+                if not self.hash_exists:
+                    with open(self.hash_filepath, "wb") as f:
+                        pickle.dump(self.Log_Target_Arrays, f)
+                    print("Dispatch Targets successfuly stored in {0}".format(self.hash_filepath))
+                else:
+                    print("Dispatch Targets file already exists in {0}".format(self.hash_filepath))
+            
                 
     
     def export_results(self, filename):
