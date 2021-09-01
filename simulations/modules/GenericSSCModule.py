@@ -104,7 +104,7 @@ class GenericSSCModule(ABC):
             self.dispatch_wrap = self.create_dispatch_wrapper( self.PySAM_dict )
             
 
-    def run_sim(self, run_loop=False, export=False, filename='temp.csv'):
+    def run_sim(self, run_loop=False, export=False, filename='temp.csv', overwrite_dispatch_targets=False):
         """ Method to run single simulation for Generic System
         
         This method handles the creating and execution of Plant, Grid, and Financial objects to
@@ -118,10 +118,13 @@ class GenericSSCModule(ABC):
                 if true, exports results to an Excel sheet
             filename (str): 
                 name for Excel sheet saved to the /outputs directory
+            overwrite_dispatch_targets (bool): 
+                if true, overwrites the current stored dispatch target file
             
         """
         
         self.run_loop = run_loop
+        self.overwrite_dispatch_targets = overwrite_dispatch_targets
         
         #--- create Plant object and execute it
         self.create_Plant( )
@@ -441,10 +444,16 @@ class GenericSSCModule(ABC):
                 # save results of hash, including a unique filename for given inputs
                 self.hash_exists   = hash_exists
                 self.hash_filepath = hash_filepath # dispatch targets will be saved here
-                
+            
                 # printing out locations
                 if self.hash_exists:
-                    print("\nDispatch Targets already exists in {0}. \nWill skip logging.\n".format(self.hash_filepath)) 
+                    # overwrite file if requested
+                    if self.overwrite_dispatch_targets:
+                        self.hash_exists = False
+                        print("\nOverwriting current Dispatch Targets at {0}.".format(self.hash_filepath)) 
+                    # file exists, do nothing
+                    else:
+                        print("\nDispatch Targets already exists in {0}. \nWill skip logging.\n".format(self.hash_filepath)) 
                 else:
                     print("\nDispatch Targets do not exist for this configuration. \n Will write to {0}.\n".format(self.hash_filepath))
             
