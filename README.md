@@ -7,6 +7,25 @@ This is a private repository for sharing code and project files.
 *Note from Gabriel: If cloning onto a local machine, I recommend that this repository be cloned into a directory alongside the SAM projects (LK, WEX, SSC, SAM). That is, the **neup-ies** folder should be in the same directory as **lk**, **ssc**, **googletest**, etc. I refer to this directory as `$DEVDIR`.*
 <br/><br/>
 
+## Building Documentation
+
+Documentation written using Sphinx <http://sphinx-doc.org/>_. 
+Follow these steps to build the documentation for this project!
+
+Make sure you have the proper packages installed in your Python environment:
+    
+    pip install Sphinx
+    pip install numpydoc
+    pip install sphinxcontrib-napoleon
+
+First make sure you are in the correct conda environment. Then, make sure you run:
+
+    cd neup-ies/simulations/docs
+    sphinx-apidoc -M -f -o source/ ../../simulations/
+    make html
+
+The final html file will be located at ``neup-ies/simulations/docs/build/html/index.html``.
+
 # Running SSC simulations in Linux
 Everything in the bash scripts has been tested on Ubuntu Focal 20.04.2 LTS.
 
