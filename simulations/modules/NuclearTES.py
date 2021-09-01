@@ -106,24 +106,32 @@ class NuclearTES(GenericSSCModule):
                 absolute filepath to the hash file in outputs directory
         """
         
-    
+        # static start of the filename
         filename = "NuclearTES__"
+        
+        # initializing empty string
         extstr = ''
         
+        # adding SSC dictionary names and values to the existing string
         sscdict = self.SSC_dict
         for s in sscdict.keys():
             extstr += "{0}: {1} ".format( s, str(sscdict[s]) )
         
+        # adding PySAM dictionary names and values to the existing string
         pysamdict = self.PySAM_dict
         for p in pysamdict.keys():
             extstr += "{0}: {1} ".format( p, str(pysamdict[p]) )
         
+        # creating a unique hash from giant string of values using md5 algorithm
         json_hash = hashlib.md5( extstr.encode('utf-8') ).hexdigest()
         
+        # adding the unique hexadecimal hash to the starting filename string
         filename += json_hash
         
+        # creating full path to output hash file
         filepath = os.path.join( FileMethods.output_dir , filename + '.dispatchTargets')
         
+        # checking if this current hash exists already
         hash_exists = os.path.exists(filepath)
         
         return hash_exists, filepath

@@ -103,11 +103,6 @@ class GenericSSCModule(ABC):
             # initialize dispatch wrap class
             self.dispatch_wrap = self.create_dispatch_wrapper( self.PySAM_dict )
             
-            if self.log_dispatch_targets:
-                hash_exists, hash_filepath = self.generate_hash()
-                self.hash_exists   = hash_exists
-                self.hash_filepath = hash_filepath
-            
 
     def run_sim(self, run_loop=False, export=False, filename='temp.csv'):
         """ Method to run single simulation for Generic System
@@ -193,23 +188,32 @@ class GenericSSCModule(ABC):
                 absolute filepath to the hash file in outputs directory
         """
         
+        # static start of the filename
         filename = "generic__"
+        
+        # initializing empty string
         extstr = ''
         
+        # adding SSC dictionary names and values to the existing string
         sscdict = self.SSC_dict
         for s in sscdict.keys():
             extstr += "{0}: {1} ".format( s, str(sscdict[s]) )
         
+        # adding PySAM dictionary names and values to the existing string
         pysamdict = self.PySAM_dict
         for p in pysamdict.keys():
             extstr += "{0}: {1} ".format( p, str(pysamdict[p]) )
         
+        # creating a unique hash from giant string of values using md5 algorithm
         json_hash = hashlib.md5( extstr.encode('utf-8') ).hexdigest()
         
+        # adding the unique hexadecimal hash to the starting filename string
         filename += json_hash
         
+        # creating full path to output hash file
         filepath = os.path.join( FileMethods.output_dir , filename + '.dispatchTargets')
         
+        # checking if this current hash exists already
         hash_exists = os.path.exists(filepath)
         
         return hash_exists, filepath
@@ -427,6 +431,22 @@ class GenericSSCModule(ABC):
         
         # run dispatch optimization for the first time
         if self.is_dispatch:
+            
+            # option, if we're running dispatch, to log all dispatch targets from each segment
+            if self.log_dispatch_targets:
+                
+                # generate unique hash from all JSON inputs
+                hash_exists, hash_filepath = self.generate_hash()
+                
+                # save results of hash, including a unique filename for given inputs
+                self.hash_exists   = hash_exists
+                self.hash_filepath = hash_filepath # dispatch targets will be saved here
+                
+                # printing out locations
+                if self.hash_exists:
+                    print("\nDispatch Targets already exists in {0}. \nWill skip logging.\n".format(self.hash_filepath)) 
+                else:
+                    print("\nDispatch Targets do not exist for this configuration. \n Will write to {0}.\n".format(self.hash_filepath))
             
             # one pre-run of Plant, used to grab inputs to dispatch in some modules
             prePlant = self.duplicate_Plant( self.Plant )
@@ -848,23 +868,18 @@ class GenericSSCModule(ABC):
         # logging dispatch targets for a debugging run if specified
         
         if self.log_dispatch_targets:
-
-            if not log_final:
-                for l in self.Log_Target_Arrays.keys():
-                    # get what we have logged so far
-                    disp_targ = getattr(self.Plant.SystemControl, l )
-                    # grab and save corresponding slices to self (this should be some sort of pointer)
-                    self.Log_Target_Arrays[l][self.slice_ssc_currentH] = disp_targ[self.slice_ssc_firstH]
+            if not self.hash_exists:
+                if not log_final:
+                    for l in self.Log_Target_Arrays.keys():
+                        # get what we have logged so far
+                        disp_targ = getattr(self.Plant.SystemControl, l )
+                        # grab and save corresponding slices to self (this should be some sort of pointer)
+                        self.Log_Target_Arrays[l][self.slice_ssc_currentH] = disp_targ[self.slice_ssc_firstH]
             
-            else:
-                
-                if not self.hash_exists:
+                else:
                     with open(self.hash_filepath, "wb") as f:
                         pickle.dump(self.Log_Target_Arrays, f)
-                    print("Dispatch Targets successfuly stored in {0}".format(self.hash_filepath))
-                else:
-                    print("Dispatch Targets file already exists in {0}".format(self.hash_filepath))
-            
+                    print("Dispatch Targets successfuly stored in {0}".format(self.hash_filepath))        
                 
     
     def export_results(self, filename):
