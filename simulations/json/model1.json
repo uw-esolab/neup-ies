@@ -110,6 +110,7 @@
         "rec_ref_cost" :  0,
         "rec_ref_area" :  1571,
         "rec_cost_exp" :  0.69999999999999996,
+        "nuclear_spec_cost" : 4500,
         "is_field_tracking_init" : false,
         "nuc_op_mode_initial" :    2,
     	"nuc_startup_energy_remain_init" : 0,
