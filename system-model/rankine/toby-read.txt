@@ -1,0 +1,1 @@
+Hi Toby this is going to be the file where you store your EES models. You should follow the naming scheme of lower-case, with dashes to signify spaces in text. 
