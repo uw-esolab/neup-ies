@@ -11,17 +11,33 @@
 
 
 Recompression supercritical CO$_2$ Brayton cycles are promising cycle configurations offering higher efficiencies, compact design, and reduced turbomachinery cost while operating with non toxic working fluid. High efficiencies, in some simple recompression cycles reaching 50\% efficiency \cite{turchi_2013,wright_2009}, allowing them to be a competitive alternative to steam Rankine and air Brayton cycles over a range of temperatures.
-\bl{Updated above as sCO2 can also be used for Coal - it is a cycle vs cycle argument rather than a heat source vs heat source argument}
+\bl{Updated above as sCO2 can also be used for Coal - it is a cycle vs cycle argument rather than a heat source vs heat source argument -BW}
 Various sCO$_2$ Brayton cycles have been modeled with the recompression cycle having the most efficiency advantages over other proposed cycle arrangements \cite{wang_2018,turchi_2012}.  Due to the benefits of sCO$_2$ Brayton cycles, the United States Department of Energy is investigating these conversion cycles for use with heat sources including nuclear and solar \cite{doe_2012}. Multiple project funding opportunities are established with the National Energy Technology Laboratory offering 144 million dollar reward for demonstration and performance verification of a sCO$_2$ Brayton cycle \cite{netl_2016} and the Office of Energy Efficiency \& Renewable Energy offering 2.6 million dollar reward in their Brayton Energy project for a integrated CSP receiver, TES, and power block in one sCO$_2$ Brayton system \cite{seto_2015}. Utilizing complementary technologies, specifically solar concentrating power and lead-cooled fast reactors, can offset the drawbacks of each. Coupling these technologies into an interconnected cycle allows for consistent generation, independent of weather or time of day, and thermal storage for high dispatchability during high grid demand periods.
 
-\bl{not a big issue but do we want to describe as sCO2 or sCO2 Brayton? In project nomenclature to date I have used sCO2 with the logic that sCO2 'isnt really a Brayton cycle' but both are common}
-A CSP has an array of mirrors concentrating solar rays towards a receiver to generate thermal energy therefore causing a dependency on weather conditions and time of day. Previous research has modeled CSP technology as the thermal source for Brayton sCO$_2$ cycles with promising results in efficiency gains and high temperature thermal energy storage \cite{turchi_2012, turchi_2013, ho_2015, wang_2018}. Thermal energy gathered from the CSP is stored in thermal energy storage which is dispatched into the sCO$_2$ Brayton cycle when grid demand increases. With a comparable temperature to the hot TES, 560 $^{\circ}$C, a LFR is capable of transferring heat to thermal storage for later dispatch. An LFR uses fission reactions to heat a heat transfer fluid, in this case liquid lead, to temperatures of 650 $^{\circ}$C. LFR powered sCO$_2$ Brayton cycles have been studied with similar gains in efficiency seen in CSP sCO$_2$ Brayton cycles \cite{dostal_2005, dostal_2004, luo_2020}. Physical testing of simple sCO$_2$ Brayton cycles is researched at the Boulder, Colorado with break-even conditions, where the turbine produces enough power to offset compressor demand, being achieved \cite{wright_2011} \bl{If you are reading this reference https://www.osti.gov/servlets/purl/1108068 I think the loop is in Sandia National Lab and the conference where the paper was published was in Boulder}. In addition to break-even conditions, research from the Supercritical CO$_2$ Brayton Cycle Integral Experiment Loop, in Korea Atomic Energy Institute, achieved electrical generation in a simple sCO$_2$ Brayton cycle \cite{cha_2016}. 
+\bl{not a big issue but do we want to describe as sCO2 or sCO2 Brayton? In project nomenclature to date I have used sCO2 with the logic that sCO2 'isnt really a Brayton cycle' but both are common -BW I would say sCO2 Brayton, Brayton uses gaseous fluid with a compressor, turbine, and heat addition. I dont think that distiguishing between supercritical fluid vs gasuous is detrimental? Correct me if I'm wrong}
+A CSP has an array of mirrors concentrating solar rays towards a receiver to generate thermal energy therefore causing a dependency on weather conditions and time of day. Previous research has modeled CSP technology as the thermal source for Brayton sCO$_2$ cycles with promising results in efficiency gains and high temperature thermal energy storage \cite{turchi_2012, turchi_2013, ho_2015, wang_2018}. Thermal energy gathered from the CSP is stored in thermal energy storage which is dispatched into the sCO$_2$ Brayton cycle when grid demand increases. With a comparable temperature to the hot TES, 560 $^{\circ}$C, a LFR is capable of transferring heat to thermal storage for later dispatch. An LFR uses fission reactions to heat a heat transfer fluid, in this case liquid lead, to temperatures of 650 $^{\circ}$C. LFR powered sCO$_2$ Brayton cycles have been studied with similar gains in efficiency seen in CSP sCO$_2$ Brayton cycles \cite{dostal_2005, dostal_2004, luo_2020}. Physical testing of simple sCO$_2$ Brayton cycles is researched at Sandia National Labs in Arvada, Colorado, with break-even conditions, where the turbine produces enough power to offset compressor demand, being achieved \cite{wright_2011}. In addition to break-even conditions, research from the Supercritical CO$_2$ Brayton Cycle Integral Experiment Loop, in Korea Atomic Energy Institute, achieved electrical generation in a simple sCO$_2$ Brayton cycle \cite{cha_2016}. 
 
-\bl{I would bullet out the next three citations}
-Various studies on complimentary solar-nuclear systems have been accomplished with several presented as follows. Monnerie et al. (2011), in search of an alternative to the typical fossil fuel-based process, reports on combining nuclear and solar energy in the same plant to produce hydrogen \cite{monnerie_2011}.  Extraction and production of fuels using complimentary solar-nuclear systems is additionally studied in the Curtis 2015 thesis from Massachusetts Institute of Technology where cycle configuration, performance, and development of shale oil extraction from kerogen deposits is reported \cite{curtis_2015}. Utilizing complimentary solar-nuclear cycles for production of hydrogen or shale oil with economical feasibility of the system discussed, in contrast to a fucus on electrical generation and storage in a sCO$_2$ Brayton recompression cycle, is not within the scope of the presented research in this paper. Implementation of a combined solar and nuclear plant, modeled in the Wang et al. (2020) shows a single sCO$_2$ Brayton recompression cycle layout with an emphasis on a cycle design's performance to varying solar irradiance and demonstration of feasibility \cite{wang_2020}.  This single cycle configuration has a dissimilar higher-temperature operating salt, KCl-MgCl$_2$, as the heat transfer fluid in the CSP with the small modular lead-cooled fast reactor's main purpose as a preheater to the CSP heat addition instead of being utilized as an TES charging alternative. Presented in this paper are the effects on cycle and heat storage efficiency of alternative heat addition locations while having the LFR serve a dual purpose of electrical generation and a suplementary CSP TES charging technique. 
-\bl{I think the last citation merits its own paragraph and a little further discussion (1-2 more sentences). You could start by saying that it is prior work on the LFR-CSP-sCO2 concept. Then describe its cycle configuration with the high temperature salt. Then in the following sentence (the stuff you currnetly have highlighted) you can say that your work is investigating higher lead temperatures than Wang (because of Westinghouse LFR) and lower temperature salt (technology readiness) and this leads to very different cycle configurations and options than Wang, as will be discussed. The overall tone is that you work recognizes and builds on Wang, rather than needing to justify its existance despite Wang}
+\bl{I would bullet out the next three citations-BW}
+Various studies on complimentary solar-nuclear systems have been accomplished with several reviewed as follows: 
 
-\hl{This paper will provide an overview of contending recompression sCO$_2$ Brayton cycles with varied positioning of complimentary CSP and LFR heat additions in the cycle. Additionally the location of where heat is drawn from the sCO$_2$ Brayton cycles to be stored in thermal energy storage is studied and the results discussed.}
+\begin{itemize}
+    \item	Monnerie et al. (2011): In search of an alternative to the typical fossil fuel-based process, reports on synthesizing hydrogen with complimentary solar-nuclear technologies being utilized as consistent heat sources for chemical decomposition of sulphuric acid to aid in simple, low-temperature electrolysis \cite{monnerie_2011}. 
+    \item   Curtis J.D. (2015): Massachusetts Institute of Technology thesis reports cycle configuration, performance, and development of complimentary solar-nuclear systems with a focus on shale oil extraction and production from kerogen deposits \cite{curtis_2015}. 
+    \item   Wang et al. (2020): Implements a combined solar and nuclear plant discussing a sCO$_2$ Brayton recompression cycle layout with an emphasis on a cycle design's performance to varying solar irradiance and demonstration of feasibility \cite{wang_2020}. 
+\end{itemize}
+
+The economic and physical feasibility of producing shale oil and hydrogen with complimentary solar-nuclear cycles, as discussed in the Curtis J.D. (2015) thesis and Monnerie et al. (2011) article, is not within the scope of sCO$_2$ Brayton recompression cycle electrical generation and storage presented in this paper.
+
+The single cycle configuration in Wang et al. (2020) has a higher-temperature operating salt, 67\%KCl-33\%MgCl$_2$, as the heat transfer fluid in the CSP which is capable of temperatures in the range of 450 - 1400 $^{\circ}$C. The lower operating point of the studied solar salt in this paper, 60\%NaNO$_3$-40\%KNO$_3$ with a temperature range of 250 - 585 $^{\circ}$C, is employed because the technology is more established when compared to KCl-MgCl$_2$ \cite{turchi_2018}. The higher temperature salt requires preheating which is achieved prior to the CSP heat addition by a small modular lead-cooled fast reactor. The small modular LFR operates at a low temperature and a fixed location when compared to the higher temperature lead and variable location that the Westinghouse LFR studied in this paper is capable of. Due to the similar operating temperatures of the CSP and LFR, multiple cycle configurations are studied that are not possible with the similar components in Wang et al. (2020). Specifically studied in this paper are the effects on cycle and heat storage efficiency of different cycle configurations while having the LFR serve a dual purpose of electrical generation and a supplementary CSP TES charging technique. This paper will provide an overview of contending recompression sCO$_2$ Brayton cycles with varied positioning of complimentary CSP and LFR heat additions in the cycle. Additionally the location of where heat is drawn from the sCO$_2$ Brayton cycles to be stored in thermal energy storage is studied with the results discussed.
+
+
+%Monnerie et al. (2011), in search of an alternative to the typical fossil fuel-based process, reports on combining nuclear and solar energy in the same plant to produce hydrogen \cite{monnerie_2011}.  Extraction and production of fuels using complimentary solar-nuclear systems is additionally studied in the Curtis 2015 thesis from Massachusetts Institute of Technology where cycle configuration, performance, and development of shale oil extraction from kerogen deposits is reported \cite{curtis_2015}. Utilizing complimentary solar-nuclear cycles for production of hydrogen or shale oil with economical feasibility of the system discussed, in contrast to a fucus on electrical generation and storage in a sCO$_2$ Brayton recompression cycle, is not within the scope of the presented research in this paper.
+
+%Implementation of a combined solar and nuclear plant, modeled in the Wang et al. (2020) shows a single sCO$_2$ Brayton recompression cycle layout with an emphasis on a cycle design's performance to varying solar irradiance and demonstration of feasibility \cite{wang_2020}.  This single cycle configuration has a dissimilar higher-temperature operating salt, KCl-MgCl$_2$, as the heat transfer fluid in the CSP with the small modular lead-cooled fast reactor's main purpose as a preheater to the CSP heat addition instead of being utilized as an TES charging alternative. Presented in this paper are the effects on cycle and heat storage efficiency of alternative heat addition locations while having the LFR serve a dual purpose of electrical generation and a supplementary CSP TES charging technique. 
+%This paper will provide an overview of contending recompression sCO$_2$ Brayton cycles with varied positioning of complimentary CSP and LFR heat additions in the cycle. Additionally the location of where heat is drawn from the sCO$_2$ Brayton cycles to be stored in thermal energy storage is studied and the results discussed.
+\bl{I think the last citation merits its own paragraph and a little further discussion (1-2 more sentences). You could start by saying that it is prior work on the LFR-CSP-sCO2 concept. Then describe its cycle configuration with the high temperature salt. Then in the following sentence (the stuff you currnetly have highlighted) you can say that your work is investigating higher lead temperatures than Wang (because of Westinghouse LFR) and lower temperature salt (technology readiness) and this leads to very different cycle configurations and options than Wang, as will be discussed. The overall tone is that you work recognizes and builds on Wang, rather than needing to justify its existance despite Wang - BW}
+
+
 
 %Korea Atomic Energy Research Institute \cite{cha_2016}  
 %interest in brayton \cite{doe_2012}
@@ -55,7 +71,7 @@ Various studies on complimentary solar-nuclear systems have been accomplished wi
 \subsection{Cycle Component Modeling}
 %======================================================================================
 Components present in the cycles are modeled using various techniques and are discussed in more detail below. Turbines and compressors are analyzed using isentropic efficiencies. Counter-flow heat exchangers are modelled using the effectiveness-NTU method while simplified ``black box'' heat exchangers that use a simple energy balance for state point calculations are used in lieu of more detailed component models where data is available. The lead-cooled fast reactor is assumed to be a black box heat exchanger because of the constant heat input and state points on the sCO$_2$ inlet and outlet are provided. The concentrating solar power cycle is modeled with necessary components including hot and cold TES, receiver, pumps and counter-flow heat exchangers.
-\bl{does above make this clearer?}
+\bl{does above make this clearer? -BW}
 
 
 \subsubsection{Turbines and Compressors }
@@ -94,9 +110,7 @@ Counter-flow heat exchangers are modeled with two fluids flowing in opposite dir
 
 Additional assumptions of the counter-flow heat exchanger model are: no heat loss to the surroundings, no pressure drops across the heat exchangers, and no fouling resistances. In Figure \ref{counter-flow-hx} the subscript 'out' denotes where the streams are leaving, 'in' denotes the entering streams, 'c' and 'h' signify cold and hot streams respectively, $\dot{Q}_{HX}$ is the total heat transfer from the hot to cold stream, and $\dot{Q}_{surr}$ is the heat transfer to the surroundings.
 
-Counter-flow heat exchanger calculations require two known state points, fluid libraries, mass flow rate of hot and cold side, and a specified approach temperature. \hl{In the modeled cases, the approach temperature is set to value of $10^{\circ}$C, based off prior model development of sCO$_{2}$ Brayton cycle heat exchangers} \cite{seidel_2010_model_development}. 
-%\mw{Justify -BW} 
-The fluid libraries referenced are built into EES for Carbon Dioxide and Salt (60\% NaNO3 40\% KNO3) \cite{pacheco_1995_salt_properties,roland_1996_co2_properties}. 
+Counter-flow heat exchanger calculations require two known state points, fluid libraries, mass flow rate of hot and cold side, and a specified approach temperature. In the modeled cases, the approach temperature is set to value of $10^{\circ}$C, based off prior model development of sCO$_{2}$ Brayton cycle heat exchangers \cite{seidel_2010_model_development}. The fluid libraries referenced are built into EES for Carbon Dioxide and Salt (60\% NaNO$_3$ 40\% KNO$_3$) \cite{pacheco_1995_salt_properties,roland_1996_co2_properties}. 
 
 To analyze the counter-flow heat exchanger a side is chosen, usually the high side, to start the calculations. The approach temperature is initially subtracted from the hot stream on the high temperature side to find the missing cold temperature according to Equation \ref{temp_h}. 
 
@@ -152,7 +166,7 @@ Where $C_{avg}$ is the average capacitance rate across the hot or cold stream an
     CR = \frac{\dot{C}_{min}}{\dot{C}_{max}},
 \end{equation}
 
-\hl{Using values of effectiveness and capacitance ratio, the effectiveness-NTU method can be employed to find the number of transfer units, $NTU$, and the conductance, $UA$} \cite{klein_nellis_2011,nellis_klein_2008}. 
+Using values of effectiveness and capacitance ratio, the effectiveness-NTU method can be employed to find the number of transfer units, $NTU$, and the conductance, $UA$ \cite{klein_nellis_2011,nellis_klein_2008}. 
 
 
 
@@ -194,14 +208,16 @@ The CSP salt cycle modeled in this paper is composed of hot and cold thermal ene
 % \linenumbers
 % \switchcolumn
 
-The CSP salt cycle uses 60\% sodium nitrate and 40\% potassium nitrate 'solar salt' as the heat transfer fluid. Solar salt stored in the hot TES can be dispatched on demand through the CSP HX when grid demand increases and held when grid demand is low. Current CSP salt cycles heat solar salt with receivers and store it in hot TES tanks at 565$^{\circ}$C. Future CSP salt cycles are hypothesized to have bulk hot TES temperatures of up to 720$^{\circ}$C, but due to high temperature limitations with the LFR outlet, the hot TES temperature is set at 595$^{\circ}$C for all modeled cycles \cite{mehos2017concentrating}. The cold TES temperature takes on three different values according to cycle configuration capabilities: 390$^{\circ}$C, 410$^{\circ}$C, and 440$^{\circ}$C. In addition to the lower hot TES temperature, current CSP salt cycles lack a secondary option for charging the hot TES \cite{hamilton2020dispatch}. The studied CSP salt cycle has two TES charging options: a receiver, which generates heat from a heliostat field, and C2S heat exchanger, which draws excess heat from the sCO$_2$ Brayton cycle. While the hot TES is charging the receiver and LFR are storing heat for later use when grid demand increases. The hot TES storage is not dispensing salt for use in the CSP cycle while charging.
+The CSP salt cycle uses 60\% sodium nitrate, NaNO$_3$, and 40\% potassium nitrate, KNO$_3$, 'solar salt' as the heat transfer fluid. Solar salt stored in the hot TES can be dispatched on demand through the CSP HX when grid demand increases and held when grid demand is low. Current CSP salt cycles heat solar salt with receivers and store it in hot TES tanks at temperatures around 565$^{\circ}$C. Future CSP salt cycles are hypothesized to have bulk hot TES temperatures of up to 720$^{\circ}$C, but due to high temperature limitations with the LFR outlet, the hot TES temperature is set at 595$^{\circ}$C for all modeled cycles \cite{mehos2017concentrating}. The cold TES temperature takes on three different values according to cycle configuration capabilities: 390$^{\circ}$C, 410$^{\circ}$C, and 440$^{\circ}$C. In addition to the lower hot TES temperature, current CSP salt cycles lack a secondary option for charging the hot TES \cite{hamilton2020dispatch}. The studied CSP salt cycle has two TES charging options: a receiver, which generates heat from a heliostat field, and C2S heat exchanger, which draws excess heat from the sCO$_2$ Brayton cycle. While the hot TES is charging the receiver and LFR are storing heat for later use when grid demand increases. The hot TES storage is not dispensing salt for use in the CSP cycle while charging.
 
-\hl{The C2S heat exchanger is active in the 'charging' cycle operating modes, when the focus is on heat storage for later use. Pump 1 is actively moving solar salt from cold TES to hot TES through the C2S heat exchanger extracting heat from the sCO$_2$ Brayton cycle. Additionally, while the focus is on heat storage and the receiver is producing heat, pump 2 is active transporting solar salt through the receiver then being stored in the hot TES.}
+The C2S heat exchanger is active in the 'charging' cycle operating modes, when the focus is on heat storage for later use. Pump 1 is actively moving solar salt from cold TES to hot TES through the C2S heat exchanger extracting heat from the sCO$_2$ Brayton cycle. Additionally, while the focus is on heat storage and the receiver is producing heat, pump 2 is active transporting solar salt through the receiver to be stored in the hot TES.
 %\mw{Is this necessarily true? Couldn't there be a condition where we'd like to dump energy from the LFR while simultaneously collecting from CSP? } 
 
-'Non-charging' cycle operating modes are characterized by operations wherein the receiver is charging the hot TES, the C2S heat exchanger is not transferring heat, and the LFR is dispatching heat directly to generate electricity. When electrical generation is occurring, the heat input in the CSP salt cycle is modelled through a black box energy balance across states S6-A and S1-A with a heat addition of 750 MW from the heliostat field. The hot storage is moved through Pump 3 and transfers heat into the sCO$_{2}$ Brayton cycle to be converted into electricity. The cooled salt is stored in cold storage and moved through Pump 2 where the heat addition from the receiver is added.
+'Non-charging' cycle operating modes are characterized by operations wherein the receiver is charging the hot TES, the C2S heat exchanger is not transferring heat, and the LFR is dispatching heat directly to generate electricity. When electrical generation is occurring, the heat input in the CSP salt cycle is modelled through a black box energy balance across states S6-A and S1-A with a heat addition of 750 MW from the heliostat field. The hot storage is moved through Pump 3 and transfers heat into the sCO$_{2}$ Brayton cycle through CSP HX to be converted into electricity. The cooled salt is stored in cold storage and moved through Pump 2 where the heat from the receiver is again transferred into the CSP cycle. 
 
-\bl{I don think the above covers the case where the salt discharges. It might be worth eliciting how the operating modes change as power demand increases. From highest to lowest demand. In all modes CSP will charge the salt is sun is available: (1) LFR and S2C both dispatch, maximum power (2) As power demand decreases, S2C ramps down until no power dispatched through salt (i.e. salt is charged) (3) LFR dispatches, no dispatch from S2C (4) LFR ramps down and gradually transfers greater and greater fraction of power to salt using C2S. (5) No electricity dispatched, all LFR heat passes through C2S
+When grid demand for electrical power increases, a series operating modes are activated. During the highest demand times, cycle operation focuses on maximum electrical generation. This is achieved through the C2S being turned off for direct electrical production from the LFR and the hot TES is discharging heat through the CSP HX for electrical production in the sCO$_2$ Brayton cycle. As grid demand diminishes, CSP HX ramps down heat extraction until no power is being dispatched through the salt and the hot TES begins charging. During this process, the LFR gradually adds a larger fraction of heat input to the TES through C2S. This process continues until no electrical production is occurring in the cycle and all heat is stored in TES for later use.
+
+\bl{I dont think the above covers the case where the salt discharges. It might be worth eliciting how the operating modes change as power demand increases. From highest to lowest demand. In all modes CSP will charge the salt is sun is available: (1) LFR and S2C both dispatch, maximum power (2) As power demand decreases, S2C ramps down until no power dispatched through salt (i.e. salt is charged) (3) LFR dispatches, no dispatch from S2C (4) LFR ramps down and gradually transfers greater and greater fraction of power to salt using C2S. (5) No electricity dispatched, all LFR heat passes through C2S
 }
 
 
@@ -500,13 +516,12 @@ The flow continues through a circulator which is assumed to have negligible pres
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Results}
+\section{Results and Discussion}
 
 
 \subsection{Non-Charging Cycle Configurations}
 %======================================================================================
 
-\subsubsection{Large Tables}
 \begin{specialtable}[H] 
     %[htbp]
     \caption{Calculated system parameters for non-charging cycle configurations with constrained (\textit{C}) and unconstrained (\textit{U}) lead-cooled fast reactor low-end temperature.\label{tab-noncharg}}
@@ -547,6 +562,8 @@ The flow continues through a circulator which is assumed to have negligible pres
     \end{tabular}\\
 \end{specialtable}
 
+\subsection{Thermal Energy Storage Charging Techniques}
+
 \begin{specialtable}[H] 
     %[htbp]
     \caption{Calculated system parameters for charging cycle configurations with constrained (\textit{C}) and unconstrained (\textit{U}) lead-cooled fast reactor low-end temperature.\label{tab-charg}}
@@ -586,7 +603,7 @@ The flow continues through a circulator which is assumed to have negligible pres
 
 
 
-\subsubsection{C-LFR-ON and C-CSP-ON}
+\subsection{Small Tables}
 %--------------------------------------------------------------------------------------
 
 Modeling the C-LFR-ON cycle in EES yielded the results in Table \ref{tab-c-lfr-on}. 
@@ -657,8 +674,6 @@ The EES model outputs for C-CSP-ON are listed in Table \ref{tab-c-csp-on}.
 
 \textbf{Discussion of Results}
 
-
-\subsubsection{C-1HTR1T-ON}
 %--------------------------------------------------------------------------------------
 
 These values are displayed in Table \ref{tab-c-1htr1t-on}.
@@ -699,8 +714,6 @@ These values are displayed in Table \ref{tab-c-1htr1t-on}.
 
 \textbf{Discussion of Results}
 
-
-\subsubsection{C-2HTR3T-ON}
 %--------------------------------------------------------------------------------------
 
 The calculated values from these studies are displayed in Table \ref{tab-c-2htr3t-on}.
@@ -746,12 +759,8 @@ The calculated values from these studies are displayed in Table \ref{tab-c-2htr3
 
 \textbf{Discussion of Results}
 
-
-\subsection{Thermal Energy Storage Charging Techniques}
 %======================================================================================
 
-
-\subsubsection{C-LFR-PRE}
 %--------------------------------------------------------------------------------------
 
 The calculations from this TES charging technique are shown in Table \ref{tab-c-lfr-pre}.
@@ -792,12 +801,8 @@ The calculations from this TES charging technique are shown in Table \ref{tab-c-
 
 \textbf{Discussion of Results}
 
-
-\subsubsection{C-LFR-POST}
 %--------------------------------------------------------------------------------------
 
-
-\subsubsection{C-LFR-PAR}
 %--------------------------------------------------------------------------------------
 
 The results from this study are displayed in Table \ref{tab-c-lfr-par}.
@@ -840,7 +845,6 @@ The results from this study are displayed in Table \ref{tab-c-lfr-par}.
 Changing the temperature of the cold CSP TES had little effect on the heat storage efficiency. The CSP salt mass flow rate and approach temperature of the SALT HX would adjust according to the temperature difference in the TES and keep the efficiency constant.
 
 
-\subsubsection{C-LFR-CIRC}
 %--------------------------------------------------------------------------------------
 
 Table \ref{tab-c-lfr-circ} to show cold thermal energy storage's affect on heat storage efficiency.
