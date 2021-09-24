@@ -62,6 +62,7 @@
         "A_sf_in" :             1269054.492,
         "N_hel" :               8790,
         "is_nuclear_only" :     1,
+        "allow_defocus_mode":   true,
         "q_dot_nuclear_des" :   950,
         "core_height" :         18,
         "d_nuc_tube_out" :  40,

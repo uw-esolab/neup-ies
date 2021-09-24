@@ -59,7 +59,7 @@ fi
 #----  cloning modified ssc --------------------------
 if [ ! -d "$SSCDIR" ]
 then
-	git clone https://github.com/gjsoto/ssc.git
+	git clone git@github.com:gjsoto/ssc.git
 else
 	echo "SSC already exists"
 fi
