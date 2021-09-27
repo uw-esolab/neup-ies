@@ -23,11 +23,21 @@ class MED:
         self.water_rate = 701.5                        #Is this the feed flow rate of the DEMINERALIZED WATER? m_dot_w2
         self.pressure = np.zeros(self.k)                          #Pressure in MPa 
         self.brine_out = []
-        self.brine_conc = []
         self.nea = 0. #TODO: figure out what this should be!!!!! Non equilibrium allowance discussed in Sharan
         
+        brine_conc_in = [self.feed_conc for i in range(k)]
         
-        
+        max_dif=1
+        #iterate the brine concentraitons (one loop does it)
+        while max_dif>0.01:
+            brine_conc_out = self.iterate_MED(k,brine_conc_in)
+            max_dif=np.max(np.abs(np.divide(np.array(brine_conc_out),np.array(brine_conc_in))-1))
+            brine_conc_in=brine_conc_out
+            
+         
+    
+    def iterate_MED(self,k,brine_conc_in):
+
         for i in range(self.k-2, -1, -1):
             self.vbtemp[i] = (self.vbtemp[i+1] + self.tempchange)
         
@@ -39,8 +49,8 @@ class MED:
             self.enth_vapor[i] = IAPWS97(T=self.vbtemp[i]+273.15,x=1).h
             self.pressure[i] = IAPWS97(T=self.vbtemp[i]+273.15,x=1).P
             #self.enth_brine[i] = SeaWater(T=self.vbtemp[i]+273.15,S=self.feed_conc,P=self.pressure[i]).h
-            self.enth_brine[i] = self.seaWaterSatH(self.vbtemp[i]+273.15,self.feed_conc,self.pressure[i])
-            self.enth_brine_nea[i] = self.seaWaterSatH(self.vbtemp[i]+273.15-self.nea,self.feed_conc,self.pressure[i])
+            self.enth_brine[i] = self.seaWaterSatH(self.vbtemp[i]+273.15,brine_conc_in[i],self.pressure[i])
+            self.enth_brine_nea[i] = self.seaWaterSatH(self.vbtemp[i]+273.15-self.nea,brine_conc_in[i],self.pressure[i])
             self.latentheat[i] = -2.36985*self.vbtemp[i] + 2500.9       #Equation found from a linear relation in EES
         
         self.enth_feed =  self.seaWaterSatH(self.feed_temp+273.15,self.feed_conc,self.pressure[i])
@@ -87,15 +97,14 @@ class MED:
         #Calculate Brine feed flow with Eq 10
         self.feed_rate = self.distill*self.max_brine_conc/(self.max_brine_conc-self.feed_conc)
 
+        brine_conc = []
         for i in range(self.k):                          
             self.brine_rate.append(self.brine_flow_out(i))    #Updates brine_rate variable for every n-effect
-            self.brine_conc.append(self.brine_conctn(i))
+            brine_conc.append(self.brine_conctn(i))
         
+        return brine_conc
         
-        """print(A)
-        print()
-        print(C)
-        print()"""
+    
         
     def brine_flow_out(self,i):
         brine_out = self.feed_rate-sum(self.vapor_rate[:i+1]) #Eq 6
