@@ -51,8 +51,8 @@ class MED:
             #self.enth_brine[i] = SeaWater(T=self.vbtemp[i]+273.15,S=self.feed_conc,P=self.pressure[i]).h
             self.enth_brine[i] = self.seaWaterSatH(self.vbtemp[i]+273.15,brine_conc_in[i],self.pressure[i])
             self.enth_brine_nea[i] = self.seaWaterSatH(self.vbtemp[i]+273.15-self.nea,brine_conc_in[i],self.pressure[i])
-            self.latentheat[i] = -2.36985*self.vbtemp[i] + 2500.9       #Equation found from a linear relation in EES
-        
+            self.latentheat[i] = self.enth_vapor[i]-IAPWS97(T=self.vbtemp[i]+273.15,x=0).h
+            
         self.enth_feed =  self.seaWaterSatH(self.feed_temp+273.15,self.feed_conc,self.pressure[i])
         
 
@@ -127,5 +127,4 @@ class MED:
 
 for k in range(1,10):
     x = MED(k)
-    print(x.distill)
 
