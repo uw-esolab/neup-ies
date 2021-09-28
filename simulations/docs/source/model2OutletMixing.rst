@@ -49,7 +49,7 @@ We then find the enthalpy change across each respective plant as
 
 .. math:: 
 
-   \Delta h_{plant} = h_{salt}^H - h_{salt}^C.
+   \Delta h_{plant} \equiv h_{salt}^H - h_{salt}^C.
 
 The enthalpy of the combined outlet stream is then calculated from the first law of thermodynamics
 
@@ -113,27 +113,27 @@ then we can combine with the previous equation:
 
 .. math::
 
-   \Delta h_{plant} = h_i(T_{salt}^H) - h_i(T_{salt}^C)
+   \Delta h_{plant} = h_{salt}^H - h_{salt}^C = h_i(T_{salt}^H) - h_i(T_{salt}^C).
 
-and find values for :math:`\bar{h}` based on the `nuclear_plant` and `collector_receiver` solved outlet temperatures and mass flows.
+We can apply the above equation to both the ``nuclear_plant`` and ``collector_receiver`` with their respective solved outlet conditions.
 
 
 Converting Enthalpy to Temperature
 ------------------------------------
 
-Now that we have a relationship between enthalpy and temperature, we could write that 
+Now that we have a relationship between enthalpy and temperature, we can write that 
 
 .. math::
   
-   \Delta h_{mix} = \bar{h} =  h_i(T_{mix}^H) - h_i(T_{mix}^C)
+   \Delta h_{mix} =  h_i(T_{mix}^H) - h_i(T_{mix}^C) = \bar{h}
  
-and, assuming that :math:`T_{mix}^C = T_{salt}^C` (which we assume is the same for both plants),
+and, assuming that :math:`T_{mix}^C = T_{salt}^C` (which we assume is the same for both plants), solve for the hot outlet temperature for the mixture:
 
 .. math::
   
-   h_i(T_{mix}^H) = \bar{h} + h_i(T_{salt}^C) = \frac{a_1}{4} ({T_{mix}^H})^4 + \frac{a_2}{3} ({T_{mix}^H})^3 + \frac{a_3}{2} ({T_{mix}^H})^2 + a_4 ({T_{mix}^H})
+   h_i(T_{mix}^H) = \bar{h} + h_i(T_{salt}^C) = \frac{a_1}{4} ({T_{mix}^H})^4 + \frac{a_2}{3} ({T_{mix}^H})^3 + \frac{a_3}{2} ({T_{mix}^H})^2 + a_4 ({T_{mix}^H}).
 
-To find :math:`({T_{mix}^H})` we need to solve a quartic equation
+To find :math:`{T_{mix}^H}` we need to solve a quartic equation
 
 .. math::
 
@@ -156,12 +156,12 @@ which are all known values at this stage and :math:`x` is :math:`{T_{mix}^H}`. W
 
    x^4 + ax^3 + bx^2 + cx + d = 0
 
-where 
+with 
 
 .. math::
    \begin{align}
       a = \frac{B}{A} &, \ b = \frac{C}{A} \\
-      c = \frac{D}{A} &, \ d = \frac{E}{A}
+      c = \frac{D}{A} &, \ d = \frac{E}{A}.
    \end{align}
    
 The temperature solutions are the eigenvalues of the following matrix
@@ -210,7 +210,7 @@ where
 
 .. math::
 
-   T_{avg} = \frac{1}{2}(T_{salt}^H+T_{salt}^C)
+   T_{avg} = \frac{1}{2}(T_{salt}^H+T_{salt}^C).
 
 With the original definition of specific heat
 
@@ -228,7 +228,7 @@ From the same enthalpy-mixing definition above
 
 .. math::
 
-   \Delta h_{mix} = \frac{\dot{m}_{nuc}^H \Delta h_{nuc} + \dot{m}_{rec}^H \Delta h_{rec}}{\dot{m}_{mix}^H} = \frac{\bar{C_p} \Delta T_{nuc} + \bar{C_p} \Delta T_{rec}}{\dot{m}_{mix}^H}.
+   \Delta h_{mix} = \frac{\dot{m}_{nuc}^H \Delta h_{nuc} + \dot{m}_{rec}^H \Delta h_{rec}}{\dot{m}_{mix}^H} = \frac{\dot{m}_{nuc}^H\bar{C_p} \Delta T_{nuc} + \dot{m}_{rec}^H \bar{C_p} \Delta T_{rec}}{\dot{m}_{mix}^H}.
 
 We then replace the left-hand side of the equation above with
 
@@ -242,7 +242,7 @@ Combining the two equations, cancelling out specific heat, and assuming that the
 
    T_{mix}^H = \frac{\dot{m}_{nuc}^H T_{nuc}^H + \dot{m}_{rec}^H T_{rec}^H}{\dot{m}_{mix}^H}.
 
-Plotting the difference between this mass flow-averaged and the previous enthalpy-averaged outlet temperatures for the mixed streams, we get
+Plotting the difference between this mass flow-averaged and the previous enthalpy-averaged outlet temperatures for the mixed streams, we get the following figure:
 
 .. image:: _static/Model2Mix__enthalpyVsMassFlowAveragedSolutions.png
    :target: _static/Model2Mix__enthalpyVsMassFlowAveragedSolutions.png
