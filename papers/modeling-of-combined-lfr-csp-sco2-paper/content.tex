@@ -69,15 +69,15 @@ In this equation the energy input to the system is on the left hand side with $\
 
 Counter-flow heat exchangers are modeled with two fluids flowing in opposite directions exchanging heat from the hot side to the cold side. The temperatures of the hot and cold flows on either side of the the heat exchanger have a temperature difference known as an approach temperature. A diagram showing a simplified counter-flow heat exchanger is illustrated in Figure \ref{counter-flow-hx}.
 
-\end{paracol}
+% \end{paracol}
 \begin{figure}[h]
     \widefigure
     \includegraphics[width=10 cm]{Definitions/counter-flow-hx.pdf}
     \caption{Simplified counter-flow heat exchanger diagram. \label{counter-flow-hx}}
 \end{figure}
-\begin{paracol}{2}
-\linenumbers
-\switchcolumn
+% \begin{paracol}{2}
+% \linenumbers
+% \switchcolumn
 
 Additional assumptions of the counter-flow heat exchanger model are: no heat loss to the surroundings, no pressure drops across the heat exchangers, and no fouling resistances. In Figure \ref{counter-flow-hx} the subscript 'out' denotes where the streams are leaving, 'in' denotes the entering streams, 'c' and 'h' signify cold and hot streams respectively, $\dot{Q}_{HX}$ is the total heat transfer from the hot to cold stream, and $\dot{Q}_{surr}$ is the heat transfer to the surroundings.
 
@@ -438,6 +438,7 @@ The full diagram for C-LFR-CIRC is shown in Figure \ref{c-lfr-circ}.
 
 The charging subsection of this diagram is composed of a circulation cycle that has heat inputted through the LFR heat exchanger. A separated circulation cycle has a loop which avoids the losses associated with compressor and turbine, therefore achieving higher heat storage efficiency than possible with full cycle operation. This subsection is encircled in blue and can be seen in Figure \ref{c-lfr-circ-sub}.
 
+The flow continues through a circulator which is assumed to have negligible pressure rise (i.e. there is assumed to be negligible pressure drop in this case). A heat exchanger, C2S, extracts heat from the flow, storing the thermal energy in the hot TES for later use. Excess heat that is not extracted is then dumped into a reservoir through the chiller to bring the temperature of the flow down to LFR cool side operating temperature of $400^{\circ}$C. Three different cold TES temperatures; $390^{\circ}$C, $410^{\circ}$C, and $440^{\circ}$C, are compared in a sensitivity study. 
 
 % \end{paracol}
 \begin{figure}[H]
@@ -449,7 +450,6 @@ The charging subsection of this diagram is composed of a circulation cycle that 
 % \linenumbers
 % \switchcolumn
 
-The flow continues through a circulator which is assumed to have negligible pressure rise (i.e. there is assumed to be negligible pressure drop in this case). A heat exchanger, C2S, extracts heat from the flow, storing the thermal energy in the hot TES for later use. Excess heat that is not extracted is then dumped into a reservoir through the chiller to bring the temperature of the flow down to LFR cool side operating temperature of $400^{\circ}$C. Three different cold TES temperatures; $390^{\circ}$C, $410^{\circ}$C, and $440^{\circ}$C, are compared in a sensitivity study. 
 
 
 
