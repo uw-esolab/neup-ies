@@ -45,7 +45,7 @@ The single cycle configuration in Wang et al. (2020) has a higher-temperature op
 
 \subsection{Cycle Component Modeling}
 %======================================================================================
-Components present in the cycles are modeled using various techniques and are discussed in more detail below. Turbines and compressors are analyzed using isentropic efficiencies. Counter-flow heat exchangers are modelled using the effectiveness-NTU method while simplified ``black box'' heat exchangers that use a simple energy balance for state point calculations are used in lieu of more detailed component models where data is available. The lead-cooled fast reactor is assumed to be a black box heat exchanger because of the constant heat input and state points on the sCO$_2$ inlet and outlet are provided. The molten salt loop for the CSP is modeled with necessary components including hot and cold TES, receiver, pumps and counter-flow heat exchangers.
+Components present in the cycles are modeled using various techniques and are discussed in more detail below. Turbines and compressors are analyzed using isentropic efficiencies. Counter-flow heat exchangers are modeled using the effectiveness-NTU method while simplified ``black box'' heat exchangers that use a simple energy balance for state point calculations are used in lieu of more detailed component models where data is available. The lead-cooled fast reactor is assumed to be a black box heat exchanger because of the constant heat input and state points on the sCO$_2$ inlet and outlet are provided. The molten salt loop for the CSP is modeled with necessary components including hot and cold TES, receiver, pumps and counter-flow heat exchangers.
 
 
 
@@ -54,14 +54,10 @@ Components present in the cycles are modeled using various techniques and are di
 
 Turbines and compressors are modeled for each cycle using constant isentropic efficiency values which are summarized in Table \ref{tab-cycle-constants}. Turbines take the high pressure sCO$_2$ and expand it through a series of blades allowing a production of energy, while compressors input mechanical energy to increase the pressure of the sCO$_2$. The turbines and compressors are assumed to be at steady state, exchange no heat with the surroundings, and have single inlet and outlet streams. Using this estimate, along with a known low and high side pressures, temperature and enthalpy outlets of the turbine and compressor are calculated \cite{klein_nellis_2011}. 
 
-\mw{this is kind of an awkward way to describe what's happening. I think most readers are familiar with isentropic efficiencies and this can be omitted.-BW}
-
 \subsubsection{Black Box and Counter-Flow Heat Exchangers}
 %--------------------------------------------------------------------------------------
 
 Black box heat exchangers are simplified heat exchangers which have no approach temperature or pinch point and are modeled as a perfect heat transfer into or out of the cycle. These heat exchangers use an energy balance with mass flow inlet energy, heat input or output, and mass flow outlet energy. The energy balance equation used for all black box heat exchangers is Equation \ref{eq-black}.
-
-\mw{This is for a single flow stream. Why would there be $\dot{Q}_{in}$ and $\dot{Q}_{out}$ in a single flow stream? Also, the variable should be consistent with the figure, which would be $\dot{Q}_{HX}$. -BW}
 
 
 \begin{equation}
@@ -151,22 +147,13 @@ Lead-cooled fast reactors use energy from a controlled nuclear reaction to heat 
     \dot{m} \cdot h_{inlet} + \dot{Q}_{LFRHX} = \dot{m} \cdot h_{outlet},
 \end{equation}
 
-\mw{If mass is conserved, use a single $\dot{m}$ - BW}
-
 Where the left hand side, $\dot{m}$, $h_{inlet}$, and $\dot{Q}_{LFRHX}$, is the energy into the flow and the right hand side, $\dot{m}$ and $h_{outlet}$, is the energy brought out from the flow of sCO$_2$. The amount of energy transferred into the cycle, $\dot{Q}_{LFRHX}$, is set at $950$ MW, and outlet temperature of the sCO$_2$ from the LFR HX is set at a value of $595^{\circ}$C. The outlet temperature of the LFR is specified because of high temperature material limits on the LFR lead side. The low temperature side is allowed to vary over a range of values with some considerations. The lead flow velocity is limited by the erosion of the fuel, the slower the lead flow velocity reduces fuel erosion and therefore leads to a more desirable compact design. Restricting the lead flow velocity, and therefore lead mass flow rate, leads to a higher LFR power output when the inlet sCO$_2$ temperature is reduced. LFR sCO$_2$ inlet temperature has a lower bound of $340^{\circ}$C before the lead begins to freeze, which is operationally unacceptable. When the inlet temperature of sCO$_2$ is increased the temperature difference across the LFR is decreased leading to an increase in power conversion cycle thermodynamic efficiency but a reduction in LFR power below $950$ MW. There is a compromise between high LFR efficiency and LFR power, therefore a temperature of $400^{\circ}$C for the sCO$_2$ inlet temperature is the optimal value provided by Westinghouse.
-
-
-\mw{How do we know that 400C is the optimal temperature? This information is given to us by Westinghouse, right? -BW} 
-
-
 
 
 \subsubsection{Concentrating Solar Power Cycle}
 %--------------------------------------------------------------------------------------
 
 The CSP salt cycle modeled in this paper is composed of hot and cold thermal energy storage (TES), pumps, receiver, sCO$_2$-to-salt counter-flow heat exchanger (C2S), and CSP counter-flow heat exchanger (CSP HX). The diagram for this CSP salt loop is seen in Figure \ref{csp}. 
-
-\mw{Best practice is to allow figures to float. To do this, specify the location as [htb] ("here, top, or bottom"). I've done a search-replace for all figures to do this. -BW}
 
 % \end{paracol}
 
@@ -184,7 +171,6 @@ The CSP salt cycle modeled in this paper is composed of hot and cold thermal ene
 The CSP salt cycle uses 60\% sodium nitrate, NaNO$_3$, and 40\% potassium nitrate, KNO$_3$, 'solar salt' as the heat transfer fluid. Solar salt stored in the hot TES can be dispatched on demand through the CSP HX when grid demand increases and held when grid demand is low. Current CSP salt cycles heat solar salt with receivers and store it in hot TES tanks at temperatures around 565$^{\circ}$C. Future CSP salt cycles are hypothesized to have bulk hot TES temperatures of up to $720^{\circ}$C, but here the hot TES temperature is set at $560^{\circ}$C for all modeled cycles \cite{mehos2017concentrating} as this has been commercially proven. The cold TES temperature takes on three different values according to cycle configuration capabilities: $390^{\circ}$C, $410^{\circ}$C, and $440^{\circ}$C. In addition to the lower hot TES temperature, current CSP salt cycles lack a secondary option for charging the hot TES \cite{hamilton2020dispatch}. The studied CSP salt cycle has two TES charging options: a receiver, which generates heat from a heliostat field, and C2S heat exchanger, which draws excess heat from the sCO$_2$ Brayton cycle. While the hot TES is charging, the receiver and LFR are storing heat for later use when grid demand increases. The hot TES storage is not dispensing salt for use in the CSP cycle while charging.
 
 The C2S heat exchanger is active in the 'charging' cycle operating modes, when the focus is on heat storage for later use. Pump 1 is actively moving solar salt from cold TES to hot TES through the C2S heat exchanger extracting heat from the sCO$_2$ Brayton cycle. Additionally, while the focus is on heat storage, and the heliostat field is inputting heat, pump 2 is actively transporting solar salt through the receiver to be stored in the hot TES.
-\mw{Is this necessarily true? Couldn't there be a condition where we'd like to dump energy from the LFR while simultaneously collecting from CSP?-BW} 
 
 'Non-charging' cycle operating modes are characterized by operations wherein the CSP salt cycle is discharging the hot TES, the C2S heat exchanger is not transferring heat, and the LFR is dispatching heat directly to generate electricity. When electrical generation is occurring and solar resource is available, the heat input in the CSP salt cycle is modelled through a black box energy balance across states S6-A and S1-A with a heat addition of 750 MW from the heliostat field. The hot TES solar salt is moved through Pump 3 and transfers heat into the sCO$_{2}$ Brayton cycle through CSP HX to be converted into electricity. The cooled salt is stored in cold storage and moved through Pump 2 where the heat from the receiver is again transferred into the CSP cycle. 
 
@@ -194,7 +180,7 @@ When grid demand for electrical power increases, a series of operating modes are
 
 \subsection{Standardization of Cycle Modeling}
 %======================================================================================
-\mw{What do you mean by ``generalized?''-BW}
+
 
 In order to draw a more direct comparison, the cycles are standardized in terms of isentropic efficiencies, heat exchanger approach temperatures, pressures, heat input, and pump constants. These values are summarized in Table \ref{tab-cycle-constants}.
 
@@ -239,8 +225,6 @@ The values displayed in Table \ref{tab-cycle-constants} are representative of CS
 
 
 In addition to standardized parameters, all cycles have identical recompression sides. The recompression side contains a precooler, low temperature recuperator, and two compressors; main compressor and recompressor. 
-\mw{We need an overview here of our process for identifying which cycles will be modeled, as the discussion below gets a bit complicated with all of the different permutations. It might be helpful to have a model taxonomy that schematically shows how the different models are related to each other.-BW}
-\mw{components don't need to be capitalized -- they aren't proper nouns -BW}
 The modeled cycles are summarized in Table \ref{tab-cycle_sum}.
 
 \begin{specialtable}[H] 
@@ -282,7 +266,6 @@ The numerator in Equation \ref{eq-eta-cycle} is the alternator power, or the pow
 The two-cycle configuration that is tested has independent sCO$_{2}$ loops that share a common CSP salt cycle. This cycle has two sCO$_{2}$ Brayton Cycles: C-LFR-ON and C-CSP-ON. Configuration of components for these two cycles is identical with the exception of heat inputs. C-LFR-ON has heat provided from a LFR while C-CSP-ON has heat provided from the CSP. These two cycles individually operate when the focus of plant operation is primarily electricity generation. 
     
 The cycle that is using the LFR heat input in the two-cycle configuration is labeled as C-LFR-ON and the cycle diagram is illustrated in Figure \ref{c-lfr-on}. 
-\mw{There are lots of little 1-2 sentence ``paragraphs'' that could be consolidated with some thought.-BW}
 
 \end{paracol}
 \begin{figure}[H] 
@@ -327,8 +310,6 @@ Equation \ref{eq-eta-2cycle} is the ratio of total alternator (net) power of C-L
 
 One drawback of having a two-cycle design, as seen in the C-LFR-ON and C-CSP-ON, is doubling the number of system components. Combining the two cycles into one would reduce redundancy, complexity, and cost. Heat addition from the CSP HX and LFR HX in parallel orientation is therefore studied in the C-1HTR1T-ON model. This model studies what impact mixing different temperature flows prior to the turbine has on cycle efficiency. The diagram for this cycle is illustrated in Figure \ref{c-1htr1t-on}.
 
-\bl{be clear that Salt HX links back into the sCO2 cycle (e.g. parallel to 5-6) but is not shown to simplify the diagram. Otherwise people will wonder where it is coming from-BW}
-\mw{After lots of tinkering, I've not solved how to get the figures to avoid spilling over the edge of the page. I think it's a problem with the MDPI template. The figures have a lot of whitespace between components and numbers, and you may need to try to compress some of them down to make them more compact.-BW}
 \end{paracol}
 
 \begin{figure}[H] 
@@ -343,7 +324,6 @@ One drawback of having a two-cycle design, as seen in the C-LFR-ON and C-CSP-ON,
 \switchcolumn
 
 The C2S is located around the turbine and LFR at state points 5 to 6 depending on the charging cycle configuration: pre, parallel, post or circulator. In the C-1HTR1T-ON cycle, the LFR HX and CSP HX have identical inlet temperatures due to splitting the flow prior to their parallel orientation. Therefore, three sensitivity studies are done on the model. The initial two studies have the low LFR temperature constrained to the value of $400^{\circ}$C with varied cold CSP TES temperature and maximized cycle efficiency. To achieve a maximum cycle efficiency, the split fraction amount of flow to the main compressor, $y_{1}$, is parametrically studied.
-\mw{State what variable(s) are manipulated in order to maximize cycle efficiency -BW} 
 Two cold TES temperatures are tested with constrained LFR low temperature of $400^{\circ}$C: 
 \begin{itemize}
     \item	$410^{\circ}$C: Lowest cold TES temperature possible due to the sCO$_2$ cold inlet constrained from the LFR to $400^{\circ}$C and the addition of $10^{\circ}$C approach temperature;
@@ -359,9 +339,7 @@ The identical inlet temperatures due to the parallel configuration makes the C-1
 
 In practice, sCO$_2$ cycles typically have 3 turbines, with 2 of these driving the compressor and recompressor. Therefore, this configuration will not in general require additional turbines compared to the C-1HTR1T-ON configuration. Furthermore, it is anticipated that the cost of the high temperature recuperator is likely most related to its volume, and hence having two smaller high temperature recuperators is unlikely to cost significantly more than one large one. 
 
-This cycle, C-2HTR3T-ON, can be seen in Figure \ref{c-2htr3t-on} and has two high temperature recuperators and three turbines. The LFR is powering one turbine, T1, and transferring unused heat to the flow entering LFR HX through a dedicated high temperature recuperator, HTR. The cycle with heat addition from the CSP powers the other two turbines, which for modelling purposes are combined into a single turbine T2, while having a dedicated high temperature recuperator, HTR2. The two turbines displayed as T2 can be modeled as a singular turbine because their isentropic efficiencies are identical causing the inlet and outlet conditions of the turbines to be consistent with a singular turbine. Additionally, the power produced by the two turbines is proportional to mass flow rate, each receives a fraction of the mass flow rate therefore producing the same fraction of power. Summing these power fractions together yields the total power of a singular turbine in the same position. 
-\mw{Need to explain how T2 is actually 2 separate turbines represented diagramatically as 1, and why we can model it this way.-BW} 
-After the high temperature recuperators, the two flows are combined and sent to the LTR hot side. 
+This cycle, C-2HTR3T-ON, can be seen in Figure \ref{c-2htr3t-on} and has two high temperature recuperators and three turbines. The LFR is powering one turbine, T1, and transferring unused heat to the flow entering LFR HX through a dedicated high temperature recuperator, HTR. The cycle with heat addition from the CSP powers the other two turbines, which for modeling purposes are combined into a single turbine T2, while having a dedicated high temperature recuperator, HTR2. The two turbines displayed as T2 can be modeled as a singular turbine because their isentropic efficiencies are identical causing the inlet and outlet conditions of the turbines to be consistent with a singular turbine. Additionally, the power produced by the two turbines is proportional to mass flow rate, each receives a fraction of the mass flow rate therefore producing the same fraction of power. Summing these power fractions together yields the total power of a singular turbine in the same position. After the high temperature recuperators, the two flows are combined and sent to the LTR hot side. 
 
 
 
@@ -383,7 +361,6 @@ The C2S heat exchanger is located around the turbine and LFR at 7A to 8A dependi
 %======================================================================================
 
 Charging cycle configurations accommodate energy storage modes of operation. These configurations examine the location of LFR heat extraction via C2S. To maximize the available heat for extraction, alternator net power is set to zero, therefore requiring the turbine power to balance with the compressors' demand. Despite the components being non-ideal and consuming power, the recompression cycle continues to operate, ensuring that there is mass flow to transfer heat from the Brayton cycle to C2S. The excess energy from the LFR is thermally stored in the TES for later use when grid demand increases. Comparison of the heat extraction point in the cycle, C2S, is accomplished by implementing C2S in different locations around the turbine in the C-LFR-ON non-charging cycle configuration; C-LFR-PRE has the turbine prior to C2S, C-LFR-POST has the turbine after C2S, C-LFR-PAR has the turbine in parallel to C2S, and C-LFR-CIRC uses a circulating loop instead of in-flow implementation. C-LFR-ON is the configuration used for these studies because during charging operation, flow through the CSP HX is deactivated, effectively making all non-charging cycles take the identical form of C-LFR-ON. To quantify the effectiveness of TES charging techniques, Equation \ref{eq-eta-heatstorage} defines the heat storage efficiency, $\eta_{heatstorage}$.  
-\bl{explain that as a (re)compression cycle is still being run for the LFR and the components are not perfectly efficient, it will consume power moving the fluid around that needs to be balanced with some of the thermal output -BW}
 
 \begin{equation}
     \label{eq-eta-heatstorage}
@@ -396,8 +373,6 @@ In the heat storage efficiency equation, $\dot{Q}_{C2S}$ is the amount of heat t
 %--------------------------------------------------------------------------------------
 
 The high temperature sCO$_2$ leaving the LFR HX flows through the LFR turbine converting thermal energy to usable work. The outlet temperature of the LFR turbine is at a temperature suitable to charge the hot TES, therefore the flow is passed through C2S exchanging heat to the cold solar salt. The diagram outlining this process is C-LFR-PRE in Fig. \ref{c-lfr-pre}. 
-\mw{Careful here. Be precise about what ``excess'' means in this context. Any fluid above absolute zero technically has excess thermal energy if the reference is zero. Depending on this definition, not all excess energy from the turbine is stored in TES. -BW} 
-\mw{explain in a bit more detail what is happening that makes this configuration different from prior iterations. -BW}
 
 \end{paracol}
 \begin{figure}[H]
@@ -445,7 +420,7 @@ The requirements of the turbine and CSP hot TES can be satisfied by splitting th
 \linenumbers
 \switchcolumn
 
-A sensitivity study \mw{this is one study with two parameter values, right? -BW} with varying cold CSP TES temperature is carried out to determine the impact on heat storage efficiency. The study considers two temperature values of $390^{\circ}$C and $440^{\circ}$C.
+A sensitivity study with varying cold CSP TES temperature is carried out to determine the impact on heat storage efficiency. The study considers two temperature values of $390^{\circ}$C and $440^{\circ}$C.
 
 \subsubsection{C-LFR-CIRC} 
 %--------------------------------------------------------------------------------------
@@ -464,7 +439,6 @@ The full diagram for C-LFR-CIRC is shown in Figure \ref{c-lfr-circ}.
 
 The charging subsection of this diagram is composed of a circulation cycle that has heat inputted through the LFR heat exchanger. A separated circulation cycle has a loop which avoids the losses associated with compressor and turbine, therefore achieving higher heat storage efficiency than possible with full cycle operation. This subsection is encircled in blue and can be seen in Figure \ref{c-lfr-circ-sub}.
 
-\bl{explain why you are considering this case (avoid losing useful energy in compressor and turbine inefficiencies)} \mw{agree with Ben. Additional motivation is needed -BW}
 
 \end{paracol}
 \begin{figure}[H]
@@ -488,7 +462,7 @@ For all cycle configurations presented, with constrained or unconstrained LFR lo
 \subsection{Non-Charging Cycle Configurations}
 %======================================================================================
 
-The three non-charging cycle models have a focus on producing the highest positive alternator power to heat input, or cycle efficiency. The two-cycle configuration, composed of C-LFR-ON and C-CSP-ON, has independent recompression cycles with dedicated compressors, turbine, recuperators, and precooler for the LFR and CSP. C-1HTR1T-ON, with the heat additions in parallel, and C-2HTR3T, with dedicated HTR for both heat additions, are cycles which incorporate the CSP and LFR in the same cycle. The results from studies done on these cycles are displayed in Table \ref{tab-noncharg}. 
+The three non-charging cycle models have a focus on producing the highest positive alternator power to heat input, or cycle efficiency. The two-cycle configuration, composed of C-LFR-ON and C-CSP-ON, has independent recompression cycles with dedicated compressors, turbine, recuperators, and pre-cooler for the LFR and CSP. C-1HTR1T-ON, with the heat additions in parallel, and C-2HTR3T, with dedicated HTR for both heat additions, are cycles which incorporate the CSP and LFR in the same cycle. The results from studies done on these cycles are displayed in Table \ref{tab-noncharg}. 
 
 \end{paracol}
 \begin{specialtable}[H] 
