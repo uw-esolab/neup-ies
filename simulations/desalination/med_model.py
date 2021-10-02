@@ -63,7 +63,7 @@ class MED:
         A[0,0] = (-self.max_brine_conc/(self.max_brine_conc-self.feed_conc))*\
                         (self.enth_feed - self.enth_brine[0])+(self.enth_vapor[0]-self.enth_brine[0])
         
-        self.cp_water = IAPWS97(T=self.vbtemp[0]+273.15,P=self.pressure[0]).cp
+        self.cp_water = IAPWS97(T=self.vbtemp[0]+273.15-0.1,P=self.pressure[0]).cp
         C[0] = self.water_rate*(self.water_temp-(self.feed_temp+self.tempchange))*self.cp_water
         
         for j in range(1,self.k):           #Creating the first row of the matrix
@@ -102,6 +102,8 @@ class MED:
             self.brine_rate.append(self.brine_flow_out(i))    #Updates brine_rate variable for every n-effect
             brine_conc.append(self.brine_conctn(i))
         
+        self.A=A
+        self.C=C
         return brine_conc
         
     
@@ -126,5 +128,6 @@ class MED:
             return self.seaWaterSatH(T-0.1,S,P)
 
 for k in range(1,10):
-    x = MED(k)
+    x=MED(k)
+    print(x.distill)
 
