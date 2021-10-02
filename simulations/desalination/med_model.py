@@ -17,6 +17,12 @@ def water_value_in_arizona():
 
 class MED:
     
+    """values we ultimately expect to pass to the MED model:
+        k=4
+        water rate - solved through EES mass balance
+        water_temp - solved through EES mass and temperature balance
+    """
+    
     def __init__(self,k):
         self.vapor_rate = []                          #Flow of the vapor rate for each n-effect
         self.feed_conc = .0335                       #Average concentration of salt in seawater
