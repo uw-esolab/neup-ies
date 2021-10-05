@@ -33,8 +33,10 @@ output_dir = FileMethods.output_dir
 # filename   = 'testDefocus__model1__pyomo_0__horizon_24_48__TES_[0,14]__PC_[400,850].nuctes' 
 # filename   = 'testDefocus__model1__pyomo_1__horizon_24_48__TES_[0,14]__PC_[400,850].nuctes'
 # filename   = 'testDefocus__model1_CAISO__pyomo_0__horizon_24_48__TES_[0,14]__PC_[400,850].nuctes' 
-filename   = 'testDefocus__model1_CAISO__pyomo_1__horizon_24_48__TES_[0,14]__PC_[400,850].nuctes' 
+# filename   = 'testDefocus__model1_CAISO__pyomo_1__horizon_24_48__TES_[0,14]__PC_[400,850].nuctes' 
 # filename   = 'testDefocus__model1_CAISO__pyomo_1__horizon_12_24__TES_[0,14]__PC_[400,850].nuctes' 
+
+filename   = 'testDefocus__model1_2021_10__pyomo_0__horizon_24_48__TES_[0,14]__PC_[400,850].nuctes' 
 
 NTPath = os.path.join(output_dir, filename)
 

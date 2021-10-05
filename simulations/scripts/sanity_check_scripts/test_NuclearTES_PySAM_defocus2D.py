@@ -54,7 +54,7 @@ p_cycle    = np.array([ 850, 800, 750, 700, 650, 600, 550, 500, 450, 400]) #, 35
 #     "14": [450]
 #     }
 
-exceptions = {"0":  [500], "2":  [], "4":  [], "6":  [], "8":  [], "10": [], "12": [], "14": [] }
+exceptions = {"0":  [500, 450, 400], "2":  [400], "4":  [], "6":  [400], "8":  [], "10": [400], "12": [], "14": [400] }
 
 # formally defining the iterator arrays
 iterator1 = tshours  
@@ -91,7 +91,7 @@ op_modes_list = tmp_modes.operating_modes
 # =============================================================================
 sscH = 24  # 12 # 24
 pyoH = 48  # 24 # 48
-json = "model1_noMin" # model1_CAISO # model1 # model1_noMin
+json = "model1" # model1_CAISO # model1 # model1_noMin
 dispatch = False # True # False
 run_loop = True
 
@@ -221,12 +221,12 @@ for i, th in enumerate(iterator1): #over tshours
                 
                 # log output means
                 gen[mean_idx]       = np.mean( outputs.gen.m )
-                qdot_nuc[mean_idx]  = np.mean( outputs.q_dot_rec_in.m )
+                qdot_nuc[mean_idx]  = np.mean( outputs.q_dot_nuc_in.m )
                 defocus[mean_idx]   = np.mean( outputs.defocus )
                 
                 # log output std dev
                 gen[stdv_idx]       = np.std( outputs.gen.m )
-                qdot_nuc[stdv_idx]  = np.std( outputs.q_dot_rec_in.m )
+                qdot_nuc[stdv_idx]  = np.std( outputs.q_dot_nuc_in.m )
                 defocus[stdv_idx]   = np.std( outputs.defocus )
                 
                 del outputs, op_mode_array, op_mode_str_profile
@@ -302,7 +302,7 @@ Storage['pyomo_bad_idx_log']  = pyomo_bad_idx_log
 
 # locating output directory
 output_dir = FileMethods.output_dir
-filename = 'testDefocus__{0}__pyomo_{1:.0f}__horizon_{2:.0f}_{3:.0f}__TES_[{4},{5}]__PC_[{6},{7}].nuctes'.format(
+filename = 'testDefocus__{0}_2021_10__pyomo_{1:.0f}__horizon_{2:.0f}_{3:.0f}__TES_[{4},{5}]__PC_[{6},{7}].nuctes'.format(
                 json, dispatch, sscH, pyoH, tshours.min(), tshours.max(), p_cycle.min(), p_cycle.max() )
 
 NTPath = os.path.join(output_dir, filename)
