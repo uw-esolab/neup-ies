@@ -37,7 +37,7 @@ tshours = 8    # (hr)
 # ========================
 
 # defining directories
-nuctes = NuclearTES.NuclearTES(json_name=json, is_dispatch=dispatch) 
+nuctes = NuclearTES.NuclearTES(json_name=json, is_dispatch=dispatch, log_dispatch_targets=True) 
 output_file = 'output.csv'
 
 # horizons

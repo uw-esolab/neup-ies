@@ -40,10 +40,11 @@ The ``PySSC`` block would look more streamlined: it does not have a time loop, i
 Here are links to other documentation pages within this project:
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
    
    quickstart
    sscmod
+   model2OutletMixing
    simulations
 
 

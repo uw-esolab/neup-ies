@@ -15,6 +15,7 @@ simulations/scripts/PySSC_scripts/**.py
 simulations/outputs/**.csv
 simulations/outputs/**.xlsx
 simulations/outputs/**.txt
+simulations/outputs/**.dispatchTargets
 
 simulations/docs/build/
 simulations/docs/source/simulations.*.rst

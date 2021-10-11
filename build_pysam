@@ -59,7 +59,7 @@ fi
 #----  cloning modified ssc --------------------------
 if [ ! -d "$SSCDIR" ]
 then
-	git clone https://github.com/gjsoto/ssc.git
+	git clone git@github.com:gjsoto/ssc.git
 else
 	echo "SSC already exists"
 fi
@@ -67,7 +67,7 @@ fi
 # checking out a stable tag or release from our modified SSC
 # this can be updated, maybe added as flag
 cd ssc
-git checkout NE2-model1-v1.5
+git checkout model2 #NE2-model1-v1.5.0
 
 #====================================================#
 #---- cloning sam ------------------------------------
