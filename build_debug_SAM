@@ -84,11 +84,17 @@ cd $DEVDIR
 if [ -d "$SSCDIR" ] ; then
    echo "SSC directory exists."
 else
-   git clone https://github.com/gjsoto/ssc.git
+   git clone git@github.com:gjsoto/ssc.git
 fi
 
 cd $SSCDIR
-git checkout NE2-model1-v1.5.0
+# check to see if argument was passed -> signifying branch to check out
+if [ $# -eq 0 ] ; then
+    echo "No arguments supplied"
+    git checkout model2 #NE2-model1-v1.5.0
+  else
+    git checkout $1
+fi
 
 # First check if SAM actually exists --------------------------
 cd $DEVDIR
