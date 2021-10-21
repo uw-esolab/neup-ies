@@ -14,9 +14,10 @@ from dispatch.NuclearDispatch import NuclearDispatch as ND
 from dispatch.NuclearDispatch import NuclearDispatchParamWrap as NDP
 from dispatch.NuclearDispatch import NuclearDispatchOutputs as NDO
 from pyomo.opt import SolverStatus, TerminationCondition
+import numpy as np
 import PySAM.PySSC as pssc
 from util.FileMethods import FileMethods
-import copy
+import os, copy, hashlib
 
 class NuclearTES(GenericSSCModule): 
     """
@@ -25,7 +26,8 @@ class NuclearTES(GenericSSCModule):
     
     """
     
-    def __init__(self, plant_name="nuclear_tes", json_name="model1", is_dispatch=False):
+    def __init__(self, plant_name="nuclear_tes", json_name="model1", is_dispatch=False,
+                 log_dispatch_targets=False):
         """ Initializes the NuclearTES module
         
         Args:
@@ -35,11 +37,13 @@ class NuclearTES(GenericSSCModule):
                 name of JSON script with input data for module
             is_dispatch (bool): 
                 boolean, if True runs Pyomo dispatch optimization
+            log_dispatch_targets (bool): 
+                boolean, if True logs dispatch targets calculated by Pyomo at each segment
                 
         """
         
         # initialize Generic module, csv data arrays should be saved here
-        GenericSSCModule.__init__( self, plant_name, json_name, is_dispatch )
+        GenericSSCModule.__init__( self, plant_name, json_name, is_dispatch, log_dispatch_targets=log_dispatch_targets )
         
         # define specific PySAM module to be called later
         self.PySAM_Module = NuclearTes
@@ -79,6 +83,60 @@ class NuclearTES(GenericSSCModule):
         self.fm_array = FileMethods.read_csv_through_pandas(samsim_dir + input_dict['flux_file'])
         
         
+    def generate_hash(self):
+        """ Method to create unique hash for given JSON inputs
+        
+        This method creates a unique, permanent hash for a given JSON script.
+        That is, it gathers all of the JSON inputs (including SSC and PySAM inputs)
+        from the designated script and converts both their keynames and values
+        to strings. It collects all of these into a single string variable and
+        then creates a new hexadecimal string or "hash" for that giant string. 
+        This serves as a unique identifier or "fingerprint" for all the values 
+        in the JSON script. This is then used later on as the file name containing
+        outputs from this particular run. Any small changes to the JSON script 
+        will result in a drastically different hash, and therefore a new output file.
+        If a simulation has already been run with the given JSON script, it can
+        just pull results from the already created hash file instead of needlessly
+        repeating the simulation. 
+
+        Returns:
+            hash_exists (bool): 
+                if True, a hash file currently exists with all given JSON inputs
+            filepath (str): 
+                absolute filepath to the hash file in outputs directory
+        """
+        
+        # static start of the filename
+        filename = "NuclearTES__"
+        
+        # initializing empty string
+        extstr = ''
+        
+        # adding SSC dictionary names and values to the existing string
+        sscdict = self.SSC_dict
+        for s in sscdict.keys():
+            extstr += "{0}: {1} ".format( s, str(sscdict[s]) )
+        
+        # adding PySAM dictionary names and values to the existing string
+        pysamdict = self.PySAM_dict
+        for p in pysamdict.keys():
+            extstr += "{0}: {1} ".format( p, str(pysamdict[p]) )
+        
+        # creating a unique hash from giant string of values using md5 algorithm
+        json_hash = hashlib.md5( extstr.encode('utf-8') ).hexdigest()
+        
+        # adding the unique hexadecimal hash to the starting filename string
+        filename += json_hash
+        
+        # creating full path to output hash file
+        filepath = os.path.join( FileMethods.output_dir , filename + '.dispatchTargets')
+        
+        # checking if this current hash exists already
+        hash_exists = os.path.exists(filepath)
+        
+        return hash_exists, filepath
+    
+    
     def create_Plant(self):
         """ Method to create Plant object for the first time
         
@@ -152,7 +210,71 @@ class NuclearTES(GenericSSCModule):
         
         return newPlant
         
+
+    def initialize_arrays(self):
+        """ Initializing empty arrays to log SSC outputs after segment simulations
         
+        This method creates empty arrays where SSC outputs will be written to.
+        Also creates a list of str names for logged simulation outputs.
+        
+        """
+        
+        u = self.u
+        
+        # start and end times for full simulation
+        i_start = (self.SSC_dict['time_start'] * u.s).to('hr').m
+        i_end   = (self.SSC_dict['time_stop'] * u.s).to('hr').m
+        
+        # size of simulation arrays
+        N_sim = int( i_end - i_start )
+        
+        # dictionary of output variable names to log after each segment simulation
+        self.Log_Arrays = {
+        #    name of NE2 variable || name of SSC module variable
+                'time_log':          'time_hr',          # logging time
+                'gen_log':           'gen',              # electricity generation log
+                'q_thermal_log':     'Q_nuc_thermal',    # thermal power from nuclear to HTF 
+                'p_cycle_log' :      'P_cycle',          # PC electrical power output (gross)
+                'q_dot_rec_inc_log': 'q_dot_nuc_inc',    # Nuclear incident thermal power
+                'q_pb_log':          'q_pb',             # PC input energy
+                'q_dot_pc_su_log' :  'q_dot_pc_startup', # PC startup thermal power
+                'm_dot_pc_log' :     'm_dot_pc',         # PC HTF mass flow rate
+                'm_dot_rec_log'  :   'm_dot_nuc',        # Nuc mass flow rate
+                'T_pc_in_log' :      'T_pc_in',          # PC HTF inlet temperature 
+                'T_pc_out_log'   :   'T_pc_out',         # PC HTF outlet temperature
+                'T_tes_cold_log':    'T_tes_cold',       # TES cold temperature
+                'T_tes_hot_log'  :   'T_tes_hot',        # TES hot temperature
+                'T_rec_in_log':      'T_nuc_in',         # Plant inlet temperature
+                'T_rec_out_log'  :   'T_nuc_out',        # Plant outlet temperature
+                'T_cond_out_log':    'T_cond_out',       # PC condenser water outlet temperature
+                'e_ch_tes_log'  :    'e_ch_tes',         # TES charge state
+                'op_mode_1_log' :    'op_mode_1',        # Operating Mode
+                'defocus_log'   :    'defocus',          # Nuclear "Defocus" fraction
+                'eta_log'       :    'eta'               # PC efficiency, gross
+            } if self.run_loop \
+                 else {'gen_log':    'gen'  # electricity generation log
+                      }
+        
+        # empty array to initalize log arrays
+        empty_array = np.zeros(N_sim)
+        
+        # loop through keys in ^ dictionary, save the KEY name to NE2 module as empty array
+        for key in self.Log_Arrays.keys():
+            # meta: if we don't grab the copy of empty_array, it'll assign a pointer to the array!!
+            setattr( self, key, empty_array.copy() ) 
+            
+        if self.log_dispatch_targets:
+            self.Log_Target_Arrays = {
+                   'is_rec_su_allowed_in' : empty_array.copy(),
+                   'is_rec_sb_allowed_in' : empty_array.copy(),
+                   'is_pc_su_allowed_in'  : empty_array.copy(),
+                   'is_pc_sb_allowed_in'  : empty_array.copy(),
+                   'q_pc_target_su_in'    : empty_array.copy(),
+                   'q_pc_target_on_in'    : empty_array.copy(),
+                   'q_pc_max_in'          : empty_array.copy()
+                   }
+
+            
     def run_pyomo(self, params):
         """ Running Pyomo dispatch optimization
         

@@ -10,6 +10,8 @@ from util.FileMethods import FileMethods
 from scripts.PySSC_scripts.PySSC import PySSC
 import os, json
 import numpy as np
+import pickle as pickle
+import hashlib as hashlib
 
 class PySSCWrapper(object):
     """
@@ -61,7 +63,7 @@ class PySSCWrapper(object):
         self.sscdict    = D['SSC_inputs']
 
 
-    def run_sim(self):
+    def run_sim(self, run_dispatch_targets=False):
         """ Method to run full SSC simulation through PySSC
         
         This method creates an SSC API, saves input data from the specified
@@ -72,6 +74,9 @@ class PySSCWrapper(object):
         
         # creating SSC API and Data object(?) for PySSC
         self.create_API()
+        
+        # option to search for file with dispatch_targets and use arrays
+        self.run_dispatch_targets = run_dispatch_targets
         
         #----Plant sims
         # initialize Plant-specific data
@@ -134,6 +139,28 @@ class PySSCWrapper(object):
         self.sscapi.data_set_matrix_from_csv( self.sscdata, b'ud_ind_od',           ud_file)
         self.sscapi.data_set_array_from_csv(  self.sscdata, b'wlim_series',         wlim_file)
         self.sscapi.data_set_array_from_csv(  self.sscdata, b'dispatch_factors_ts', dispatch_factors_file)
+        
+        # set data for dispatch targets if exists
+        if self.run_dispatch_targets:
+            hash_exists, hash_filepath = self.generate_hash()
+            
+            if hash_exists:
+                print("\nDispatch Targets exists in {0}.\n".format(hash_filepath)) 
+                
+                # loading dispatch targets from file if it exists
+                with open(hash_filepath, 'rb') as f:
+                    self.DT = pickle.load(f)
+                
+                # setting dispatch targets to True
+                self.sscapi.data_set_number(self.sscdata, 'is_dispatch_targets'.encode("utf-8"), 1)
+                
+                # setting dispatch target arrays in SSC inputs
+                for key in self.DT.keys():
+                    self.sscapi.data_set_array(self.sscdata, key.encode("utf-8"), self.DT[key])
+                    
+            else:
+                print("\nDispatch Targets do not exist for this configuration. \n Will write to {0}.\n".format(hash_filepath))
+            
         
         # setting dispatch series separately
         dispatch_series = [1.2]*8760
@@ -304,6 +331,60 @@ class PySSCWrapper(object):
         return fin_mod, fin_name 
 
 
+    def generate_hash(self):
+        """ Method to create unique hash for given JSON inputs
+        
+        This method creates a unique, permanent hash for a given JSON script.
+        That is, it gathers all of the JSON inputs (including SSC and PySAM inputs)
+        from the designated script and converts both their keynames and values
+        to strings. It collects all of these into a single string variable and
+        then creates a new hexadecimal string or "hash" for that giant string. 
+        This serves as a unique identifier or "fingerprint" for all the values 
+        in the JSON script. This is then used later on as the file name containing
+        outputs from this particular run. Any small changes to the JSON script 
+        will result in a drastically different hash, and therefore a new output file.
+        If a simulation has already been run with the given JSON script, it can
+        just pull results from the already created hash file instead of needlessly
+        repeating the simulation. 
+
+        Returns:
+            hash_exists (bool): 
+                if True, a hash file currently exists with all given JSON inputs
+            filepath (str): 
+                absolute filepath to the hash file in outputs directory
+        """
+        
+        # static start of the filename
+        filename = "NuclearTES__" if self.sscdict['compute_module_0'] == 'nuclear_tes' else "SolarTES__"
+        
+        # initializing empty string
+        extstr = ''
+        
+        # adding SSC dictionary names and values to the existing string
+        sscdict = self.sscdict
+        for s in sscdict.keys():
+            extstr += "{0}: {1} ".format( s, str(sscdict[s]) )
+        
+        # adding PySAM dictionary names and values to the existing string
+        pysamdict = self.pysam_dict
+        for p in pysamdict.keys():
+            extstr += "{0}: {1} ".format( p, str(pysamdict[p]) )
+        
+        # creating a unique hash from giant string of values using md5 algorithm
+        json_hash = hashlib.md5( extstr.encode('utf-8') ).hexdigest()
+        
+        # adding the unique hexadecimal hash to the starting filename string
+        filename += json_hash
+        
+        # creating full path to output hash file
+        filepath = os.path.join( FileMethods.output_dir , filename + '.dispatchTargets')
+        
+        # checking if this current hash exists already
+        hash_exists = os.path.exists(filepath)
+        
+        return hash_exists, filepath
+    
+    
     def get_array(self, out_str):
         """ Method to extract data from SSC results
         

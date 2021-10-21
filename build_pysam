@@ -57,17 +57,22 @@ fi
 
 #====================================================#
 #----  cloning modified ssc --------------------------
-if [ ! -d "$SSCDIR" ]
-then
-	git clone https://github.com/gjsoto/ssc.git
+# First check if SSC actually exists --------------------------
+cd $DEVDIR
+if [ -d "$SSCDIR" ] ; then
+   echo "SSC directory exists."
 else
-	echo "SSC already exists"
+   git clone git@github.com:gjsoto/ssc.git
 fi
 
-# checking out a stable tag or release from our modified SSC
-# this can be updated, maybe added as flag
-cd ssc
-git checkout NE2-model1-v1.5
+cd $SSCDIR
+# check to see if argument was passed -> signifying branch to check out
+if [ $# -eq 0 ] ; then
+    echo "No arguments supplied"
+    git checkout model2 #NE2-model1-v1.5.0
+  else
+    git checkout $1
+fi
 
 #====================================================#
 #---- cloning sam ------------------------------------

@@ -6,19 +6,19 @@ Quick Start Guide
 Here is a brief overview of steps to set up the full project. 
 Steps have been reproduced successfully in *Ubuntu Focal 20.04.2 LTS*.
 
-First, you will need to clone and build the ``SAM`` repositories: 
+Ultimately, through this process you will clone and build the ``SAM`` repositories: 
 
 * `LK  <https://github.com/NREL/lk>`_  
 * `WEX <https://github.com/NREL/wex>`_
 * `SSC <https://github.com/gjsoto/ssc>`_
 * `SAM <https://github.com/NREL/sam>`_
 
-You will also need:
+You will also clone:
 
 * `googletest <https://github.com/google/googletest>`_
 * `wxWidgets <https://www.wxwidgets.org/>`_
 
-Don't worry, I have added bash scripts to this **neup-ies** repository to automate the building process.
+But don't worry, I have added bash scripts to this **neup-ies** repository to automate the building process.
  
 .. note::
     The **neup-ies** project must be cloned into a directory alongside the other ``SAM`` projects. 
@@ -34,13 +34,16 @@ First, open your *bashrc* file through an open terminal (or manually if you wish
 
     gedit $HOME/.bashrc
 
-then add the line
+then add the lines
 
 .. code-block:: bash
 
+    export DEVDIR=<full-path-to-parent-directory>
     export PYTHONPATH=$PYTHONPATH:$DEVDIR/neup-ies/simulations
+    export git=git@github.com
     
 Your ``$DEVDIR`` variable could be, for example: ``home/user_name/Documents/NE2``. Then, the ``neup-ies`` as well as the ``SAM`` directories would be placed in the shown ``NE2`` parent directory.
+The github line just facilitates cloning with an SSH key.
 
 Next, clone this repository in the parent directory. Note that you must have an `SSH key set up <https://docs.github.com/en/github/authenticating-to-github/connecting-to-github-with-ssh>`_.
 
@@ -54,6 +57,11 @@ Build Debug Version of SAM
 ---------------------------
 
 * If running for the first time:
+* 
+	0. Make sure you delete the following directories if they exist:
+		* ``$DEVDIR/build_debug``
+		* ``$DEVDIR/ssc``
+		* ``$DEVDIR/sam``
 
 	1. create a CMakeLists file 
 	
@@ -104,26 +112,37 @@ Build Debug Version of SAM
 		* Check that ``googletest`` created its libraries at ``$DEVDIR/googletest/build_debug/lib``. These should be called ``libgtestd.a`` among others.
 		* A CodeLite IDE workspace is created at ``$DEVDIR/build_debug/system_advisor_model.workspace``
 	    
-* If rebuilding a new *debug* version:
+* If rebuilding a new *debug* version **OR** you already have an *export* version installed:
 
-	1. Make sure you delete the following directories:
+	0. Make sure you delete the following directories:
 		* ``$DEVDIR/build_debug``
 		* ``$DEVDIR/ssc``
 		* ``$DEVDIR/sam``
 
-	2. Note that the bash script at ``$DEVDIR/neup-ies/build_debug_SAM`` checks out specific branches of the ``SSC`` and ``SAM`` repositories. Check that these are correct for the desired libraries and workspaces. 
-	
-	3. Run the bash script to build a *debug* version of ``SAM``
+	1. Note that the bash script at ``$DEVDIR/neup-ies/build_debug_SAM`` checks out specific branches of the ``SSC`` and ``SAM`` repositories. 
+        * The script should check out a specified, stable tag of ``SAM``, if it doesn't work you could try to contact someone at NREL.
+	    * The script defaults to a stable branch of my forked ``SSC`` repository, but the bash script call takes in an extra argument to override
+  
+	2. Run the bash script to build a *debug* version of ``SAM``
 
 		.. code-block:: bash
 
 		    cd $DEVDIR/neup-ies
-		    source ./build_debug_SAM
+		    source ./build_debug_SAM <optional-SSC-branch-name>
+
+	   If you want to specify the ``SSC`` branch to check out, add an extra argument as shown with the branch name, otherwise leave that blank.
 
 Build Export Version of SAM linked through PySAM
 -------------------------------------------------
 
 * If running for the first time:
+	
+	0. Make sure you delete the following directories if they exist:
+		* ``$DEVDIR/build_sam_export``
+		* ``$DEVDIR/build_ssc_export``
+		* ``$DEVDIR/ssc``
+		* ``$DEVDIR/sam``
+		* ``$DEVDIR/pysam``
 
 	1. run steps 1, 2 and 3 from the above debug section
 	
@@ -147,22 +166,28 @@ Build Export Version of SAM linked through PySAM
 		* There should be .whl and .egg files in the ``$DEVDIR/pysam/dist`` directory
 		* Check that ``$DEVDIR/pysam/files/libssc.so`` and ``$DEVDIR/pysam/files/libSAM_api.so`` library exists
 
-* If rebuilding a new *export* version:
+* If rebuilding a new *export* version **OR** you already have a *debug* version installed:
 
-	1. Make sure you delete the following directories:
+	0. Make sure you delete the following directories:
 		* ``$DEVDIR/build_sam_export``
 		* ``$DEVDIR/build_ssc_export``
 		* ``$DEVDIR/ssc``
 		* ``$DEVDIR/sam``
 		* ``$DEVDIR/pysam``
 
-	2. Note that the bash script at ``$DEVDIR/neup-ies/build_pysam`` checks out specific branches of the ``pysam``, ``SSC`` and ``SAM`` repositories. Check that these are correct for the desired libraries and workspaces. 
-	
-	3. Run the bash script to build ``PySAM`` and a *export* version of ``SAM``
+	1. Note that the bash script at ``$DEVDIR/neup-ies/build_pysam`` checks out specific branches of the ``pysam``, ``SSC`` and ``SAM`` repositories.  
+	    * The script should check out a stable tag of ``SAM``, if it doesn't work you could try to contact someone at NREL.
+	    * The script defaults to a specified, stable branch of my forked ``SSC`` repository, but the bash script call takes in an extra argument to override
+	    * The script currently checks out the default ``pysam`` branch
+  
+	2. Run the bash script to build ``PySAM`` and an *export* version of ``SAM``
 
 		.. code-block:: bash
 
 		    cd $DEVDIR/neup-ies
-		    source ./build_pysam
+		    source ./build_pysam <optional-SSC-branch-name>
+
+	   If you want to specify the ``SSC`` branch to check out, add an extra argument as shown with the branch name, otherwise leave that blank.
+
 
 
