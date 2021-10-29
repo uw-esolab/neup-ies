@@ -138,30 +138,32 @@ Where $C_{avg}$ is the average capacitance rate across the hot or cold stream an
 \end{equation}
 
 \replaced[comment={Improving counter-flow hx explanation [1,1]}]{Assuming constant average capacitance rate is suitable for most engineering purposes, especially when there is uncertainty associated with other design parameters \cite{nellis_klein_2008}. To justify the assumption of constant average capacitance rate, two graphs for the LTR and HTR are plotted. To ensure that there is no internal pinch point, the temperatures of the hot and cold streams as a function of dimensionless length in the LTR and HTR are shown in Figure \ref{graph-t-vs-p-ltr} and Figure \ref{graph-t-vs-p-htr} respectively. Additionally, to confirm approximate linearity of specific heats at differential steps throughout the counter-flow heat exchanger, the specific heat as a function of dimensionless length of the hot and cold streams in the LTR and HTR are plotted in Figure \ref{graph-c-vs-p-ltr} and Figure \ref{graph-c-vs-p-htr} respectively.}{} 
+\end{paracol}
+
 
 \begin{figure*}
-    \begin{subfigure}[b]{0.45\textwidth}
+    \begin{subfigure}[b]{0.48\textwidth}
         \includegraphics[width=\textwidth]{Definitions/c-vs-p-ltr.pdf}
         \caption[]%
         {{\small Specific heat as a function of location for LTR}}
         \label{graph-c-vs-p-ltr}
     \end{subfigure}
     \hfill
-    \begin{subfigure}[b]{0.45\textwidth}
+    \begin{subfigure}[b]{0.48\textwidth}
         \includegraphics[width=\textwidth]{Definitions/t-vs-p-ltr.pdf}
         \caption[]%
         {{\small Temperature as a function of location for LTR}}
         \label{graph-t-vs-p-ltr}
     \end{subfigure}
     \vskip\baselineskip
-    \begin{subfigure}[b]{0.45\textwidth}
+    \begin{subfigure}[b]{0.48\textwidth}
         \includegraphics[width=\textwidth]{Definitions/c-vs-p-htr.pdf}
         \caption[]%
         {{\small Specific heat as a function of location for HTR}}
         \label{graph-c-vs-p-htr}
     \end{subfigure}
     \hfill
-    \begin{subfigure}[b]{0.45\textwidth}
+    \begin{subfigure}[b]{0.48\textwidth}
         \includegraphics[width=\textwidth]{Definitions/t-vs-p-htr.pdf}
         \caption[]%
         {{\small Temperature as a function of location for HTR}}
@@ -171,7 +173,12 @@ Where $C_{avg}$ is the average capacitance rate across the hot or cold stream an
     \label{graphs-t-c-vs-p} 
 \end{figure*}
 
-\replaced[comment={Improving counter-flow hx explanation [1,1]}]{The calculations used to discretize the counter-flow heat exchangers into a sub-heat exchanger model, shown in Figure \ref{graphs-t-c-vs-p}, is from JJ Dyreby's (2014) PhD thesis \cite{dyreby_2014}. The series of figures are constructed using extreme values experienced by the recuperators; the cold inlet temperature is lowest recorded value, and the hot inlet temperature is the highest recorded value. As seen in the presented graphs, the capacitance ratio determines the approach temperature, not an internal pinch point in the recuperator. All pinch points recorded are on the high end.}{}
+\begin{paracol}{2}
+    \linenumbers
+    \switchcolumn
+
+
+\replaced[comment={Improving counter-flow hx explanation [1,1]}]{The calculations used to discretize the counter-flow heat exchangers into a sub-heat exchanger model, shown in Figure \ref{graphs-t-c-vs-p}, is from Dyreby \cite{dyreby_2014}. Figure~\ref{graphs-t-c-vs-p} is constructed using the most extreme temperature values experienced by the recuperators -- the cold inlet and hot outlet are the lowest and highest modeled temperature values, respectively. As demonstrated, the capacitance ratio determines the approach temperature instead of any possible internal pinch point within the recuperator. All pinch points recorded are on the high-temperature end.}{}
 
 
 \subsubsection{Lead-Cooled Fast Reactor}
