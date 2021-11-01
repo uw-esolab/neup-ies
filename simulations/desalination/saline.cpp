@@ -3,7 +3,7 @@
 #include <math.h>
 #include <limits>
 
-int seawater_TPS(double T, double P, double S, water_state * brine_state)
+int seawater_TPS(double T, double P, double S, water_state * brine_state, bool force_satliq)
 {
     /*
     Model seawater with standard IAPWS-08
@@ -16,6 +16,13 @@ int seawater_TPS(double T, double P, double S, water_state * brine_state)
         Pressure, [MPa]
     S : float
         Salinity, [kg/kg]
+
+    brine_state : water_state* 
+        Pointer to the object holding state properties
+
+    force_satliq : bool
+        Flag that forces water properties to be evaluated at the saturated liquid condition 
+        when inside the vapor dome
 
     Returns
     -------
@@ -104,9 +111,18 @@ int seawater_TPS(double T, double P, double S, water_state * brine_state)
 
     // Get the state of pure water
     water_state w_state;
-    water_TP(T, P*1000., &w_state);
-    water_state w_ref;
-    water_TP(To, Po*1000., &w_ref);
+    if (force_satliq)
+    {
+        water_PQ(P * 1000., 0., &w_state);
+    }
+    else
+    {
+        water_TP(T, P*1000., &w_state);
+    }
+    if (w_state.enth == 0.)
+        return -1;
+    //water_state w_ref;
+    //water_TP(To, Po*1000., &w_ref);
 
     // Calculate the state of the salt component
     S_ = Sn*40/35;

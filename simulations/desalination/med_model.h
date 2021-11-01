@@ -9,6 +9,8 @@ As with Sharan, gives optimal water output with 4 effects
 
 #include <vector>
 
+int matinv(double* A, double* b, int n, double* X);
+
 double water_value_in_arizona()
 {
     // https://efc.web.unc.edu/2014/09/23/conservation-water-rates-arizona-utilities-using-rates-discourage-discretionary-water-use/
@@ -33,6 +35,7 @@ class MED
     double tempchange;                          //Known temperature change, from Sharan paper (delta_T_NEA)
     double water_rate;                      //Is this the feed flow rate of the DEMINERALIZED WATER? m_dot_w2
     double feed_rate;
+    double feed_temp;
     double nea; 
     std::vector<double> vapor_rate;                          //Flow of the vapor rate for each n-effect
     std::vector<double> brine_rate;                         //Brine flow rate 
@@ -50,5 +53,6 @@ public:
     std::vector<double> iterate_MED(int k, std::vector<double> &brine_conc_in);
     double brine_flow_out(int i);
     double brine_conctn(int i);
-    double seaWaterSatH(double T, double S, double P);
+    double seaWaterSatH(double T, double P, double S);
+    double m3_per_day;
 };
