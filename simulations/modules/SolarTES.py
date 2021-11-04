@@ -31,7 +31,7 @@ class SolarTES(NuclearTES):
             is_dispatch (bool)       : boolean, if True runs Pyomo dispatch optimization
         """
         
-        # initialize Generic module, csv data arrays should be saved here
+        # initialize Nuclear+Generic module, csv data arrays should be saved here
         NuclearTES.__init__( self, plant_name, json_name, is_dispatch )
         
         # define specific PySAM module to be called later
@@ -162,13 +162,13 @@ class SolarTES(NuclearTES):
         #    name of NE2 variable || name of SSC module variable
                 'time_log':          'time_hr',          # logging time
                 'gen_log':           'gen',              # electricity generation log
-                'q_thermal_log':     'Q_thermal',    # thermal power from nuclear to HTF 
+                'q_thermal_log':     'Q_thermal',        # thermal power from nuclear to HTF 
                 'p_cycle_log' :      'P_cycle',          # PC electrical power output (gross)
-                'q_dot_rec_inc_log': 'q_dot_rec_inc',    # Nuclear incident thermal power
+                'q_dot_rec_inc_log': 'q_dot_rec_inc',    # Receiver incident thermal power
                 'q_pb_log':          'q_pb',             # PC input energy
                 'q_dot_pc_su_log' :  'q_dot_pc_startup', # PC startup thermal power
                 'm_dot_pc_log' :     'm_dot_pc',         # PC HTF mass flow rate
-                'm_dot_rec_log'  :   'm_dot_rec',        # Nuc mass flow rate
+                'm_dot_rec_log'  :   'm_dot_rec',        # Rec mass flow rate
                 'T_pc_in_log' :      'T_pc_in',          # PC HTF inlet temperature 
                 'T_pc_out_log'   :   'T_pc_out',         # PC HTF outlet temperature
                 'T_tes_cold_log':    'T_tes_cold',       # TES cold temperature
@@ -178,7 +178,7 @@ class SolarTES(NuclearTES):
                 'T_cond_out_log':    'T_cond_out',       # PC condenser water outlet temperature
                 'e_ch_tes_log'  :    'e_ch_tes',         # TES charge state
                 'op_mode_1_log' :    'op_mode_1',        # Operating Mode
-                'defocus_log'   :    'defocus',          # Nuclear "Defocus" fraction
+                'defocus_log'   :    'defocus',          # Receiver Defocus fraction
                 'eta_log'       :    'eta'               # PC efficiency, gross
             } if self.run_loop \
                  else {'gen_log':    'gen'  # electricity generation log

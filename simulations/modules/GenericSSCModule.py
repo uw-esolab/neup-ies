@@ -165,7 +165,7 @@ class GenericSSCModule(ABC):
         
         # saving location of solar resource file for SSC input
         parent_dir = FileMethods.parent_dir
-        self.solar_resource_file = os.path.join(parent_dir, input_dict['solar_resource_rel_parent']) #os.path.join
+        self.solar_resource_file = os.path.join(parent_dir, input_dict['solar_resource_rel_parent']) 
 
     @abstractmethod
     def generate_hash(self):
