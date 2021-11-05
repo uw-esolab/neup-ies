@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Wed Nov  3 22:17:06 2021
+Created on Thu Nov  4 15:46:36 2021
 
 @author: gabrielsoto
 """
 
-from util.PySSCWrapper import PySSCWrapper
+import modules.NuclearTES as NuclearTES
 from util.PostProcessing import OutputExtraction
 from util.FileMethods import FileMethods
 import os, pint, time, copy, pickle
@@ -89,11 +89,11 @@ op_modes_list = tmp_modes.operating_modes
 # =============================================================================
 # Double Loop
 # =============================================================================
-sscH = 24  # 12 # 24
-pyoH = 48  # 24 # 48
+sscH = 12  # 12 # 24
+pyoH = 24  # 24 # 48
 json = "model1" # model1_CAISO # model1 # model1_noMin
-dispatch = False # True # False
-run_loop = False
+dispatch = True # True # False
+run_loop = True
 
 
 # starting the time counter
@@ -121,11 +121,20 @@ for i, th in enumerate(iterator1): #over tshours
         # =========================================
         
         # defining directories
-        pw = PySSCWrapper(json_name='model1',is_debug=False)
+        nuctes = NuclearTES.NuclearTES( json_name=json, is_dispatch=dispatch)
 
         # horizons
-        pw.sscdict['tshours'] = float(th)
-        pw.sscdict['P_ref']   = float(pc)
+        nuctes.PySAM_dict['ssc_horizon']   = sscH
+        nuctes.ssc_horizon   = sscH * nuctes.u.hr
+        nuctes.PySAM_dict['pyomo_horizon'] = pyoH
+        nuctes.pyomo_horizon = pyoH * nuctes.u.hr
+        
+        # saving/updating PYSAM dict to nuctes
+        nuctes.dispatch_wrap = nuctes.create_dispatch_wrapper( nuctes.PySAM_dict )
+
+        # update SSC dictionary parameters
+        nuctes.SSC_dict['P_ref']   = float(pc)
+        nuctes.SSC_dict['tshours'] = float(th)
         
         # =========================================
         # exceptions we know don't work in SSC
@@ -158,7 +167,7 @@ for i, th in enumerate(iterator1): #over tshours
             success = True
             try:
                 # run SSC through PySSC
-                pw.run_sim()
+                nuctes.run_sim( run_loop=run_loop )
             except Exception as err:
                 print(" Run failed.")
                 success = False
@@ -166,30 +175,42 @@ for i, th in enumerate(iterator1): #over tshours
             # =========================================
             # log success of simulation
             # =========================================
-            t_plot = pw.get_array('time_hr')
+            
+            # extract Plant object
+            nt = nuctes.Plant
             
             # log final time index of simulation
-            last_ind = int( t_plot[t_plot>0][-1] )
-            out_slice = slice(0,last_ind,1)
+            iter_log[idx] = nuctes.slice_ssc_currentH.start if nuctes.slice_ssc_currentH.stop != 8760 \
+                                    else nuctes.slice_ssc_currentH.stop
             
-            print( "      last index: {0}".format(last_ind) )
-            
-            iter_log[idx] = last_ind
-
             # log success
-            success = False if last_ind != 8760 else success
+            success = False if nuctes.slice_ssc_currentH.stop != 8760 else success
             
             # if we ran dispatch optimization, check for failures or crashes 
             if dispatch:
-                pass
+                
+                # log all of the Pyomo failures (the dictionary stores successes, we negate it with the 'not' command)
+                pyomo_fail = np.array([not nuctes.disp_success[k] for k in nuctes.disp_success.keys()])
+                
+                # number of failures due to Pyomo
+                pyomo_fail_sum = sum(pyomo_fail)
+                
+                # log whether Pyomo failed at all throughout simulation
+                pyomo_bad_log[idx] = bool(pyomo_fail_sum > 0)
+                
+                # log the time index where Pyomo crashed if it did indeed crash
+                if pyomo_fail_sum > 0:
+                    pyomo_bad_idx_log[idx] = np.where(pyomo_fail==True)[0][0]
 
             # =========================================
             # Simulation was successful! Log results
             # =========================================
             if success:
 
+                outputs = OutputExtraction(nuctes)
+                
                 # analyzing OP modes
-                op_mode_array       = pw.get_array('op_mode_1')[out_slice]
+                op_mode_array       = outputs.op_mode_1
                 op_mode_str_profile = [op_modes_list[ int(x) ] for x in op_mode_array]
                 
                 TES_charging    = np.array(["TES_CH" in x for x in op_mode_str_profile])
@@ -199,16 +220,16 @@ for i, th in enumerate(iterator1): #over tshours
                 TES_DC[idx] = int(TES_discharging.sum() > 0)
                 
                 # log output means
-                gen[mean_idx]       = np.mean( pw.get_array('gen')[out_slice] )
-                qdot_nuc[mean_idx]  = np.mean( pw.get_array('q_dot_nuc_inc')[out_slice] )
-                defocus[mean_idx]   = np.mean( pw.get_array('defocus')[out_slice] )
+                gen[mean_idx]       = np.mean( outputs.gen.m )
+                qdot_nuc[mean_idx]  = np.mean( outputs.q_dot_nuc_in.m )
+                defocus[mean_idx]   = np.mean( outputs.defocus )
                 
                 # log output std dev
-                gen[stdv_idx]       = np.std( pw.get_array('gen')[out_slice] )
-                qdot_nuc[stdv_idx]  = np.std( pw.get_array('q_dot_nuc_inc')[out_slice] )
-                defocus[stdv_idx]   = np.std( pw.get_array('defocus')[out_slice] )
+                gen[stdv_idx]       = np.std( outputs.gen.m )
+                qdot_nuc[stdv_idx]  = np.std( outputs.q_dot_nuc_in.m )
+                defocus[stdv_idx]   = np.std( outputs.defocus )
                 
-                del  op_mode_array, op_mode_str_profile
+                del outputs, op_mode_array, op_mode_str_profile
             
             # =========================================
             # Simulation failed! Log results
@@ -217,7 +238,13 @@ for i, th in enumerate(iterator1): #over tshours
                 
                 # check if last crash was due to Pyomo
                 if dispatch:
-                    pass
+                    # checking the last success log at end of simulation
+                    count = int(nuctes.disp_count - 1)
+                    disp_success = nuctes.disp_success[count]
+                    
+                    # Simulation ended because of SSC crash   == 1 
+                    # Simulation ended because of Pyomo crash == 2 
+                    fail_log[idx] = 1 if disp_success else 2 
                 
                 dummy_val = -1
                 # log output means
@@ -233,6 +260,10 @@ for i, th in enumerate(iterator1): #over tshours
                 TES_CH[idx] = dummy_val
                 TES_DC[idx] = dummy_val 
                 
+            # reset the Plant and Grid, prevents memory leak
+            del nt
+            
+        del nuctes
             
 # end time counter
 toc = time.perf_counter()        
@@ -271,7 +302,7 @@ Storage['pyomo_bad_idx_log']  = pyomo_bad_idx_log
 
 # locating output directory
 output_dir = FileMethods.output_dir
-filename = 'failureModes_{0}__2021_11__pyomo_{1:.0f}__horizon_{2:.0f}_{3:.0f}__TES_[{4},{5}]__PC_[{6},{7}].nuctes'.format(
+filename = 'failureModes_PySAM__{0}_2021_11__pyomo_{1:.0f}__horizon_{2:.0f}_{3:.0f}__TES_[{4},{5}]__PC_[{6},{7}].nuctes'.format(
                 json, dispatch, sscH, pyoH, tshours.min(), tshours.max(), p_cycle.min(), p_cycle.max() )
 
 NTPath = os.path.join(output_dir, filename)
@@ -279,4 +310,3 @@ NTPath = os.path.join(output_dir, filename)
 # pickling
 with open(NTPath, 'wb') as f:
     pickle.dump(Storage, f)
-

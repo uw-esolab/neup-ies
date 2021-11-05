@@ -37,7 +37,14 @@ output_dir = FileMethods.output_dir
 # filename   = 'testDefocus__model1_CAISO__pyomo_1__horizon_12_24__TES_[0,14]__PC_[400,850].nuctes' 
 
 # filename   = 'failureModes__model1_2021_10__pyomo_0__horizon_24_48__TES_[0,14]__PC_[100,850].nuctes' 
-filename   = 'failureModes__model1_CAISO_2021_10__pyomo_0__horizon_24_48__TES_[0,14]__PC_[100,850].nuctes' 
+# filename   = 'failureModes__model1_2021_11__pyomo_0__horizon_24_48__TES_[0,14]__PC_[100,850].nuctes' 
+
+# filename   = 'failureModes_PySAM__model1_2021_11__pyomo_0__horizon_24_48__TES_[0,14]__PC_[100,850].nuctes' 
+# filename   = 'failureModes_PySAM__model1_CAISO_2021_11__pyomo_0__horizon_24_48__TES_[0,14]__PC_[100,850].nuctes'
+# filename   = 'failureModes_PySAM__model1_2021_11__pyomo_1__horizon_24_48__TES_[0,14]__PC_[100,850].nuctes'
+# filename   = 'failureModes_PySAM__model1_CAISO_2021_11__pyomo_1__horizon_24_48__TES_[0,14]__PC_[100,850].nuctes'
+filename   = 'failureModes_PySAM__model1_2021_11__pyomo_1__horizon_12_24__TES_[0,14]__PC_[100,850].nuctes'
+# filename   = 'failureModes_PySAM__model1_CAISO_2021_11__pyomo_1__horizon_12_24__TES_[0,14]__PC_[100,850].nuctes'
 
 NTPath = os.path.join(output_dir, filename)
 
@@ -89,7 +96,7 @@ ax1  = fig.add_subplot(111)
 fig.suptitle(full_title, fontweight='bold')
 
 asp_df = 0.7
-im1 = ax1.imshow(array.T, origin='upper', cmap=cmap, aspect=asp_df)
+im1 = ax1.imshow(array.T, origin='upper', cmap=cmap, aspect=asp_df, vmin=0, vmax=100)
 
 # ========== Text ==========
 xmin,xmax,ymax,ymin = im1.get_extent() #note the order
