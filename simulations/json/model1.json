@@ -2,7 +2,7 @@
     "PySAM_inputs": {
         "ssc_lib":                   "build_ssc/ssc/libssc.so",
         "solar_resource_rel_parent": "sam/deploy/solar_resource/phoenix_az_33.450495_-111.983688_psmv3_60_tmy.csv",
-        "dispatch_factors_file":     "data/dispatch_factors_ts.csv",
+        "dispatch_factors_file":     "data/temp_dispatch_factors.csv",
         "ud_file":                   "data/ud_ind_od.csv",
         "wlim_file":                 "data/wlim_series.csv",
         "helio_file":                "data/helio_positions.csv",
@@ -75,7 +75,7 @@
         "time_start" :          0,
         "time_stop" :           31536000,
         "is_dispatch" :           0,
-        "ppa_multiplier_model" :  0,
+        "ppa_multiplier_model" :  1,
         "gross_net_conversion_factor" :  0.90000000000000002,
         "helio_width" :               0,
         "helio_height" :              0,

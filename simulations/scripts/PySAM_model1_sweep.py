@@ -25,17 +25,24 @@ u = pint.UnitRegistry()
 pid = os.getpid()
 print("PID = ", pid)
 
+
+#parse the dispatch factors file
+dispatch_data = []
+with open ("../data/dispatch_factors_ts.csv") as f:
+    for line in f:
+        dispatch_data.append(float(line.strip()))
+dispatch_data=np.array(dispatch_data)
+
 # create empty dictionary for results
 results={}
 
 #two turbine max fractions
-for p_ref in [500,525,550]:
+for p_ref in [500,550,600,700]:
     results[p_ref]={}
     
-    for cycle_max_frac in [1.05,1.2,1.35]: 
+    for cycle_max_frac in [1.05]: #scoping indicates low sensitivity
         
-        
-        results[p_ref][cycle_max_frac]={}
+        results[p_ref][cycle_max_frac]={}                    
         
         #try disabling the TES cost for some cases
         for remove_tes_cost in [False]: #True
@@ -52,7 +59,13 @@ for p_ref in [500,525,550]:
                 #load in the typical model1 simulation as starting point
                 with open("../json/model1.json") as f:
                     base_sim = json.load(f)
-    
+                
+                turbine_exponent = 0.83 #turbine cost vs size. Clara Lloyd thesis
+                turbine_cost = 100 #$/kWe Figure VI.2 of Clara Lloyd thesis. CHECK WITH CORY!
+                ref_turbine_size = 950*base_sim["SSC_inputs"]["design_eff"]
+                turbine_premium = turbine_cost*((p_ref/ref_turbine_size)**turbine_exponent-1)
+                base_sim["SSC_inputs"]["bop_spec_cost"]+=turbine_premium
+                
                 if remove_tes_cost:
                     base_sim["SSC_inputs"]["tes_spec_cost"]=0.0
                 else:
@@ -60,18 +73,25 @@ for p_ref in [500,525,550]:
                     
                 base_sim["SSC_inputs"]["cycle_max_frac"]=cycle_max_frac
                 base_sim["SSC_inputs"]["P_ref"]=p_ref
+                base_financing=base_sim["SSC_inputs"]["construction_financing_cost"]
                 
                 results[p_ref][cycle_max_frac][remove_tes_cost][exaggerate]=[]
                 
                 #increase the difference of the factors from unity
-                for j in range(1,9):
-                    this_fac = "dispatch_factor"+str(int(j))
-                    base_sim["SSC_inputs"][this_fac]=(base_sim["SSC_inputs"][this_fac]-1)*exaggerate+base_sim["SSC_inputs"][this_fac]
+                new_dispatch_data = list((dispatch_data-1)*exaggerate+dispatch_data)
+                with open("../data/temp_dispatch_factors.csv","w") as f:
+                    for item in new_dispatch_data:
+                        f.write("{:.5f}\n".format(item))
                 
                 #sweep the TS Hours 
                 for tshours in range(6):
                     
                     base_sim["SSC_inputs"]["tshours"]=tshours
+                    
+                    #4 years, 7%. Built into initial financing estimate.
+                    #Add on extra cost of big turbine and TES
+                    extra_financing = 4*0.07*(turbine_premium+tshours*base_sim["SSC_inputs"]["tes_spec_cost"])
+                    base_sim["SSC_inputs"]["construction_financing_costs"]=base_financing+extra_financing
                     
                     with open("../json/tmp.json","w") as f:
                         json.dump(base_sim,f)
@@ -150,8 +170,18 @@ for p_ref in [500,525,550]:
                     upl.plot_SSC_power_and_energy(ax1 , plot_all_time=plt_allTime, title_label=title, start_hr=start, end_hr=end, hide_x=True, x_legend=1.2, y_legend_L=1.0, y_legend_R=0.3)
                     upl.plot_SSC_op_modes(ax2, plot_all_time=plt_allTime, start_hr=start, end_hr=end, hide_x=True )
                     upl.plot_SSC_massflow(ax3, plot_all_time=plt_allTime, start_hr=start, end_hr=end, y_legend_L=0.8, y_legend_R=0.3)
-                            
+
+#Save results                           
 with open("output_ppa_results.json","w") as f:
     json.dump(results,f)          
 
+#Output results
+for key1 in results.keys():
+    print("Power "+str(key1))
+    for key2 in results[key1].keys():
+        print("Turbine Factor "+str(key2))
+        print("Exaggerate/TSHours,0,1,2,3,4,5")
+        for key3 in results[key1][key2][False].keys():
+            first_item = results[key1][key2][False][key3][0]
+            print("{0},{1}".format(str(key3),",".join(["{:.2f}".format(item/first_item) for item in results[key1][key2][False][key3]])))
 
