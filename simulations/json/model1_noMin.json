@@ -66,7 +66,7 @@
         "time_start" :          0,
         "time_stop" :           31536000,
         "is_dispatch" :           0,
-        "ppa_multiplier_model" :  0,
+        "ppa_multiplier_model" :  1,
         "gross_net_conversion_factor" :  0.90000000000000002,
         "helio_width" :               0,
         "helio_height" :              0,
