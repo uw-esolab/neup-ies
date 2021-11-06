@@ -79,7 +79,6 @@ for p_ref in p_refs:
                     base_sim["SSC_inputs"]["tes_spec_cost"]=28.4 # lower with higher delta T
                     
                 base_sim["SSC_inputs"]["cycle_max_frac"]=cycle_max_frac
-                base_sim["SSC_inputs"]["P_ref"]=p_ref
                 base_financing=base_sim["SSC_inputs"]["construction_financing_cost"]
                 
                 results[p_ref][cycle_max_frac][remove_tes_cost][exaggerate]=[]
@@ -91,7 +90,7 @@ for p_ref in p_refs:
                         f.write("{:.5f}\n".format(item))
                 
                 #sweep the TS Hours 
-                for tshours in range(6):
+                for tshours in range(6 if p_ref >465 else 1):
                     
                     base_sim["SSC_inputs"]["tshours"]=tshours
                     
