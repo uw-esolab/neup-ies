@@ -78,7 +78,7 @@ for p_ref in [500,550,600,700]:
                 results[p_ref][cycle_max_frac][remove_tes_cost][exaggerate]=[]
                 
                 #increase the difference of the factors from unity
-                new_dispatch_data = list((dispatch_data-1)*exaggerate+dispatch_data)
+                new_dispatch_data = list((dispatch_data-1)*exaggerate+1)
                 with open("../data/temp_dispatch_factors.csv","w") as f:
                     for item in new_dispatch_data:
                         f.write("{:.5f}\n".format(item))
@@ -103,6 +103,7 @@ for p_ref in [500,550,600,700]:
                     # defining directories
                     nuctes = NuclearTES.NuclearTES(json_name="tmp",is_dispatch=True,log_dispatch_targets=False)
                     output_file = 'output_P{0:.0f}_C{1:.2f}_{2}_E{3:.1f}_T{4:.0f}.csv'.format(p_ref,cycle_max_frac,"T" if remove_tes_cost else "F",exaggerate,tshours)
+                    print("attempting to run "+output_file)
                     nuctes.run_sim( run_loop=True, export=True, filename=output_file )
                     nt = nuctes.Plant
                     so = nuctes.SO
