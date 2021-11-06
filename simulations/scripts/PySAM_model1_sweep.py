@@ -37,15 +37,19 @@ dispatch_data=np.array(dispatch_data)
 results={}
 
 #two turbine max fractions
-for p_ref in [500,550,600,700]:
+p_refs=[465,525,600,700,800]
+cycle_max_fracs=[1.05]
+remove_tes_costs=[False]
+exaggerates=[1,1.5,2]
+for p_ref in p_refs:
     results[p_ref]={}
     
-    for cycle_max_frac in [1.05]: #scoping indicates low sensitivity
+    for cycle_max_frac in cycle_max_fracs: #scoping indicates low sensitivity
         
         results[p_ref][cycle_max_frac]={}                    
         
         #try disabling the TES cost for some cases
-        for remove_tes_cost in [False]: #True
+        for remove_tes_cost in remove_tes_costs: #True
             
             #only do this option for first cycle_max_frac
             if cycle_max_frac != 1.05 and remove_tes_cost:
@@ -54,7 +58,7 @@ for p_ref in [500,550,600,700]:
             results[p_ref][cycle_max_frac][remove_tes_cost]={}
             
             # make the PPA profile more extreme systematically
-            for exaggerate in [1,1.5,2.0]:
+            for exaggerate in exaggerates:
                 
                 #load in the typical model1 simulation as starting point
                 with open("../json/model1.json") as f:
@@ -64,7 +68,10 @@ for p_ref in [500,550,600,700]:
                 turbine_cost = 100 #$/kWe Figure VI.2 of Clara Lloyd thesis. CHECK WITH CORY!
                 ref_turbine_size = 950*base_sim["SSC_inputs"]["design_eff"]
                 turbine_premium = turbine_cost*((p_ref/ref_turbine_size)**turbine_exponent-1)
-                base_sim["SSC_inputs"]["bop_spec_cost"]+=turbine_premium
+                
+                #add on the turbine premium but then scale down to ensure that plant cost is linked to reactor rating not turbine
+                base_sim["SSC_inputs"]["nuclear_spec_cost"]=(4500+turbine_premium)*(ref_turbine_size)/p_ref
+                print(base_sim["SSC_inputs"]["nuclear_spec_cost"])
                 
                 if remove_tes_cost:
                     base_sim["SSC_inputs"]["tes_spec_cost"]=0.0
@@ -90,7 +97,10 @@ for p_ref in [500,550,600,700]:
                     
                     #4 years, 7%. Built into initial financing estimate.
                     #Add on extra cost of big turbine and TES
-                    extra_financing = 4*0.07*(turbine_premium+tshours*base_sim["SSC_inputs"]["tes_spec_cost"])
+                    yrs=4.0
+                    rate=0.07
+                    kWe=950000
+                    extra_financing = yrs*rate*kWe*(turbine_premium+tshours*base_sim["SSC_inputs"]["tes_spec_cost"])
                     base_sim["SSC_inputs"]["construction_financing_costs"]=base_financing+extra_financing
                     
                     with open("../json/tmp.json","w") as f:
@@ -103,7 +113,7 @@ for p_ref in [500,550,600,700]:
                     # defining directories
                     nuctes = NuclearTES.NuclearTES(json_name="tmp",is_dispatch=True,log_dispatch_targets=False)
                     output_file = 'output_P{0:.0f}_C{1:.2f}_{2}_E{3:.1f}_T{4:.0f}.csv'.format(p_ref,cycle_max_frac,"T" if remove_tes_cost else "F",exaggerate,tshours)
-                    print("attempting to run "+output_file)
+                    print("attempting to run "+output_file)#Output results
                     nuctes.run_sim( run_loop=True, export=True, filename=output_file )
                     nt = nuctes.Plant
                     so = nuctes.SO
@@ -177,12 +187,12 @@ with open("output_ppa_results.json","w") as f:
     json.dump(results,f)          
 
 #Output results
-for key1 in results.keys():
-    print("Power "+str(key1))
-    for key2 in results[key1].keys():
-        print("Turbine Factor "+str(key2))
-        print("Exaggerate/TSHours,0,1,2,3,4,5")
-        for key3 in results[key1][key2][False].keys():
-            first_item = results[key1][key2][False][key3][0]
-            print("{0},{1}".format(str(key3),",".join(["{:.2f}".format(item/first_item) for item in results[key1][key2][False][key3]])))
+for exaggerate in exaggerates:
+    print("Exagerate "+str(exaggerate))
+    for cycle_max_frac in cycle_max_fracs:
+        print("Turbine Factor "+str(cycle_max_frac))
+        print("Powers/TSHours,0,1,2,3,4,5")
+        first_item=results[p_refs[0]][cycle_max_frac][False][exaggerate][0]
+        for p_ref in p_refs:
+            print("{0},{1}".format(str(p_ref),",".join(["{:.2f}".format(item/first_item) for item in results[p_ref][cycle_max_frac][False][exaggerate]])))
 
