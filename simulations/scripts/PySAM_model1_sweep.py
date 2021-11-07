@@ -69,8 +69,8 @@ for p_ref in p_refs:
                 ref_turbine_size = 950*base_sim["SSC_inputs"]["design_eff"]
                 turbine_premium = turbine_cost*((p_ref/ref_turbine_size)**turbine_exponent-1)
                 
-                #add on the turbine premium but then scale down to ensure that plant cost is linked to reactor rating not turbine
-                base_sim["SSC_inputs"]["nuclear_spec_cost"]=(4500+turbine_premium)*(ref_turbine_size)/p_ref
+                #add on the turbine premium !!!NO- but then scale down to ensure that plant cost is linked to reactor rating not turbine
+                base_sim["SSC_inputs"]["nuclear_spec_cost"]=(4500+turbine_premium)#*(ref_turbine_size)/p_ref
                 print(base_sim["SSC_inputs"]["nuclear_spec_cost"])
                 
                 if remove_tes_cost:
