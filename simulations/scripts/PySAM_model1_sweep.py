@@ -36,11 +36,10 @@ dispatch_data=np.array(dispatch_data)
 # create empty dictionary for results
 results={}
 
-#two turbine max fractions
 p_refs=[465,525,600,700,800]
 cycle_max_fracs=[1.05]
 remove_tes_costs=[False]
-exaggerates=[1,1.5,2]
+exaggerates=[1]#,1.5,2] 
 for p_ref in p_refs:
     results[p_ref]={}
     
@@ -64,13 +63,12 @@ for p_ref in p_refs:
                 with open("../json/model1.json") as f:
                     base_sim = json.load(f)
                 
-                turbine_exponent = 0.83 #turbine cost vs size. Clara Lloyd thesis
-                turbine_cost = 100 #$/kWe Figure VI.2 of Clara Lloyd thesis. CHECK WITH CORY! Could be on low side from other referenes
-                ref_turbine_size = 950*base_sim["SSC_inputs"]["design_eff"]
-                turbine_premium = turbine_cost*((p_ref/ref_turbine_size)**turbine_exponent-1)
+                turbine_unit_cost = 225 #Cory email 8th Nov 2021
+                turbine_ref = 950*base_sim["SSC_inputs"]["design_eff"]
+                turbine_premium = turbine_unit_cost*(p_ref-turbine_ref)
                 
-                #add on the turbine premium !!!NO- but then scale down to ensure that plant cost is linked to reactor rating not turbine
-                base_sim["SSC_inputs"]["nuclear_spec_cost"]=(4500+turbine_premium)*(ref_turbine_size)/p_ref
+                #add on the turbine premium - but then scale down to ensure that plant cost is linked to reactor rating not turbine
+                base_sim["SSC_inputs"]["nuclear_spec_cost"]=(4500*turbine_ref+turbine_premium)/p_ref
                 print(base_sim["SSC_inputs"]["nuclear_spec_cost"])
                 
                 if remove_tes_cost:
@@ -91,7 +89,7 @@ for p_ref in p_refs:
                         f.write("{:.5f}\n".format(item))
                 
                 #sweep the TS Hours 
-                for tshours in range(6 if p_ref >465 else 1):
+                for tshours in range(1): #6 if p_ref >465 else 1):
                     
                     base_sim["SSC_inputs"]["tshours"]=tshours
                     
@@ -99,9 +97,12 @@ for p_ref in p_refs:
                     #Add on extra cost of big turbine and TES
                     yrs=4.0
                     rate=0.07
-                    kWe=950000
-                    extra_financing = yrs*rate*kWe*(turbine_premium+tshours*base_sim["SSC_inputs"]["tes_spec_cost"])
+                    kWth=950000
+                    extra_financing = yrs*rate*(1000*turbine_premium+kWth*tshours*base_sim["SSC_inputs"]["tes_spec_cost"])
                     base_sim["SSC_inputs"]["construction_financing_costs"]=base_financing+extra_financing
+                    
+                    #base_sim["SSC_inputs"]["construction_financing_costs"]=base_sim["SSC_inputs"]["total_installed_cost"]*yrs*rate 
+                    
                     
                     with open("../json/tmp.json","w") as f:
                         json.dump(base_sim,f)
