@@ -65,12 +65,12 @@ for p_ref in p_refs:
                     base_sim = json.load(f)
                 
                 turbine_exponent = 0.83 #turbine cost vs size. Clara Lloyd thesis
-                turbine_cost = 100 #$/kWe Figure VI.2 of Clara Lloyd thesis. CHECK WITH CORY!
+                turbine_cost = 100 #$/kWe Figure VI.2 of Clara Lloyd thesis. CHECK WITH CORY! Could be on low side from other referenes
                 ref_turbine_size = 950*base_sim["SSC_inputs"]["design_eff"]
                 turbine_premium = turbine_cost*((p_ref/ref_turbine_size)**turbine_exponent-1)
                 
                 #add on the turbine premium !!!NO- but then scale down to ensure that plant cost is linked to reactor rating not turbine
-                base_sim["SSC_inputs"]["nuclear_spec_cost"]=(4500+turbine_premium)#*(ref_turbine_size)/p_ref
+                base_sim["SSC_inputs"]["nuclear_spec_cost"]=(4500+turbine_premium)*(ref_turbine_size)/p_ref
                 print(base_sim["SSC_inputs"]["nuclear_spec_cost"])
                 
                 if remove_tes_cost:
@@ -79,6 +79,7 @@ for p_ref in p_refs:
                     base_sim["SSC_inputs"]["tes_spec_cost"]=28.4 # lower with higher delta T
                     
                 base_sim["SSC_inputs"]["cycle_max_frac"]=cycle_max_frac
+                base_sim["SSC_inputs"]["P_ref"]=p_ref
                 base_financing=base_sim["SSC_inputs"]["construction_financing_cost"]
                 
                 results[p_ref][cycle_max_frac][remove_tes_cost][exaggerate]=[]
