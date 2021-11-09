@@ -27,18 +27,18 @@ print("PID = ", pid)
 # =============================================================================
 
 # modifying inputs
-json = "model1"   # model1_CAISO # model1
+json = "model1_CAISO"   # model1_CAISO # model1
 dispatch = True
 run_loop = True
 sscH    = 24   # (hr)
 pyoH    = 48   # (hr)
-Pref    = 200  # (MW)
-tshours = 0    # (hr)
+Pref    = 850  # (MW)
+tshours = 2    # (hr)
 
 # ========================
 
 # defining directories
-nuctes = NuclearTES.NuclearTES(json_name=json, is_dispatch=dispatch, log_dispatch_targets=True) 
+nuctes = NuclearTES.NuclearTES(json_name=json, is_dispatch=dispatch, log_dispatch_targets=False) 
 output_file = 'output.csv'
 
 # horizons
@@ -53,6 +53,7 @@ nuctes.dispatch_wrap = nuctes.create_dispatch_wrapper( nuctes.PySAM_dict )
 # update SSC dictionary parameters
 nuctes.SSC_dict['P_ref'] = Pref
 nuctes.SSC_dict['tshours'] = tshours
+nuctes.dispatch_wrap.set_design()
 
 print("Pref    = {0}".format(nuctes.SSC_dict['P_ref'] ) )
 print("tshours = {0}".format(nuctes.SSC_dict['tshours'] ) )
@@ -133,7 +134,7 @@ upl.plot_SSC_massflow(ax3, plot_all_time=plt_allTime, start_hr=start, end_hr=end
 # retrieving the DispatchPlots class
 from util.PostProcessing import DispatchPlots
 # specifying dispatch model
-ind = 0
+ind = 160
 # extracting specific, solved dispatch model
 dm = nuctes.disp_models[str(ind)]
 # create Dispatch plotting object

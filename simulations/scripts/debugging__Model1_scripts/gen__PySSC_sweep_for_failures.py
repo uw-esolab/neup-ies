@@ -91,7 +91,7 @@ op_modes_list = tmp_modes.operating_modes
 # =============================================================================
 sscH = 24  # 12 # 24
 pyoH = 48  # 24 # 48
-json = "model1" # model1_CAISO # model1 # model1_noMin
+json = "model1_CAISO" # model1_CAISO # model1 # model1_noMin
 dispatch = False # True # False
 run_loop = False
 

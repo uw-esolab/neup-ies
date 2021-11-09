@@ -39,7 +39,9 @@ print("PID = ", pid)
 
 # setting up arrays to cycle through
 tshours    = np.array([ 0, 2, 4, 6, 8, 10, 12, 14 ])
-p_cycle    = np.array([ 850, 800, 750, 700, 650, 600, 550, 500, 450, 400, 350, 300, 250, 200, 150, 100 ]) 
+# p_cycle    = np.array([ 850, 800, 750, 700, 650, 600, 550, 500, 450, 400, 350, 300, 250, 200, 150, 100 ]) 
+# p_cycle    = np.array([ 500, 450, 400, 350, 300, 250, 200, 150, 100 ]) 
+p_cycle    = np.array([ 850, 800, 750, 700, 650, 600, 550 ]) 
 
 # exceptions!
 # exceptions = {
@@ -89,9 +91,9 @@ op_modes_list = tmp_modes.operating_modes
 # =============================================================================
 # Double Loop
 # =============================================================================
-sscH = 12  # 12 # 24
-pyoH = 24  # 24 # 48
-json = "model1" # model1_CAISO # model1 # model1_noMin
+sscH = 24  # 12 # 24
+pyoH = 48  # 24 # 48
+json = "model1_CAISO" # model1_CAISO # model1 # model1_noMin
 dispatch = True # True # False
 run_loop = True
 
@@ -135,6 +137,7 @@ for i, th in enumerate(iterator1): #over tshours
         # update SSC dictionary parameters
         nuctes.SSC_dict['P_ref']   = float(pc)
         nuctes.SSC_dict['tshours'] = float(th)
+        nuctes.dispatch_wrap.set_design()
         
         # =========================================
         # exceptions we know don't work in SSC
