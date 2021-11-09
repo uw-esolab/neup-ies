@@ -43,8 +43,15 @@ output_dir = FileMethods.output_dir
 # filename   = 'failureModes_PySAM__model1_CAISO_2021_11__pyomo_0__horizon_24_48__TES_[0,14]__PC_[100,850].nuctes'
 # filename   = 'failureModes_PySAM__model1_2021_11__pyomo_1__horizon_24_48__TES_[0,14]__PC_[100,850].nuctes'
 # filename   = 'failureModes_PySAM__model1_CAISO_2021_11__pyomo_1__horizon_24_48__TES_[0,14]__PC_[100,850].nuctes'
-filename   = 'failureModes_PySAM__model1_2021_11__pyomo_1__horizon_12_24__TES_[0,14]__PC_[100,850].nuctes'
+# filename   = 'failureModes_PySAM__model1_2021_11__pyomo_1__horizon_12_24__TES_[0,14]__PC_[100,850].nuctes'
 # filename   = 'failureModes_PySAM__model1_CAISO_2021_11__pyomo_1__horizon_12_24__TES_[0,14]__PC_[100,850].nuctes'
+
+# filename   = 'failureModes_PySAM__model1_2021_11__pyomo_1__horizon_24_48__TES_[0,14]__PC_[100,500].nuctes'
+# filename   = 'failureModes_PySAM__model1_2021_11__pyomo_1__horizon_12_24__TES_[0,14]__PC_[100,500].nuctes'
+# filename   = 'failureModes_PySAM__model1_CAISO_2021_11__pyomo_1__horizon_24_48__TES_[0,14]__PC_[100,500].nuctes'
+# filename   = 'failureModes_PySAM__model1_CAISO_2021_11__pyomo_1__horizon_12_24__TES_[0,14]__PC_[100,500].nuctes'
+# filename   = 'failureModes_PySAM__model1_CAISO_2021_11__pyomo_1__horizon_24_48__TES_[0,14]__PC_[550,850].nuctes'
+filename   = 'failureModes_PySAM__model1_CAISO_2021_11__pyomo_1__horizon_12_24__TES_[0,14]__PC_[550,850].nuctes'
 
 NTPath = os.path.join(output_dir, filename)
 
