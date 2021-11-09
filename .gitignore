@@ -19,3 +19,4 @@ simulations/outputs/**.dispatchTargets
 
 simulations/docs/build/
 simulations/docs/source/simulations.*.rst
+simulations/docs/source/_build/**
