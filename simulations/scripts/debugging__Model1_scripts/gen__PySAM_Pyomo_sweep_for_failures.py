@@ -40,8 +40,8 @@ print("PID = ", pid)
 # setting up arrays to cycle through
 tshours    = np.array([ 0, 2, 4, 6, 8, 10, 12, 14 ])
 # p_cycle    = np.array([ 850, 800, 750, 700, 650, 600, 550, 500, 450, 400, 350, 300, 250, 200, 150, 100 ]) 
-# p_cycle    = np.array([ 500, 450, 400, 350, 300, 250, 200, 150, 100 ]) 
-p_cycle    = np.array([ 850, 800, 750, 700, 650, 600, 550 ]) 
+p_cycle    = np.array([ 500, 450, 400, 350, 300, 250, 200, 150, 100 ]) 
+# p_cycle    = np.array([ 850, 800, 750, 700, 650, 600, 550 ]) 
 
 # exceptions!
 # exceptions = {
@@ -73,7 +73,7 @@ qdot_nuc  = empty2D.copy()
 TES_CH    = empty.copy()
 TES_DC    = empty.copy()
 iter_log  = empty.copy()
-fail_log  = empty.copy() # 0 = No failure, 1 = SSC caused failure, 2 = Pyomo caused failure, 3 = Pyomo crash occurred, but sim continued
+fail_log  = empty.copy() # 0 = No failure, 1 = SSC caused failure, 2 = Pyomo caused failure, 3 = Pyomo crash occurred, but sim continued, 4 = SSC low mass flow error
 pyomo_bad_log     = empty.copy()
 pyomo_bad_idx_log = empty.copy()
 
@@ -248,6 +248,11 @@ for i, th in enumerate(iterator1): #over tshours
                     # Simulation ended because of SSC crash   == 1 
                     # Simulation ended because of Pyomo crash == 2 
                     fail_log[idx] = 1 if disp_success else 2 
+                
+                if hasattr(nuctes,'err_message'):
+                    if 'Mass flow rate too low' in nuctes.err_message:
+                        fail_log[idx] = 4
+                    
                 
                 dummy_val = -1
                 # log output means

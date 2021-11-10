@@ -32,8 +32,8 @@ dispatch = True
 run_loop = True
 sscH    = 24   # (hr)
 pyoH    = 48   # (hr)
-Pref    = 850  # (MW)
-tshours = 2    # (hr)
+Pref    = 650  # (MW)
+tshours = 0    # (hr)
 
 # ========================
 
@@ -117,7 +117,7 @@ ax2 = fig.add_subplot(312)
 ax3 = fig.add_subplot(313)
 
 plt_allTime = True
-title = 'SSC Results \nSSC horizon = {0}, Pyomo Horizon = {1} \nPref = {2:.2f} , tshours = {3}'.format( \
+title = 'SSC Results \nSSC horizon = {0} hr, Pyomo Horizon = {1} hr \nPref = {2:.2f} , tshours = {3}'.format( \
                                 sscH, pyoH, nuctes.SSC_dict['P_ref'], nuctes.SSC_dict['tshours'])
 start = 0
 end   = start + 3600
@@ -134,7 +134,7 @@ upl.plot_SSC_massflow(ax3, plot_all_time=plt_allTime, start_hr=start, end_hr=end
 # retrieving the DispatchPlots class
 from util.PostProcessing import DispatchPlots
 # specifying dispatch model
-ind = 160
+ind = 220
 # extracting specific, solved dispatch model
 dm = nuctes.disp_models[str(ind)]
 # create Dispatch plotting object
@@ -155,7 +155,10 @@ ax5 = fig.add_subplot(515)
 plt.subplots_adjust(hspace=0)
 # plt.gcf().subplots_adjust(bottom=0.1) # leaving room at the bottom
 
-dpl.plot_pyomo_energy(      ax1, x_legend=1.04, y_legend_L=1.0, hide_x=True )
+title_pyo = 'Pyomo Results \nTime after Sim Start = {0} d, Pyomo Horizon = {1} hr \nPref = {2:.2f} , tshours = {3}'.format( \
+                                (ind*sscH*u.hr).to('d').m, pyoH, nuctes.SSC_dict['P_ref'], nuctes.SSC_dict['tshours'])
+
+dpl.plot_pyomo_energy(      ax1, x_legend=1.04, y_legend_L=1.0, hide_x=True, title_label=title_pyo )
 dpl.plot_pyomo_power(       ax2, x_legend=1.15, y_legend_L=1.0, hide_x=True )
 dpl.plot_pyomo_power_ramps( ax3, x_legend=1.04, y_legend_L=1.0, hide_x=True )
 dpl.plot_pyomo_nuclear_bin( ax4, x_legend=1.04, y_legend_L=1.0, hide_x=True )
