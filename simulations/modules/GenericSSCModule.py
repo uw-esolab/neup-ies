@@ -562,6 +562,7 @@ class GenericSSCModule(ABC):
             Plant.execute()
         except Exception as err:
             exec_success = False
+            self.err_message = str(err)
             print("\n SSC error: {0}".format(err))
             
         return exec_success, Plant
