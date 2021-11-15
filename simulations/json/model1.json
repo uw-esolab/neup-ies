@@ -245,7 +245,7 @@
         "cycle_cutoff_frac" :  0.20000000000000001,
         "q_sby_frac" :  0.20000000000000001,
         "dT_cw_ref" :   10,
-        "T_amb_des" :   42,
+        "T_amb_des" :   30,
         "P_boil" :      100,
         "field_fl_props" : [[ 0,   0,   0,   0,   0,   0,   0 ]],
         "CT" :            2,

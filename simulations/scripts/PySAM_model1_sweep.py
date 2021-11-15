@@ -25,6 +25,8 @@ u = pint.UnitRegistry()
 pid = os.getpid()
 print("PID = ", pid)
 
+turbine_source = "ud_ind_od.csv" #ud_ind_od.csv or had_slid_560.csv
+
 
 #parse the dispatch factors file
 dispatch_data = []
@@ -33,13 +35,19 @@ with open ("../data/dispatch_factors_ts.csv") as f:
         dispatch_data.append(float(line.strip()))
 dispatch_data=np.array(dispatch_data)
 
+caiso_dispatch_data=[]
+with open("../data/CAISO_dispatch_factors.csv") as f:
+    for line in f:
+        caiso_dispatch_data.append(float(line.strip()))
+caiso_dispatch_data=np.array(caiso_dispatch_data)
+
 # create empty dictionary for results
 results={}
 
 p_refs=[465,525,600,700,800]
 cycle_max_fracs=[1.05]
 remove_tes_costs=[False]
-exaggerates=[1]#,1.5,2] 
+exaggerates=["caiso"] #[1,1.5,2] 
 for p_ref in p_refs:
     results[p_ref]={}
     
@@ -63,6 +71,8 @@ for p_ref in p_refs:
                 with open("../json/model1.json") as f:
                     base_sim = json.load(f)
                 
+                base_sim["PySAM_inputs"]["ud_file"]="data/"+turbine_source
+                
                 turbine_unit_cost = 225 #Cory email 8th Nov 2021
                 turbine_ref = 950*base_sim["SSC_inputs"]["design_eff"]
                 turbine_premium = turbine_unit_cost*(p_ref-turbine_ref)
@@ -83,13 +93,16 @@ for p_ref in p_refs:
                 results[p_ref][cycle_max_frac][remove_tes_cost][exaggerate]=[]
                 
                 #increase the difference of the factors from unity
-                new_dispatch_data = list((dispatch_data-1)*exaggerate+1)
+                if exaggerate == "caiso":
+                    new_dispatch_data = caiso_dispatch_data
+                else:
+                    new_dispatch_data = list((dispatch_data-1)*exaggerate+1)
                 with open("../data/temp_dispatch_factors.csv","w") as f:
                     for item in new_dispatch_data:
                         f.write("{:.5f}\n".format(item))
                 
                 #sweep the TS Hours 
-                for tshours in range(1): #6 if p_ref >465 else 1):
+                for tshours in range(6 if p_ref >465 else 1):
                     
                     base_sim["SSC_inputs"]["tshours"]=tshours
                     
@@ -113,7 +126,7 @@ for p_ref in p_refs:
                     
                     # defining directories
                     nuctes = NuclearTES.NuclearTES(json_name="tmp",is_dispatch=True,log_dispatch_targets=False)
-                    output_file = 'output_P{0:.0f}_C{1:.2f}_{2}_E{3:.1f}_T{4:.0f}.csv'.format(p_ref,cycle_max_frac,"T" if remove_tes_cost else "F",exaggerate,tshours)
+                    output_file = 'output_P{0:.0f}_C{1:.2f}_{2}_E{3}_T{4:.0f}.csv'.format(p_ref,cycle_max_frac,"T" if remove_tes_cost else "F",str(exaggerate),tshours)
                     print("attempting to run "+output_file)#Output results
                     nuctes.run_sim( run_loop=True, export=True, filename=output_file )
                     nt = nuctes.Plant
