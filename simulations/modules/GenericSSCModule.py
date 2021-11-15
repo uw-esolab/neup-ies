@@ -879,14 +879,13 @@ class GenericSSCModule(ABC):
         
         if self.log_dispatch_targets:
             if not self.hash_exists:
-                if not log_final:
-                    for l in self.Log_Target_Arrays.keys():
-                        # get what we have logged so far
-                        disp_targ = getattr(self.Plant.SystemControl, l )
-                        # grab and save corresponding slices to self (this should be some sort of pointer)
-                        self.Log_Target_Arrays[l][self.slice_ssc_currentH] = disp_targ[self.slice_ssc_firstH]
+                for l in self.Log_Target_Arrays.keys():
+                    # get what we have logged so far
+                    disp_targ = getattr(self.Plant.SystemControl, l )
+                    # grab and save corresponding slices to self (this should be some sort of pointer)
+                    self.Log_Target_Arrays[l][self.slice_ssc_currentH] = disp_targ[self.slice_ssc_firstH]
             
-                else:
+                if log_final:
                     with open(self.hash_filepath, "wb") as f:
                         pickle.dump(self.Log_Target_Arrays, f)
                     print("Dispatch Targets successfuly stored in {0}".format(self.hash_filepath))        
