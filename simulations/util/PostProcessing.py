@@ -409,9 +409,17 @@ class Plots(object):
         # plotting data from list
         for a, l, w in zip(array_list, label_list, lw_list):
             extracted_array = get_array(a)
-            plot_data_on_axis(ax, extracted_array, l, w)
             if is_bar_graph and extracted_array.min() < 0:
-                plot_data_on_axis(ax, -extracted_array, l, w)
+                pos_array =  extracted_array
+                neg_array = -extracted_array
+                pos_array[pos_array<0] = 0
+                neg_array[neg_array<0] = 0
+                
+                plot_data_on_axis(ax, pos_array, l, w)
+                plot_data_on_axis(ax, neg_array, l, w, color='r')
+                plt.show()
+            else:
+                plot_data_on_axis(ax, extracted_array, l, w)
 
         #========================#
         #---- Setting Labels ----#
@@ -627,10 +635,12 @@ class Plots(object):
 
         # custom y limits and ticks to be integers
         price = self.price[ start_hr:end_hr  ]
-        minP = 1.05*price.min() if price.min() < 0 else 0
+        minP = 0
         maxP = 1.05*price.max()
+        spacing = 0.5 if maxP-minP < 2 else 1
+        
         ax2.set_ylim(minP, maxP)
-        ax2.set_yticks(np.arange(minP, maxP, 0.5))
+        ax2.set_yticks( np.arange( minP, maxP, spacing) )
         
         # plot price array(s)
         price_array_list = ['price']
