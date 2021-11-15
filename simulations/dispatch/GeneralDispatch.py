@@ -454,7 +454,7 @@ class GeneralDispatch(ABC):
             return ineq
 
 
-    def solve_model(self, mipgap=0.7, tee=False):
+    def solve_model(self, mipgap=0.7, tee=False, run_simple=False):
         """ Method to solve the Pyomo model
         
         This method solves the Pyomo Concrete model that has been instantiated
@@ -481,6 +481,10 @@ class GeneralDispatch(ABC):
         
         # setting optimality condition
         opt.options["ratioGap"] = mipgap
+        
+        if run_simple:
+            opt.options["primalPivot"] = "dantzig"
+            opt.options["dualPivot"]   = "dantzig"
         
         # solving model
         results = opt.solve(self.model, tee=tee, keepfiles=False)
