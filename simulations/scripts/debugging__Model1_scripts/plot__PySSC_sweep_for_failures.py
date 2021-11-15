@@ -50,8 +50,8 @@ output_dir = FileMethods.output_dir
 # filename   = 'failureModes_PySAM__model1_2021_11__pyomo_1__horizon_12_24__TES_[0,14]__PC_[100,500].nuctes'
 # filename   = 'failureModes_PySAM__model1_CAISO_2021_11__pyomo_1__horizon_24_48__TES_[0,14]__PC_[100,500].nuctes'
 # filename   = 'failureModes_PySAM__model1_CAISO_2021_11__pyomo_1__horizon_12_24__TES_[0,14]__PC_[100,500].nuctes'
-filename   = 'failureModes_PySAM__model1_CAISO_2021_11__pyomo_1__horizon_24_48__TES_[0,14]__PC_[550,850].nuctes'
-# filename   = 'failureModes_PySAM__model1_CAISO_2021_11__pyomo_1__horizon_12_24__TES_[0,14]__PC_[550,850].nuctes'
+# filename   = 'failureModes_PySAM__model1_CAISO_2021_11__pyomo_1__horizon_24_48__TES_[0,14]__PC_[550,850].nuctes'
+filename   = 'failureModes_PySAM__model1_CAISO_2021_11__pyomo_1__horizon_12_24__TES_[0,14]__PC_[550,850].nuctes'
 
 NTPath = os.path.join(output_dir, filename)
 
@@ -93,7 +93,7 @@ full_title = "PySSC - {0} tariffs {1} Pyomo - {2:.0f}/{3:.0f}hr horizons ".forma
 cmap = cm.hot_r
 
 # ========== Arrays ==========
-p_array = copy.deepcopy( iter_log ) 
+p_array = copy.deepcopy( iter_log ) / 24.
 array = copy.deepcopy( iter_log ) / 8760. * 100
 mean_label = "% of simulation completed"
 
@@ -116,7 +116,7 @@ for i, x_val in enumerate(x_series):
          condition = fail_log[i,j]
          color = 'y' if condition == 1 else 'g' if condition == 2 else 'm' if condition == 4 else 'w' 
          color = 'c' if pyomo_bad_log[i,j] else color
-         text = ax1.text(x_val, y_val, str(int(p_array[i,j])), color=color, fontsize=10, va='center', ha='center')
+         text = ax1.text(x_val, y_val, '{0:.1f}'.format(p_array[i,j]), color=color, fontsize=10, va='center', ha='center')
          text.set_path_effects([PathEffects.Stroke(linewidth=3, foreground='black'), PathEffects.Normal()])
          del text
 
