@@ -2,6 +2,7 @@
 *.pyc
 simulations/scripts/**.py
 !simulations/scripts/PySAM_model1.py
+!simulations/scripts/PySAM_model1_sweep.py
 !simulations/scripts/PySAM_example.py
 !simulations/scripts/PySAM_generic_mspt.py
 
