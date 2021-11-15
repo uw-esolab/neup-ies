@@ -6,7 +6,7 @@ As with Sharan, gives optimal water output with 4 effects
 """
 
 import numpy as np
-from iapws import SeaWater,IAPWS97
+from iapws import SeaWater,IAPWS97, iapws08
 
 def water_value_in_arizona():
     """https://efc.web.unc.edu/2014/09/23/conservation-water-rates-arizona-utilities-using-rates-discourage-discretionary-water-use/"""
@@ -143,14 +143,18 @@ class MED:
     def seaWaterSatH(self,T,S,P):
         """the enthalpy at saturation pressure was pinging between gas and liquid. This clears it up"""
         test_enth = SeaWater(T=T,P=P,S=S).h
+        
+        # Tboil = iapws08._Tb(P, S)
+        # test_enth = SeaWater(T=Tboil-0.5, P=P, S=S).h
+
         if test_enth < 1000:
             return test_enth
         else:
             return self.seaWaterSatH(T-0.1,S,P)
 
-for k in range(1,10):
+for k in range(4,10):
     x=MED(k)
-    print(x.m3_per_day)
+    print(k,x.m3_per_day)
 
 
 
