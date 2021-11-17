@@ -70,7 +70,7 @@
         "is_nuclear_only" :     1,
         "q_dot_nuclear_des" :   950,
         "allow_defocus_mode":   false,
-        "core_height" :         18,
+        "core_height" :         1,
         "d_nuc_tube_out" :  40,
         "th_nuc_tube" :     1.25,
         "mat_nuc_tube" :    2,
