@@ -25,7 +25,7 @@ u = pint.UnitRegistry()
 pid = os.getpid()
 print("PID = ", pid)
 
-turbine_source = "ud_ind_od.csv" #ud_ind_od.csv or had_slid_560.csv
+turbine_source = "ham_slid_560_2.csv" #ud_ind_od.csv or ham_slid_560_2.csv
 
 
 #parse the dispatch factors file
@@ -44,10 +44,10 @@ caiso_dispatch_data=np.array(caiso_dispatch_data)
 # create empty dictionary for results
 results={}
 
-p_refs=[465,525,600,700,800]
+p_refs=[465,525,600,700,800] #465
 cycle_max_fracs=[1.05]
 remove_tes_costs=[False]
-exaggerates=["caiso"] #[1,1.5,2] 
+exaggerates=[1,1.5,2]#,"caiso"] 
 for p_ref in p_refs:
     results[p_ref]={}
     
