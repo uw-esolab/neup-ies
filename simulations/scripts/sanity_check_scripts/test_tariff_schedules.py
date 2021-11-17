@@ -94,3 +94,21 @@ ax.plot(p_time, zero_line, 'k', label="Zero-Line")
 ax.set_xlabel("Time (d)", fontweight='bold')
 ax.set_ylabel("Tariff Multiplier", fontweight='bold')
 ax.legend()
+
+
+# CAISO tariff rates
+
+pos_CAISO =  LMP_norm.copy()
+neg_CAISO = -LMP_norm.copy()
+
+pos_CAISO[pos_CAISO<0] = 0
+neg_CAISO[neg_CAISO<0] = 0
+
+fig = plt.figure()
+ax = fig.gca()
+
+ax.bar(p_time, pos_CAISO, np.diff(p_time)[0], alpha=0.7, label="CAISO +")
+ax.bar(p_time, neg_CAISO, np.diff(p_time)[0], alpha=0.7, label="CAISO -")
+ax.set_xlabel("Time (d)", fontweight='bold')
+ax.set_ylabel("Tariff Multiplier", fontweight='bold')
+ax.legend()

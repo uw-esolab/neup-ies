@@ -142,7 +142,7 @@ class NuclearDispatch(GeneralDispatch):
                     #obj_cost_cycle_su_hs_sd
                     - (model.Ccsu*model.ycsup[t] + 0.1*model.Cchsp*model.ychsp[t] + model.alpha*model.ycsd[t])
                     #obj_cost_cycle_ramping
-                    - (model.C_delta_w*(model.wdot_delta_plus[t]+model.wdot_delta_minus[t])+model.C_v_w*(model.wdot_v_plus[t] + model.wdot_v_minus[t]))
+                    - model.Delta[t]*(model.C_delta_w*(model.wdot_delta_plus[t]+model.wdot_delta_minus[t])+model.C_v_w*(model.wdot_v_plus[t] + model.wdot_v_minus[t]))
                     #obj_cost_nuc_su_hs_sd
                     - (model.Cnsu*model.ynsup[t] + model.Cnhsp*model.ynhsp[t] + model.alpha*model.ynsd[t])
                     #obj_cost_ops

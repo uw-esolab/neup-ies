@@ -161,10 +161,10 @@ class GeneralDispatch(ABC):
         #------- Variables ---------
         self.model.ucsu = pe.Var(self.model.T, domain=pe.NonNegativeReals, units=u.kWh)                             #u^{csu}: Cycle start-up energy inventory at period $t$ [kWt$\cdot$h]
         self.model.wdot = pe.Var(self.model.T, domain=pe.NonNegativeReals, units=u.kW)                              #\dot{w}: Power cycle electricity generation at period $t$ [kWe]
-        self.model.wdot_delta_plus = pe.Var(self.model.T, domain=pe.NonNegativeReals, units=u.kW)	                #\dot{w}^{\Delta+}: Power cycle ramp-up in period $t$ [kWe]
-        self.model.wdot_delta_minus = pe.Var(self.model.T, domain=pe.NonNegativeReals, units=u.kW) 	                #\dot{w}^{\Delta-}: Power cycle ramp-down in period $t$ [kWe]
-        self.model.wdot_v_plus = pe.Var(self.model.T, domain=pe.NonNegativeReals, bounds = (0,self.model.W_v_plus), units=u.kW)      #\dot{w}^{v+}: Power cycle ramp-up beyond designed limit in period $t$ [kWe]
-        self.model.wdot_v_minus = pe.Var(self.model.T, domain=pe.NonNegativeReals, bounds = (0,self.model.W_v_minus), units=u.kW) 	 #\dot{w}^{v-}: Power cycle ramp-down beyond designed limit in period $t$ [kWe]
+        self.model.wdot_delta_plus = pe.Var(self.model.T, domain=pe.NonNegativeReals, units=u.kW/u.hr)	                #\dot{w}^{\Delta+}: Power cycle ramp-up in period $t$ [kWe/hr]
+        self.model.wdot_delta_minus = pe.Var(self.model.T, domain=pe.NonNegativeReals, units=u.kW/u.hr) 	                #\dot{w}^{\Delta-}: Power cycle ramp-down in period $t$ [kWe/hr]
+        self.model.wdot_v_plus = pe.Var(self.model.T, domain=pe.NonNegativeReals, bounds = (0,self.model.W_v_plus), units=u.kW/u.hr)      #\dot{w}^{v+}: Power cycle ramp-up beyond designed limit in period $t$ [kWe/hr]
+        self.model.wdot_v_minus = pe.Var(self.model.T, domain=pe.NonNegativeReals, bounds = (0,self.model.W_v_minus), units=u.kW/u.hr) 	 #\dot{w}^{v-}: Power cycle ramp-down beyond designed limit in period $t$ [kWe/hr]
         self.model.wdot_s = pe.Var(self.model.T, domain=pe.NonNegativeReals, units=u.kW)	                       #\dot{w}^s: Energy sold to grid in time t [kWe]
         self.model.wdot_p = pe.Var(self.model.T, domain=pe.NonNegativeReals, units=u.kW)	                       #\dot{w}^p: Energy purchased from the grid in time t [kWe]
         self.model.x = pe.Var(self.model.T, domain=pe.NonNegativeReals, units=u.kW)                                #x: Cycle thermal power utilization at period $t$ [kWt]
@@ -454,7 +454,7 @@ class GeneralDispatch(ABC):
             return ineq
 
 
-    def solve_model(self, mipgap=0.7):
+    def solve_model(self, mipgap=0.7, tee=False, run_simple=False):
         """ Method to solve the Pyomo model
         
         This method solves the Pyomo Concrete model that has been instantiated
@@ -482,8 +482,12 @@ class GeneralDispatch(ABC):
         # setting optimality condition
         opt.options["ratioGap"] = mipgap
         
+        if run_simple:
+            opt.options["primalPivot"] = "dantzig"
+            opt.options["dualPivot"]   = "dantzig"
+        
         # solving model
-        results = opt.solve(self.model, tee=False, keepfiles=False)
+        results = opt.solve(self.model, tee=tee, keepfiles=False)
         #TODO: assert successful optimization?
         
         return results

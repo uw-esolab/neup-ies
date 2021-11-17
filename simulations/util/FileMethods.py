@@ -34,7 +34,7 @@ class FileMethods(object):
             data_array (list) : data in either list (SSC_ARRAY) or nested list (SSC_MATRIX) form
         """
         
-        dataframe = pandas.read_csv(filepath,header=None) #important: No Header assumed
+        dataframe = pandas.read_csv(filepath, header=None) #important: No Header assumed
         
         #recasting dataframe to a 1D numpy array if there is only 1 columnn in csv (SSC ARRAY)
         if dataframe.shape[1] == 1:
