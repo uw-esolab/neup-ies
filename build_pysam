@@ -67,7 +67,14 @@ fi
 # checking out a stable tag or release from our modified SSC
 # this can be updated, maybe added as flag
 cd ssc
-git checkout model2 #NE2-model1-v1.5.0
+# check to see if argument was passed -> signifying branch to check out
+if [ $# -eq 0 ] ; then
+    echo "No arguments supplied"
+    git checkout model2 #NE2-model1-v1.5.0
+  else
+    git checkout $1
+fi
+
 
 #====================================================#
 #---- cloning sam ------------------------------------
