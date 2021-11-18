@@ -23,7 +23,7 @@ class MED:
         water_temp - solved through EES mass and temperature balance
     """
     
-    def __init__(self,k):
+    def __init__(self,k,water_temp=67.6,water_rate=308):
         self.vapor_rate = []                          #Flow of the vapor rate for each n-effect
         self.feed_conc = .0335                       #Average concentration of salt in seawater
         self.brine_rate = []                         #Brine flow rate 
@@ -34,11 +34,11 @@ class MED:
         self.enth_vapor = np.zeros(self.k)            #Vapor enthalpy vector creation
         self.enth_brine = np.zeros(self.k)            #Brine enthalpy vector creation
         self.enth_brine_nea = np.zeros(self.k)       #allowance for flashing
-        self.water_temp = 67.6                     #Known starting/inlet temp of the DEMINERALIZED WATER [T2] (sCO2 outlet - delta_T_PCHE)
+        self.water_temp = water_temp                    #Known starting/inlet temp of the DEMINERALIZED WATER [T2] (sCO2 outlet - delta_T_PCHE)
         #self.feed_temp  = 20                       #Known starting/inlet temp of the BRINE [T1]
         self.latentheat = np.zeros(self.k)            #Latent heat of vapor vector creation
         self.tempchange = 3.                          #Known temperature change, from Sharan paper (delta_T_NEA)
-        self.water_rate = 308                      #Is this the feed flow rate of the DEMINERALIZED WATER? m_dot_w2
+        self.water_rate = water_rate                      #Is this the feed flow rate of the DEMINERALIZED WATER? m_dot_w2
         self.pressure = np.zeros(self.k)                          #Pressure in MPa 
         self.brine_out = []
         self.nea = 3. 
@@ -150,11 +150,22 @@ class MED:
         if test_enth < 1000:
             return test_enth
         else:
-            return self.seaWaterSatH(T-0.1,S,P)
+            return self.seaWaterSatH(T-0.5,S,P)
 
-for k in range(4,10):
-    x=MED(k)
-    print(k,x.m3_per_day)
+print("water_temp opt_stages m3/day $M/yr")
+price=water_value_in_arizona()
+for water_temp in [50,70,90,110,130,150]:
+    #find optimal number of stages
+    y=list()
+    for k in range(1,10):
+        y.append(MED(k,water_temp=water_temp,water_rate=3029).m3_per_day) #EES, LFR only
+        if k>1:
+            if y[-1]<y[-2]:
+                break
+    y=np.array(y)
+    stages=np.argmax(y)
+    print(water_temp,stages,y[stages],y[stages]*price*365.25/1e6)
+
 
 
 
