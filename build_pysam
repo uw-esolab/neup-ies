@@ -94,7 +94,7 @@ mkdir build_ssc_export
 cd build_ssc_export
 
 # making SSC in Export mode, skipping tests
-cmake ${SSCDIR} -G "CodeLite - Unix Makefiles" -DCMAKE_BUILD_TYPE=Export -DSAM_SKIP_TOOLS=1 -DSAMAPI_EXPORT=1 -DSAM_SKIP_TESTS=1 ../ssc/
+cmake ${SSCDIR} -G "CodeLite - Unix Makefiles" -DCMAKE_BUILD_TYPE=Release -DSAM_SKIP_TOOLS=1 -DSAMAPI_EXPORT=1 -DSAM_SKIP_TESTS=1 ../ssc/
 make -j8
 
 #====================================================#
