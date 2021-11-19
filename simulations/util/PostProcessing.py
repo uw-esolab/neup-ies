@@ -1212,11 +1212,9 @@ class DispatchPlots(Plots):
 
         # plot cycle binary arrays
         cyclebin_array_list = ['y_array',   'ychsp_array', 'ycsb_array',
-                               'ycsd_array', 'ycsu_array',  'ycsup_array',
-                               'ycgb_array', 'ycge_array'] # list of array strings
-        cyclebin_label_list = ['Is Cycle Generating Power?', 'Is Cycle HSU Pen?', 'Is Cycle SB?', 
-                               'Is Cycle SD?',               'Is Cycle SU?',      'Is Cycle CSU Pen?', 
-                               'Is Cycle Began Gen?',        'Is Cycle Stopped Gen?'] 
+                               'ycsd_array', 'ycsup_array'] # list of array strings
+        cyclebin_label_list = ['Is Cycle Generating Power?', 'Is Cycle in Hot Start Up?', 'Is Cycle in Standby?', 
+                               'Is Cycle Shutting Down?',    'Is Cycle in Cold Start Up?'] 
 
         cyclebin_wts = np.linspace(10, 1.5, 8).tolist()
         cyclebin_ylabel = 'Cycle \nBinary \nVariables'
