@@ -20,8 +20,9 @@ from dispatch.GeneralDispatch import GeneralDispatchOutputs as GDO
 from tqdm import tqdm
 import pickle as pickle
 import numpy as np
-import copy
+import copy, time
 from abc import ABC, abstractmethod
+from multiprocessing import Process
 
 class GenericSSCModule(ABC):
     """
@@ -42,7 +43,7 @@ class GenericSSCModule(ABC):
     @abstractmethod
     def __init__(self, plant_name="abstract", json_name="abstract", 
                        is_dispatch=False, dispatch_time_step=1,
-                       log_dispatch_targets=False):
+                       log_dispatch_targets=False, exec_debug=False):
         """ Initializes the GenericSSCModules
         
         Args:
@@ -79,6 +80,9 @@ class GenericSSCModule(ABC):
         self.pyomo_horizon = PySAM_dict['pyomo_horizon'] * u.hr
         self.output_keys   = output_keys
         self.dispatch_time_step = dispatch_time_step * u.hr
+        
+        # choosing debug mode vs normal execution of Plant
+        self.exec_debug = exec_debug
         
         # save csv arrays to class 
         self.store_csv_arrays( PySAM_dict )
@@ -495,7 +499,10 @@ class GenericSSCModule(ABC):
         
         # this loop should only be entered if run_loop == True
         for t in tqdm(remaining_sim_time):
-        
+            
+            # if t == 197:
+            #     import pdb
+            #     pdb.set_trace()
             # advance to the next time segment
             time_start, time_next, time_pyoH = self.advance_time_segment( time_start, time_next )
             
@@ -557,9 +564,26 @@ class GenericSSCModule(ABC):
         Plant.SystemControl.time_start = start_hr.to('s').m
         Plant.SystemControl.time_stop  = end_hr.to('s').m
         
+        if self.exec_debug:
+            checker = Process( target=Plant.execute )
+            
         exec_success = True
+
         try:
-            Plant.execute()
+            if self.exec_debug:
+                checker.start()
+                checker.join(10)
+                if checker.is_alive() == True:
+                    print("process stuck. terminating")
+                    exec_success = False
+                    try:
+                        checker.terminate()
+                    except:
+                        checker.kill()
+                else:
+                    Plant.execute()
+            else:
+                Plant.execute()
         except Exception as err:
             exec_success = False
             self.err_message = str(err)
@@ -964,3 +988,4 @@ class GenericSSCModule(ABC):
             safe_del(k)
         
         safe_del('Log_Arrays')
+
