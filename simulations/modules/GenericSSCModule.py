@@ -43,7 +43,8 @@ class GenericSSCModule(ABC):
     @abstractmethod
     def __init__(self, plant_name="abstract", json_name="abstract", 
                        is_dispatch=False, dispatch_time_step=1,
-                       log_dispatch_targets=False, exec_debug=False):
+                       log_dispatch_targets=False, exec_debug=False, 
+                       exec_timeout=10.):
         """ Initializes the GenericSSCModules
         
         Args:
@@ -57,7 +58,10 @@ class GenericSSCModule(ABC):
                 time step for dispatch (hours)
             log_dispatch_targets (bool): 
                 boolean, if True logs dispatch targets calculated by Pyomo at each segment
-            
+            exec_debug (bool):
+                boolean, allows execution in "debug" mode that times out exec call
+            exec_timeout (float):
+                amount of time in seconds to timeout an exec call
         """
         
         # grab names, either default here or from child class
@@ -82,7 +86,8 @@ class GenericSSCModule(ABC):
         self.dispatch_time_step = dispatch_time_step * u.hr
         
         # choosing debug mode vs normal execution of Plant
-        self.exec_debug = exec_debug
+        self.exec_debug   = exec_debug
+        self.exec_timeout = exec_timeout
         
         # save csv arrays to class 
         self.store_csv_arrays( PySAM_dict )
@@ -564,26 +569,43 @@ class GenericSSCModule(ABC):
         Plant.SystemControl.time_start = start_hr.to('s').m
         Plant.SystemControl.time_stop  = end_hr.to('s').m
         
+        # debugging mode, if selected, creates a process for plant execution
         if self.exec_debug:
             checker = Process( target=Plant.execute )
-            
+        
+        # initialize success boolean
         exec_success = True
-
+        
+        # try to see if execution succeeds
         try:
+            # debug execution method
             if self.exec_debug:
+
+                # start plant execution and add timeout in seconds
                 checker.start()
-                checker.join(10)
+                checker.join(self.exec_timeout)
+            
+                # ping process to see if execution is stuck
                 if checker.is_alive() == True:
-                    print("process stuck. terminating")
+                    err = "\n ...Process stuck. Terminating."
+                    print(err)
                     exec_success = False
+                    self.err_message = err
+                    
+                    # terminate the process, sometimes might need to kill (!!)
                     try:
                         checker.terminate()
                     except:
                         checker.kill()
+                        
+                # if execution didn't hang, call again (wasn't saving outputs)
                 else:
                     Plant.execute()
+                    
+            # normal execution, no debug
             else:
                 Plant.execute()
+        # execution failed
         except Exception as err:
             exec_success = False
             self.err_message = str(err)
