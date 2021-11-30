@@ -83,19 +83,19 @@
 % Authors, for the paper (add full first names)
 %\dagger -> adds dagger
 %\ddagger -> adds double dagger
-\Author{\hl{Brian White} %Please carefully check the accuracy of names and affiliations. Changes will not be possible after proofreading.
- $^{1}$, Michael Wagner~$^{1}$\orcidB{}, Ty Neises~$^{3}$, Cory Stansbury~$^{4}$ and Ben Lindley~$^{2,}$*\orcidA{}}
+\Author{\hl{Brian T. White} %Please carefully check the accuracy of names and affiliations. Changes will not be possible after proofreading.
+ $^{1}$, Michael J. Wagner~$^{1}$\orcidB{}, Ty Neises~$^{3}$, Cory Stansbury~$^{4}$ and Ben Lindley~$^{2,}$*\orcidA{}}
 
 % MDPI internal command: Authors, for metadata in PDF
-\AuthorNames{Brian White, Michael Wagner, Ty Neises, Cory Stansbury and Ben Lindley}
+\AuthorNames{Brian T. White, Michael J. Wagner, Ty Neises, Cory Stansbury and Ben Lindley}
 
 % MDPI internal command: Authors, for citation in the left column
-\AuthorCitation{White, B.; Wagner, M.; Neises, T.; Stansbury, C.; Lindley, B.}
+\AuthorCitation{White, B.T.; Wagner, M.J.; Neises, T.; Stansbury, C.; Lindley, B.}
 % If this is a Chicago style journal: Lastname, Firstname, Firstname Lastname, and Firstname Lastname.
 
 % Affiliations / Addresses (Add [1] after \address if there is only one affiliation.)
 \address{%
-$^{1}$ \quad Department of Mechanical Engineering, University of Wisconsin---Madison, 1415 University Drive, \mbox{Madison, WI 53706, USA;} bwhite24@wisc.edu (B.W.); mjwagner2@wisc.edu (M.W.)\\
+$^{1}$ \quad Department of Mechanical Engineering, University of Wisconsin---Madison, 1415 Engineering Drive, \mbox{Madison, WI 53706, USA;} bwhite24@wisc.edu (B.W.); mjwagner2@wisc.edu (M.W.)\\
 $^{2}$ \quad Department of Engineering Physics, University of Wisconsin---Madison, 1500 Engineering Drive, \mbox{Madison, WI 53706, USA}\\
 $^{3}$ \quad National Renewable Energy Laboratory, Thermal Systems Group, 15013 Denver West Parkway, \mbox{Golden, CO 80401, USA;} ty.neises@nrel.gov\\
 $^{4}$ \quad Westinghouse Electric Company, Lead Fast Reactor Systems Development, 1000 Westinghouse Dr, \mbox{Cranberry Twp, PA 16066, USA;} stansbca@westinghouse.com}
@@ -210,9 +210,9 @@ Brayton cycles are promising cycle configurations offering higher efficiencies, 
 {concentrating solar power (CSP) receiver, thermal energy storage (TES),}
 %{CSP receiver, TES,} 
 and power block in one sCO$_2$ Brayton system~\cite{seto_2015}. Utilizing complementary technologies, specifically solar concentrating power and lead-cooled fast reactors, can offset the drawbacks of each. %\replaced[comment={Drawbacks of CSP and LFR technology elaborated on [2,2]}]
-{These drawbacks include CSP dependency on weather conditions and time of day, while the LFR in isolation does not incoporate thermal energy storage for meeting peak demand}
+{These drawbacks include CSP dependency on weather conditions and time of day, while the LFR in isolation does not incorporate thermal energy storage for meeting peak demand.}
 Coupling these technologies into an interconnected cycle allows for consistent generation, independent of weather or time of day, and~thermal storage for high dispatchability during high-grid-demand periods. 
-A CSP has an array of mirrors concentrating solar rays towards a %\replaced[comment={Furthering explanation of the CSP [3,1]}]
+A CSP \hl{plant} has an array of mirrors concentrating solar rays towards a %\replaced[comment={Furthering explanation of the CSP [3,1]}]
 {tower receiver, transferring the energy into a solar salt, and~storing the solar salt in tanks. CSP systems require direct sunlight to operate at full power, therefore causing variability based on weather conditions and time of day.}
 %{receiver to generate thermal energy therefore causing a dependency on weather conditions and time of day.}
  Previous research has modeled CSP technology as the thermal source for Brayton sCO$_2$ cycles with promising results in efficiency gains and high-temperature thermal energy storage~\cite{turchi_2013, iverson_2013, ho_2015, wang_2018, neises_2020}. Thermal energy gathered from the CSP is stored in thermal energy storage which is dispatched into the sCO$_2$ Brayton cycle when grid demand increases. With~a comparable temperature to the hot TES, 560 $~^{\circ}$C, a~%\replaced[comment={Abbreviation defined [4,1]}]
@@ -231,7 +231,7 @@ Various studies on complimentary solar-nuclear systems have been accomplished wi
 The economic and physical feasibility of producing shale oil and hydrogen with complimentary solar-nuclear cycles, as~discussed in the Curtis J.D. (2015) thesis and Monnerie~et~al. (2011) article, is not within the scope of sCO$_2$ Brayton recompression cycle electrical generation and storage presented in this~paper.
 
 The single-cycle configuration in Wang~et~al. (2020) has a higher-temperature operating salt, 67\%KCl\hl{--}33\%MgCl$_2$, as~the heat transfer fluid in the CSP which is capable of temperatures in the range of 450--1400 $~^{\circ}$C. The~lower operating point of the studied solar salt in this paper, 60\%NaNO$_3$\hl{--}40\%KNO$_3$ %does it should be en dash?
-with a temperature range of 250--585 $~^{\circ}$C, is employed because the technology is more established when compared to KCl-MgCl$_2$ \cite{turchi_2018}. The~higher temperature salt requires preheating which is achieved prior to the CSP heat addition by a small modular lead-cooled fast reactor. The~small modular LFR operates at a low temperature and a fixed location when compared to the higher temperature lead and variable location that the Westinghouse LFR studied in this paper is capable of. Due to the similar operating temperatures of the CSP and LFR, multiple cycle configurations are studied that are not possible with the similar components in Wang~et~al. (2020). Specifically studied in this paper are the effects on cycle and heat storage efficiency of different cycle configurations while having the LFR serve a dual purpose of electrical generation and a supplementary CSP TES charging technique. This paper provides an overview of contending recompression sCO$_2$ Brayton cycles with varied positioning of complimentary CSP and LFR heat additions in the cycle. Additionally, the location of where heat is drawn from the sCO$_2$ Brayton cycles to be stored in thermal energy storage is studied with the results~discussed.
+with a temperature range of 250--585 $~^{\circ}$C, is employed because the technology is more established when compared to KCl-MgCl$_2$ \cite{turchi_2018}. The~higher temperature salt requires preheating which is achieved prior to the CSP heat addition by a small modular lead-cooled fast reactor. The~small modular LFR operates at a \hl{relatively low temperature and at a fixed configuration in contrast to the Westinghouse LFR studied in this paper, which is capable of higher temperature and variable configuration}. Due to the similar operating temperatures of the CSP and LFR, multiple cycle configurations are studied that are not possible with the similar components in Wang~et~al. (2020). Specifically studied in this paper are the effects on cycle and heat storage efficiency of different cycle configurations while having the LFR serve a dual purpose of electrical generation and a supplementary CSP TES charging technique. This paper provides an overview of contending recompression sCO$_2$ Brayton cycles with varied positioning of complimentary CSP and LFR heat additions in the cycle. Additionally, the location of where heat is drawn from the sCO$_2$ Brayton cycles to be stored in thermal energy storage is studied with the results~discussed.
 
 
 
@@ -254,7 +254,7 @@ with a temperature range of 250--585 $~^{\circ}$C, is employed because the techn
 
 \subsection{Cycle Component~Modeling}
 %======================================================================================
-Components present in the cycles are modeled using various techniques and are discussed in more detail below. Turbines and compressors are analyzed using isentropic efficiencies. Counter-flow heat exchangers (HX) are modeled using the effectiveness-NTU method while simplified ``black box'' heat exchangers that use a simple energy balance for state point calculations are used in lieu of more detailed component models where data are available. The~lead-cooled fast reactor is assumed to be a black box heat exchanger because of the constant heat input and state points on the sCO$_2$ inlet and outlet are provided. The~molten salt loop for the CSP is modeled with necessary components including hot and cold TES, receiver, pumps and counter-flow heat~exchangers.
+Components present in the cycles are modeled using various techniques and are discussed in more detail below. Turbines and compressors are analyzed using isentropic efficiencies. Counter-flow heat exchangers (HX) are modeled using the effectiveness-NTU method while simplified ``black box'' heat exchangers that use a simple energy balance for state point calculations are used in lieu of more detailed component models where data are available. The~lead-cooled fast reactor is assumed to be a black box heat exchanger because of the constant heat input and state points on the sCO$_2$ inlet and outlet are provided. The~molten salt loop for the CSP is modeled with necessary components including hot and cold TES, receiver, pumps, and counter-flow heat~exchangers.
 
 
 
@@ -332,14 +332,14 @@ Calculating the maximum heat transfer rate allows for effectiveness to be calcul
     \varepsilon = \frac{\dot{Q}_{HX}}{\dot{Q}_{max}},
 \end{equation}
 
-All of the prior equations are carried out in a built-in function within EES. EES is an iterative solver, and therefore as long as there is a feasible solution, the~functions can take any of the four state points around the heat exchanger and converge on a~solution.
+All of the prior equations are carried out in a built-in function within EES. EES is an iterative solver, and therefore if there is a feasible solution, the~functions can take any of the four state points around the heat exchanger and converge on a~solution.
 
 After the effectiveness is solved for, capacitance ratio is necessary. The~capacitance ratio is defined as the average minimum capacitance rate, $\dot{C}_{min}$, over~the average maximum capacitance rate, $\dot{C}_{max}$. Average capacitance rates for the hot and cold streams are found by multiplying the addition of the specific heat at the inlet and outlet of the stream by the mass flow and dividing by two as shown in Equation~(\ref{avg_cap}).
 \begin{equation}
     \label{avg_cap}
     \dot{C}_{avg} = \frac{\dot{m}(c_{in}+c_{out})}{2},
 \end{equation}
-where $C_{avg}$ is the average capacitance rate across the hot or cold stream and $c_{in}$ and $c_{out}$ is the specific heat at the inlet and outlet respectively. %\replaced[comment={Improving counter-flow hx explanation [1,1]}]
+where $\dot{C}_{avg}$ is the average capacitance rate across the hot or cold stream and $c_{in}$ and $c_{out}$ is the specific heat at the inlet and outlet respectively. %\replaced[comment={Improving counter-flow hx explanation [1,1]}]
 {Specific heat is found using library correlations, with~the average capacitance rate assumed to be constant during the analysis.}
 %{Specific heat is found using library correlations.} 
 Once both average capacitances are calculated for the hot and cold streams, one has a larger value, $\dot{C}_{max}$, and~one has a smaller value,  $\dot{C}_{min}$. These maximum and minimum values are used to find the capacitance ratio, $CR$, in~Equation~(\ref{cap_ratio}).
@@ -486,7 +486,7 @@ In order to draw a more direct comparison, the~cycles are standardized in terms 
 
 The values displayed in Table~\ref{tab-cycle-constants} are representative of CSP and the Westinghouse LFR. 
 %\replaced[comment={Elaborated on table variable names [2,5]}]
-{In Table~\ref{tab-cycle-constants}, variable names require further explanation. The~high side pressure with the variable label $P_{2A}$, is the constant pressure outlet on the compressors and inlet to the turbines. In~all models, the value is set by the outlet of the main compressor and held constant with the assumption that there is no pressure drop across heat exchangers. In~addition to this pressure, temperatures are also set. The~inlet temperature of the main compressor, $T_{1A}$, is set to a value of $40~^{\circ}$C in all models. The~temperature of the sCO$_2$ on the outlet of the LFR HX has different variable names, T$_5$, T$_{2C}$, T$_{6A}$, and~T$_{5C}$, according to the associated cycle configuration diagram.}{}.
+{In Table~\ref{tab-cycle-constants}, variable names require further explanation. The~high side pressure with the variable label $P_{2A}$, is the constant pressure outlet on the compressors and inlet to the turbines. In~all models, the value is set by the outlet of the main compressor and held constant with the assumption that there is no pressure drop across heat exchangers. In~addition to this pressure, temperatures are also set. The~inlet temperature of the main compressor, $T_{1A}$, is set to a value of $40~^{\circ}$C in all models. The~temperature of the sCO$_2$ on the outlet of the LFR HX has different variable names, T$_5$, T$_{2C}$, T$_{6A}$, and~T$_{5C}$, according to the associated cycle configuration diagram.}{}
 
 
 In addition to standardized parameters, all cycles have identical recompression sides. The~recompression side contains a  %\replaced[comment={Abbreviations defined [4,1]}]
@@ -535,16 +535,16 @@ The cycle that is using the LFR heat input in the two-cycle configuration is lab
 
 Two separate sensitivity studies on the LFR inlet temperature are completed for C-LFR-ON. The~constrained study is calculated by setting the LFR inlet temperature to the design value of $400~^{\circ}$C, which is a requirement of the LFR primary circuit to maximize power output within material limits. In~addition to the constrained studies, unconstrained studies are required to test the penalties that LFR inlet temperature has on efficiency. The~unconstrained study is performed by gradually increasing the mass flow to the main compressor through a parametric study while maximizing cycle efficiency. In~Figure~\ref{c-lfr-on}, the~location of the C2S heat exchanger while charging falls between state point 5 and 6 in any of the studied charging configurations: parallel, pre, circulator or~post. 
 
-% \end{paracol}
+ \end{paracol}
 \begin{figure}[H] 
     %[!h] 
-   % \widefigure
+  % \widefigure
     \includegraphics[width=\linewidth]{Definitions/c-lfr-on.pdf}
     \caption{Diagram for C-LFR-ON with focus on electricity~generation\label{c-lfr-on}}
 \end{figure}
-% \begin{paracol}{2}
+ \begin{paracol}{2}
 % %\linenumbers
-% \switchcolumn
+ \switchcolumn
 
 The cycle that is using the CSP heat input in the two-cycle configuration is labeled C-CSP-ON and the cycle diagram is shown in Figure~\ref{c-csp-on}. 
 
@@ -605,19 +605,22 @@ The identical inlet temperatures due to the parallel configuration makes the C-1
 
 In practice, sCO$_2$ cycles typically have 3 turbines, with~2 of these driving the compressor and recompressor. Therefore, this configuration will not in general require additional turbines compared to the C-1HTR1T-ON configuration. Furthermore, it is anticipated that the cost of the high-temperature recuperator (HTR) is likely most related to its volume, and~hence having two smaller high-temperature recuperators is unlikely to cost significantly more than one large~one. 
 
-This cycle, C-2HTR3T-ON, can be seen in Figure~\ref{c-2htr3t-on} and has two high-temperature recuperators and three turbines. The~LFR is powering one turbine, T1, and~transferring unused heat to the flow entering LFR HX through a dedicated high-temperature recuperator, HTR. The~cycle with heat addition from the CSP powers the other two turbines, which for modeling purposes are combined into a single turbine T2, while having a dedicated high-temperature recuperator, HTR2. The~two turbines displayed as T2 can be modeled as a singular turbine because their isentropic efficiencies are identical causing the inlet and outlet conditions of the turbines to be consistent with a singular turbine. Additionally, the~power produced by the two turbines is proportional to mass flow rate, each receives a fraction of the mass flow rate, therefore producing the same fraction of power. Summing these power fractions together yields the total power of a singular turbine in the same position. After~the high-temperature recuperators, the~two flows are combined and sent to the LTR hot~side. 
+This cycle, C-2HTR3T-ON, can be seen in Figure~\ref{c-2htr3t-on} and has two high-temperature recuperators and three turbines. The~LFR is powering one turbine, T1, and~transferring unused heat to the flow entering LFR HX through a dedicated high-temperature recuperator, HTR. The~cycle with heat addition from the CSP powers the other two turbines, which for modeling purposes are combined into a single turbine T2, while having a dedicated high-temperature recuperator, HTR2. 
 
 \end{paracol}
 \begin{figure}[H]
-    \widefigure
-    \includegraphics[width=\linewidth]{Definitions/c-2htr3t-on.pdf}
-    \caption{Diagram for C-2HTR3T-ON with focus on electricity~generation\label{c-2htr3t-on}}
+  \widefigure
+  \includegraphics[width=\linewidth]{Definitions/c-2htr3t-on.pdf}
+  \caption{Diagram for C-2HTR3T-ON with focus on electricity~generation\label{c-2htr3t-on}}
 \end{figure}
 \begin{paracol}{2}
-%%\linenumbers
-\switchcolumn
-
-The C2S heat exchanger is located around the turbine and LFR at 7A to 8A depending on the charging configuration: pre, post, parallel or circulator. Three sensitivity studies are performed on the C-2HTR3T-ON model---two with the LFR low temperature constrained and one without this constraint. The~two constrained studies, with~an LFR temperature of $400^{\circ}$, have varied cold CSP TES temperature with the lowest temperature of $390~^{\circ}$C and highest temperature of $440~^{\circ}$C. The~unconstrained low LFR inlet study is calculated at a cold CSP TES temperature of $390~^{\circ}$C.
+  %%\linenumbers
+  \switchcolumn
+  
+  
+  The~two turbines displayed as T2 can be modeled as a singular turbine because their isentropic efficiencies are identical causing the inlet and outlet conditions of the turbines to be consistent with a singular turbine. Additionally, the~power produced by the two turbines is proportional to mass flow rate, each receives a fraction of the mass flow rate, therefore producing the same fraction of power. Summing these power fractions together yields the total power of a singular turbine in the same position. After~the high-temperature recuperators, the~two flows are combined and sent to the LTR hot~side. 
+  
+  The C2S heat exchanger is located around the turbine and LFR at 7A to 8A depending on the charging configuration: pre, post, parallel or circulator. Three sensitivity studies are performed on the C-2HTR3T-ON model---two with the LFR low temperature constrained and one without this constraint. The~two constrained studies, with~an LFR temperature of $400^{\circ}$, have varied cold CSP TES temperature with the lowest temperature of $390~^{\circ}$C and highest temperature of $440~^{\circ}$C. The~unconstrained low LFR inlet study is calculated at a cold CSP TES temperature of $390~^{\circ}$C.
 
 
 
@@ -637,6 +640,8 @@ In the heat storage efficiency equation, $\dot{Q}_{C2S}$ is the amount of heat t
 
 The high-temperature sCO$_2$ leaving the LFR HX flows through the LFR turbine converting thermal energy to usable work. The~outlet temperature of the LFR turbine is at a temperature suitable to charge the hot TES, and therefore the flow is passed through C2S exchanging heat to the cold solar salt. The~diagram outlining this process is C-LFR-PRE in Figure~\ref{c-lfr-pre}. 
 
+A problem arises with this salt charging configuration. The~temperature out of the turbine is not high enough to charge the hot CSP TES to the required value of $560~^{\circ}$C when the turbine power is balanced with the compressor demand. To~raise the temperature, some of the high-temperature flow before the turbine is redirected through a valve and combined after the turbine. Limiting the flow through the turbine reduces the turbine power and compressor power because of the balancing requirement. Due to the reduction in available compressor power, the~LFR RC is effectively bypassed, and~a large portion of usable heat is expelled in the LFR PC before the LFR MC. The~thermal storage efficiency reduces as a result of the large amount of heat rejected in the LFR~PC.
+
 \end{paracol}
 \begin{figure}[H]
     \widefigure
@@ -647,7 +652,6 @@ The high-temperature sCO$_2$ leaving the LFR HX flows through the LFR turbine co
 %%\linenumbers
 \switchcolumn
 
-A problem arises with this salt charging configuration. The~temperature out of the turbine is not high enough to charge the hot CSP TES to the required value of $560~^{\circ}$C when the turbine power is balanced with the compressor demand. To~raise the temperature, some of the high-temperature flow before the turbine is redirected through a valve and combined after the turbine. Limiting the flow through the turbine reduces the turbine power and compressor power because of the balancing requirement. Due to the reduction in available compressor power, the~LFR RC is effectively bypassed, and~a large portion of usable heat is expelled in the LFR PC before the LFR MC. The~thermal storage efficiency reduces as a result of the large amount of heat rejected in the LFR~PC. 
 
 
 
@@ -731,7 +735,7 @@ obtained using standardized values found in \mbox{Table \ref{tab-cycle_sum}} for
 
 The three non-charging cycle models have a focus on producing the highest positive alternator power to heat input, or~cycle efficiency. The~two-cycle configuration, composed of C-LFR-ON and C-CSP-ON, has independent recompression cycles with dedicated compressors, turbine, recuperators, and~pre-cooler for the LFR and CSP. C-1HTR1T-ON, with~the heat additions in parallel, and~C-2HTR3T, with~dedicated HTR for both heat additions, are cycles which incorporate the CSP and LFR in the same cycle. The~results from studies performed on these cycles are displayed in Table~\ref{tab-noncharg}. 
 
-The calculated values reported in Table~\ref{tab-noncharg} are component power, mass flow fractions, and~counter-flow heat exchanger specifications. Columns labeled with '$C$' headers have the LFR sCO$_2$ low inlet temperature constrained to 400$~^{\circ}$C while those labeled with '$U$' are unconstrained and calculated based off of a parametric study on the MC mass flow fraction. Values listed in the Cold TES Temperature row are set to values of 390$~^{\circ}$C, 410$~^{\circ}$C, or~440$~^{\circ}$C to study the effects that cold TES temperature has on cycle efficiency and to accommodate certain characteristics of cycle configurations. %\replaced[comment={Removed the conjunction 'and' in the sentence for clarity. [1,1]}]
+The calculated values reported in Table~\ref{tab-noncharg} are component power, mass flow fractions, and~counter-flow heat exchanger specifications. Columns labeled with '$C$' headers have the LFR sCO$_2$ low inlet temperature constrained to 400$~^{\circ}$C while those labeled with '$U$' are unconstrained and calculated based off a parametric study on the MC mass flow fraction. Values listed in the Cold TES Temperature row are set to values of 390$~^{\circ}$C, 410$~^{\circ}$C, or~440$~^{\circ}$C to study the effects that cold TES temperature has on cycle efficiency and to accommodate certain characteristics of cycle configurations. %\replaced[comment={Removed the conjunction 'and' in the sentence for clarity. [1,1]}]
 {Cycles that do not contain the listed component omit the associated values.}
 %{Cycles that do not contain the listed component and omit the associated values.} 
 \clearpage 
@@ -849,17 +853,17 @@ When the focus of the cycles is thermal storage for later use, the~LFR charges t
         % \switchcolumn
         
 \subsubsection{C-LFR-PRE}
-The TES charging technique with the turbine prior to the C2S heat exchanger, C-LFR-PRE, requires the temperature of the C2S inlet to be high enough to charge the hot TES. The~hot TES is at a temperature of 560$~^{\circ}$C, with~a 10$~^{\circ}$C approach temperature, and therefore the inlet temperature to C2S is required to be at least 570$~^{\circ}$C. In~cases where the turbine outlet temperature is less than 570$~^{\circ}$C, a~isenthalpic valve bypasses flow from the high-temperature turbine inlet and mixes with the low-temperature turbine outlet raising the temperature prior to the C2S heat exchanger. For~the C-LFR-PRE configuration to be viable, it requires a larger temperature than the set LFR HX outlet temperature of 595$~^{\circ}$C. With~this low of a LFR outlet temperature, 73.78\% of the flow is redirected around the turbine to raise the temperature prior to C2S. As~the temperature of the hot TES is raised above a value of 540$~^{\circ}$C, the~amount of flow around the turbine approaches 100\% and balancing the turbine power to compressor power is infeasible. The~temperature in the hot TES is therefore set to a lower value of 540$~^{\circ}$C to allow for operation of this cycle. With~heat storage efficiency maximized, 93.89\% of the flow is sent to the main compressor, rejecting 622 MW of heat out of the cycle through the precooler. This amount of rejected heat is reflected in a heat storage efficiency of 34.53\%, the~lowest of all tested TES charging~configurations.
+The TES charging technique with the turbine prior to the C2S heat exchanger, C-LFR-PRE, requires the temperature of the C2S inlet to be high enough to charge the hot TES. The~hot TES is at a temperature of 560$~^{\circ}$C, with~a 10$~^{\circ}$C approach temperature, and therefore the inlet temperature to C2S is required to be at least 570$~^{\circ}$C. In~cases where the turbine outlet temperature is less than 570$~^{\circ}$C, a~isenthalpic valve bypasses flow from the high-temperature turbine inlet and mixes with the low-temperature turbine outlet raising the temperature prior to the C2S heat exchanger. For~the C-LFR-PRE configuration to be viable, it requires a larger temperature than the set LFR HX outlet temperature of 595$~^{\circ}$C. With~this low of a LFR outlet temperature, \hl{73.8}\% of the flow is redirected around the turbine to raise the temperature prior to C2S. As~the temperature of the hot TES is raised above a value of 540$~^{\circ}$C, the~amount of flow around the turbine approaches 100\% and balancing the turbine power to compressor power is infeasible. The~temperature in the hot TES is therefore set to a lower value of 540$~^{\circ}$C to allow for operation of this cycle. With~heat storage efficiency maximized, \hl{93.9}\% of the flow is sent to the main compressor, rejecting 622 MW of heat out of the cycle through the precooler. This amount of rejected heat is reflected in a heat storage efficiency of \hl{34.5}\%, the~lowest of all tested TES charging~configurations.
 
 \subsubsection{C-LFR-PAR}
 
-To test the effects of splitting flow prior to the turbine, a~parallel configuration C-LFR-PAR is studied. To~reduce the pressure from 28.8 MPa to 8.8 MPa, an~isenthalpic valve is required after heat is extracted for storage through C2S. With~this configuration two different values for cold TES are studied, one with a cold TES storage of $390~^{\circ}$C the other with a temperature of $440~^{\circ}$C. A~noteworthy difference for this cycle is the C2S approach temperature is not set to $10~^{\circ}$C. Defining the approach temperature as $10~^{\circ}$C causes the energy balance governing combiner 2 to be over constrained. Therefore, this value is free and calculated to be $35~^{\circ}$C for the $390~^{\circ}$C case and $26.27~^{\circ}$C for the $440~^{\circ}$C case. Both of these different temperature cold TES studies do not change the cycle parameters because, as~seen in C-1HTR1T-ON and C-2HTR3T-ON, the~solar salt mass flow rate adjusts to accommodate for the temperature difference. The~higher cold TES temperature of $440~^{\circ}$C causes the mass flow rate in the CSP to increase by approximately 650 kg/s. Increasing the mass flow rate has a higher demand on system components but in this situation it allows for the salt to be charged at a higher rate, increasing the storage capabilities. Both cycles have a heat storage efficiency of 45.30\%.
+To test the effects of splitting flow prior to the turbine, a~parallel configuration C-LFR-PAR is studied. To~reduce the pressure from 28.8 MPa to 8.8 MPa, an~isenthalpic valve is required after heat is extracted for storage through C2S. With~this configuration two different values for cold TES are studied, one with a cold TES storage of $390~^{\circ}$C the other with a temperature of $440~^{\circ}$C. A~noteworthy difference for this cycle is the C2S approach temperature is not set to $10~^{\circ}$C. Defining the approach temperature as $10~^{\circ}$C causes the energy balance governing combiner 2 to be over constrained. Therefore, this value is free and calculated to be $35~^{\circ}$C for the $390~^{\circ}$C case and $26.3~^{\circ}$C for the $440~^{\circ}$C case. Both of these different temperature cold TES studies do not change the cycle parameters because, as~seen in C-1HTR1T-ON and C-2HTR3T-ON, the~solar salt mass flow rate adjusts to accommodate for the temperature difference. The~higher cold TES temperature of $440~^{\circ}$C causes the mass flow rate in the CSP to increase by approximately 650 kg/s. Increasing the mass flow rate has a higher demand on system components but in this situation it allows for the salt to be charged at a higher rate, increasing the storage capabilities. Both cycles have a heat storage efficiency of \hl{45.3}\%.
 
 \subsubsection{C-LFR-CIRC}
 
 C-LFR-CIRC is a thermal energy storage charging technique which does not suffer from significant losses associated with turbines, compressors, and~heat exchangers. The~separate recirculation cycle is modeled extracting heat directly from the LFR, passes the high-temperature mass flow through a circulator, exchanges the heat into the hot TES through C2S, then removes heat in a chiller to bring the temperature of the flow down to the inlet temperature of the LFR, ideally $400~^{\circ}$C. This is the most adoptable TES charging technique with a wide range of possible TES charging temperatures while transferring a majority of the heat from the LFR into the hot TES. Multiple temperatures for the cold TES are studied; $390~^{\circ}$C, $410~^{\circ}$C, and~$440~^{\circ}$C. Of~these three temperatures, the~highest efficiency is a cold TES temperature of $390^{\circ}$ with a heat storage efficiency of 100\% (not accounting for pressure drop losses, which will be small). The~heat storage efficiency reduces as the temperature of the cold TES is increased; the $410~^{\circ}$C case has an efficiency of 90\% while the $440~^{\circ}$C case has an efficiency of 74\%. This reduction in efficiency is due to the inlet temperature condition on the LFR, the~higher the temperature of the cold TES the higher the temperature of the C2S outlet and therefore more heat is being extracted through the chiller to bring the flow temperature down to the LFR inlet~temperature. 
 
-There is an interaction between the temperatures selected here and the non-charging cycle configuration. For~C-LFR-CIRC, the~highest efficiencies are achieved when the cold TES temperature is $10~^{\circ}$C less than the inlet to the LFR, this is due to the approach temperature on the C2S heat exchanger. If~the sCO$_2$ LFR inlet temperature is constrained to $400~^{\circ}$C, then the desired cold TES temperature is $390~^{\circ}$C to allow for the apporach temperature. If~the cold TES is at a higher temperature, then the chiller is needed. This then implies that the sCO$_2$ inlet temperature in the salt-to-sCO$_2$ heat exchanger is  $380~^{\circ}$C. From~the results of the previous section, this is clearly achievable for the C-2HTR3T-ON configuration and the separate cycle configuration, but~for the C-1HTR1T-ON configuration the LFR and CSP inlet temperatures are constrained to be the same. In~this case, the~LFR and CSP inlet temperatures would then be $400~^{\circ}$C, implying a cold TES temperature of  $410~^{\circ}$C and hence a 90\% heat storage efficiency with a requirement for a~chiller.
+There is an interaction between the temperatures selected here and the non-charging cycle configuration. For~C-LFR-CIRC, the~highest efficiencies are achieved when the cold TES temperature is $10~^{\circ}$C less than the inlet to the LFR, this is due to the approach temperature on the C2S heat exchanger. If~the sCO$_2$ LFR inlet temperature is constrained to $400~^{\circ}$C, then the desired cold TES temperature is $390~^{\circ}$C to allow for the approach temperature. If~the cold TES is at a higher temperature, then the chiller is needed. This then implies that the sCO$_2$ inlet temperature in the salt-to-sCO$_2$ heat exchanger is  $380~^{\circ}$C. From~the results of the previous section, this is clearly achievable for the C-2HTR3T-ON configuration and the separate cycle configuration, but~for the C-1HTR1T-ON configuration the LFR and CSP inlet temperatures are constrained to be the same. In~this case, the~LFR and CSP inlet temperatures would then be $400~^{\circ}$C, implying a cold TES temperature of  $410~^{\circ}$C and hence a 90\% heat storage efficiency with a requirement for a~chiller.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -882,7 +886,7 @@ This paper analyzed contending sCO$_2$ Brayton cycle configurations for complime
     \item   C-LFR-CIRC: Flexible technique with a heat storage efficiency being highly dependent on cold TES temperature and LFR inlet temperature. Able to achieve heat storage efficiency to near 100\% by eliminating losses associated with the turbines and compressors. For~C-1HTR1T-ON, the~heat storage efficiency is limit to 90\% because the inlet temperatures to the LFR and CSP are constrained to be the same. The~additional chiller and circulator components in the dedicated circulation loop increase complexity and cost. 
 \end{itemize}
 
-C-LFR-PAR and C-LFR-CIRC are therefore options going forward, with~a trade-off between heat storage efficiency and component costs, with~the performance of C-LFR-CIRC also depending on the choise of charging~configuration.
+C-LFR-PAR and C-LFR-CIRC are therefore options going forward, with~a trade-off between heat storage efficiency and component costs, with~the performance of C-LFR-CIRC also depending on the choice of charging~configuration.
 
 The cycle configurations with the listed conclusions can be used as reference for future cycle design and proof of concept considerations. Further studies and cycle analysis must be performed before these cycles are used for implementation into a physical plant. 
 \vspace{6pt} 
@@ -891,9 +895,9 @@ The cycle configurations with the listed conclusions can be used as reference fo
 
 \funding{This work was supported by funding received from the DOE Office of Nuclear Energy’s Nuclear Energy University Program under contract number~DE-NE0008988. }
 
- \institutionalreview{\hl{x}}%In this section, please add the Institutional Review Board Statement and approval number for studies involving humans or animals. Please note that the Editorial Office might ask you for further information. Please add ``The study was conducted according to the guidelines of the Declaration of Helsinki, and~approved by the Institutional Review Board (or Ethics Committee) of NAME OF INSTITUTE (protocol code XXX and date of approval).'' OR ``Ethical review and approval were waived for this study, due to REASON (please provide a detailed justification).'' OR ``Not applicable'' for studies not involving humans or animals. You might also choose to exclude this statement if the study did not involve humans or~animals.
+% \institutionalreview{\hl{x}}%In this section, please add the Institutional Review Board Statement and approval number for studies involving humans or animals. Please note that the Editorial Office might ask you for further information. Please add ``The study was conducted according to the guidelines of the Declaration of Helsinki, and~approved by the Institutional Review Board (or Ethics Committee) of NAME OF INSTITUTE (protocol code XXX and date of approval).'' OR ``Ethical review and approval were waived for this study, due to REASON (please provide a detailed justification).'' OR ``Not applicable'' for studies not involving humans or animals. You might also choose to exclude this statement if the study did not involve humans or~animals.
 
- \informedconsent{\hl{x}}%Any research article describing a study involving humans should contain this statement. Please add ``Informed consent was obtained from all subjects involved in the study.'' OR ``Patient consent was waived due to REASON (please provide a detailed justification).'' OR ``Not applicable'' for studies not involving humans. You might also choose to exclude this statement if the study did not involve~humans.
+ %\informedconsent{\hl{x}}%Any research article describing a study involving humans should contain this statement. Please add ``Informed consent was obtained from all subjects involved in the study.'' OR ``Patient consent was waived due to REASON (please provide a detailed justification).'' OR ``Not applicable'' for studies not involving humans. You might also choose to exclude this statement if the study did not involve~humans.
 
 % Written informed consent for publication must be obtained from participating patients who can be identified (including by the patients themselves). Please state ``Written informed consent has been obtained from the patient(s) to publish this paper'' if applicable.
 
@@ -947,7 +951,7 @@ $\dot{m}$ & Mass flow rate [kg/s]\\
 $NTU$ & Number of transfer units [-]\\
 $P$ & Pressure [MPa]\\
 $\dot{Q}$ & Heat transfer rate [W]\\
-$T$ & Temperature []$~^{\circ}$C]\\
+$T$ & Temperature [$~^{\circ}$C]\\
 $UA$ & Conductivity of heat exchanger [MW/$~^{\circ}$C]\\
 $v$ & Volumetric flow rate [$m^3$/kg]\\
 $\dot{W}$ & Power [MW]\\
