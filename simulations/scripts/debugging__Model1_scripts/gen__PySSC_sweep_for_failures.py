@@ -91,7 +91,7 @@ op_modes_list = tmp_modes.operating_modes
 # =============================================================================
 sscH = 24  # 12 # 24
 pyoH = 48  # 24 # 48
-json = "model1_CAISO" # model1_CAISO # model1 # model1_noMin
+json = "model1_Hamilton_560_dfe" # model1_CAISO # model1 # model1_noMin # model1_Hamilton_560
 dispatch = False # True # False
 run_loop = False
 
@@ -271,7 +271,7 @@ Storage['pyomo_bad_idx_log']  = pyomo_bad_idx_log
 
 # locating output directory
 output_dir = FileMethods.output_dir
-filename = 'failureModes_{0}__2021_11__pyomo_{1:.0f}__horizon_{2:.0f}_{3:.0f}__TES_[{4},{5}]__PC_[{6},{7}].nuctes'.format(
+filename = 'failureModes__{0}__2021_11__pyomo_{1:.0f}__horizon_{2:.0f}_{3:.0f}__TES_[{4},{5}]__PC_[{6},{7}].nuctes'.format(
                 json, dispatch, sscH, pyoH, tshours.min(), tshours.max(), p_cycle.min(), p_cycle.max() )
 
 NTPath = os.path.join(output_dir, filename)

@@ -40,8 +40,10 @@ print("PID = ", pid)
 # setting up arrays to cycle through
 tshours    = np.array([ 0, 2, 4, 6, 8, 10, 12, 14 ])
 # p_cycle    = np.array([ 850, 800, 750, 700, 650, 600, 550, 500, 450, 400, 350, 300, 250, 200, 150, 100 ]) 
-p_cycle    = np.array([ 500, 450, 400, 350, 300, 250, 200, 150, 100 ]) 
+# p_cycle    = np.array([ 500, 450, 400, 350, 300, 250, 200, 150, 100 ]) 
 # p_cycle    = np.array([ 850, 800, 750, 700, 650, 600, 550 ]) 
+
+p_cycle    = np.array([ 850, 800, 750, 700, 650, 600, 550, 500, 450, 400, 350, 300 ]) 
 
 # exceptions!
 # exceptions = {
@@ -70,10 +72,13 @@ empty2D = np.zeros([  len(iterator1) , len(iterator2), 2 ])
 defocus   = empty2D.copy()
 gen       = empty2D.copy()
 qdot_nuc  = empty2D.copy()
+revenue   = empty.copy()
 TES_CH    = empty.copy()
 TES_DC    = empty.copy()
 iter_log  = empty.copy()
-fail_log  = empty.copy() # 0 = No failure, 1 = SSC caused failure, 2 = Pyomo caused failure, 3 = Pyomo crash occurred, but sim continued, 4 = SSC low mass flow error
+fail_log  = empty.copy() # 0 = No failure, 1 = SSC caused failure, 
+                         # 2 = Pyomo caused failure, 3 = Pyomo crash occurred
+                         # 4 = SSC low mass flow error, 5 = 
 pyomo_bad_log     = empty.copy()
 pyomo_bad_idx_log = empty.copy()
 
@@ -93,7 +98,7 @@ op_modes_list = tmp_modes.operating_modes
 # =============================================================================
 sscH = 24  # 12 # 24
 pyoH = 48  # 24 # 48
-json = "model1_CAISO" # model1_CAISO # model1 # model1_noMin
+json = "model1" # model1_CAISO # model1 # model1_noMin # model1_HODR # model1_Hamilton_560_dfe
 dispatch = True # True # False
 run_loop = True
 
@@ -232,6 +237,8 @@ for i, th in enumerate(iterator1): #over tshours
                 qdot_nuc[stdv_idx]  = np.std( outputs.q_dot_nuc_in.m )
                 defocus[stdv_idx]   = np.std( outputs.defocus )
                 
+                revenue[idx] = np.sum(outputs.gen.to('kW').m * outputs.price )
+                
                 del outputs, op_mode_array, op_mode_str_profile
             
             # =========================================
@@ -252,6 +259,8 @@ for i, th in enumerate(iterator1): #over tshours
                 if hasattr(nuctes,'err_message'):
                     if 'Mass flow rate too low' in nuctes.err_message:
                         fail_log[idx] = 4
+                    elif 'stuck' in nuctes.err_message:
+                        fail_log[idx] = 5
                     
                 
                 dummy_val = -1
@@ -307,6 +316,7 @@ Storage['iter_log']   = iter_log
 Storage['fail_log']   = fail_log
 Storage['pyomo_bad_log']      = pyomo_bad_log
 Storage['pyomo_bad_idx_log']  = pyomo_bad_idx_log
+Storage['revenue'] = revenue
 
 # locating output directory
 output_dir = FileMethods.output_dir
