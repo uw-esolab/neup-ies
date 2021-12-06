@@ -27,7 +27,7 @@ class NuclearTES(GenericSSCModule):
     """
     
     def __init__(self, plant_name="nuclear_tes", json_name="model1", is_dispatch=False,
-                 log_dispatch_targets=False):
+                 log_dispatch_targets=False, **specs):
         """ Initializes the NuclearTES module
         
         Args:
@@ -43,7 +43,7 @@ class NuclearTES(GenericSSCModule):
         """
         
         # initialize Generic module, csv data arrays should be saved here
-        GenericSSCModule.__init__( self, plant_name, json_name, is_dispatch, log_dispatch_targets=log_dispatch_targets )
+        GenericSSCModule.__init__( self, plant_name, json_name, is_dispatch, log_dispatch_targets=log_dispatch_targets, **specs)
         
         # define specific PySAM module to be called later
         self.PySAM_Module = NuclearTes

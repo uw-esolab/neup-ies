@@ -469,11 +469,12 @@ class GenericSSCModule(ABC):
             # one pre-run of Plant, used to grab inputs to dispatch in some modules
             prePlant = self.duplicate_Plant( self.Plant )
             
+            print("Attempting to run full simulation to gather predictions for Pyomo")
             # runs for the full simulation to gather some SSC-specific array calculations
             ssc_run_success, prePlant = self.run_Plant_through_SSC(
                                                 prePlant, time_start , self.sim_time_end 
                                                 )
-            print("Attempting to run full simulation to gather predictions for Pyomo:  {0}".format(
+            print("First pre-run attempt:  {0}".format(
                             "success!" if ssc_run_success else "failed :("))
             
             # create dispatch parameters for the first time
