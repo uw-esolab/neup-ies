@@ -395,8 +395,8 @@ class GeneralDispatch(ABC):
         def cycle_shutdown_rule(model, t):
             """ PC shutdown only after operating or standby """
             if t == 1:
-                return model.ycsd[t] >= model.y0 - model.y[t] + model.ycsb0 - model.ycsb[t]
-            return model.ycsd[t] >= model.y[t-1] - model.y[t] + model.ycsb[t-1] - model.ycsb[t]
+                return 0 >= model.y0 - model.y[t] + model.ycsb0 - model.ycsb[t]
+            return model.ycsd[t-1] >= model.y[t-1] - model.y[t] + model.ycsb[t-1] - model.ycsb[t]
         def cycle_start_pen_rule(model, t):
             """ PC cold startup penalty """
             if t == 1: 

@@ -111,8 +111,7 @@ class OutputExtraction(object):
         
         # Dispatch Model with results
         dm = self.dm
-        u = self.u
-        
+
         # lambda functions
         extract_from_model = lambda name: getattr(dm.model, name)
         extract_array      = lambda name: np.array([ pe.value(extract_from_model(name)[t]) for t in dm.model.T ])
