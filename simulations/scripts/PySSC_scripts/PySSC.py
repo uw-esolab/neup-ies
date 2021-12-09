@@ -9,7 +9,7 @@ class PySSC:
         if is_debug:
             self.ssc_dir = self.parent_dir + '/build_debug/ssc/ssc/libsscd.so' # the file can sometimes be named 'sscd.so'
         else:
-            self.ssc_dir = self.parent_dir + '/build_ssc_export/ssc/libssc.so' # the file can sometimes be named 'sscd.so'
+            self.ssc_dir = self.parent_dir + '/build_ssc_release/ssc/libssc.so' # the file can sometimes be named 'sscd.so'
         self.pdll = CDLL(self.ssc_dir)   
 
     INVALID=0
