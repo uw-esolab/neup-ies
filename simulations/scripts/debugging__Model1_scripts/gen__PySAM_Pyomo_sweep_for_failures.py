@@ -41,9 +41,10 @@ print("PID = ", pid)
 tshours    = np.array([ 0, 2, 4, 6, 8, 10, 12, 14 ])
 # p_cycle    = np.array([ 850, 800, 750, 700, 650, 600, 550, 500, 450, 400, 350, 300, 250, 200, 150, 100 ]) 
 # p_cycle    = np.array([ 500, 450, 400, 350, 300, 250, 200, 150, 100 ]) 
+p_cycle    = np.array([ 500, 450, 400, 350, 300, 250, 200 ]) 
 # p_cycle    = np.array([ 850, 800, 750, 700, 650, 600, 550 ]) 
 
-p_cycle    = np.array([ 850, 800, 750, 700, 650, 600, 550, 500, 450, 400, 350, 300 ]) 
+# p_cycle    = np.array([ 850, 800, 750, 700, 650, 600, 550, 500, 450, 400, 350, 300 ]) 
 
 # exceptions!
 # exceptions = {
@@ -98,7 +99,7 @@ op_modes_list = tmp_modes.operating_modes
 # =============================================================================
 sscH = 24  # 12 # 24
 pyoH = 48  # 24 # 48
-json = "model1" # model1_CAISO # model1 # model1_noMin # model1_HODR # model1_Hamilton_560_dfe
+json = "model1_CAISO" # model1_CAISO # model1 # model1_noMin # model1_HODR # model1_Hamilton_560_dfe
 dispatch = True # True # False
 run_loop = True
 
@@ -320,7 +321,7 @@ Storage['revenue'] = revenue
 
 # locating output directory
 output_dir = FileMethods.output_dir
-filename = 'failureModes_PySAM__{0}_2021_11__pyomo_{1:.0f}__horizon_{2:.0f}_{3:.0f}__TES_[{4},{5}]__PC_[{6},{7}].nuctes'.format(
+filename = 'failureModes_PySAM__{0}__2021_12__pyomo_{1:.0f}__horizon_{2:.0f}_{3:.0f}__TES_[{4},{5}]__PC_[{6},{7}].nuctes'.format(
                 json, dispatch, sscH, pyoH, tshours.min(), tshours.max(), p_cycle.min(), p_cycle.max() )
 
 NTPath = os.path.join(output_dir, filename)
