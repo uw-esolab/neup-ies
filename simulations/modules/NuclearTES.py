@@ -238,6 +238,8 @@ class NuclearTES(GenericSSCModule):
                 'q_dot_rec_inc_log': 'q_dot_nuc_inc',    # Nuclear incident thermal power
                 'q_pb_log':          'q_pb',             # PC input energy
                 'q_dot_pc_su_log' :  'q_dot_pc_startup', # PC startup thermal power
+                'q_dc_tes' :         'q_dc_tes',         # TES discharge thermal power
+                'q_ch_tes' :         'q_ch_tes',         # TES charge thermal power
                 'm_dot_pc_log' :     'm_dot_pc',         # PC HTF mass flow rate
                 'm_dot_rec_log'  :   'm_dot_nuc',        # Nuc mass flow rate
                 'T_pc_in_log' :      'T_pc_in',          # PC HTF inlet temperature 
