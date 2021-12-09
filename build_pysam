@@ -75,6 +75,7 @@ if [ $# -eq 0 ] ; then
     git checkout $1
 fi
 
+
 #====================================================#
 #---- cloning sam ------------------------------------
 cd $DEVDIR
@@ -90,33 +91,33 @@ git clone https://github.com/NREL/pysam.git
 #====================================================#
 #---- build modified ssc -----------------------------
 cd $DEVDIR
-mkdir build_ssc_export
-cd build_ssc_export
+mkdir build_ssc_release
+cd build_ssc_release
 
 # making SSC in Export mode, skipping tests
-cmake ${SSCDIR} -G "CodeLite - Unix Makefiles" -DCMAKE_BUILD_TYPE=Release -DSAM_SKIP_TOOLS=1 -DSAMAPI_EXPORT=1 -DSAM_SKIP_TESTS=1 ../ssc/
+cmake ${SSCDIR} -G "CodeLite - Unix Makefiles" -DCMAKE_BUILD_TYPE=Release -DSAM_SKIP_TOOLS=0 -DSAMAPI_EXPORT=1 -DSAM_SKIP_TESTS=1 ../ssc/
 make -j8
 
 #====================================================#
 #---- build SAM --------------------------------------
 cd $DEVDIR
-mkdir build_sam_export
-cd build_sam_export
+mkdir build_sam_release
+cd build_sam_release
 
 # making sure that LIB environment variables are updated to true path
-export SSCE_LIB=$DEVDIR/build_ssc_export/ssc
-export SSC_LIB=$DEVDIR/build_ssc_export/ssc
+export SSCE_LIB=$DEVDIR/build_ssc_release/ssc
+export SSC_LIB=$DEVDIR/build_ssc_release/ssc
 
 # I apologize for this line of code, its better than forking the SAM repository just for one line
 # updating 'ssc.so' to 'libssc.so'
 sed -i '146s/.*/            NAMES ssc.dylib ssc.lib libssc.so/' $DEVDIR/sam/api/api_autogen/CMakeLists.txt
 
 # make SAM in Export mode, this one breaks... For some reason it doesnt read the correct SAM_API scripts?
-cmake ${SAMNTDIR}/api -G "CodeLite - Unix Makefiles" -DCMAKE_BUILD_TYPE=Export -DSAMAPI_EXPORT=1 -DSAM_SKIP_AUTOGEN=0 ../sam/api
+cmake ${SAMNTDIR}/api -G "CodeLite - Unix Makefiles" -DCMAKE_BUILD_TYPE=Release -DSAMAPI_EXPORT=1 -DSAM_SKIP_AUTOGEN=0 ../sam/api
 make -j8
 
 # not a typo... for some reason have to do this twice. Only then will it read the correct modules
-cmake ${SAMNTDIR}/api -G "CodeLite - Unix Makefiles" -DCMAKE_BUILD_TYPE=Export -DSAMAPI_EXPORT=1 -DSAM_SKIP_AUTOGEN=0 ../sam/api
+cmake ${SAMNTDIR}/api -G "CodeLite - Unix Makefiles" -DCMAKE_BUILD_TYPE=Release -DSAMAPI_EXPORT=1 -DSAM_SKIP_AUTOGEN=0 ../sam/api
 make -j8
 
 #====================================================#
