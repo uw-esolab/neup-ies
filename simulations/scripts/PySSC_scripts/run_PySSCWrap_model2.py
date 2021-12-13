@@ -7,7 +7,7 @@ Created on Fri Sep  3 09:56:04 2021
 """
 
 from util.PySSCWrapper import PySSCWrapper
-import os
+import os, sys
 
 # print the PID of this script run
 pid = os.getpid()
