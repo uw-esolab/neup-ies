@@ -79,7 +79,7 @@
         "f_nuc_min" :     0.15,
         "eta_nuc_pump" :     0.84999999999999998,
         "time_start" :            0,
-        "time_stop" :             86400,
+        "time_stop" :             31536000,
         "is_dispatch" :           0,
         "ppa_multiplier_model" :  1,
         "gross_net_conversion_factor" :  0.90000000000000002,
