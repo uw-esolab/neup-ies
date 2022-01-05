@@ -82,6 +82,35 @@ class DualPlantDispatch(NuclearDispatch):
         SolarDispatch.generate_params(self, skip_parent=True)
 
 
+    def add_objective(self):
+        """ Method to add an objective function to the Pyomo Solar Model
+        
+        This method adds an objective function to the Pyomo Solar Dispatch
+        model. Typically, the LORE team defined a nested function and passes it
+        into the Pyomo model. 
+        """
+        def objectiveRule(model):
+            """ Maximize profits vs. costs """
+            return (
+                    sum( model.D[t] * 
+                    #obj_profit
+                    model.Delta[t]*model.P[t]*0.1*(model.wdot_s[t] - model.wdot_p[t])
+                    #obj_cost_cycle_su_hs_sd
+                    - (model.Ccsu*model.ycsup[t] + 0.1*model.Cchsp*model.ychsp[t] + model.alpha*model.ycsd[t])
+                    #obj_cost_cycle_ramping
+                    - (model.C_delta_w*(model.wdot_delta_plus[t]+model.wdot_delta_minus[t])+model.C_v_w*(model.wdot_v_plus[t] + model.wdot_v_minus[t]))
+                    #obj_cost_rec_su_hs_sd
+                    - (model.Crsu*model.yrsup[t] + model.Crhsp*model.yrhsp[t] + model.alpha*model.yrsd[t])
+                    #obj_cost_rec_su_hs_sd
+                    - (model.Cnsu*model.ynsup[t] + model.Cnhsp*model.yrhsp[t] + model.alpha*model.ynsd[t])
+                    #obj_cost_ops
+                    - model.Delta[t]*(model.Cpc*model.wdot[t] + model.Ccsb*model.Qb*model.ycsb[t] + model.Crec*model.xr[t] + model.Cnuc*model.xn[t] )
+                    for t in model.T) 
+                    )
+        
+        self.model.OBJ = pe.Objective(rule=objectiveRule, sense = pe.maximize)
+        
+        
     def addTESEnergyBalanceConstraints(self):
         """ Method to add TES constraints to the Pyomo Solar Model
         
