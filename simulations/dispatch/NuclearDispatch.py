@@ -45,7 +45,7 @@ class NuclearDispatch(GeneralDispatch):
         GeneralDispatch.__init__( self, params, unitRegistry )
 
 
-    def generate_params(self, params):
+    def generate_params(self, params, skip_parent=False):
         """ Method to generate parameters within Pyomo Nuclear Model
         
         This method reads in a dictionary of pyomo parameters and uses these
@@ -63,7 +63,8 @@ class NuclearDispatch(GeneralDispatch):
         """
         
         # generating GeneralDispatch parameters first (PowerCycle, etc.)
-        GeneralDispatch.generate_params(self, params)
+        if not skip_parent:
+            GeneralDispatch.generate_params(self, params)
         
         # lambdas to convert units and data to proper syntax
         gd = self.gd
@@ -96,7 +97,7 @@ class NuclearDispatch(GeneralDispatch):
         self.model.ynsu0 = pe.Param(mutable=True, initialize=gd("ynsu0"), units=gu("ynsu0"))  #y^{nsu}_0: 1 if nuclear is in starting up initially, 0 otherwise [az] this is new.
         
 
-    def generate_variables(self):
+    def generate_variables(self, skip_parent=False):
         """ Method to generate parameters within Pyomo Nuclear Model
         
         This method instantiates variables for the Pyomo Concrete Model, with
@@ -106,7 +107,8 @@ class NuclearDispatch(GeneralDispatch):
         """
         
         # generating GeneralDispatch variables first (PowerCycle, etc.)
-        GeneralDispatch.generate_variables(self)
+        if not skip_parent:
+            GeneralDispatch.generate_variables(self)
         
         u = self.u_pyomo
         ### Decision Variables ###
