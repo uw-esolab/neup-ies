@@ -162,7 +162,7 @@ class SolarTES(NuclearTES):
         #    name of NE2 variable || name of SSC module variable
                 'time_log':          'time_hr',          # logging time
                 'gen_log':           'gen',              # electricity generation log
-                'q_thermal_log':     'Q_thermal',        # thermal power from nuclear to HTF 
+                'q_thermal_log':     'Q_thermal',        # thermal power from rec to HTF 
                 'p_cycle_log' :      'P_cycle',          # PC electrical power output (gross)
                 'q_dot_rec_inc_log': 'q_dot_rec_inc',    # Receiver incident thermal power
                 'q_pb_log':          'q_pb',             # PC input energy
@@ -173,8 +173,8 @@ class SolarTES(NuclearTES):
                 'T_pc_out_log'   :   'T_pc_out',         # PC HTF outlet temperature
                 'T_tes_cold_log':    'T_tes_cold',       # TES cold temperature
                 'T_tes_hot_log'  :   'T_tes_hot',        # TES hot temperature
-                'T_rec_in_log':      'T_rec_in',         # Plant inlet temperature
-                'T_rec_out_log'  :   'T_rec_out',        # Plant outlet temperature
+                'T_rec_in_log':      'T_rec_in',         # Receiver HTF inlet temperature
+                'T_rec_out_log'  :   'T_rec_out',        # Receiver HTF outlet temperature
                 'T_cond_out_log':    'T_cond_out',       # PC condenser water outlet temperature
                 'e_ch_tes_log'  :    'e_ch_tes',         # TES charge state
                 'op_mode_1_log' :    'op_mode_1',        # Operating Mode
