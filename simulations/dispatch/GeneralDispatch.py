@@ -134,6 +134,7 @@ class GeneralDispatch(ABC):
         self.model.Ccsb = pe.Param(mutable=True, initialize=gd("Ccsb"), units=gu("Ccsb"))              #C^{csb}: Operating cost of power cycle standby operation [\$/kWt$\cdot$h]
         
         ### Initial Condition Parameters ###
+        self.model.s0 = pe.Param(mutable=True, initialize=gd("s0"), units=gu("s0"))           #s_0: Initial TES reserve quantity  [kWt$\cdot$h]
         self.model.ucsu0 = pe.Param(mutable=True, initialize=gd("ucsu0"), units=gu("ucsu0")) #u^{csu}_0: Initial cycle start-up energy inventory  [kWt$\cdot$h]
         self.model.wdot0 = pe.Param(mutable=True, initialize=gd("wdot0"), units=gu("wdot0")) #\dot{w}_0: Initial power cycle electricity generation [kW]e
         self.model.y0 = pe.Param(mutable=True, initialize=gd("y0"), units=gu("y0"))          #y_0: 1 if cycle is generating electric power initially, 0 otherwise
@@ -159,6 +160,7 @@ class GeneralDispatch(ABC):
         u = self.u_pyomo
         ### Decision Variables ###
         #------- Variables ---------
+        self.model.s = pe.Var(self.model.T, domain=pe.NonNegativeReals, bounds = (0,self.model.Eu), units=u.kWh)    #s: TES reserve quantity at period $t$  [kWt$\cdot$h]
         self.model.ucsu = pe.Var(self.model.T, domain=pe.NonNegativeReals, units=u.kWh)                             #u^{csu}: Cycle start-up energy inventory at period $t$ [kWt$\cdot$h]
         self.model.wdot = pe.Var(self.model.T, domain=pe.NonNegativeReals, units=u.kW)                              #\dot{w}: Power cycle electricity generation at period $t$ [kWe]
         self.model.wdot_delta_plus = pe.Var(self.model.T, domain=pe.NonNegativeReals, units=u.kW/u.hr)	                #\dot{w}^{\Delta+}: Power cycle ramp-up in period $t$ [kWe/hr]
