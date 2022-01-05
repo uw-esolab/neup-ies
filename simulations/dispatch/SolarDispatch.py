@@ -335,12 +335,15 @@ class SolarDispatch(GeneralDispatch):
         """
         
         # generating GeneralDispatch constraints first (PowerCycle, etc.)
-        GeneralDispatch.generate_constraints(self)
+        if not skip_parent:
+            # call general PC constraints
+            GeneralDispatch.generate_constraints(self)
+            # call TES energy balance constraints specific to current dispatch model
+            self.addTESEnergyBalanceConstraints()
         
         self.addReceiverStartupConstraints()
         self.addReceiverSupplyAndDemandConstraints()
         self.addReceiverNodeLogicConstraints()
-        self.addTESEnergyBalanceConstraints()
 
 
 # =============================================================================

@@ -118,7 +118,7 @@ class NuclearDispatch(GeneralDispatch):
         self.model.xnsu = pe.Var(self.model.T, domain=pe.NonNegativeReals, units=u.kW)      #x^{nsu}: Nuclear start-up power consumption at period $t$ [kWt]
         
         #------- Binary Variables ---------
-        self.model.yn = pe.Var(self.model.T, domain=pe.Binary)        #y^r: 1 if nuclear is generating ``usable'' thermal power at period $t$; 0 otherwise
+        self.model.yn = pe.Var(self.model.T, domain=pe.Binary)        #y^n: 1 if nuclear is generating ``usable'' thermal power at period $t$; 0 otherwise
         self.model.ynhsp = pe.Var(self.model.T, domain=pe.Binary)	  #y^{nhsp}: 1 if nuclear hot start-up penalty is incurred at period $t$ (from standby); 0 otherwise
         self.model.ynsb = pe.Var(self.model.T, domain=pe.Binary)	  #y^{nsb}: 1 if nuclear is in standby mode at period $t$; 0 otherwise
         self.model.ynsd = pe.Var(self.model.T, domain=pe.Binary)	  #y^{nsd}: 1 if nuclear is shut down at period $t$; 0 otherwise
@@ -329,7 +329,7 @@ class NuclearDispatch(GeneralDispatch):
         self.model.grid_sun_con = pe.Constraint(self.model.T,rule=grid_sun_rule)
 
 
-    def generate_constraints(self):
+    def generate_constraints(self, skip_parent=False):
         """ Method to add ALL constraints to the Pyomo Nuclear Model
         
         This method calls the previously defined constraint methods to instantiate
@@ -339,12 +339,16 @@ class NuclearDispatch(GeneralDispatch):
         """
         
         # generating GeneralDispatch constraints first (PowerCycle, etc.)
-        GeneralDispatch.generate_constraints(self)
+        if not skip_parent:
+            # call general PC constraints
+            GeneralDispatch.generate_constraints(self)
+            # call TES energy balance constraints specific to current dispatch model
+            self.addTESEnergyBalanceConstraints()
         
         self.addNuclearStartupConstraints()
         self.addNuclearSupplyAndDemandConstraints()
         self.addNuclearNodeLogicConstraints()
-        self.addTESEnergyBalanceConstraints()
+        
 
     
 # =============================================================================
