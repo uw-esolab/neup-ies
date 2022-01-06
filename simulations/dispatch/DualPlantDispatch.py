@@ -181,3 +181,49 @@ class DualPlantDispatch(NuclearDispatch):
         # generating NuclearDispatch constraints first (PowerCycle, etc.)
         NuclearDispatch.generate_constraints(self)
         SolarDispatch.generate_constraints(self, skip_parent=True)
+
+
+# =============================================================================
+# Dispatch Wrapper
+# =============================================================================
+
+class DualPlantDispatchParamWrap(NuclearDispatchParamWrap):
+    """
+    The DualPlantDispatchParamWrap class is meant to be the staging area for the 
+    creation of Parameters ONLY for the DualPlantDispatch class. It communicates 
+    with the NE2 modules, receiving SSC and PySAM input dictionaries to calculate 
+    both static parameters used for every simulation segment AND initial conditions 
+    that can be updated.
+    """
+
+    def __init__(self, unit_registry, SSC_dict=None, PySAM_dict=None, pyomo_horizon=48, 
+                   dispatch_time_step=1):
+        """ Initializes the NuclearDispatchParamWrap module
+        
+        Inputs:
+            unitRegistry (pint.registry)   : unique unit Pint unit registry
+            SSC_dict (dict)                : dictionary of SSC inputs needed to run modules
+            PySAM_dict (dict)              : dictionary of PySAM inputs + file names
+            pyomo_horizon (int Quant)      : length of Pyomo simulation segment (hours)
+            dispatch_time_step (int Quant) : length of each Pyomo time step (hours)
+        """
+        
+        NuclearDispatchParamWrap.__init__( self, unit_registry, SSC_dict, PySAM_dict, 
+                            pyomo_horizon, dispatch_time_step )
+
+
+    def set_design(self, skip_parent=False):
+        """ Method to calculate and save design point values of Plant operation
+        
+        This method extracts values and calculates for design point parameters 
+        of our Plant (e.g., nuclear thermal power output, power cycle efficiency,
+        inlet and outlet temperatures, etc.). 
+        """
+        
+        NuclearDispatchParamWrap.set_design(self)
+        SolarDispatchParamWrap.set_design(self, skip_parent=True)
+        
+        
+        
+        
+        

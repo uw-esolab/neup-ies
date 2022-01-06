@@ -380,7 +380,7 @@ class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
                             pyomo_horizon, dispatch_time_step )
 
 
-    def set_design(self):
+    def set_design(self, skip_parent=False):
         """ Method to calculate and save design point values of Plant operation
         
         This method extracts values and calculates for design point parameters 
@@ -390,7 +390,8 @@ class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
         
         u = self.u
         
-        GeneralDispatchParamWrap.set_design(self)
+        if not skip_parent:
+            GeneralDispatchParamWrap.set_design(self)
 
         # nuclear parameters
         self.q_nuc_design = self.SSC_dict['q_dot_nuclear_des'] * u.MW      # nuclear design thermal power

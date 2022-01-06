@@ -375,7 +375,7 @@ class SolarDispatchParamWrap(GeneralDispatchParamWrap):
                             pyomo_horizon, dispatch_time_step )
 
 
-    def set_design(self):
+    def set_design(self, skip_parent=False):
         """ Method to calculate and save design point values of Plant operation
         
         This method extracts values and calculates for design point parameters 
@@ -385,7 +385,8 @@ class SolarDispatchParamWrap(GeneralDispatchParamWrap):
         
         u = self.u
         
-        GeneralDispatchParamWrap.set_design(self)
+        if not skip_parent:
+            GeneralDispatchParamWrap.set_design(self)
         
         # specific heat values at design point
         T_htf  = 0.5*(self.T_htf_hot + self.T_htf_cold)
