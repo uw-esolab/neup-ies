@@ -13,6 +13,8 @@ import PySAM.NuclearMsptTes as NuclearMsptTes
 from modules.GenericSSCModule import GenericSSCModule
 from modules.NuclearTES import NuclearTES
 from modules.SolarTES import SolarTES
+from dispatch.DualPlantDispatch import DualPlantDispatch as DD
+from dispatch.DualPlantDispatch import DualPlantDispatchParamWrap as DDP
 
 class DualPlantTES(SolarTES): 
     """
@@ -41,6 +43,9 @@ class DualPlantTES(SolarTES):
         
         # define specific PySAM module to be called later
         self.PySAM_Module = NuclearMsptTes
+
+        # define specific Dispatch module to be called later
+        self.Dispatch_Module = DD
 
 
     def update_Plant_after_SSC(self):
@@ -146,3 +151,29 @@ class DualPlantTES(SolarTES):
                    'q_pc_target_on_in'    : empty_array.copy(),
                    'q_pc_max_in'          : empty_array.copy()
                    }
+
+
+    def create_dispatch_wrapper(self, PySAM_dict):
+        """ Creating a wrapper object for calling a class that creates dispatch parameters
+        
+        ** self.is_dispatch == True 
+        (Called in __init__ of NE2 module)
+        
+        This method creates an object whose class ultimately calculates and creates 
+        parameters for Dispatch optimization. The reason this class exists separately
+        is that it gets overlaoded based on the PySAM module we are running. Depending on
+        the PySAM module, this method calls on a different Dispatch Parameter class that 
+        is specific to the module.
+
+        Inputs:
+            PySAM_dict (dict)   : dictionary of PySAM inputs from a script in /json directory
+        Outputs:
+            dispatch_wrap (obj) : wrapper object for the class that creates dispatch parameters
+        """
+        
+        self.DispatchParameterClass = DDP
+        
+        dispatch_wrap = self.DispatchParameterClass( self.u, self.SSC_dict, PySAM_dict,
+                    self.pyomo_horizon, self.dispatch_time_step)
+        
+        return dispatch_wrap

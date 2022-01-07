@@ -208,6 +208,9 @@ class DualPlantDispatchParamWrap(NuclearDispatchParamWrap):
             dispatch_time_step (int Quant) : length of each Pyomo time step (hours)
         """
         
+        # here, we invoke the NuclearParamWrap init which calls on the General version
+        # within this call, the set_design() method is called which then calls upon both
+        #   the nuclear and solar versions
         NuclearDispatchParamWrap.__init__( self, unit_registry, SSC_dict, PySAM_dict, 
                             pyomo_horizon, dispatch_time_step )
 
@@ -221,7 +224,7 @@ class DualPlantDispatchParamWrap(NuclearDispatchParamWrap):
         """
         
         NuclearDispatchParamWrap.set_design(self)
-        SolarDispatchParamWrap.set_design(self, skip_parent=True)
+        SolarDispatchParamWrap.set_design(self, skip_parent=True) #some duplicates here, should be fine
         
         
         

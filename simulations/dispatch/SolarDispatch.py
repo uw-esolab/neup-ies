@@ -325,7 +325,7 @@ class SolarDispatch(GeneralDispatch):
         self.model.grid_sun_con = pe.Constraint(self.model.T,rule=grid_sun_rule)
         
 
-    def generate_constraints(self):
+    def generate_constraints(self, skip_parent=False):
         """ Method to add ALL constraints to the Pyomo Solar Model
         
         This method calls the previously defined constraint methods to instantiate

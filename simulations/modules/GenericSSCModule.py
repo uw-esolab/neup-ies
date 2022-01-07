@@ -137,7 +137,7 @@ class GenericSSCModule(ABC):
         self.create_Grid( )
         # update gen and annual energy so SystemOutput is consistent, carried over to SO object
         self.Grid.SystemOutput.gen = tuple(self.gen_log)
-        self.Grid.SystemOutput.annual_energy = np.sum(self.annual_energy.magnitude)
+        self.Grid.SystemOutput.annual_energy = np.sum(self.annual_energy.m)
         self.Grid.execute( )
         
         #--- use executed Plant object to create SingleOwner object and execute it
