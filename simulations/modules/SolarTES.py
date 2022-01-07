@@ -40,7 +40,6 @@ class SolarTES(NuclearTES):
         # define specific Dispatch module to be called later
         self.Dispatch_Module = SD
 
-
         self.Dispatch_Outputs = SDO
 
 

@@ -15,6 +15,7 @@ from modules.NuclearTES import NuclearTES
 from modules.SolarTES import SolarTES
 from dispatch.DualPlantDispatch import DualPlantDispatch as DD
 from dispatch.DualPlantDispatch import DualPlantDispatchParamWrap as DDP
+from dispatch.SolarDispatch import SolarDispatchParamWrap as SDP
 
 class DualPlantTES(SolarTES): 
     """
@@ -177,3 +178,119 @@ class DualPlantTES(SolarTES):
                     self.pyomo_horizon, self.dispatch_time_step)
         
         return dispatch_wrap
+
+
+    def create_dispatch_params(self, Plant ):
+        """ Populating a dictionary with dispatch parameters before optimization
+        
+        Note:
+            self.is_dispatch == True 
+            (Called within simulation)
+        
+        This method is creates the Dispatch Parameter dictionary that will be 
+        populated with static inputs from SSC_dict as well as initial conditions
+        for Dispatch optimization. The initial conditions are continuously updated
+        if simulation is segmented.
+
+        Args:
+            Plant (obj): 
+                original PySAM Plant module
+        Returns:
+            dispatch_wrap (obj): 
+                wrapper object for the class that creates dispatch parameters
+                
+        """
+        # get the object
+        DW = self.dispatch_wrap
+        
+        # run the setters from the GenericSSCModule parent class
+        params = GenericSSCModule.create_dispatch_params(self, Plant )
+        
+        # extract array from full run of Plant for solar
+        assert hasattr(Plant.Outputs, "Q_thermal"), "Q_thermal was not found in the outputs of Plant."
+        self.Q_rec_guess = Plant.Outputs.Q_thermal
+        
+        # extract array from full run of Plant for nuclear
+        assert hasattr(Plant.Outputs, "Q_nuc_thermal"), "Q_thermal was not found in the outputs of Plant."
+        self.Q_nuc_guess = Plant.Outputs.Q_nuc_thermal
+        
+        # set up copy of SSC dict
+        updated_SSC_dict = copy.deepcopy(self.SSC_dict)
+        updated_SSC_dict['Q_thermal']     = self.Q_rec_guess[self.slice_pyo_firstH]
+        updated_SSC_dict['Q_nuc_thermal'] = self.Q_nuc_guess[self.slice_pyo_firstH]
+        
+        # these are NuclearTES-specific setters
+        params = DW.set_nuclear_parameters( params )
+        params = DW.set_time_series_nuclear_parameters( params, updated_SSC_dict )
+        
+        # these are SolarTES-specific setters
+        params = SDP.set_solar_parameters( DW, params )
+        params = SDP.set_time_series_solar_parameters( DW, params, updated_SSC_dict )
+        
+        # this sets the initial states for the SolarTES
+        params = DW.set_initial_state( params )
+        
+        return params
+
+
+    def update_Pyomo_after_SSC(self, Plant, params ):
+        """ Update Pyomo inputs with SSC outputs from previous segment simulation
+        
+        Note:
+            self.run_loop    == True
+            self.is_dispatch == True 
+                          
+        This method uses the SSC end results from the previous simulation segment
+        and uses them to update the existing Dispatch parameter dictionary that
+        is ultimately sent to Pyomo. Essentially just updates the initial conditions
+        of the Dispatch parameter dictionary. 
+        
+        Args:
+            Plant (obj): 
+                original PySAM Plant module
+            params (dict): 
+                dictionary of Pyomo dispatch parameters
+        Returns:
+            params (dict): 
+                updated dictionary of Pyomo dispatch parameters
+                
+        """
+        
+        ssc_slice = self.slice_ssc_firstH
+        
+        updated_SSC_dict = copy.deepcopy(self.SSC_dict)
+        
+        # saving relevant end-of-sim outputs from the last simulation segment
+        updated_SSC_dict['rec_op_mode_initial']              = Plant.Outputs.rec_op_mode_final[ssc_slice][-1]
+        updated_SSC_dict['rec_startup_time_remain_init']     = Plant.Outputs.rec_startup_time_remain_final[ssc_slice][-1]
+        updated_SSC_dict['rec_startup_energy_remain_init']   = Plant.Outputs.rec_startup_energy_remain_final[ssc_slice][-1]
+        updated_SSC_dict['T_tank_cold_init']                 = Plant.Outputs.T_tes_cold[ssc_slice][-1]
+        updated_SSC_dict['T_tank_hot_init']                  = Plant.Outputs.T_tes_hot[ssc_slice][-1]
+        updated_SSC_dict['csp.pt.tes.init_hot_htf_percent']  = Plant.Outputs.hot_tank_htf_percent_final[ssc_slice][-1]
+        updated_SSC_dict['pc_op_mode_initial']               = Plant.Outputs.pc_op_mode_final[ssc_slice][-1]
+        updated_SSC_dict['pc_startup_time_remain_init']      = Plant.Outputs.pc_startup_time_remain_final[ssc_slice][-1]
+        updated_SSC_dict['pc_startup_energy_remain_initial'] = Plant.Outputs.pc_startup_energy_remain_final[ssc_slice][-1]
+        updated_SSC_dict['is_field_tracking_init']           = Plant.Outputs.is_field_tracking_final[ssc_slice][-1]
+        
+        # these are specific to the initial states
+        updated_SSC_dict['wdot0']     = Plant.Outputs.P_cycle[ssc_slice][-1]
+        
+        # extract time series from a previous SSC run
+        updated_SSC_dict['Q_thermal']     = self.Q_rec_guess[self.slice_pyo_currentH]
+        updated_SSC_dict['Q_nuc_thermal'] = self.Q_nuc_guess[self.slice_pyo_currentH]
+        
+        # TODO: removing w_dot_s_prev references in all of Dispatch for now, might need to revisit later
+        # updated_SSC_dict['wdot_s_prev'] = 0 #np.array([pe.value(dm.model.wdot_s_prev[t]) for t in dm.model.T])[-1]
+        
+        DW = self.dispatch_wrap
+        
+        # set up Plant outputs dictionary
+        plant_dict = Plant.Outputs.export()
+        
+        # updating the initial state and time series Nuclear params
+        params = DW.set_time_indexed_parameters( params, self.df_array, self.ud_array, self.slice_pyo_currentH )
+        params = DW.set_initial_state( params, updated_SSC_dict, Plant, self.t_ind )
+        params = DW.set_time_series_nuclear_parameters( params, updated_SSC_dict )
+        params = SDP.set_time_series_solar_parameters( DW, params, updated_SSC_dict )
+        
+        return params

@@ -13,15 +13,18 @@ Pyomo code by Alex Zolan
 Modified by Gabriel Soto
 """
 import pyomo.environ as pe
-from dispatch.NuclearDispatch import NuclearDispatch
-from dispatch.SolarDispatch   import SolarDispatch
+from dispatch.GeneralDispatch import GeneralDispatch
 from dispatch.GeneralDispatch import GeneralDispatchParamWrap
+from dispatch.NuclearDispatch import NuclearDispatch
+from dispatch.NuclearDispatch import NuclearDispatchParamWrap
+from dispatch.SolarDispatch   import SolarDispatch
+from dispatch.SolarDispatch   import SolarDispatchParamWrap
 import numpy as np
 from util.FileMethods import FileMethods
 from util.SSCHelperMethods import SSCHelperMethods
 import os, copy
 
-class DualPlantDispatch(NuclearDispatch):
+class DualPlantDispatch(SolarDispatch):
     """
     The DualPlantDispatch class is meant to set up and run Dispatch
     optimization as a mixed integer linear program problem using Pyomo,
@@ -79,7 +82,7 @@ class DualPlantDispatch(NuclearDispatch):
         
         # generating NuclearDispatch variables first (PowerCycle, etc.)
         NuclearDispatch.generate_variables(self)
-        SolarDispatch.generate_params(self, skip_parent=True)
+        SolarDispatch.generate_variables(self, skip_parent=True)
 
 
     def add_objective(self):
@@ -225,6 +228,53 @@ class DualPlantDispatchParamWrap(NuclearDispatchParamWrap):
         
         NuclearDispatchParamWrap.set_design(self)
         SolarDispatchParamWrap.set_design(self, skip_parent=True) #some duplicates here, should be fine
+
+
+    def set_fixed_cost_parameters(self, param_dict):
+        """ Method to set fixed costs of the Plant
+        
+        This method calculates some fixed costs for the Plant operations, startup,
+        standby, etc. 
+        
+        Inputs:
+            param_dict (dict) : dictionary of Pyomo dispatch parameters
+        Outputs:
+            param_dict (dict) : updated dictionary of Pyomo dispatch parameters
+        """
+        
+        # set up costs from parent class
+        param_dict = NuclearDispatchParamWrap.set_fixed_cost_parameters( self, param_dict )
+        param_dict = SolarDispatchParamWrap.set_fixed_cost_parameters(self, param_dict, skip_parent=True) 
+
+        return param_dict
+
+
+    def set_initial_state(self, param_dict, updated_dict=None, plant=None, npts=None ):
+        """ Method to set the initial state of the Plant before Dispatch optimization
+        
+        This method uses SSC data to set the initial state of the Plant before Dispatch
+        optimization in Pyomo. This method is called in two ways: once before starting 
+        the simulation loop, in which case it only uses values from the SSC_dict portion
+        of the given JSON script. The method is also called within the simulation loop
+        to update the initial state parameters based on the ending conditions of the 
+        previous simulation segment (provided by SSC). 
+        
+        TODO: can we just input another dictionary instead of passing the full Plant?
+        
+        Inputs:
+            param_dict (dict)    : dictionary of Pyomo dispatch parameters
+            updated_dict (dict)  : dictionary with updated SSC initial conditions from previous run
+            plant (obj)          : the full PySAM Plant object. 
+            npts (int)           : length of the SSC horizon
+        Outputs:
+            param_dict (dict) : updated dictionary of Pyomo dispatch parameters
+        """
+
+        # First filling out initial states from GeneralDispatcher
+        param_dict = NuclearDispatchParamWrap.set_initial_state( self, param_dict, updated_dict, plant, npts )
+        param_dict = SolarDispatchParamWrap.set_initial_state( self, param_dict, updated_dict, plant, npts, skip_parent=True)
+        
+        return param_dict
         
         
         
