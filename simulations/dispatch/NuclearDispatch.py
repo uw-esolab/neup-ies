@@ -78,7 +78,6 @@ class NuclearDispatch(GeneralDispatch):
         ### Nuclear Parameters ###
         self.model.deltanl = pe.Param(mutable=True, initialize=gd("deltanl"), units=gu("deltanl")) #\delta^{nl}: Minimum time to start the nuclear plant [hr]
         self.model.En = pe.Param(mutable=True, initialize=gd("En"), units=gu("En"))                #E^n: Required energy expended to start nuclear plant [kWt$\cdot$h]
-        self.model.Eu = pe.Param(mutable=True, initialize=gd("Eu"), units=gu("Eu"))                #E^u: Thermal energy storage capacity [kWt$\cdot$h]
         self.model.Ln = pe.Param(mutable=True, initialize=gd("Ln"), units=gu("Ln"))                #L^n: Nuclear pumping power per unit power produced [kWe/kWt]
         self.model.Qnl = pe.Param(mutable=True, initialize=gd("Qnl"), units=gu("Qnl"))             #Q^{nl}: Minimum operational thermal power delivered by nuclear [kWt$\cdot$h]
         self.model.Qnsb = pe.Param(mutable=True, initialize=gd("Qnsb"), units=gu("Qnsb"))          #Q^{nsb}: Required thermal power for nuclear standby [kWt$\cdot$h]
@@ -412,7 +411,7 @@ class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
         self.m_tes_design = m_tes_des.to('kg')     # TES active storage mass (kg)
         
         
-    def set_fixed_cost_parameters(self, param_dict):
+    def set_fixed_cost_parameters(self, param_dict, skip_parent=False):
         """ Method to set fixed costs of the Plant
         
         This method calculates some fixed costs for the Plant operations, startup,
@@ -428,7 +427,8 @@ class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
         u = self.u
     
         # set up costs from parent class
-        param_dict = GeneralDispatchParamWrap.set_fixed_cost_parameters( self, param_dict )
+        if not skip_parent:
+            param_dict = GeneralDispatchParamWrap.set_fixed_cost_parameters( self, param_dict )
         
         C_nuc  = self.PySAM_dict['nuc_op_cost'] * u.USD / u.MWh  # value taken from Cory @ Westinghouse, later converted to $/kWh        
         C_nsu  = self.PySAM_dict['nuc_cold_su'] * u.USD
@@ -541,7 +541,7 @@ class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
         return param_dict
 
 
-    def set_initial_state(self, param_dict, updated_dict=None, plant=None, npts=None ):
+    def set_initial_state(self, param_dict, updated_dict=None, plant=None, npts=None, skip_parent=False):
         """ Method to set the initial state of the Plant before Dispatch optimization
         
         This method uses SSC data to set the initial state of the Plant before Dispatch
@@ -564,7 +564,8 @@ class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
         u = self.u
         
         # First filling out initial states from GeneralDispatcher
-        param_dict = GeneralDispatchParamWrap.set_initial_state( self, param_dict, updated_dict, plant, npts )
+        if not skip_parent:
+            param_dict = GeneralDispatchParamWrap.set_initial_state( self, param_dict, updated_dict, plant, npts )
         
         if updated_dict is None:
             self.current_Plant = copy.deepcopy(self.SSC_dict)

@@ -109,6 +109,7 @@ class GeneralDispatch(ABC):
         ### Power Cycle Parameters ###
         self.model.Ec = pe.Param(mutable=True, initialize=gd("Ec"), units=gu("Ec"))           #E^c: Required energy expended to start cycle [kWt$\cdot$h]
         self.model.eta_des = pe.Param(mutable=True, initialize=gd("eta_des"), units=gu("eta_des"))   #\eta^{des}: Cycle nominal efficiency [-] 
+        self.model.Eu = pe.Param(mutable=True, initialize=gd("Eu"), units=gu("Eu"))                #E^u: Thermal energy storage capacity [kWt$\cdot$h]
         self.model.etap = pe.Param(mutable=True, initialize=gd("etap"), units=gu("etap"))     #\eta^p: Slope of linear approximation of power cycle performance curve [kWe/kWt]
         self.model.Lc = pe.Param(mutable=True, initialize=gd("Lc"), units=gu("Lc"))           #L^c: Cycle heat transfer fluid pumping power per unit energy expended [kWe/kWt]
         self.model.Qb = pe.Param(mutable=True, initialize=gd("Qb"), units=gu("Qb"))           #Q^b: Cycle standby thermal power consumption per period [kWt]

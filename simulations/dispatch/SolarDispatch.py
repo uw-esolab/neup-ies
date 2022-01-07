@@ -15,12 +15,13 @@ Modified by Gabriel Soto
 import pyomo.environ as pe
 from dispatch.GeneralDispatch import GeneralDispatch
 from dispatch.GeneralDispatch import GeneralDispatchParamWrap
+from dispatch.NuclearDispatch import NuclearDispatch
 import numpy as np
 from util.FileMethods import FileMethods
 from util.SSCHelperMethods import SSCHelperMethods
 import os, copy
 
-class SolarDispatch(GeneralDispatch):
+class SolarDispatch(NuclearDispatch):
     """
     The SolarDispatch class is meant to set up and run Dispatch
     optimization as a mixed integer linear program problem using Pyomo,
@@ -80,7 +81,6 @@ class SolarDispatch(GeneralDispatch):
         self.model.deltal = pe.Param(mutable=True, initialize=gd("deltal"), units=gu("deltal"))    #\delta^l: Minimum time to start the receiver [hr]
         self.model.Ehs = pe.Param(mutable=True, initialize=gd("Ehs"), units=gu("Ehs"))             #E^{hs}: Heliostat field startup or shut down parasitic loss [kWe$\cdot$h]
         self.model.Er = pe.Param(mutable=True, initialize=gd("Er"), units=gu("Er"))                #E^r: Required energy expended to start receiver [kWt$\cdot$h]
-        self.model.Eu = pe.Param(mutable=True, initialize=gd("Eu"), units=gu("Eu"))                #E^u: Thermal energy storage capacity [kWt$\cdot$h]
         self.model.Lr = pe.Param(mutable=True, initialize=gd("Lr"), units=gu("Lr"))                #L^r: Receiver pumping power per unit power produced [kWe/kWt]
         self.model.Qrl = pe.Param(mutable=True, initialize=gd("Qrl"), units=gu("Qrl"))             #Q^{rl}: Minimum operational thermal power delivered by receiver [kWt$\cdot$h]
         self.model.Qrsb = pe.Param(mutable=True, initialize=gd("Qrsb"), units=gu("Qrsb"))          #Q^{rsb}: Required thermal power for receiver standby [kWt$\cdot$h]
@@ -411,7 +411,7 @@ class SolarDispatchParamWrap(GeneralDispatchParamWrap):
         self.m_tes_design = m_tes_des.to('kg')     # TES active storage mass (kg)
 
 
-    def set_fixed_cost_parameters(self, param_dict):
+    def set_fixed_cost_parameters(self, param_dict, skip_parent=False):
         """ Method to set fixed costs of the Plant
         
         This method calculates some fixed costs for the Plant operations, startup,
@@ -427,7 +427,8 @@ class SolarDispatchParamWrap(GeneralDispatchParamWrap):
         u = self.u
     
         # set up costs from parent class
-        param_dict = GeneralDispatchParamWrap.set_fixed_cost_parameters( self, param_dict )
+        if not skip_parent:
+            param_dict = GeneralDispatchParamWrap.set_fixed_cost_parameters( self, param_dict )
         
         # TODO: old values from LORE files
         C_rec  = self.PySAM_dict['rec_op_cost'] * u.USD / u.MWh #Q_ratio * 0.002  * u.USD/u.kWh        
@@ -555,7 +556,7 @@ class SolarDispatchParamWrap(GeneralDispatchParamWrap):
         return param_dict
 
 
-    def set_initial_state(self, param_dict, updated_dict=None, plant=None, npts=None ):
+    def set_initial_state(self, param_dict, updated_dict=None, plant=None, npts=None, skip_parent=False):
         """ Method to set the initial state of the Plant before Dispatch optimization
         
         This method uses SSC data to set the initial state of the Plant before Dispatch
@@ -578,7 +579,8 @@ class SolarDispatchParamWrap(GeneralDispatchParamWrap):
         u = self.u
         
         # First filling out initial states from GeneralDispatcher
-        param_dict = GeneralDispatchParamWrap.set_initial_state( self, param_dict, updated_dict, plant, npts )
+        if not skip_parent:
+            param_dict = GeneralDispatchParamWrap.set_initial_state( self, param_dict, updated_dict, plant, npts )
         
         if updated_dict is None:
             self.current_Plant = copy.deepcopy(self.SSC_dict)
