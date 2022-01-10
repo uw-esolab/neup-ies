@@ -261,16 +261,19 @@ class DualPlantTES(SolarTES):
         updated_SSC_dict = copy.deepcopy(self.SSC_dict)
         
         # saving relevant end-of-sim outputs from the last simulation segment
-        updated_SSC_dict['rec_op_mode_initial']              = Plant.Outputs.rec_op_mode_final[ssc_slice][-1]
-        updated_SSC_dict['rec_startup_time_remain_init']     = Plant.Outputs.rec_startup_time_remain_final[ssc_slice][-1]
-        updated_SSC_dict['rec_startup_energy_remain_init']   = Plant.Outputs.rec_startup_energy_remain_final[ssc_slice][-1]
+        updated_SSC_dict['rec_op_mode_initial']              = Plant.Outputs.rec_op_mode_final
+        updated_SSC_dict['rec_startup_time_remain_init']     = Plant.Outputs.rec_startup_time_remain_final
+        updated_SSC_dict['rec_startup_energy_remain_init']   = Plant.Outputs.rec_startup_energy_remain_final
+        updated_SSC_dict['nuc_op_mode_initial']              = Plant.Outputs.nuc_op_mode_final
+        updated_SSC_dict['nuc_startup_time_remain_init']     = Plant.Outputs.nuc_startup_time_remain_final
+        updated_SSC_dict['nuc_startup_energy_remain_init']   = Plant.Outputs.nuc_startup_energy_remain_final
         updated_SSC_dict['T_tank_cold_init']                 = Plant.Outputs.T_tes_cold[ssc_slice][-1]
         updated_SSC_dict['T_tank_hot_init']                  = Plant.Outputs.T_tes_hot[ssc_slice][-1]
-        updated_SSC_dict['csp.pt.tes.init_hot_htf_percent']  = Plant.Outputs.hot_tank_htf_percent_final[ssc_slice][-1]
-        updated_SSC_dict['pc_op_mode_initial']               = Plant.Outputs.pc_op_mode_final[ssc_slice][-1]
-        updated_SSC_dict['pc_startup_time_remain_init']      = Plant.Outputs.pc_startup_time_remain_final[ssc_slice][-1]
-        updated_SSC_dict['pc_startup_energy_remain_initial'] = Plant.Outputs.pc_startup_energy_remain_final[ssc_slice][-1]
-        updated_SSC_dict['is_field_tracking_init']           = Plant.Outputs.is_field_tracking_final[ssc_slice][-1]
+        updated_SSC_dict['csp.pt.tes.init_hot_htf_percent']  = Plant.Outputs.hot_tank_htf_percent_final
+        updated_SSC_dict['pc_op_mode_initial']               = Plant.Outputs.pc_op_mode_final
+        updated_SSC_dict['pc_startup_time_remain_init']      = Plant.Outputs.pc_startup_time_remain_final
+        updated_SSC_dict['pc_startup_energy_remain_initial'] = Plant.Outputs.pc_startup_energy_remain_final
+        updated_SSC_dict['is_field_tracking_init']           = Plant.Outputs.is_field_tracking_final
         
         # these are specific to the initial states
         updated_SSC_dict['wdot0']     = Plant.Outputs.P_cycle[ssc_slice][-1]

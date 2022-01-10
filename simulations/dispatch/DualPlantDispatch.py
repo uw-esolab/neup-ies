@@ -104,8 +104,8 @@ class DualPlantDispatch(SolarDispatch):
                     - (model.C_delta_w*(model.wdot_delta_plus[t]+model.wdot_delta_minus[t])+model.C_v_w*(model.wdot_v_plus[t] + model.wdot_v_minus[t]))
                     #obj_cost_rec_su_hs_sd
                     - (model.Crsu*model.yrsup[t] + model.Crhsp*model.yrhsp[t] + model.alpha*model.yrsd[t])
-                    #obj_cost_rec_su_hs_sd
-                    - (model.Cnsu*model.ynsup[t] + model.Cnhsp*model.yrhsp[t] + model.alpha*model.ynsd[t])
+                    #obj_cost_nuc_su_hs_sd
+                    - (model.Cnsu*model.ynsup[t] + model.Cnhsp*model.ynhsp[t] + model.alpha*model.ynsd[t])
                     #obj_cost_ops
                     - model.Delta[t]*(model.Cpc*model.wdot[t] + model.Ccsb*model.Qb*model.ycsb[t] + model.Crec*model.xr[t] + model.Cnuc*model.xn[t] )
                     for t in model.T) 
@@ -227,7 +227,7 @@ class DualPlantDispatchParamWrap(NuclearDispatchParamWrap):
         """
         
         NuclearDispatchParamWrap.set_design(self)
-        SolarDispatchParamWrap.set_design(self, skip_parent=True) #some duplicates here, should be fine
+        SolarDispatchParamWrap.set_design(self, skip_parent=True, given_des=True)
 
 
     def set_fixed_cost_parameters(self, param_dict):

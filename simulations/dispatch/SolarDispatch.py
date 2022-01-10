@@ -77,7 +77,6 @@ class SolarDispatch(NuclearDispatch):
         self.model.Crhsp = pe.Param(mutable=True, initialize=gd("Crhsp"), units=gu("Crhsp"))           #C^{rhsp}: Penalty for receiver hot start-up [\$/start]
         
         ### CSP Parameters ###
-        #TODO: Eu is reused here
         self.model.deltal = pe.Param(mutable=True, initialize=gd("deltal"), units=gu("deltal"))    #\delta^l: Minimum time to start the receiver [hr]
         self.model.Ehs = pe.Param(mutable=True, initialize=gd("Ehs"), units=gu("Ehs"))             #E^{hs}: Heliostat field startup or shut down parasitic loss [kWe$\cdot$h]
         self.model.Er = pe.Param(mutable=True, initialize=gd("Er"), units=gu("Er"))                #E^r: Required energy expended to start receiver [kWt$\cdot$h]
@@ -123,7 +122,7 @@ class SolarDispatch(NuclearDispatch):
         #------- Binary Variables ---------
         self.model.yr = pe.Var(self.model.T, domain=pe.Binary)        #y^r: 1 if receiver is generating ``usable'' thermal power at period $t$; 0 otherwise
         self.model.yrhsp = pe.Var(self.model.T, domain=pe.Binary)	  #y^{rhsp}: 1 if receiver hot start-up penalty is incurred at period $t$ (from standby); 0 otherwise
-        self.model.yrsb = pe.Var(self.model.T, domain=pe.Binary, bounds=(0,0.2))	  #y^{rsb}: 1 if receiver is in standby mode at period $t$; 0 otherwise
+        self.model.yrsb = pe.Var(self.model.T, domain=pe.Binary)	  #y^{rsb}: 1 if receiver is in standby mode at period $t$; 0 otherwise
         self.model.yrsd = pe.Var(self.model.T, domain=pe.Binary)	  #y^{rsd}: 1 if receiver is shut down at period $t$; 0 otherwise
         self.model.yrsu = pe.Var(self.model.T, domain=pe.Binary)      #y^{rsu}: 1 if receiver is starting up at period $t$; 0 otherwise
         self.model.yrsup = pe.Var(self.model.T, domain=pe.Binary)     #y^{rsup}: 1 if receiver cold start-up penalty is incurred at period $t$ (from off); 0 otherwise
@@ -212,12 +211,12 @@ class SolarDispatch(NuclearDispatch):
             return model.xr[t] >= model.Qrl * model.yr[t]
         def rec_gen_persist_rule(model,t):
             """ CSP not able to operate if no thermal power  """
-            return model.yr[t] <= model.Qin[t]/model.Qrl
+            return model.yr[t] <= model.Qin[t] / model.Qrl
         
-        self.model.rec_production_con = pe.Constraint(self.model.T,rule=rec_production_rule)
-        self.model.rec_generation_con = pe.Constraint(self.model.T,rule=rec_generation_rule)
-        self.model.min_generation_con = pe.Constraint(self.model.T,rule=min_generation_rule)
-        self.model.rec_gen_persist_con = pe.Constraint(self.model.T,rule=rec_gen_persist_rule)
+        self.model.rec_production_con = pe.Constraint(self.model.T,rule=rec_production_rule) #problem
+        self.model.rec_generation_con = pe.Constraint(self.model.T,rule=rec_generation_rule) # problem
+        self.model.min_generation_con = pe.Constraint(self.model.T,rule=min_generation_rule) 
+        self.model.rec_gen_persist_con = pe.Constraint(self.model.T,rule=rec_gen_persist_rule) 
         
 
     def addReceiverNodeLogicConstraints(self):
@@ -342,7 +341,7 @@ class SolarDispatch(NuclearDispatch):
             self.addTESEnergyBalanceConstraints()
         
         self.addReceiverStartupConstraints()
-        self.addReceiverSupplyAndDemandConstraints()
+        # self.addReceiverSupplyAndDemandConstraints()
         self.addReceiverNodeLogicConstraints()
 
 
@@ -375,7 +374,7 @@ class SolarDispatchParamWrap(GeneralDispatchParamWrap):
                             pyomo_horizon, dispatch_time_step )
 
 
-    def set_design(self, skip_parent=False):
+    def set_design(self, skip_parent=False, given_des=False):
         """ Method to calculate and save design point values of Plant operation
         
         This method extracts values and calculates for design point parameters 
@@ -395,7 +394,10 @@ class SolarDispatchParamWrap(GeneralDispatchParamWrap):
         cp_des = cp_des.to('J/g/kelvin')   
         
         # CSP parameters
-        self.q_rec_design = self.SSC_dict["P_ref"]/self.SSC_dict["design_eff"]*self.SSC_dict["solarm"]* u.MW      # CSP design thermal power
+        if given_des:
+            self.q_rec_design = self.SSC_dict["q_dot_rec_des"] * u.MW
+        else:
+            self.q_rec_design = self.SSC_dict["P_ref"]/self.SSC_dict["design_eff"]*self.SSC_dict["solarm"]* u.MW      # CSP design thermal power
         
         dm_rec_des = self.q_rec_design / (cp_des * (self.T_htf_hot - self.T_htf_cold) )  
         self.dm_rec_design = dm_rec_des.to('kg/s') 
