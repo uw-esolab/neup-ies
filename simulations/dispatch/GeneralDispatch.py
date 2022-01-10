@@ -17,10 +17,13 @@ import pyomo.environ as pe
 import numpy as np
 from util.FileMethods import FileMethods
 from util.SSCHelperMethods import SSCHelperMethods
+from pyomo.environ import value
 from pyomo.environ import units as u_pyomo
 if not hasattr(u_pyomo,'USD'):
     u_pyomo.load_definitions_from_strings(['USD = [currency]'])
 from pyomo.util.check_units import assert_units_consistent, assert_units_equivalent, check_units_equivalent
+from pyomo.util.infeasible import log_infeasible_constraints, log_infeasible_bounds
+import logging
 from abc import ABC, abstractmethod
 
 
@@ -283,7 +286,8 @@ class GeneralDispatch(ABC):
         """
         def power_rule(model, t):
             """ Model of electric power vs. heat input as linear function """
-            return model.wdot[t] == (model.etaamb[t]/model.eta_des)*(model.etap*model.x[t] + model.y[t]*(model.Wdotu - model.etap*model.Qu))
+            #TODO: should this be <= rather than == ????
+            return model.wdot[t] <= (model.etaamb[t]/model.eta_des)*(model.etap*model.x[t] + model.y[t]*(model.Wdotu - model.etap*model.Qu))
         def power_ub_rule(model, t):
             """ Upper bound on PC electric power output """
             return model.wdot[t] <= model.Wdotu*(model.etaamb[t]/model.eta_des)*model.y[t]
@@ -488,9 +492,14 @@ class GeneralDispatch(ABC):
         if run_simple:
             opt.options["primalPivot"] = "dantzig"
             opt.options["dualPivot"]   = "dantzig"
-        
+        # opt.options["presolve"] = "off"
         # solving model
-        results = opt.solve(self.model, tee=tee, keepfiles=False)
+        results = opt.solve(self.model, tee=False, keepfiles=False)
+        # logging.basicConfig(filename='example.log', level=logging.INFO)
+        # log_infeasible_constraints(self.model, log_expression=True, log_variables=True)
+        # log_infeasible_bounds(self.model)
+        
+        # print(value(self.model.OBJ))
         #TODO: assert successful optimization?
         
         return results
