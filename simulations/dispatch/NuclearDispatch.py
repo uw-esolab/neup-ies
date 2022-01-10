@@ -182,7 +182,7 @@ class NuclearDispatch(GeneralDispatch):
         def ramp_limit_rule(model,t):
             """ NP must abide by ramp rate limits """
             return model.xnsu[t] <= model.Qnu*model.ynsu[t]
-        def nontrivial_solar_rule(model,t):
+        def nontrivial_nuclear_rule(model,t):
             """ NP trivial power prevents startup """
             return model.ynsu[t] <= model.Qin_nuc[t] / model.Qnl
         
@@ -190,8 +190,8 @@ class NuclearDispatch(GeneralDispatch):
         self.model.nuc_inv_nonzero_con = pe.Constraint(self.model.T,rule=nuc_inv_nonzero_rule)
         self.model.nuc_startup_con = pe.Constraint(self.model.T,rule=nuc_startup_rule)
         self.model.nuc_su_persist_con = pe.Constraint(self.model.T,rule=nuc_su_persist_rule)
-        self.model.ramp_limit_con = pe.Constraint(self.model.T,rule=ramp_limit_rule)
-        self.model.nontrivial_solar_con = pe.Constraint(self.model.T,rule=nontrivial_solar_rule)
+        self.model.nuc_ramp_limit_con = pe.Constraint(self.model.T,rule=ramp_limit_rule)
+        self.model.nontrivial_nuclear_con = pe.Constraint(self.model.T,rule=nontrivial_nuclear_rule)
         
         
     def addNuclearSupplyAndDemandConstraints(self):
@@ -216,7 +216,7 @@ class NuclearDispatch(GeneralDispatch):
         
         self.model.nuc_production_con = pe.Constraint(self.model.T,rule=nuc_production_rule)
         self.model.nuc_generation_con = pe.Constraint(self.model.T,rule=nuc_generation_rule)
-        self.model.min_generation_con = pe.Constraint(self.model.T,rule=min_generation_rule)
+        self.model.nuc_min_generation_con = pe.Constraint(self.model.T,rule=min_generation_rule)
         self.model.nuc_gen_persist_con = pe.Constraint(self.model.T,rule=nuc_gen_persist_rule)
         
         
@@ -264,7 +264,7 @@ class NuclearDispatch(GeneralDispatch):
         
         self.model.nuc_su_sb_persist_con = pe.Constraint(self.model.T,rule=nuc_su_sb_persist_rule)
         self.model.nuc_sb_persist_con = pe.Constraint(self.model.T,rule=nuc_sb_persist_rule)
-        self.model.rsb_persist_con = pe.Constraint(self.model.T,rule=rsb_persist_rule)
+        self.model.nuc_rsb_persist_con = pe.Constraint(self.model.T,rule=rsb_persist_rule)
         self.model.nuc_su_pen_con = pe.Constraint(self.model.T,rule=nuc_su_pen_rule)
         self.model.nuc_hs_pen_con = pe.Constraint(self.model.T,rule=nuc_hs_pen_rule)
         self.model.nuc_shutdown_con = pe.Constraint(self.model.T,rule=nuc_shutdown_rule)
@@ -290,8 +290,8 @@ class NuclearDispatch(GeneralDispatch):
         def tes_start_up_rule(model, t):
             """ Ensuring sufficient TES charge level to startup NP """
             if t == 1:
-                return model.s0 >= model.Delta[t]*model.delta_ns[t]*( (model.Qu + model.Qb)*( -3 + model.ynsu[t] + model.y0 + model.y[t] + model.ycsb0 + model.ycsb[t] ) + model.x[t] + model.Qb*model.ycsb[t] )
-            return model.s[t-1] >= model.Delta[t]*model.delta_ns[t]*( (model.Qu + model.Qb)*( -3 + model.ynsu[t] + model.y[t-1] + model.y[t] + model.ycsb[t-1] + model.ycsb[t] ) + model.x[t] + model.Qb*model.ycsb[t] )
+                return model.s0 >= model.Delta[t]*model.delta_rs[t]*( (model.Qu + model.Qb)*( -3 + model.ynsu[t] + model.y0 + model.y[t] + model.ycsb0 + model.ycsb[t] ) + model.x[t] + model.Qb*model.ycsb[t] )
+            return model.s[t-1] >= model.Delta[t]*model.delta_rs[t]*( (model.Qu + model.Qb)*( -3 + model.ynsu[t] + model.y[t-1] + model.y[t] + model.ycsb[t-1] + model.ycsb[t] ) + model.x[t] + model.Qb*model.ycsb[t] )
         def maintain_tes_rule(model):
             """ Final state of TES has to be less than or equal to start """
             return model.s[model.num_periods] <= model.s0
@@ -391,7 +391,7 @@ class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
         
         if not skip_parent:
             GeneralDispatchParamWrap.set_design(self)
-
+        
         # nuclear parameters
         self.q_nuc_design = self.SSC_dict['q_dot_nuclear_des'] * u.MW      # nuclear design thermal power
         
