@@ -492,14 +492,10 @@ class GeneralDispatch(ABC):
         if run_simple:
             opt.options["primalPivot"] = "dantzig"
             opt.options["dualPivot"]   = "dantzig"
-        # opt.options["presolve"] = "off"
+
         # solving model
         results = opt.solve(self.model, tee=False, keepfiles=False)
-        # logging.basicConfig(filename='example.log', level=logging.INFO)
-        # log_infeasible_constraints(self.model, log_expression=True, log_variables=True)
-        # log_infeasible_bounds(self.model)
-        
-        # print(value(self.model.OBJ))
+
         #TODO: assert successful optimization?
         
         return results
