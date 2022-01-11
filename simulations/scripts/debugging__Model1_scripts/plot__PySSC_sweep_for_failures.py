@@ -33,15 +33,15 @@ output_dir = FileMethods.output_dir
 start_name     = 'failureModes' # testDefocus # failureModes
 PySAM_name     = 'PySAM'        # PySAM  # ''
 add_extra_Name = True
-extra_name    = '2021_12'  # 2021_10  # 2021_11
-json_name     = 'model1_CAISO'   # model1_CAISO  # Hamilton_560  # Hamilton_560_dfe
+extra_name    = '2022_01'  # 2021_10  # 2021_11 # 2021_12
+json_name     = 'model1_Hamilton_560_dfe'   # model1_CAISO  # Hamilton_560  # Hamilton_560_dfe
 dispatch      = True # True # False
 sscH          = 24   # 12 # 24
 pyoH          = 48   # 24 # 48
 TES_min       = 0    # 0  # 2
 TES_max       = 14   # 14
-PC_min        = 200  # 100 # 300 # 400 # 550
-PC_max        = 500  # 500 # 850
+PC_min        = 600  # 100 # 300 # 400 # 550
+PC_max        = 850  # 500 # 850
 
 # generate name of file
 filename = '{0}_{1}__{2}__{3}__pyomo_{4:.0f}__horizon_{5:.0f}_{6:.0f}__TES_[{7},{8}]__PC_[{9},{10}].nuctes'.format(
