@@ -280,7 +280,7 @@ class GeneralDispatch(ABC):
         """
         def power_rule(model, t):
             """ Model of electric power vs. heat input as linear function """
-            return model.wdot[t] == (model.etaamb[t]/model.eta_des)*(model.etap*model.x[t] + model.y[t]*(model.Wdotu - model.etap*model.Qu))
+            return model.wdot[t] <= (model.etaamb[t]/model.eta_des)*(model.etap*model.x[t] + model.y[t]*(model.Wdotu - model.etap*model.Qu))
         def power_ub_rule(model, t):
             """ Upper bound on PC electric power output """
             return model.wdot[t] <= model.Wdotu*(model.etaamb[t]/model.eta_des)*model.y[t]
