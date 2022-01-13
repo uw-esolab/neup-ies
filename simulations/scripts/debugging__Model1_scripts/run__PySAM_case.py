@@ -27,9 +27,9 @@ print("PID = ", pid)
 # =============================================================================
 
 # modifying inputs
-json = "model1_CAISO"   # model1_CAISO # model1
-dispatch = True
-run_loop = True
+json = "model1_wecdsr"   # model1_CAISO # model1
+dispatch = False
+run_loop = False
 sscH    = 24   # (hr)
 pyoH    = 48   # (hr)
 Pref    = 650  # (MW)

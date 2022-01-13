@@ -25,7 +25,7 @@ print("PID = ", pid)
 # =============================================================================
 
 # initialize the PySSC Wrapper
-pw = PySSCWrapper(json_name='model1',is_debug=True)
+pw = PySSCWrapper(json_name='model1_wecdsr',is_debug=False)
 
 # update SSC dictionary parameters
 pw.sscdict['tshours']   = 2

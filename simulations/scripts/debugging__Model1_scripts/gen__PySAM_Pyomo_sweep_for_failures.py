@@ -44,8 +44,8 @@ tshours    = np.array([ 0, 2, 4, 6, 8, 10, 12, 14 ])
 # p_cycle    = np.array([ 500, 450, 400, 350, 300, 250, 200 ]) 
 # p_cycle    = np.array([ 850, 800, 750, 700, 650, 600, 550 ]) 
 
-p_cycle    = np.array([ 850, 800, 750, 700, 650, 600 ]) 
-# p_cycle    = np.array([ 550, 500, 450, 400, 350, 300 ]) 
+# p_cycle    = np.array([ 850, 800, 750, 700, 650, 600 ]) 
+p_cycle    = np.array([ 550, 500, 450, 400, 350, 300 ]) 
 # 
 # p_cycle    = np.array([ 850, 800, 750, 700, 650, 600, 550, 500, 450, 400, 350, 300 ]) 
 
@@ -102,7 +102,7 @@ op_modes_list = tmp_modes.operating_modes
 # =============================================================================
 sscH = 24  # 12 # 24
 pyoH = 48  # 24 # 48
-json = "model1_Hamilton_560_tariffx2" # model1_CAISO # model1 # model1_noMin # model1_HODR # model1_Hamilton_560_dfe
+json = "model1_CAISO" # model1_CAISO # model1 # model1_noMin # model1_HODR # model1_Hamilton_560_dfe # model1_Hamilton_560_tariffx2
 dispatch = True # True # False
 run_loop = True
 

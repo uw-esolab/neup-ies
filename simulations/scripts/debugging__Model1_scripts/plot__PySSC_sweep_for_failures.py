@@ -31,16 +31,16 @@ print("PID = ", pid)
 output_dir = FileMethods.output_dir
 
 start_name     = 'failureModes' # testDefocus # failureModes
-PySAM_name     = 'PySAM'        # PySAM  # ''
+PySAM_name     = ''  # PySAM  # ''
 add_extra_Name = True
 extra_name    = '2022_01'  # 2021_10  # 2021_11 # 2021_12
-json_name     = 'model1_Hamilton_560_tariffx2'   # model1_CAISO  # Hamilton_560  # Hamilton_560_dfe
-dispatch      = True # True # False
+json_name     = 'model1_wecdsr'   # model1_CAISO  # model1_Hamilton_560_dfe # model1_Hamilton_560_tariffx1_5
+dispatch      = False # True # False
 sscH          = 24   # 12 # 24
 pyoH          = 48   # 24 # 48
 TES_min       = 0    # 0  # 2
 TES_max       = 14   # 14
-PC_min        = 600  # 100 # 300 # 400 # 550
+PC_min        = 100  # 100 # 300 # 400 # 550
 PC_max        = 850  # 500 # 850
 
 # generate name of file
