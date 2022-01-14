@@ -153,8 +153,7 @@ class SolarPlots(Plots):
     Note that the Plots class must be initialized before using. 
     """
 
-    def __init__(self, module, fsl='x-small', loc='best', legend_offset=False,
-                 lp=16, lps=12, fs=12, lw=2, x_shrink=0.85, x_legend=12):
+    def __init__(self, module, **kwargs):
         """ Initializes the Plots module
 
         The instantiation of this class receives a full module object, the module
@@ -174,50 +173,14 @@ class SolarPlots(Plots):
             x_shrink (float)    : (legend_offset==True) amount to shrink axis to make room for legend
         """
         
-        self.u = u
-
-        # user-defined plotting parameters
-        self.lp  = lp   # labelpad
-        self.lps = lps  # labelpad short
-        self.fs  = fs   # fontsize
-        self.lw  = lw   # linewidth
-        self.fsl = fsl  # fontsize legend
-        self.loc = loc  # location of legend
-
-        # offsetting legend
-        self.legend_offset = legend_offset # boolean - are we plotting legends off-axis?
-        self.x_shrink      = x_shrink # amount to shrink x-asis by to make room for legend
-
-        # alternate legend locations
-        self.loc_ur = 'upper right'
-        self.loc_ul = 'upper left'
-        self.loc_lr = 'lower right'   # location of legend
-        self.loc_ll = 'lower left'    # location of legend
-        self.loc_cr = 'center right'  # location of legend
-        self.loc_cl = 'center left'   # location of legend
+        Plots.__init__(self, module, **kwargs)
         
-        # module class name
-        mod_class = module.__class__.__module__
-        self.mod_class_name = mod_class.split('.')[0]
+    
+    def set_extractor(self):
+        """ Setting the output extraction class
+        """
         
-        # continuing with SSC plots
-        if self.mod_class_name == 'modules':
-            
-            # full PySAM module
-            self.mod = module.Plant
-            
-            # define an Output object to extract information from SSC
-            Outputs = self.mod.PySAM_Outputs if module.run_loop else self.mod.Outputs
-            
-            # saving full time logs
-            self.t_full = np.asarray(Outputs.time_hr)*u.hr
-            self.full_slice = slice(0, len(self.t_full), 1)
-            
-            # setting operating modes, kept it way at the bottom because it's ugly
-            self.set_operating_modes_list()
-            
-            # extracting outputs
-            SolarOutputExtraction.set_ssc_outputs(self, Outputs)
+        self.extractor = SolarOutputExtraction
         
         
     def plot_SSC_power_and_energy(self, ax=None, title_label=None, plot_all_time=True, \
@@ -359,8 +322,7 @@ class SolarDispatchPlots(DispatchPlots):
     Note that the DispatchPlots class must be initialized before using. 
     """
 
-    def __init__(self, module, fsl='x-small', loc='best', legend_offset=False,
-                 lp=16, lps=12, fs=12, lw=2, x_shrink=0.85, x_legend=12):
+    def __init__(self, module, **kwargs):
         """ Initializes the Plots module
 
         The instantiation of this class receives a full Dispatch object, the module
@@ -381,8 +343,7 @@ class SolarDispatchPlots(DispatchPlots):
         """
         
         # initialize Plots class
-        SolarPlots.__init__( self, module, fsl, loc, legend_offset, \
-                 lp, lps, fs, lw, x_shrink, x_legend)
+        SolarPlots.__init__( self, module, **kwargs)
  
 
         # continuing with Pyomo Dispatch plots

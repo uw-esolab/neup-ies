@@ -245,9 +245,17 @@ class Plots(object):
             self.set_operating_modes_list()
             
             # extracting outputs
-            OutputExtraction.set_ssc_outputs(self, Outputs)
+            self.set_extractor()
+            self.extractor.set_ssc_outputs(self, Outputs)
 
 
+    def set_extractor(self):
+        """ Setting the output extraction class
+        """
+        
+        self.extractor = OutputExtraction
+        
+        
     def get_array(self, array_str, slicer):
         """ Method to slice through arrays
 
@@ -655,8 +663,8 @@ class Plots(object):
                                     is_bar_graph=True, left_axis=False)
             
         # custom y limits and ticks to be integers
-        ax.set_ylim(0, 40)
-        ax.set_yticks(np.arange(0, 40, 5))
+        ax.set_ylim(0, len(self.operating_modes) )
+        ax.set_yticks(np.arange(0, len(self.operating_modes), 5))
 
         # plot operating mode arrays
         op_array_list = ['op_mode_1'] # list of array strings
