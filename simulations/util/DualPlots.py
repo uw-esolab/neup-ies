@@ -16,10 +16,10 @@ rc('axes', linewidth=2)
 rc('font', weight='bold', size=12)
 from util.PostProcessing import OutputExtraction
 from util.PostProcessing import Plots
+from util.PostProcessing import DispatchPlots
 from util.SolarPlots import SolarOutputExtraction
 from util.SolarPlots import SolarPlots
-from util.PostProcessing import DispatchPlots
-
+from util.SolarPlots import SolarDispatchPlots
 
 class DualOutputExtraction(SolarOutputExtraction):
     """
@@ -290,3 +290,258 @@ class DualPlots(SolarPlots):
             'CR_SU__PC_RM_HI__TES_OFF__NUC_ON',
             'CR_SU__PC_RM_HI__TES_FULL__NUC_ON',
             'ITER_END']
+
+
+class DualDispatchPlots(DualPlots):
+    """
+    The Plots class is a part of the PostProcessing family of classes. It can 
+    output results from Pyomo Dispatch models. 
+
+    Note that the DispatchPlots class must be initialized before using. 
+    """
+
+    def __init__(self, module, **kwargs):
+        """ Initializes the Plots module
+
+        The instantiation of this class receives a full Dispatch object, the module
+        being one of the Pyomo Dispatch model created in the /neup-ies/simulations/dispatch directory.
+        It also contains various inputs relating to cosmetic parameters for
+        matplotlib plots. 
+
+        Inputs:
+            module (object)     : object representing Pyomo Dispatch Model with results
+            fsl (str)           : fontsize for legend
+            loc (str)           : location of legend
+            legend_offset(bool) : are we plotting legends off-axis?
+            lp (int)            : labelpad for axis labels
+            lps (int)           : labelpad for axis labels - short version
+            fs (int)            : fontsize for labels, titles, etc.
+            lw (int)            : linewidth for plotting
+            x_shrink (float)    : (legend_offset==True) amount to shrink axis to make room for legend
+        """
+        
+        # initialize Plots class
+        SolarDispatchPlots.__init__( self, module, **kwargs)
+        
+    
+    def set_plotter(self):
+        """ Setting class for plotting
+        """
+        
+        self.plotter = DualPlots
+
+
+    def plot_pyomo_energy(self, ax=None, **kwargs):
+        """ Method to plot energy data from Pyomo Dispatch on single plot
+
+        This method is used specifically to plot energy data from Dispatch simulation
+        results. Built-in options to plot legend off-axis. 
+
+        Inputs:
+            ax (object)         : axis object to plot on
+            plot_all_time(bool) : are we plotting all results or just a portion?
+            title_label(str)    : title name for plot
+            start_hr (int)      : (plot_all_time==False) hour used for starting index 
+            end_hr (int)        : (plot_all_time==False) hour used for ending index
+            hide_x(bool)        : hiding the x-axis from this particular plot
+            x_legend (float)    : (legend_offset==True) x-offset defining left-most side of legend
+            y_legend_L (float)  : (legend_offset==True) y-offset of left y-axis plot
+            y_legend_R (float)  : (legend_offset==True) y-offset of right y-axis plot
+        """
+        
+        SolarDispatchPlots.plot_pyomo_energy(self, ax=ax, **kwargs)
+        
+
+    def plot_pyomo_power(self, ax=None, title_label=None, plot_all_time=True, \
+                          start_hr=0, end_hr=48, hide_x=False,  x_legend=1.2, \
+                          y_legend_L=1.0, y_legend_R=1.0):
+        """ Method to plot power and pricing data from Pyomo Dispatch on single plot
+
+        This method is used specifically to plot power data from Dispatch simulation
+        results. Built-in options to plot legend off-axis. 
+
+        Inputs:
+            ax (object)         : axis object to plot on
+            plot_all_time(bool) : are we plotting all results or just a portion?
+            title_label(str)    : title name for plot
+            start_hr (int)      : (plot_all_time==False) hour used for starting index 
+            end_hr (int)        : (plot_all_time==False) hour used for ending index
+            hide_x(bool)        : hiding the x-axis from this particular plot
+            x_legend (float)    : (legend_offset==True) x-offset defining left-most side of legend
+            y_legend_L (float)  : (legend_offset==True) y-offset of left y-axis plot
+            y_legend_R (float)  : (legend_offset==True) y-offset of right y-axis plot
+        """
+
+        #========================#
+        #--- Creating Figure  ---#
+        #========================#
+
+        # if no axis object specified, create a figure and axis from it
+        if ax is None:
+            fig = plt.figure(figsize=[10, 5])
+            ax = fig.gca()   # this is the power plot
+    
+        # twin axis to plot pricing on opposite y-axis
+        ax2 = ax.twinx()  # this is the pricing plot
+
+        # plot energy arrays
+        power_array_list = ['wdot_array', 'x_array', 'xr_array',
+                            'xrsu_array', 'xn_array',
+                            'wdot_s_array', 'wdot_p_array'] # list of array strings
+        power_label_list = ['Cycle Out (E)', 'Cycle In (T)',
+                            'Receiver Out (T)', 'Receiver Startup (T)', 'Nuclear Out (T)',
+                            'Energy Sold to Grid (E)', 'Energy Purchased (E)'] # list of labels for each array string to extract from Outputs
+        power_wts = np.linspace(6, 2, 6).tolist()
+        power_ylabel = 'Power \n(MW)'
+
+        ax  = self.plot_SSC_generic(ax, array_list=power_array_list, \
+                                    label_list=power_label_list, \
+                                    y_label=power_ylabel, \
+                                    lw_list=power_wts, \
+                                    title_label=title_label, \
+                                    plot_all_time=plot_all_time, \
+                                    start_hr=start_hr, end_hr=end_hr, hide_x=hide_x)
+        
+        #========================#
+        #--- Extra arrays  ------#
+        #========================#
+        
+        # retrieving arrays
+        wdot_array    = self.wdot_array.m    
+        x_array       = self.x_array.m
+        xr_array      = self.xr_array.m
+        xrsu_array    = self.xrsu_array.m    
+        wdot_s_array  = self.wdot_s_array.m
+        wdot_p_array  = self.wdot_p_array.m
+        
+        # vertical power line at midpoint
+        power_vert = np.linspace(  np.min([wdot_array, x_array, xr_array, \
+                                           xrsu_array, wdot_s_array, wdot_p_array]), 
+                                   np.max([wdot_array, x_array, xr_array, \
+                                           xrsu_array, wdot_s_array, wdot_p_array])*1.1, 
+                                   self.T )
+            
+        # Line marking the midpoint line
+        ax.plot(self.time_midway, power_vert, 'k--', linewidth=self.lw)   
+            
+        #========================#
+        #--- Double axis      ---#
+        #========================#
+        
+        # plot price array(s)
+        price_array_list = ['p_array']
+        price_label_list = [None]
+        price_ylabel = 'Tariff \n($/kWh)'
+        ax2 = self.plot_SSC_generic(ax2, array_list=price_array_list, \
+                                    label_list=price_label_list, \
+                                    y_label=price_ylabel, \
+                                    title_label=None, \
+                                    plot_all_time=plot_all_time, \
+                                    start_hr=start_hr, end_hr=end_hr, hide_x=hide_x, \
+                                    is_bar_graph=True, left_axis=False)
+            
+        #========================#
+        #---- Setting Labels ----#
+        #========================#
+        
+        # customizing legend(s)
+        if self.legend_offset:
+            ax.legend( loc=self.loc_ul, fontsize=self.fsl, bbox_to_anchor=(x_legend, y_legend_L)) # plot legend for Power arrays
+        else:
+            ax.legend( loc=self.loc_ul, fontsize=self.fsl) # plot legend for Power arrays
+            
+
+    def plot_pyomo_dual_bin(self, ax=None, title_label=None, plot_all_time=True, \
+                          start_hr=0, end_hr=48, hide_x=False,  x_legend=1.2, \
+                          y_legend_L=1.0, y_legend_R=1.0):
+        """ Method to plot solar binary data from Pyomo Dispatch on single plot
+
+        This method is used specifically to plot data from Dispatch simulation
+        results pertaining to nuclear binary values. Variables include whether
+        nuclear plant is running (0 or 1), etc. Built-in options to plot legend 
+        off-axis. 
+
+        Inputs:
+            ax (object)         : axis object to plot on
+            plot_all_time(bool) : are we plotting all results or just a portion?
+            title_label(str)    : title name for plot
+            start_hr (int)      : (plot_all_time==False) hour used for starting index 
+            end_hr (int)        : (plot_all_time==False) hour used for ending index
+            hide_x(bool)        : hiding the x-axis from this particular plot
+            x_legend (float)    : (legend_offset==True) x-offset defining left-most side of legend
+            y_legend_L (float)  : (legend_offset==True) y-offset of left y-axis plot
+            y_legend_R (float)  : (legend_offset==True) y-offset of right y-axis plot
+        """
+
+        #========================#
+        #--- Creating Figure  ---#
+        #========================#
+
+        # if no axis object specified, create a figure and axis from it
+        if ax is None:
+            fig = plt.figure(figsize=[10, 5])
+            ax = fig.gca()   # this is the power plot
+
+        # plot nuclear binary arrays
+        recbin_array_list = ['yn_array', 'yr_array',   'yrhsp_array', 'yrsb_array',
+                             'yrsd_array', 'yrsu_array',  'yrsup_array' ] # list of array strings
+        recbin_label_list = ['Is Nuclear On?', 'Is Receiver On?', 'Is Receiver HSU Pen?', 
+                             'Is Receiver SB?', 'Is Receiver SD?', 
+                             'Is Receiver SU?', 'Is Receiver CSU Pen?' ] # list of labels for each array string to extract from Outputs
+        recbin_wts = np.linspace(10, 1.5, 6).tolist()
+        recbin_ylabel = 'CSP and LFR \nBinary \nVariables'
+
+        ax  = self.plot_SSC_generic(ax, array_list=recbin_array_list, \
+                                    label_list=recbin_label_list, \
+                                    y_label=recbin_ylabel, \
+                                    lw_list=recbin_wts, \
+                                    title_label=title_label, \
+                                    plot_all_time=plot_all_time, \
+                                    start_hr=start_hr, end_hr=end_hr, hide_x=hide_x)
+            
+        #========================#
+        #--- Extra arrays  ---#
+        #========================#
+
+        # vertical binary line at midpoint
+        binary_vert = np.linspace( -0.5, 1.5, self.T )
+            
+        # Line marking the midpoint line
+        ax.plot(self.time_midway, binary_vert, 'k--', linewidth=self.lw)
+        
+        # set binary ticks and labels
+        ax.set_yticks([0, 1])
+        ax.set_yticklabels(['No', 'Yes'])
+
+        #========================#
+        #---- Setting Labels ----#
+        #========================#
+        
+        # customizing legend(s)
+        if self.legend_offset:
+            ax.legend( loc=self.loc_ul, fontsize=self.fsl, bbox_to_anchor=(x_legend, y_legend_L)) # plot legend for Nuclear arrays
+        else:
+            ax.legend( loc=self.loc_ul, fontsize=self.fsl) # plot legend for Nuclear arrays
+
+
+    def plot_pyomo_cycle_bin(self, ax=None, **kwargs):
+        """ Method to plot power cycle binary data from Pyomo Dispatch on single plot
+
+        This method is used specifically to plot data from Dispatch simulation
+        results pertaining to cycle binary values. Variables include whether
+        power cycle is running (0 or 1), etc. Built-in options to plot legend 
+        off-axis. 
+
+        Inputs:
+            ax (object)         : axis object to plot on
+            plot_all_time(bool) : are we plotting all results or just a portion?
+            title_label(str)    : title name for plot
+            start_hr (int)      : (plot_all_time==False) hour used for starting index 
+            end_hr (int)        : (plot_all_time==False) hour used for ending index
+            hide_x(bool)        : hiding the x-axis from this particular plot
+            x_legend (float)    : (legend_offset==True) x-offset defining left-most side of legend
+            y_legend_L (float)  : (legend_offset==True) y-offset of left y-axis plot
+            y_legend_R (float)  : (legend_offset==True) y-offset of right y-axis plot
+        """
+        
+        DispatchPlots.plot_pyomo_cycle_bin(self, ax=ax, **kwargs)
