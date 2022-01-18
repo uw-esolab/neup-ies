@@ -314,7 +314,7 @@ class SolarPlots(Plots):
             'ITER_END']
 
 
-class SolarDispatchPlots(DispatchPlots):
+class SolarDispatchPlots(SolarPlots):
     """
     The Plots class is a part of the PostProcessing family of classes. It can 
     output results from Pyomo Dispatch models. 
@@ -343,21 +343,15 @@ class SolarDispatchPlots(DispatchPlots):
         """
         
         # initialize Plots class
-        SolarPlots.__init__( self, module, **kwargs)
- 
-
-        # continuing with Pyomo Dispatch plots
-        if self.mod_class_name == 'dispatch':
-            
-            # saving module to self
-            self.dm = module
-            
-            # extract outputs from Dispatch model
-            SolarOutputExtraction.set_pyomo_outputs(self)
-            
-            # slice of arrays
-            self.full_slice = slice(0, len(self.t_full), 1)
-
+        DispatchPlots.__init__( self, module, **kwargs)
+    
+    
+    def set_plotter(self):
+        """ Setting class for plotting
+        """
+        
+        self.plotter = SolarPlots
+        
 
     def plot_pyomo_energy(self, ax=None, title_label=None, plot_all_time=True, \
                           start_hr=0, end_hr=48, hide_x=False,  x_legend=1.2, \
