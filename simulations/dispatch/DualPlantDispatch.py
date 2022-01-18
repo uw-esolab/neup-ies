@@ -131,8 +131,8 @@ class DualPlantDispatch(SolarDispatch):
         def tes_start_up_rule(model, t):
             """ Ensuring sufficient TES charge level to startup NP """
             if t == 1:
-                return model.s0 >= model.Delta[t]*model.delta_rs[t]*( (model.Qu + model.Qb)*( -3 + model.yrsu[t] + model.y0 + model.y[t] + model.ycsb0 + model.ycsb[t] ) + model.x[t] + model.Qb*model.ycsb[t] )
-            return model.s[t-1] >= model.Delta[t]*model.delta_rs[t]*( (model.Qu + model.Qb)*( -3 + model.yrsu[t] + model.y[t-1] + model.y[t] + model.ycsb[t-1] + model.ycsb[t] ) + model.x[t] + model.Qb*model.ycsb[t] )
+                return model.s0 >= model.Delta[t]*model.delta_rs[t]*( (model.Qu + model.Qb)*( -3 + model.yrsu[t] + model.ynsu[t] + model.y0 + model.y[t] + model.ycsb0 + model.ycsb[t] ) + model.x[t] + model.Qb*model.ycsb[t] )
+            return model.s[t-1] >= model.Delta[t]*model.delta_rs[t]*( (model.Qu + model.Qb)*( -3 + model.yrsu[t] + model.ynsu[t] + model.y[t-1] + model.y[t] + model.ycsb[t-1] + model.ycsb[t] ) + model.x[t] + model.Qb*model.ycsb[t] )
         def maintain_tes_rule(model):
             """ Final state of TES has to be less than or equal to start """
             return model.s[model.num_periods] <= model.s0
@@ -153,7 +153,7 @@ class DualPlantDispatch(SolarDispatch):
         
         TODO: This should be revisited when adding MED!!
         """
-        def grid_sun_rule(model, t):
+        def grid_therm_rule(model, t):
             """ Balance of power flow, i.e. sold vs purchased """
             return (
                     model.wdot_s[t] - model.wdot_p[t] == (1-model.etac[t])*model.wdot[t]
@@ -169,7 +169,7 @@ class DualPlantDispatch(SolarDispatch):
         GeneralDispatch.addPiecewiseLinearEfficiencyConstraints(self)
         
         # additional constraints
-        self.model.grid_sun_con = pe.Constraint(self.model.T,rule=grid_sun_rule)
+        self.model.grid_sun_con = pe.Constraint(self.model.T,rule=grid_therm_rule)
         
         
     def generate_constraints(self):

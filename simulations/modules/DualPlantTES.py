@@ -16,6 +16,7 @@ from modules.SolarTES import SolarTES
 from dispatch.DualPlantDispatch import DualPlantDispatch as DD
 from dispatch.DualPlantDispatch import DualPlantDispatchParamWrap as DDP
 from dispatch.SolarDispatch import SolarDispatchParamWrap as SDP
+from dispatch.SolarDispatch import SolarDispatchOutputs as SDO
 
 class DualPlantTES(SolarTES): 
     """
@@ -47,6 +48,8 @@ class DualPlantTES(SolarTES):
 
         # define specific Dispatch module to be called later
         self.Dispatch_Module = DD
+        
+        self.Dispatch_Outputs = SDO
 
 
     def update_Plant_after_SSC(self):

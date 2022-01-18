@@ -341,7 +341,7 @@ class SolarDispatch(NuclearDispatch):
             self.addTESEnergyBalanceConstraints()
         
         self.addReceiverStartupConstraints()
-        # self.addReceiverSupplyAndDemandConstraints()
+        self.addReceiverSupplyAndDemandConstraints()
         self.addReceiverNodeLogicConstraints()
 
 
