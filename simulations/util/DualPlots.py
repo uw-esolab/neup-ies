@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Fri Jul 16 16:15:50 2021
+Created on Thu Jan 13 14:46:10 2022
 
 @author: gabrielsoto
 """
@@ -17,9 +17,11 @@ rc('font', weight='bold', size=12)
 from util.PostProcessing import OutputExtraction
 from util.PostProcessing import Plots
 from util.PostProcessing import DispatchPlots
+from util.SolarPlots import SolarOutputExtraction
+from util.SolarPlots import SolarPlots
+from util.SolarPlots import SolarDispatchPlots
 
-
-class SolarOutputExtraction(OutputExtraction):
+class DualOutputExtraction(SolarOutputExtraction):
     """
     The OutputExtraction class is a part of the PostProcessing family of classes.
     It extracts outputs from SSC or Dispatch models. Can be called from other 
@@ -37,9 +39,9 @@ class SolarOutputExtraction(OutputExtraction):
             module (object)     : object representing NE2 module class after simulations
         """
         
-        OutputExtraction.__init__(self, module)
-        
-        
+        SolarOutputExtraction.__init__(self, module)
+
+
     def set_ssc_outputs(self, mod_out):
         """ Method to set SSC outputs from module
         
@@ -49,15 +51,19 @@ class SolarOutputExtraction(OutputExtraction):
         Inputs:
             mod_out (object)  : object representing Outputs subclass of NE2 module
         """
+        
         # saving some outputs for plotting
         self.p_cycle      = np.asarray(mod_out.P_cycle) * u.MW
         self.gen          = (np.asarray(mod_out.gen) * u.kW).to('MW')
         self.q_dot_rec_in = np.asarray(mod_out.q_dot_rec_inc) * u.MW
         self.q_thermal    = np.asarray(mod_out.Q_thermal) * u.MW
+        self.q_dot_nuc_in = np.asarray(mod_out.q_dot_nuc_inc) * u.MW
+        self.q_nuc_thermal    = np.asarray(mod_out.Q_nuc_thermal) * u.MW
         self.q_pb         = np.asarray(mod_out.q_pb) * u.MW
         self.q_dot_pc_su  = np.asarray(mod_out.q_dot_pc_startup) * u.MW
         self.m_dot_pc     = np.asarray(mod_out.m_dot_pc) * u.kg/u.s
         self.m_dot_rec    = np.asarray(mod_out.m_dot_rec) * u.kg/u.s
+        self.m_dot_nuc    = np.asarray(mod_out.m_dot_nuc) * u.kg/u.s
         self.T_pc_in      = np.asarray(mod_out.T_pc_in) * u.degC
         self.T_pc_out     = np.asarray(mod_out.T_pc_out) * u.degC
         self.T_tes_cold   = np.asarray(mod_out.T_tes_cold) * u.degC
@@ -69,6 +75,7 @@ class SolarOutputExtraction(OutputExtraction):
         self.price        = np.asarray(self.mod.TimeOfDeliveryFactors.dispatch_factors_ts)
 
         # setting static inputs
+        self.q_nuc_design  = self.mod.SystemDesign.q_dot_nuclear_des * u.MW  # receiver design thermal power
         self.p_pb_design   = self.mod.SystemDesign.P_ref * u.MW              # power block design electrical power
         self.eta_design    = self.mod.SystemDesign.design_eff                # power block design efficiency
         self.q_pb_design  = (self.p_pb_design / self.eta_design).to('MW')    # power block design thermal rating
@@ -88,61 +95,11 @@ class SolarOutputExtraction(OutputExtraction):
         and saves them to `self`. 
         """
         
-        # Dispatch Model with results
-        dm = self.dm
-        u = self.u
-        
-        # lambda functions
-        extract_from_model = lambda name: getattr(dm.model, name)
-        extract_array      = lambda name: np.array([ pe.value(extract_from_model(name)[t]) for t in dm.model.T ])
-        extract_energy     = lambda name: (extract_array(name)*u.kWh).to('MWh') 
-        extract_power      = lambda name: (extract_array(name)*u.kW).to('MW') 
-        
-        # Time and Pricing Arrays
-        self.t_full = extract_array('Delta_e') * u.hr
-        self.p_array = extract_array('P')
-        
-        # marking the midway point
-        self.T = len(self.t_full)
-        self.time_midway = np.ones([self.T])*int(self.T/2)
-
-        # Energy Arrays
-        self.s_array     = extract_energy('s')
-        self.ucsu_array  = extract_energy('ucsu')
-        self.ursu_array  = extract_energy('ursu')
-        
-        # Power Arrays
-        self.wdot_array             = extract_power('wdot')
-        self.wdot_delta_plus_array  = extract_power('wdot_delta_plus')
-        self.wdot_delta_minus_array = extract_power('wdot_delta_minus')
-        self.wdot_v_plus_array      = extract_power('wdot_v_plus')
-        self.wdot_v_minus_array     = extract_power('wdot_v_minus')
-        self.wdot_s_array           = extract_power('wdot_s')
-        self.wdot_p_array           = extract_power('wdot_p')
-        self.x_array                = extract_power('x')
-        self.xr_array               = extract_power('xr')
-        self.xrsu_array             = extract_power('xrsu')
-
-        # Binary Arrays (Nuclear)
-        self.yr_array    = extract_array('yr') 
-        self.yrhsp_array = extract_array('yrhsp') 
-        self.yrsb_array  = extract_array('yrsb') 
-        self.yrsd_array  = extract_array('yrsu') 
-        self.yrsu_array  = extract_array('yrsu') 
-        self.yrsup_array = extract_array('yrsup') 
-        
-        # Binary Arrays (Cycle)
-        self.y_array     = extract_array('y') 
-        self.ychsp_array = extract_array('ychsp') 
-        self.ycsb_array  = extract_array('ycsb') 
-        self.ycsd_array  = extract_array('ycsd') 
-        self.ycsu_array  = extract_array('ycsu') 
-        self.ycsup_array = extract_array('ycsup') 
-        self.ycgb_array  = extract_array('ycgb')  
-        self.ycge_array  = extract_array('ycge') 
+        OutputExtraction.set_pyomo_outputs(self)
+        SolarOutputExtraction.set_pyomo_outputs(self)
 
 
-class SolarPlots(Plots):
+class DualPlots(SolarPlots):
     """
     The Plots class is a part of the PostProcessing family of classes. It can 
     output results from SSCmodels. This might be a 
@@ -172,17 +129,17 @@ class SolarPlots(Plots):
             lw (int)            : linewidth for plotting
             x_shrink (float)    : (legend_offset==True) amount to shrink axis to make room for legend
         """
-        
-        Plots.__init__(self, module, **kwargs)
-        
     
+        SolarPlots.__init__(self, module, **kwargs)
+        
+        
     def set_extractor(self):
         """ Setting the output extraction class
         """
         
-        self.extractor = SolarOutputExtraction
+        self.extractor = DualOutputExtraction
         
-        
+
     def plot_SSC_power_and_energy(self, ax=None, title_label=None, plot_all_time=True, \
                                   start_hr=0, end_hr=48, hide_x=False, x_legend=1.2, \
                                   y_legend_L=1.0, y_legend_R=1.0):
@@ -220,10 +177,11 @@ class SolarPlots(Plots):
         ax.set_yticks([0, 250, 500, 750, 1000])
 
         # plot Power arrays
-        power_array_list = ['p_cycle', 'q_dot_rec_in', 'q_thermal', 'gen', 'q_dot_pc_su'] # list of array strings
+        power_array_list = ['p_cycle', 'q_dot_rec_in', 'q_thermal', 'q_nuc_thermal', 'gen', 'q_dot_pc_su'] # list of array strings
         power_label_list = ['P_cycle (Electric)',
-                            'Q_dot Incident (Thermal)',
-                            'Q_dot to Salt (Thermal)',
+                            'Q_dot Receiver Incident (Thermal)',
+                            'Q_dot to Salt from CSP (Thermal)',
+                            'Q_dot to Salt from LFR (Thermal)',
                             'Power generated (Electric)',
                             'PC startup thermal power (Thermal)'] # list of labels for each array string to extract from Outputs
         power_ylabel = 'Power \n(MW)'
@@ -311,10 +269,30 @@ class SolarPlots(Plots):
             'CR_TO_COLD__PC_MIN__TES_EMPTY',
             'CR_TO_COLD__PC_OFF__TES_OFF',
             'CR_TO_COLD__PC_SU__TES_DC',
+            'CR_OFF__PC_OFF__TES_CH__NUC_ON',
+            'CR_OFF__PC_SU__TES_CH__NUC_ON',
+            'CR_OFF__PC_SU__TES_OFF__NUC_ON',
+            'CR_SU__PC_OFF__TES_CH__NUC_ON',
+            'CR_SU__PC_SU__TES_CH__NUC_ON',
+            'CR_SU__PC_SU__TES_OFF__NUC_ON',
+            'CR_OFF__PC_SB__TES_OFF__NUC_ON',
+            'CR_OFF__PC_SB__TES_CH__NUC_ON',
+            'CR_OFF__PC_SB__TES_FULL__NUC_ON',
+            'CR_OFF__PC_RM_LO__TES_OFF__NUC_ON',
+            'CR_OFF__PC_TARGET__TES_CH__NUC_ON',
+            'CR_OFF__PC_RM_HI__TES_OFF__NUC_ON',
+            'CR_OFF__PC_RM_HI__TES_FULL__NUC_ON',
+            'CR_SU__PC_SB__TES_OFF__NUC_ON',
+            'CR_SU__PC_SB__TES_CH__NUC_ON',
+            'CR_SU__PC_SB__TES_FULL__NUC_ON',
+            'CR_SU__PC_RM_LO__TES_OFF__NUC_ON',
+            'CR_SU__PC_TARGET__TES_CH__NUC_ON',
+            'CR_SU__PC_RM_HI__TES_OFF__NUC_ON',
+            'CR_SU__PC_RM_HI__TES_FULL__NUC_ON',
             'ITER_END']
 
 
-class SolarDispatchPlots(SolarPlots):
+class DualDispatchPlots(DualPlots):
     """
     The Plots class is a part of the PostProcessing family of classes. It can 
     output results from Pyomo Dispatch models. 
@@ -343,19 +321,17 @@ class SolarDispatchPlots(SolarPlots):
         """
         
         # initialize Plots class
-        DispatchPlots.__init__( self, module, **kwargs)
-    
+        SolarDispatchPlots.__init__( self, module, **kwargs)
+        
     
     def set_plotter(self):
         """ Setting class for plotting
         """
         
-        self.plotter = SolarPlots
-        
+        self.plotter = DualPlots
 
-    def plot_pyomo_energy(self, ax=None, title_label=None, plot_all_time=True, \
-                          start_hr=0, end_hr=48, hide_x=False,  x_legend=1.2, \
-                          y_legend_L=1.0, y_legend_R=1.0):
+
+    def plot_pyomo_energy(self, ax=None, **kwargs):
         """ Method to plot energy data from Pyomo Dispatch on single plot
 
         This method is used specifically to plot energy data from Dispatch simulation
@@ -372,61 +348,10 @@ class SolarDispatchPlots(SolarPlots):
             y_legend_L (float)  : (legend_offset==True) y-offset of left y-axis plot
             y_legend_R (float)  : (legend_offset==True) y-offset of right y-axis plot
         """
-
-        #========================#
-        #--- Creating Figure  ---#
-        #========================#
-
-        # if no axis object specified, create a figure and axis from it
-        if ax is None:
-            fig = plt.figure(figsize=[10, 5])
-            ax = fig.gca()   # this is the power plot
-
-        # plot energy arrays
-        energy_array_list = ['s_array', 'ucsu_array', 'ursu_array'] # list of array strings
-        energy_label_list = ['TES Reserve Quantity',
-                             'Cycle Startup Energy Inventory',
-                             'Receiver Startup Energy Inventory'] # list of labels for each array string to extract from Outputs
-        energy_wts = np.linspace(4, 2, 3).tolist()
-        energy_ylabel = 'Energy \n(MWh)'
-
-        ax  = self.plot_SSC_generic(ax, array_list=energy_array_list, \
-                                    label_list=energy_label_list, \
-                                    y_label=energy_ylabel, \
-                                    lw_list=energy_wts, \
-                                    title_label=title_label, \
-                                    plot_all_time=plot_all_time, \
-                                    start_hr=start_hr, end_hr=end_hr, hide_x=hide_x)
-            
-        #========================#
-        #--- Extra arrays  ---#
-        #========================#
         
-        # retrieving arrays
-        s_array = self.s_array.m    
-        ucsu_array = self.ucsu_array.m
-        ursu_array = self.ursu_array.m
+        SolarDispatchPlots.plot_pyomo_energy(self, ax=ax, **kwargs)
         
-        # vertical energy line at midpoint
-        energy_vert = np.linspace( np.min([s_array, ucsu_array, ursu_array]), 
-                                   np.max([s_array, ucsu_array, ursu_array])*1.1, 
-                                   self.T )
-            
-        # Line marking the midpoint line
-        ax.plot(self.time_midway, energy_vert, 'k--', linewidth=self.lw)
 
-
-        #========================#
-        #---- Setting Labels ----#
-        #========================#
-        
-        # customizing legend(s)
-        if self.legend_offset:
-            ax.legend( loc=self.loc_ul, fontsize=self.fsl, bbox_to_anchor=(x_legend, y_legend_L)) # plot legend for Energy arrays
-        else:
-            ax.legend( loc=self.loc_ul, fontsize=self.fsl) # plot legend for Energy arrays
-
-        
     def plot_pyomo_power(self, ax=None, title_label=None, plot_all_time=True, \
                           start_hr=0, end_hr=48, hide_x=False,  x_legend=1.2, \
                           y_legend_L=1.0, y_legend_R=1.0):
@@ -461,9 +386,10 @@ class SolarDispatchPlots(SolarPlots):
 
         # plot energy arrays
         power_array_list = ['wdot_array', 'x_array', 'xr_array',
-                            'xrsu_array', 'wdot_s_array', 'wdot_p_array'] # list of array strings
+                            'xrsu_array', 'xn_array',
+                            'wdot_s_array', 'wdot_p_array'] # list of array strings
         power_label_list = ['Cycle Out (E)', 'Cycle In (T)',
-                            'Receiver Out (T)', 'Receiver Startup (T)',
+                            'Receiver Out (T)', 'Receiver Startup (T)', 'Nuclear Out (T)',
                             'Energy Sold to Grid (E)', 'Energy Purchased (E)'] # list of labels for each array string to extract from Outputs
         power_wts = np.linspace(6, 2, 6).tolist()
         power_ylabel = 'Power \n(MW)'
@@ -523,9 +449,9 @@ class SolarDispatchPlots(SolarPlots):
             ax.legend( loc=self.loc_ul, fontsize=self.fsl, bbox_to_anchor=(x_legend, y_legend_L)) # plot legend for Power arrays
         else:
             ax.legend( loc=self.loc_ul, fontsize=self.fsl) # plot legend for Power arrays
+            
 
-
-    def plot_pyomo_solar_bin(self, ax=None, title_label=None, plot_all_time=True, \
+    def plot_pyomo_dual_bin(self, ax=None, title_label=None, plot_all_time=True, \
                           start_hr=0, end_hr=48, hide_x=False,  x_legend=1.2, \
                           y_legend_L=1.0, y_legend_R=1.0):
         """ Method to plot solar binary data from Pyomo Dispatch on single plot
@@ -557,13 +483,13 @@ class SolarDispatchPlots(SolarPlots):
             ax = fig.gca()   # this is the power plot
 
         # plot nuclear binary arrays
-        recbin_array_list = ['yr_array',   'yrhsp_array', 'yrsb_array',
-                             'yrsd_array', 'yrsu_array',  'yrsup_array'] # list of array strings
-        recbin_label_list = ['Is Receiver On?', 'Is Receiver HSU Pen?', 
+        recbin_array_list = ['yn_array', 'yr_array',   'yrhsp_array', 'yrsb_array',
+                             'yrsd_array', 'yrsu_array',  'yrsup_array' ] # list of array strings
+        recbin_label_list = ['Is Nuclear On?', 'Is Receiver On?', 'Is Receiver HSU Pen?', 
                              'Is Receiver SB?', 'Is Receiver SD?', 
-                             'Is Receiver SU?', 'Is Receiver CSU Pen?'] # list of labels for each array string to extract from Outputs
+                             'Is Receiver SU?', 'Is Receiver CSU Pen?' ] # list of labels for each array string to extract from Outputs
         recbin_wts = np.linspace(10, 1.5, 6).tolist()
-        recbin_ylabel = 'Receiver \nBinary \nVariables'
+        recbin_ylabel = 'CSP and LFR \nBinary \nVariables'
 
         ax  = self.plot_SSC_generic(ax, array_list=recbin_array_list, \
                                     label_list=recbin_label_list, \
@@ -596,3 +522,26 @@ class SolarDispatchPlots(SolarPlots):
             ax.legend( loc=self.loc_ul, fontsize=self.fsl, bbox_to_anchor=(x_legend, y_legend_L)) # plot legend for Nuclear arrays
         else:
             ax.legend( loc=self.loc_ul, fontsize=self.fsl) # plot legend for Nuclear arrays
+
+
+    def plot_pyomo_cycle_bin(self, ax=None, **kwargs):
+        """ Method to plot power cycle binary data from Pyomo Dispatch on single plot
+
+        This method is used specifically to plot data from Dispatch simulation
+        results pertaining to cycle binary values. Variables include whether
+        power cycle is running (0 or 1), etc. Built-in options to plot legend 
+        off-axis. 
+
+        Inputs:
+            ax (object)         : axis object to plot on
+            plot_all_time(bool) : are we plotting all results or just a portion?
+            title_label(str)    : title name for plot
+            start_hr (int)      : (plot_all_time==False) hour used for starting index 
+            end_hr (int)        : (plot_all_time==False) hour used for ending index
+            hide_x(bool)        : hiding the x-axis from this particular plot
+            x_legend (float)    : (legend_offset==True) x-offset defining left-most side of legend
+            y_legend_L (float)  : (legend_offset==True) y-offset of left y-axis plot
+            y_legend_R (float)  : (legend_offset==True) y-offset of right y-axis plot
+        """
+        
+        DispatchPlots.plot_pyomo_cycle_bin(self, ax=ax, **kwargs)

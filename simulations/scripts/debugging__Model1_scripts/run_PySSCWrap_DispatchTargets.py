@@ -1,23 +1,27 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Fri Sep  3 09:56:04 2021
+Created on Mon May 24 10:27:17 2021
 
 @author: gabrielsoto
 """
 
 from util.PySSCWrapper import PySSCWrapper
-import os, sys
+import os
 
 # print the PID of this script run
 pid = os.getpid()
 print("PID = ", pid)
 
 # initialize the PySSC Wrapper
-pw = PySSCWrapper(json_name='model2',is_debug=False)
+pw = PySSCWrapper(json_name='model1_CAISO',is_debug=True)
+
+# update SSC dictionary parameters
+pw.sscdict['tshours']   = 0
+pw.sscdict['P_ref']     = 400
 
 # run SSC through PySSC
-pw.run_sim()
+pw.run_sim(run_dispatch_targets=True)
 
 # get output arrays from the SSC run
 p_cycle       = pw.get_array('P_cycle')

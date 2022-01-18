@@ -28,7 +28,7 @@ print("PID = ", pid)
 # =============================================================================
 
 # defining directories
-nuctes = NuclearTES.NuclearTES(is_dispatch=True)
+nuctes = NuclearTES.NuclearTES(json_name="model1", is_dispatch=True, log_dispatch_targets=True, exec_debug=True)
 output_file = 'output.csv'
 nuctes.run_sim( run_loop=True, export=False, filename=output_file )
 nt = nuctes.Plant

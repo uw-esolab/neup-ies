@@ -27,7 +27,7 @@ class NuclearTES(GenericSSCModule):
     """
     
     def __init__(self, plant_name="nuclear_tes", json_name="model1", is_dispatch=False,
-                 log_dispatch_targets=False):
+                 log_dispatch_targets=False, **specs):
         """ Initializes the NuclearTES module
         
         Args:
@@ -43,7 +43,7 @@ class NuclearTES(GenericSSCModule):
         """
         
         # initialize Generic module, csv data arrays should be saved here
-        GenericSSCModule.__init__( self, plant_name, json_name, is_dispatch, log_dispatch_targets=log_dispatch_targets )
+        GenericSSCModule.__init__( self, plant_name, json_name, is_dispatch, log_dispatch_targets=log_dispatch_targets, **specs)
         
         # define specific PySAM module to be called later
         self.PySAM_Module = NuclearTes
@@ -238,6 +238,8 @@ class NuclearTES(GenericSSCModule):
                 'q_dot_rec_inc_log': 'q_dot_nuc_inc',    # Nuclear incident thermal power
                 'q_pb_log':          'q_pb',             # PC input energy
                 'q_dot_pc_su_log' :  'q_dot_pc_startup', # PC startup thermal power
+                'q_dc_tes' :         'q_dc_tes',         # TES discharge thermal power
+                'q_ch_tes' :         'q_ch_tes',         # TES charge thermal power
                 'm_dot_pc_log' :     'm_dot_pc',         # PC HTF mass flow rate
                 'm_dot_rec_log'  :   'm_dot_nuc',        # Nuc mass flow rate
                 'T_pc_in_log' :      'T_pc_in',          # PC HTF inlet temperature 
@@ -305,20 +307,29 @@ class NuclearTES(GenericSSCModule):
         except Exception as err:
             # usually this gets triggered if cbc solver fails
             dispatch_success = False
-            print("Dispatch solver failed with error message: \n{0}".format(err))
+            print("NE2 Dispatch solver failed with error message: \n{0}".format(err))
         
         # check results to see if saved solution is optimal and feasible (cbc didn't crash)
         if dispatch_success:
             # check if solver status ended normally
             if rt_results.solver.status != SolverStatus.ok:
                 dispatch_success = False
-                print('Solver solution status was not normal.')
+                print('NE2 Solver solution status was not normal.')
             
             # check if termination condition was not optimal
             if rt_results.solver.termination_condition != TerminationCondition.optimal:
                 dispatch_success = False
-                print('Solver solution termination condition not optimal: {0}'.format(rt_results.solver.termination_condition) )
-
+                print('NE2 Solver solution termination condition not optimal: {0}'.format(rt_results.solver.termination_condition) )
+        else:
+            try:
+                rt_results = dispatch_model.solve_model(run_simple=True)
+                dispatch_success = True
+                print("\nNE2 Simple dispatch solver fixed the problem!")
+            except Exception as err:
+                # usually this gets triggered if cbc solver fails
+                dispatch_success = False
+                print("NE2 Simple dispatch solver failed with error message: \n{0}".format(err))
+                
         # saving current model to self
         self.current_disp_model = dispatch_model
         
@@ -392,12 +403,12 @@ class NuclearTES(GenericSSCModule):
         params = GenericSSCModule.create_dispatch_params(self, Plant )
 
         # extract array from full run of Plant
-        assert hasattr(Plant.Outputs, "Q_nuc_thermal"), "Q_thermal was not found in the outputs of Plant."
+        assert hasattr(Plant.Outputs, "Q_nuc_thermal"), "Q_nuc_thermal was not found in the outputs of Plant."
         self.Q_nuc_guess = Plant.Outputs.Q_nuc_thermal
         
         # set up copy of SSC dict
         updated_SSC_dict = copy.deepcopy(self.SSC_dict)
-        updated_SSC_dict['Q_thermal'] = self.Q_nuc_guess[self.slice_pyo_firstH]
+        updated_SSC_dict['Q_nuc_thermal'] = self.Q_nuc_guess[self.slice_pyo_firstH]
         
         # these are NuclearTES-specific setters
         params = DW.set_nuclear_parameters( params )

@@ -111,8 +111,7 @@ class OutputExtraction(object):
         
         # Dispatch Model with results
         dm = self.dm
-        u = self.u
-        
+
         # lambda functions
         extract_from_model = lambda name: getattr(dm.model, name)
         extract_array      = lambda name: np.array([ pe.value(extract_from_model(name)[t]) for t in dm.model.T ])
@@ -228,6 +227,8 @@ class Plots(object):
         mod_class = module.__class__.__module__
         self.mod_class_name = mod_class.split('.')[0]
         
+        self.set_extractor()
+        
         # continuing with SSC plots
         if self.mod_class_name == 'modules':
             
@@ -245,9 +246,16 @@ class Plots(object):
             self.set_operating_modes_list()
             
             # extracting outputs
-            OutputExtraction.set_ssc_outputs(self, Outputs)
+            self.extractor.set_ssc_outputs(self, Outputs)
 
 
+    def set_extractor(self):
+        """ Setting the output extraction class
+        """
+        
+        self.extractor = OutputExtraction
+        
+        
     def get_array(self, array_str, slicer):
         """ Method to slice through arrays
 
@@ -409,9 +417,17 @@ class Plots(object):
         # plotting data from list
         for a, l, w in zip(array_list, label_list, lw_list):
             extracted_array = get_array(a)
-            plot_data_on_axis(ax, extracted_array, l, w)
             if is_bar_graph and extracted_array.min() < 0:
-                plot_data_on_axis(ax, -extracted_array, l, w)
+                pos_array =  extracted_array
+                neg_array = -extracted_array
+                pos_array[pos_array<0] = 0
+                neg_array[neg_array<0] = 0
+                
+                plot_data_on_axis(ax, pos_array, l, w)
+                plot_data_on_axis(ax, neg_array, l, w, color='r')
+                plt.show()
+            else:
+                plot_data_on_axis(ax, extracted_array, l, w)
 
         #========================#
         #---- Setting Labels ----#
@@ -627,10 +643,12 @@ class Plots(object):
 
         # custom y limits and ticks to be integers
         price = self.price[ start_hr:end_hr  ]
-        minP = 1.05*price.min() if price.min() < 0 else 0
+        minP = 0
         maxP = 1.05*price.max()
+        spacing = 0.5 if maxP-minP < 2 else 1
+        
         ax2.set_ylim(minP, maxP)
-        ax2.set_yticks(np.arange(minP, maxP, 0.5))
+        ax2.set_yticks( np.arange( minP, maxP, spacing) )
         
         # plot price array(s)
         price_array_list = ['price']
@@ -645,8 +663,8 @@ class Plots(object):
                                     is_bar_graph=True, left_axis=False)
             
         # custom y limits and ticks to be integers
-        ax.set_ylim(0, 40)
-        ax.set_yticks(np.arange(0, 40, 5))
+        ax.set_ylim(0, len(self.operating_modes) )
+        ax.set_yticks(np.arange(0, len(self.operating_modes), 5))
 
         # plot operating mode arrays
         op_array_list = ['op_mode_1'] # list of array strings
@@ -798,8 +816,7 @@ class DispatchPlots(Plots):
     Note that the DispatchPlots class must be initialized before using. 
     """
 
-    def __init__(self, module, fsl='x-small', loc='best', legend_offset=False,
-                 lp=16, lps=12, fs=12, lw=2, x_shrink=0.85, x_legend=12):
+    def __init__(self, module, **kwargs):
         """ Initializes the Plots module
 
         The instantiation of this class receives a full Dispatch object, the module
@@ -815,23 +832,14 @@ class DispatchPlots(Plots):
             lp (int)            : labelpad for axis labels
             lps (int)           : labelpad for axis labels - short version
             fs (int)            : fontsize for labels, titles, etc.
-            lw (int)            : linewidth fo        # plot price array(s)
-        price_array_list = ['price']
-        price_label_list = [None]
-        price_ylabel = 'Tariff \n($/kWh)'
-        ax2 = self.plot_SSC_generic(ax2, array_list=price_array_list, \
-                                    label_list=price_label_list, \
-                                    y_label=price_ylabel, \
-                                    title_label=None, \
-                                    plot_all_time=plot_all_time, \
-                                    start_hr=start_hr, end_hr=end_hr, hide_x=hide_x, \
-                                    is_bar_graph=True)r plotting
+            lw (int)            : linewidth for plotting
             x_shrink (float)    : (legend_offset==True) amount to shrink axis to make room for legend
         """
         
+        self.set_plotter()
+        
         # initialize Plots class
-        Plots.__init__( self, module, fsl, loc, legend_offset, \
-                 lp, lps, fs, lw, x_shrink, x_legend)
+        self.plotter.__init__( self, module, **kwargs)
  
 
         # continuing with Pyomo Dispatch plots
@@ -841,12 +849,20 @@ class DispatchPlots(Plots):
             self.dm = module
             
             # extract outputs from Dispatch model
-            OutputExtraction.set_pyomo_outputs(self)
+            self.set_extractor()
+            self.extractor.set_pyomo_outputs(self)
             
             # slice of arrays
             self.full_slice = slice(0, len(self.t_full), 1)
 
 
+    def set_plotter(self):
+        """ Setting class for plotting
+        """
+        
+        self.plotter = Plots
+        
+        
     def plot_pyomo_energy(self, ax=None, title_label=None, plot_all_time=True, \
                           start_hr=0, end_hr=48, hide_x=False,  x_legend=1.2, \
                           y_legend_L=1.0, y_legend_R=1.0):
@@ -1202,11 +1218,9 @@ class DispatchPlots(Plots):
 
         # plot cycle binary arrays
         cyclebin_array_list = ['y_array',   'ychsp_array', 'ycsb_array',
-                               'ycsd_array', 'ycsu_array',  'ycsup_array',
-                               'ycgb_array', 'ycge_array'] # list of array strings
-        cyclebin_label_list = ['Is Cycle Generating Power?', 'Is Cycle HSU Pen?', 'Is Cycle SB?', 
-                               'Is Cycle SD?',               'Is Cycle SU?',      'Is Cycle CSU Pen?', 
-                               'Is Cycle Began Gen?',        'Is Cycle Stopped Gen?'] 
+                               'ycsd_array', 'ycsup_array'] # list of array strings
+        cyclebin_label_list = ['Is Cycle Generating Power?', 'Is Cycle in Hot Start Up?', 'Is Cycle in Standby?', 
+                               'Is Cycle Shutting Down?',    'Is Cycle in Cold Start Up?'] 
 
         cyclebin_wts = np.linspace(10, 1.5, 8).tolist()
         cyclebin_ylabel = 'Cycle \nBinary \nVariables'

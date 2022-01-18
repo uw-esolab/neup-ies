@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Thu Aug 12 14:23:43 2021
+Created on Fri Nov 19 09:15:26 2021
 
 @author: gabrielsoto
 """
+
 
 import os,sys
 sys.path.append('..')
@@ -26,13 +27,13 @@ print("PID = ", pid)
 # =============================================================================
 
 # modifying inputs
-json = "model1_CAISO"   # model1_CAISO # model1
+json = "model1"   # model1_CAISO # model1
 dispatch = True
 run_loop = True
 sscH    = 24   # (hr)
 pyoH    = 48   # (hr)
-Pref    = 850  # (MW)
-tshours = 2    # (hr)
+Pref    = 525  # (MW)
+tshours = 8    # (hr)
 
 # ========================
 
@@ -45,9 +46,6 @@ nuctes.PySAM_dict['ssc_horizon']   = sscH
 nuctes.ssc_horizon   = sscH * nuctes.u.hr
 nuctes.PySAM_dict['pyomo_horizon'] = pyoH
 nuctes.pyomo_horizon = pyoH * nuctes.u.hr
-
-nuctes.SSC_dict['cycle_cutoff_frac'] = 0.1
-nuctes.SSC_dict['q_sby_frac'] = 0.1
 
 # saving/updating PYSAM dict to nuctes
 nuctes.dispatch_wrap = nuctes.create_dispatch_wrapper( nuctes.PySAM_dict )
@@ -114,53 +112,15 @@ upl = Plots(nuctes, legend_offset = True, x_shrink=0.7, fE_min=0, fE_max=1.05)
 
 # 48 hour plot
 fig = plt.figure(figsize=[14,6])
-ax1 = fig.add_subplot(311)
-ax2 = fig.add_subplot(312)
-ax3 = fig.add_subplot(313)
+ax1 = fig.add_subplot(211)
+ax2 = fig.add_subplot(212)
 
 plt_allTime = True
-title = 'SSC Results \nSSC horizon = {0}, Pyomo Horizon = {1} \nPref = {2:.2f} , tshours = {3}'.format( \
+title = 'SSC Results \nSSC horizon = {0} hr, Pyomo Horizon = {1} hr \nPref = {2:.2f} , tshours = {3}'.format( \
                                 sscH, pyoH, nuctes.SSC_dict['P_ref'], nuctes.SSC_dict['tshours'])
-start = 145*24
-end   = start + 155*24
+start = 0
+end   = start + 3600
 
 upl.plot_SSC_power_and_energy(ax1 , plot_all_time=plt_allTime, title_label=title, start_hr=start, end_hr=end, hide_x=True, x_legend=1.2, y_legend_L=1.0, y_legend_R=0.3)
-upl.plot_SSC_op_modes(ax2, plot_all_time=plt_allTime, start_hr=start, end_hr=end, hide_x=True )
-upl.plot_SSC_massflow(ax3, plot_all_time=plt_allTime, start_hr=start, end_hr=end, y_legend_L=0.8, y_legend_R=0.3)
-
-
-# =============================================================================
-#   Creating Pyomo Plotting Object
-# =============================================================================
-
-# retrieving the DispatchPlots class
-from util.PostProcessing import DispatchPlots
-# specifying dispatch model
-ind = 109
-# extracting specific, solved dispatch model
-dm = nuctes.disp_models[str(ind)]
-# create Dispatch plotting object
-dpl = DispatchPlots(dm, lp=8, legend_offset=True, x_shrink=0.75)
-
-
-# =============================================================================
-#   Pyomo Plotting
-# =============================================================================
-
-fig = plt.figure(figsize=[12, 10])
-ax1 = fig.add_subplot(411)
-ax2 = fig.add_subplot(412)
-ax3 = fig.add_subplot(413)
-ax4 = fig.add_subplot(414)
-
-plt.subplots_adjust(hspace=0)
-# plt.gcf().subplots_adjust(bottom=0.1) # leaving room at the bottom
-
-title_pyo = 'Pyomo Results \nTime after Sim Start = {0} d, Pyomo Horizon = {1} hr \nPref = {2:.2f} , tshours = {3}'.format( \
-                                (ind*sscH*u.hr).to('d').m, pyoH, nuctes.SSC_dict['P_ref'], nuctes.SSC_dict['tshours'])
-
-dpl.plot_pyomo_energy(      ax1, x_legend=1.04, y_legend_L=1.0, hide_x=True, title_label=title_pyo )
-dpl.plot_pyomo_power(       ax2, x_legend=1.15, y_legend_L=1.0, hide_x=True )
-dpl.plot_pyomo_nuclear_bin( ax3, x_legend=1.04, y_legend_L=1.0, hide_x=True )
-dpl.plot_pyomo_cycle_bin(   ax4, x_legend=1.04, y_legend_L=1.0)
+upl.plot_SSC_op_modes(ax2, plot_all_time=plt_allTime, start_hr=start, end_hr=end)
 

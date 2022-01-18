@@ -20,8 +20,9 @@ from dispatch.GeneralDispatch import GeneralDispatchOutputs as GDO
 from tqdm import tqdm
 import pickle as pickle
 import numpy as np
-import copy
+import copy, time
 from abc import ABC, abstractmethod
+from multiprocessing import Process
 
 class GenericSSCModule(ABC):
     """
@@ -42,7 +43,8 @@ class GenericSSCModule(ABC):
     @abstractmethod
     def __init__(self, plant_name="abstract", json_name="abstract", 
                        is_dispatch=False, dispatch_time_step=1,
-                       log_dispatch_targets=False):
+                       log_dispatch_targets=False, exec_debug=False, 
+                       exec_timeout=10.):
         """ Initializes the GenericSSCModules
         
         Args:
@@ -56,7 +58,10 @@ class GenericSSCModule(ABC):
                 time step for dispatch (hours)
             log_dispatch_targets (bool): 
                 boolean, if True logs dispatch targets calculated by Pyomo at each segment
-            
+            exec_debug (bool):
+                boolean, allows execution in "debug" mode that times out exec call
+            exec_timeout (float):
+                amount of time in seconds to timeout an exec call
         """
         
         # grab names, either default here or from child class
@@ -79,6 +84,10 @@ class GenericSSCModule(ABC):
         self.pyomo_horizon = PySAM_dict['pyomo_horizon'] * u.hr
         self.output_keys   = output_keys
         self.dispatch_time_step = dispatch_time_step * u.hr
+        
+        # choosing debug mode vs normal execution of Plant
+        self.exec_debug   = exec_debug
+        self.exec_timeout = exec_timeout
         
         # save csv arrays to class 
         self.store_csv_arrays( PySAM_dict )
@@ -137,7 +146,7 @@ class GenericSSCModule(ABC):
         self.create_Grid( )
         # update gen and annual energy so SystemOutput is consistent, carried over to SO object
         self.Grid.SystemOutput.gen = tuple(self.gen_log)
-        self.Grid.SystemOutput.annual_energy = np.sum(self.annual_energy.magnitude)
+        self.Grid.SystemOutput.annual_energy = np.sum(self.annual_energy.m)
         self.Grid.execute( )
         
         #--- use executed Plant object to create SingleOwner object and execute it
@@ -165,7 +174,7 @@ class GenericSSCModule(ABC):
         
         # saving location of solar resource file for SSC input
         parent_dir = FileMethods.parent_dir
-        self.solar_resource_file = os.path.join(parent_dir, input_dict['solar_resource_rel_parent']) #os.path.join
+        self.solar_resource_file = os.path.join(parent_dir, input_dict['solar_resource_rel_parent']) 
 
     @abstractmethod
     def generate_hash(self):
@@ -460,11 +469,12 @@ class GenericSSCModule(ABC):
             # one pre-run of Plant, used to grab inputs to dispatch in some modules
             prePlant = self.duplicate_Plant( self.Plant )
             
+            print("Attempting to run full simulation to gather predictions for Pyomo")
             # runs for the full simulation to gather some SSC-specific array calculations
             ssc_run_success, prePlant = self.run_Plant_through_SSC(
                                                 prePlant, time_start , self.sim_time_end 
                                                 )
-            print("Attempting to run full simulation to gather predictions for Pyomo:  {0}".format(
+            print("First pre-run attempt:  {0}".format(
                             "success!" if ssc_run_success else "failed :("))
             
             # create dispatch parameters for the first time
@@ -495,7 +505,10 @@ class GenericSSCModule(ABC):
         
         # this loop should only be entered if run_loop == True
         for t in tqdm(remaining_sim_time):
-        
+            
+            # if t == 197:
+            #     import pdb
+            #     pdb.set_trace()
             # advance to the next time segment
             time_start, time_next, time_pyoH = self.advance_time_segment( time_start, time_next )
             
@@ -557,11 +570,46 @@ class GenericSSCModule(ABC):
         Plant.SystemControl.time_start = start_hr.to('s').m
         Plant.SystemControl.time_stop  = end_hr.to('s').m
         
+        # debugging mode, if selected, creates a process for plant execution
+        if self.exec_debug:
+            checker = Process( target=Plant.execute )
+        
+        # initialize success boolean
         exec_success = True
+        
+        # try to see if execution succeeds
         try:
-            Plant.execute()
+            # debug execution method
+            if self.exec_debug:
+
+                # start plant execution and add timeout in seconds
+                checker.start()
+                checker.join(self.exec_timeout)
+            
+                # ping process to see if execution is stuck
+                if checker.is_alive() == True:
+                    err = "\n ...Process stuck. Terminating."
+                    print(err)
+                    exec_success = False
+                    self.err_message = err
+                    
+                    # terminate the process, sometimes might need to kill (!!)
+                    try:
+                        checker.terminate()
+                    except:
+                        checker.kill()
+                        
+                # if execution didn't hang, call again (wasn't saving outputs)
+                else:
+                    Plant.execute()
+                    
+            # normal execution, no debug
+            else:
+                Plant.execute()
+        # execution failed
         except Exception as err:
             exec_success = False
+            self.err_message = str(err)
             print("\n SSC error: {0}".format(err))
             
         return exec_success, Plant
@@ -878,14 +926,13 @@ class GenericSSCModule(ABC):
         
         if self.log_dispatch_targets:
             if not self.hash_exists:
-                if not log_final:
-                    for l in self.Log_Target_Arrays.keys():
-                        # get what we have logged so far
-                        disp_targ = getattr(self.Plant.SystemControl, l )
-                        # grab and save corresponding slices to self (this should be some sort of pointer)
-                        self.Log_Target_Arrays[l][self.slice_ssc_currentH] = disp_targ[self.slice_ssc_firstH]
+                for l in self.Log_Target_Arrays.keys():
+                    # get what we have logged so far
+                    disp_targ = getattr(self.Plant.SystemControl, l )
+                    # grab and save corresponding slices to self (this should be some sort of pointer)
+                    self.Log_Target_Arrays[l][self.slice_ssc_currentH] = disp_targ[self.slice_ssc_firstH]
             
-                else:
+                if log_final:
                     with open(self.hash_filepath, "wb") as f:
                         pickle.dump(self.Log_Target_Arrays, f)
                     print("Dispatch Targets successfuly stored in {0}".format(self.hash_filepath))        
@@ -964,3 +1011,4 @@ class GenericSSCModule(ABC):
             safe_del(k)
         
         safe_del('Log_Arrays')
+

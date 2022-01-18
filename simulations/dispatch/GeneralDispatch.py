@@ -17,10 +17,13 @@ import pyomo.environ as pe
 import numpy as np
 from util.FileMethods import FileMethods
 from util.SSCHelperMethods import SSCHelperMethods
+from pyomo.environ import value
 from pyomo.environ import units as u_pyomo
 if not hasattr(u_pyomo,'USD'):
     u_pyomo.load_definitions_from_strings(['USD = [currency]'])
 from pyomo.util.check_units import assert_units_consistent, assert_units_equivalent, check_units_equivalent
+from pyomo.util.infeasible import log_infeasible_constraints, log_infeasible_bounds
+import logging
 from abc import ABC, abstractmethod
 
 
@@ -109,6 +112,7 @@ class GeneralDispatch(ABC):
         ### Power Cycle Parameters ###
         self.model.Ec = pe.Param(mutable=True, initialize=gd("Ec"), units=gu("Ec"))           #E^c: Required energy expended to start cycle [kWt$\cdot$h]
         self.model.eta_des = pe.Param(mutable=True, initialize=gd("eta_des"), units=gu("eta_des"))   #\eta^{des}: Cycle nominal efficiency [-] 
+        self.model.Eu = pe.Param(mutable=True, initialize=gd("Eu"), units=gu("Eu"))                #E^u: Thermal energy storage capacity [kWt$\cdot$h]
         self.model.etap = pe.Param(mutable=True, initialize=gd("etap"), units=gu("etap"))     #\eta^p: Slope of linear approximation of power cycle performance curve [kWe/kWt]
         self.model.Lc = pe.Param(mutable=True, initialize=gd("Lc"), units=gu("Lc"))           #L^c: Cycle heat transfer fluid pumping power per unit energy expended [kWe/kWt]
         self.model.Qb = pe.Param(mutable=True, initialize=gd("Qb"), units=gu("Qb"))           #Q^b: Cycle standby thermal power consumption per period [kWt]
@@ -134,6 +138,7 @@ class GeneralDispatch(ABC):
         self.model.Ccsb = pe.Param(mutable=True, initialize=gd("Ccsb"), units=gu("Ccsb"))              #C^{csb}: Operating cost of power cycle standby operation [\$/kWt$\cdot$h]
         
         ### Initial Condition Parameters ###
+        self.model.s0 = pe.Param(mutable=True, initialize=gd("s0"), units=gu("s0"))           #s_0: Initial TES reserve quantity  [kWt$\cdot$h]
         self.model.ucsu0 = pe.Param(mutable=True, initialize=gd("ucsu0"), units=gu("ucsu0")) #u^{csu}_0: Initial cycle start-up energy inventory  [kWt$\cdot$h]
         self.model.wdot0 = pe.Param(mutable=True, initialize=gd("wdot0"), units=gu("wdot0")) #\dot{w}_0: Initial power cycle electricity generation [kW]e
         self.model.y0 = pe.Param(mutable=True, initialize=gd("y0"), units=gu("y0"))          #y_0: 1 if cycle is generating electric power initially, 0 otherwise
@@ -159,12 +164,13 @@ class GeneralDispatch(ABC):
         u = self.u_pyomo
         ### Decision Variables ###
         #------- Variables ---------
+        self.model.s = pe.Var(self.model.T, domain=pe.NonNegativeReals, bounds = (0,self.model.Eu), units=u.kWh)    #s: TES reserve quantity at period $t$  [kWt$\cdot$h]
         self.model.ucsu = pe.Var(self.model.T, domain=pe.NonNegativeReals, units=u.kWh)                             #u^{csu}: Cycle start-up energy inventory at period $t$ [kWt$\cdot$h]
         self.model.wdot = pe.Var(self.model.T, domain=pe.NonNegativeReals, units=u.kW)                              #\dot{w}: Power cycle electricity generation at period $t$ [kWe]
-        self.model.wdot_delta_plus = pe.Var(self.model.T, domain=pe.NonNegativeReals, units=u.kW)	                #\dot{w}^{\Delta+}: Power cycle ramp-up in period $t$ [kWe]
-        self.model.wdot_delta_minus = pe.Var(self.model.T, domain=pe.NonNegativeReals, units=u.kW) 	                #\dot{w}^{\Delta-}: Power cycle ramp-down in period $t$ [kWe]
-        self.model.wdot_v_plus = pe.Var(self.model.T, domain=pe.NonNegativeReals, bounds = (0,self.model.W_v_plus), units=u.kW)      #\dot{w}^{v+}: Power cycle ramp-up beyond designed limit in period $t$ [kWe]
-        self.model.wdot_v_minus = pe.Var(self.model.T, domain=pe.NonNegativeReals, bounds = (0,self.model.W_v_minus), units=u.kW) 	 #\dot{w}^{v-}: Power cycle ramp-down beyond designed limit in period $t$ [kWe]
+        self.model.wdot_delta_plus = pe.Var(self.model.T, domain=pe.NonNegativeReals, units=u.kW/u.hr)	                #\dot{w}^{\Delta+}: Power cycle ramp-up in period $t$ [kWe/hr]
+        self.model.wdot_delta_minus = pe.Var(self.model.T, domain=pe.NonNegativeReals, units=u.kW/u.hr) 	                #\dot{w}^{\Delta-}: Power cycle ramp-down in period $t$ [kWe/hr]
+        self.model.wdot_v_plus = pe.Var(self.model.T, domain=pe.NonNegativeReals, bounds = (0,self.model.W_v_plus), units=u.kW/u.hr)      #\dot{w}^{v+}: Power cycle ramp-up beyond designed limit in period $t$ [kWe/hr]
+        self.model.wdot_v_minus = pe.Var(self.model.T, domain=pe.NonNegativeReals, bounds = (0,self.model.W_v_minus), units=u.kW/u.hr) 	 #\dot{w}^{v-}: Power cycle ramp-down beyond designed limit in period $t$ [kWe/hr]
         self.model.wdot_s = pe.Var(self.model.T, domain=pe.NonNegativeReals, units=u.kW)	                       #\dot{w}^s: Energy sold to grid in time t [kWe]
         self.model.wdot_p = pe.Var(self.model.T, domain=pe.NonNegativeReals, units=u.kW)	                       #\dot{w}^p: Energy purchased from the grid in time t [kWe]
         self.model.x = pe.Var(self.model.T, domain=pe.NonNegativeReals, units=u.kW)                                #x: Cycle thermal power utilization at period $t$ [kWt]
@@ -280,7 +286,7 @@ class GeneralDispatch(ABC):
         """
         def power_rule(model, t):
             """ Model of electric power vs. heat input as linear function """
-            return model.wdot[t] == (model.etaamb[t]/model.eta_des)*(model.etap*model.x[t] + model.y[t]*(model.Wdotu - model.etap*model.Qu))
+            return model.wdot[t] <= (model.etaamb[t]/model.eta_des)*(model.etap*model.x[t] + model.y[t]*(model.Wdotu - model.etap*model.Qu))
         def power_ub_rule(model, t):
             """ Upper bound on PC electric power output """
             return model.wdot[t] <= model.Wdotu*(model.etaamb[t]/model.eta_des)*model.y[t]
@@ -395,8 +401,8 @@ class GeneralDispatch(ABC):
         def cycle_shutdown_rule(model, t):
             """ PC shutdown only after operating or standby """
             if t == 1:
-                return model.ycsd[t] >= model.y0 - model.y[t] + model.ycsb0 - model.ycsb[t]
-            return model.ycsd[t] >= model.y[t-1] - model.y[t] + model.ycsb[t-1] - model.ycsb[t]
+                return 0 >= model.y0 - model.y[t] + model.ycsb0 - model.ycsb[t]
+            return model.ycsd[t-1] >= model.y[t-1] - model.y[t] + model.ycsb[t-1] - model.ycsb[t]
         def cycle_start_pen_rule(model, t):
             """ PC cold startup penalty """
             if t == 1: 
@@ -454,7 +460,7 @@ class GeneralDispatch(ABC):
             return ineq
 
 
-    def solve_model(self, mipgap=0.7):
+    def solve_model(self, mipgap=0.7, tee=False, run_simple=False):
         """ Method to solve the Pyomo model
         
         This method solves the Pyomo Concrete model that has been instantiated
@@ -482,8 +488,13 @@ class GeneralDispatch(ABC):
         # setting optimality condition
         opt.options["ratioGap"] = mipgap
         
+        if run_simple:
+            opt.options["primalPivot"] = "dantzig"
+            opt.options["dualPivot"]   = "dantzig"
+
         # solving model
         results = opt.solve(self.model, tee=False, keepfiles=False)
+
         #TODO: assert successful optimization?
         
         return results
