@@ -7,14 +7,14 @@ Created on Fri Sep  3 09:56:04 2021
 """
 
 from util.PySSCWrapper import PySSCWrapper
-import os
+import os, sys
 
 # print the PID of this script run
 pid = os.getpid()
 print("PID = ", pid)
 
 # initialize the PySSC Wrapper
-pw = PySSCWrapper(json_name='model2',is_debug=True)
+pw = PySSCWrapper(json_name='model2',is_debug=False)
 
 # run SSC through PySSC
 pw.run_sim()

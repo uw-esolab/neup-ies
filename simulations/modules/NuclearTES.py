@@ -403,12 +403,12 @@ class NuclearTES(GenericSSCModule):
         params = GenericSSCModule.create_dispatch_params(self, Plant )
 
         # extract array from full run of Plant
-        assert hasattr(Plant.Outputs, "Q_nuc_thermal"), "Q_thermal was not found in the outputs of Plant."
+        assert hasattr(Plant.Outputs, "Q_nuc_thermal"), "Q_nuc_thermal was not found in the outputs of Plant."
         self.Q_nuc_guess = Plant.Outputs.Q_nuc_thermal
         
         # set up copy of SSC dict
         updated_SSC_dict = copy.deepcopy(self.SSC_dict)
-        updated_SSC_dict['Q_thermal'] = self.Q_nuc_guess[self.slice_pyo_firstH]
+        updated_SSC_dict['Q_nuc_thermal'] = self.Q_nuc_guess[self.slice_pyo_firstH]
         
         # these are NuclearTES-specific setters
         params = DW.set_nuclear_parameters( params )

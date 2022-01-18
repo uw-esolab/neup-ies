@@ -146,7 +146,7 @@ class GenericSSCModule(ABC):
         self.create_Grid( )
         # update gen and annual energy so SystemOutput is consistent, carried over to SO object
         self.Grid.SystemOutput.gen = tuple(self.gen_log)
-        self.Grid.SystemOutput.annual_energy = np.sum(self.annual_energy.magnitude)
+        self.Grid.SystemOutput.annual_energy = np.sum(self.annual_energy.m)
         self.Grid.execute( )
         
         #--- use executed Plant object to create SingleOwner object and execute it
@@ -174,7 +174,7 @@ class GenericSSCModule(ABC):
         
         # saving location of solar resource file for SSC input
         parent_dir = FileMethods.parent_dir
-        self.solar_resource_file = os.path.join(parent_dir, input_dict['solar_resource_rel_parent']) #os.path.join
+        self.solar_resource_file = os.path.join(parent_dir, input_dict['solar_resource_rel_parent']) 
 
     @abstractmethod
     def generate_hash(self):
