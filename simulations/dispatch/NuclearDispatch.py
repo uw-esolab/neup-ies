@@ -517,10 +517,10 @@ class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
         
         # thermal power and startup params
         self.Dnsu    = self.PySAM_dict['Dnsu']*u.hr   # Minimum time to start the nuclear plant (hr)
-        self.Qin_nuc = self.current_Plant['Q_thermal'] * u.MW    # value here taken from a previous Plant-SSC run
+        self.Qin_nuc = self.current_Plant['Q_nuc_thermal'] * u.MW    # value here taken from a previous Plant-SSC run
 
         if len(self.Qin_nuc) < len(param_dict['Delta']):
-            self.Qin_nuc = np.hstack( [self.current_Plant['Q_thermal'], self.current_Plant['Q_thermal']] ) * u.MW
+            self.Qin_nuc = np.hstack( [self.current_Plant['Q_nuc_thermal'], self.current_Plant['Q_nuc_thermal']] ) * u.MW
         
         # instantiating arrays
         n  = len(self.Delta)
