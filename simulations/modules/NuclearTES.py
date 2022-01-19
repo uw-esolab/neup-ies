@@ -460,7 +460,7 @@ class NuclearTES(GenericSSCModule):
         updated_SSC_dict['wdot0'] = Plant.Outputs.P_cycle[self.t_ind-1]
 
         # extract time series from a previous SSC run
-        updated_SSC_dict['Q_thermal'] = self.Q_nuc_guess[self.slice_pyo_currentH]
+        updated_SSC_dict['Q_nuc_thermal'] = self.Q_nuc_guess[self.slice_pyo_currentH]
         
         # TODO: removing w_dot_s_prev references in all of Dispatch for now, might need to revisit later
         # updated_SSC_dict['wdot_s_prev'] = 0 #np.array([pe.value(dm.model.wdot_s_prev[t]) for t in dm.model.T])[-1]
