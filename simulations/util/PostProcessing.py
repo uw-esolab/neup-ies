@@ -47,6 +47,8 @@ class OutputExtraction(object):
             Outputs = self.mod.PySAM_Outputs if module.run_loop else self.mod.Outputs
             
             self.t_full = np.asarray(Outputs.time_hr)*u.hr
+            self.t_max = self.t_full.max()
+            self.t_plot = np.arange(1, len(self.t_full), 1)*u.hr
             
             # extracting outputs
             self.set_ssc_outputs( Outputs )
@@ -241,6 +243,8 @@ class Plots(object):
             # saving full time logs
             self.t_full = np.asarray(Outputs.time_hr)*u.hr
             self.full_slice = slice(0, len(self.t_full), 1)
+            self.t_max = self.t_full.max()
+            self.t_plot = np.arange(1, len(self.t_full), 1)*u.hr
             
             # setting operating modes, kept it way at the bottom because it's ugly
             self.set_operating_modes_list()
@@ -374,19 +378,18 @@ class Plots(object):
         # extracting full time array and slice
         d_slice = self.full_slice
         
-        if self.t_full.to('hr')[-1] > 80*u.hr :
-            t_plot     = self.t_full.to('d')
+        if self.t_max > 80*u.hr :
+            t_plot = self.t_plot.to('d')
             time_label = 'Time (days)'
         else:
             # full time is less than 3 days, should use hrs in label
-            t_plot     = self.t_full.to('hr')
+            t_plot = self.t_plot.to('hr')
             time_label = 'Time (hr)'
         
-
         # if we're not plotting the full results, slice up the arrays for the time portion we want to plot
         if not plot_all_time:
             d_slice = self.get_slice(start_hr, end_hr)
-            t_plot = self.t_full[d_slice]
+            t_plot = t_plot[d_slice]
             time_label = 'Time (hr)'
 
         # nested function to plot arrays to a specific axis
@@ -400,7 +403,7 @@ class Plots(object):
 
         # lambda function to get arrays from self and slice em
         get_array = lambda array_str : self.get_array(array_str, d_slice)
-
+        
         #========================#
         #--- Creating Figure  ---#
         #========================#
@@ -682,9 +685,10 @@ class Plots(object):
         #---- extract operating modes to designated array
         #==================================================#
         op_mode_1 = self.get_array('op_mode_1', d_slice)
-
+        # import pdb
+        # pdb.set_trace()
         # Plotting data points over the OP mode line with different colors and labels
-        for op in self.op_mode_result[d_slice]:
+        for op in self.op_mode_result:
             # getting unique operating modes
             inds = (op_mode_1 == op)
             # individual index getting plotted with unique color and label
@@ -854,6 +858,8 @@ class DispatchPlots(Plots):
             
             # slice of arrays
             self.full_slice = slice(0, len(self.t_full), 1)
+            self.t_max = self.t_full.max()
+            self.t_plot = np.arange(0, len(self.t_full), 1)*u.hr
 
 
     def set_plotter(self):
