@@ -15,6 +15,10 @@ simulations/scripts/PySSC_scripts/**.html
 !simulations/scripts/PySSC_scripts/PySSC_generic_mspt.py
 !simulations/scripts/PySSC_scripts/run_PySSCWrap_model1.py
 
+simulations/json/tmp.json
+
+simulations/data/temp_dispatch_factors.csv
+
 simulations/outputs/**.csv
 simulations/outputs/**.xlsx
 simulations/outputs/**.txt
