@@ -1,6 +1,6 @@
 {
     "PySAM_inputs": {
-        "ssc_lib":                   "build_ssc/ssc/libssc.so",
+        "ssc_lib":                   "build_ssc_release/ssc/libssc.so",
         "solar_resource_rel_parent": "sam/deploy/solar_resource/phoenix_az_33.450495_-111.983688_psmv3_60_tmy.csv",
         "dispatch_factors_file":     "data/CAISO_dispatch_factors.csv",
         "ud_file":                   "data/ud_ind_od.csv",
