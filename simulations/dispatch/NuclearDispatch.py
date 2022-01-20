@@ -469,7 +469,7 @@ class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
         self.En     = (self.SSC_dict['rec_qf_delay'] * u.kWh / u.kW ) * self.q_nuc_design 
         self.Eu     = self.SSC_dict['tshours']*u.hr * self.q_pb_design
         self.Ln     = dw_rec_pump / self.q_nuc_design
-        self.Qnl    = self.SSC_dict['f_rec_min'] * self.q_nuc_design 
+        self.Qnl    = self.SSC_dict['f_nuc_min'] * self.q_nuc_design 
         self.Qnsb   = q_nuc_standby_fraction  * self.q_nuc_design 
         self.Qnsd   = q_nuc_shutdown_fraction * self.q_nuc_design 
         self.Qnu    = self.En / self.deltanl  
