@@ -137,9 +137,9 @@ class NuclearDispatch(GeneralDispatch):
             return (
                     sum( model.D[t] * 
                     #obj_profit
-                    model.Delta[t]*model.P[t]*0.1*(model.wdot_s[t] - model.wdot_p[t])
+                    model.Delta[t]*model.P[t]*0.5*(model.wdot_s[t] - model.wdot_p[t])
                     #obj_cost_cycle_su_hs_sd
-                    - (model.Ccsu*model.ycsup[t] + 0.1*model.Cchsp*model.ychsp[t] + model.alpha*model.ycsd[t])
+                    - (0.5*model.Ccsu*model.ycsup[t] + 0.2*model.Cchsp*model.ychsp[t] + model.alpha*model.ycsd[t])
                     #obj_cost_cycle_ramping
                     - model.Delta[t]*(model.C_delta_w*(model.wdot_delta_plus[t]+model.wdot_delta_minus[t])+model.C_v_w*(model.wdot_v_plus[t] + model.wdot_v_minus[t]))
                     #obj_cost_nuc_su_hs_sd
