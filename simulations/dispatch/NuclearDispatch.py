@@ -75,6 +75,20 @@ class NuclearDispatch(GeneralDispatch):
         self.model.Cnsu = pe.Param(mutable=True, initialize=gd("Cnsu"), units=gu("Cnsu"))              #C^{nsu}: Penalty for nuclear cold start-up [\$/start]
         self.model.Cnhsp = pe.Param(mutable=True, initialize=gd("Cnhsp"), units=gu("Cnhsp"))           #C^{nhsp}: Penalty for nuclear hot start-up [\$/start]
         
+        ### Objective Function Coefficients ###
+        self.model.ec_p = pe.Param(mutable=True, initialize=gd("ec_p"))          #e^{P}: Profit obj func coefficient [-]
+        self.model.ec_pcsu = pe.Param(mutable=True, initialize=gd("ec_pcsu"))    #e^{pcsu}: PC SU obj func coefficient [-]
+        self.model.ec_pchsu = pe.Param(mutable=True, initialize=gd("ec_pchsu"))  #e^{pchsu}: PC Hot SU obj func coefficient [-]
+        self.model.ec_pcsd = pe.Param(mutable=True, initialize=gd("ec_pcsd"))    #e^{pcsd}: PC SD obj func coefficient [-]
+        self.model.ec_pcr = pe.Param(mutable=True, initialize=gd("ec_pcr"))      #e^{pcr}: PC ramp obj func coefficient [-]
+        self.model.ec_pcer = pe.Param(mutable=True, initialize=gd("ec_pcer"))    #e^{pcer}: PC excess ramp obj func coefficient [-]
+        self.model.ec_nsu = pe.Param(mutable=True, initialize=gd("ec_nsu"))      #e^{nsu}: Nuclear SU obj func coefficient [-]
+        self.model.ec_nhsu = pe.Param(mutable=True, initialize=gd("ec_nhsu"))    #e^{nhsu}: Nuclear Hot SU obj func coefficient [-]
+        self.model.ec_nsd = pe.Param(mutable=True, initialize=gd("ec_nsd"))      #e^{nsd}: Nuclear SD obj func coefficient [-]
+        self.model.ec_pcg = pe.Param(mutable=True, initialize=gd("ec_pcg"))      #e^{pcg}: PC gen obj func coefficient [-]
+        self.model.ec_pcsb = pe.Param(mutable=True, initialize=gd("ec_pcsb"))    #e^{pcsb}: PC SB obj func coefficient [-]
+        self.model.ec_nt = pe.Param(mutable=True, initialize=gd("ec_nt"))        #e^{nt}: Nuclear production obj func coefficient [-]
+        
         ### Nuclear Parameters ###
         self.model.deltanl = pe.Param(mutable=True, initialize=gd("deltanl"), units=gu("deltanl")) #\delta^{nl}: Minimum time to start the nuclear plant [hr]
         self.model.En = pe.Param(mutable=True, initialize=gd("En"), units=gu("En"))                #E^n: Required energy expended to start nuclear plant [kWt$\cdot$h]
@@ -137,15 +151,15 @@ class NuclearDispatch(GeneralDispatch):
             return (
                     sum( model.D[t] * 
                     #obj_profit
-                    model.Delta[t]*model.P[t]*0.5*(model.wdot_s[t] - model.wdot_p[t])
+                    model.Delta[t]*model.P[t]*model.ec_p*(model.wdot_s[t] - model.wdot_p[t])
                     #obj_cost_cycle_su_hs_sd
-                    - (0.5*model.Ccsu*model.ycsup[t] + 0.2*model.Cchsp*model.ychsp[t] + model.alpha*model.ycsd[t])
+                    - (model.ec_pcsu*model.Ccsu*model.ycsup[t] + model.ec_pchsu*model.Cchsp*model.ychsp[t] + model.ec_pcsd*model.alpha*model.ycsd[t])
                     #obj_cost_cycle_ramping
-                    - model.Delta[t]*(model.C_delta_w*(model.wdot_delta_plus[t]+model.wdot_delta_minus[t])+model.C_v_w*(model.wdot_v_plus[t] + model.wdot_v_minus[t]))
+                    - model.Delta[t]*(model.ec_pcr*model.C_delta_w*(model.wdot_delta_plus[t]+model.wdot_delta_minus[t]) + model.ec_pcer*model.C_v_w*(model.wdot_v_plus[t] + model.wdot_v_minus[t]))
                     #obj_cost_nuc_su_hs_sd
-                    - (model.Cnsu*model.ynsup[t] + model.Cnhsp*model.ynhsp[t] + model.alpha*model.ynsd[t])
+                    - (model.ec_nsu*model.Cnsu*model.ynsup[t] + model.ec_nhsu*model.Cnhsp*model.ynhsp[t] + model.ec_nsd*model.alpha*model.ynsd[t])
                     #obj_cost_ops
-                    - model.Delta[t]*model.Cpc*model.wdot[t] - model.Delta[t]*model.Ccsb*model.Qb*model.ycsb[t] - model.Delta[t]*model.Cnuc*model.xn[t]
+                    - model.Delta[t]*model.ec_pcg*model.Cpc*model.wdot[t] - model.Delta[t]*model.ec_pcsb*model.Ccsb*model.Qb*model.ycsb[t] - model.Delta[t]*model.ec_nt*model.Cnuc*model.xn[t]
                     for t in model.T) 
                     )
         
@@ -437,6 +451,25 @@ class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
         # original nuc_op_cost given in MWh-electric rather than MWh-thermal
         C_nuc *= self.eta_design # eta => electric/thermal conversion
         
+        # getting objective function coefficients
+        coeff_list = ['ec_p',     # proft term
+                      'ec_pcsu',  # PC cold SU term
+                      'ec_pchsu', # PC hot SU term 
+                      'ec_pcsd',  # PC SD term
+                      'ec_pcr',   # PC ramping term
+                      'ec_pcer',  # PC excess ramping term
+                      'ec_nsu',   # LFR cold SU term
+                      'ec_nhsu',  # LFR hot SU term
+                      'ec_nsd',   # LFR SD term
+                      'ec_pcg',   # PC power generating term
+                      'ec_pcsb',  # PC SB term
+                      'ec_nt'     # LFR thermal power generating term
+                      ]
+        
+        # setting objective function coefficients
+        for coeff in coeff_list:
+            param_dict[coeff] = self.PySAM_dict[coeff] if coeff in self.PySAM_dict.keys() else 1.0
+            
         ### Cost Parameters ###
         param_dict['Cnuc']   = C_nuc.to('USD/kWh')  #C^{nuc}: Operating cost of nuclear plant [\$/kWt$\cdot$h]
         param_dict['Cnsu']   = C_nsu.to('USD')      #C^{nsu}: Penalty for nuclear cold start-up [\$/start]

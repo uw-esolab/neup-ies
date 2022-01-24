@@ -34,7 +34,20 @@
         "nuc_piping_ht_loss":        0,
         "dw_nuc_pump":               0,
         "Dnsu":                      1,
-        "weight":                    0.999
+        "weight":                    0.999,
+        "ec_p":                      0.5,
+        "ec_pcsu":                   0.5,
+        "ec_pchsu":                  0.2,
+        "ec_pcsd":                   1.0,
+        "ec_pcr":                    1.0,
+        "ec_pcer":                   1.0,  
+        "ec_nsu":                    1.0,
+        "ec_nhsu":                   1.0,
+        "ec_nsd":                    1.0,
+        "ec_pcg":                    1.0,
+        "ec_pcsb":                   1.0,
+        "ec_nt":                     1.0
+    },
     },
     
     "PySAM_outputs": {
