@@ -24,7 +24,7 @@ pid = os.getpid()
 print("PID = ", pid)
 
 # =============================================================================
-# set up
+# set up parameters
 # =============================================================================
 
 # array of successful P_cycle and tshours combinations
@@ -44,8 +44,8 @@ tshours    = np.array([ 0, 2, 4, 6, 8, 10, 12, 14 ])
 # p_cycle    = np.array([ 500, 450, 400, 350, 300, 250, 200 ]) 
 # p_cycle    = np.array([ 850, 800, 750, 700, 650, 600, 550 ]) 
 
-# p_cycle    = np.array([ 850, 800, 750, 700, 650, 600 ]) 
-p_cycle    = np.array([ 550, 500, 450, 400, 350, 300 ]) 
+p_cycle    = np.array([ 850, 800, 750, 700, 650, 600 ]) 
+# p_cycle    = np.array([ 550, 500, 450, 400, 350, 300 ]) 
 # 
 # p_cycle    = np.array([ 850, 800, 750, 700, 650, 600, 550, 500, 450, 400, 350, 300 ]) 
 
@@ -63,6 +63,19 @@ p_cycle    = np.array([ 550, 500, 450, 400, 350, 300 ])
 
 # exceptions = {"0":  [500, 450, 400], "2":  [400], "4":  [], "6":  [400], "8":  [], "10": [400], "12": [], "14": [400] }
 exceptions = {"0":  [], "2":  [], "4":  [], "6":  [], "8":  [], "10": [], "12": [], "14": [] }
+
+# =============================================================================
+# Parameters for Sweep
+# =============================================================================
+sscH = 24  # 12 # 24
+pyoH = 48  # 24 # 48
+json = "model1_CAISO" # model1_CAISO # model1 # model1_noMin # model1_HODR # model1_Hamilton_560_dfe # model1_Hamilton_560_tariffx2
+dispatch = True # True # False
+run_loop = True
+
+# =============================================================================
+# Initialize empty arrays
+# =============================================================================
 
 # formally defining the iterator arrays
 iterator1 = tshours  
@@ -100,12 +113,6 @@ op_modes_list = tmp_modes.operating_modes
 # =============================================================================
 # Double Loop
 # =============================================================================
-sscH = 24  # 12 # 24
-pyoH = 48  # 24 # 48
-json = "model1_CAISO" # model1_CAISO # model1 # model1_noMin # model1_HODR # model1_Hamilton_560_dfe # model1_Hamilton_560_tariffx2
-dispatch = True # True # False
-run_loop = True
-
 
 # starting the time counter
 tic = time.perf_counter()
@@ -122,10 +129,6 @@ for i, th in enumerate(iterator1): #over tshours
         idx = (i,j)
         mean_idx = (i,j,0)
         stdv_idx = (i,j,1)
-
-        # print current position in loop
-        print("output tshours :   ", th)
-        print("output Pref    :   ", pc)
         
         # =========================================
         # updating pysam class
@@ -152,6 +155,7 @@ for i, th in enumerate(iterator1): #over tshours
         # exceptions we know don't work in SSC
         # =========================================
         
+        
         if pc in exceptions[str(th)]:
             dummy_val = -1
             # log output means
@@ -167,11 +171,16 @@ for i, th in enumerate(iterator1): #over tshours
             TES_CH[idx] = dummy_val
             TES_DC[idx] = dummy_val
             
-        # =========================================
-        # actually run this simulation
-        # =========================================
+
         
         else:
+            
+            # =========================================
+            # actually run this simulation
+            # =========================================
+            # print current position in loop
+            print("Pref    = {0}".format(nuctes.SSC_dict['P_ref'] ) )
+            print("tshours = {0}".format(nuctes.SSC_dict['tshours'] ) )
             
             # =========================================
             # try running simulation, log success
