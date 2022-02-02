@@ -1,0 +1,13 @@
+Supercritical Rankine Cycle Version Control
+Fixed quantities for each model listed
+
+rankine-supercrit-1a
+HPT+IPT inlet temp and pressure, HX approach temperatures, turbine/pump efficiencies, mass flow rates, pressures at each state point
+
+rankine-supercrit-1b
+Change: switched turbine outlet pressures for temperatures
+HPT+IPT inlet temp and pressure, HX approach temperatures, turbine/pump efficiencies, mass flow rates, turbine outlet temperatures, pump pressures (states 1,16-24)
+
+rankine-supercrit-1c (overconstrained)
+Change: set parameters given by Westinghouse
+HPT+IPT inlet temp and pressure, LPT outlet pressure and quality, HX approach temperatures, turbine/pump efficiencies, mass flow rates, turbine outlet temperatures, pump pressures (states 1,16-24), final feedwater temp
