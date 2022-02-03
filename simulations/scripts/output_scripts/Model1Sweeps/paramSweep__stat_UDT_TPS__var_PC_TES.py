@@ -14,6 +14,7 @@ import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import matplotlib.patheffects as PathEffects
 import numpy as np
+import hashlib
 from pylab import rc
 rc('axes', linewidth=2)
 rc('font', weight='bold',size=12)
@@ -24,11 +25,16 @@ pid = os.getpid()
 print("PID = ", pid)
 
 # =============================================================================
+# Static  - User Defined Tables + Tariff Price Schedule
+# Varying - PC size, TES size
+# =============================================================================
+
+# =============================================================================
 # Parameters for Sweep
 # =============================================================================
 sscH = 24  # 12 # 24
 pyoH = 48  # 24 # 48
-json = "model1_CAISO_Hamilton" # model1_CAISO # model1 # model1_noMin # model1_HODR # model1_Hamilton_560_tariffx2
+json = "model1_Hamilton_560_tariffx1"  # model1_CAISO # model1 # model1_noMin # model1_HODR # model1_Hamilton_560_tariffx2
 dispatch = True # True # False
 run_loop = True
 
@@ -41,11 +47,19 @@ fin_rate = 0.07
 
 
 # TES sizes to sweep through
-tshours    = np.array([ 0, 2, 4, 6, 8, 10, 12, 14 ])
+# tshours    = np.array([ 0, 2, 4, 6, 8, 10, 12, 14 ])
+tshours    = np.array([ 0, 4, 8, 12, 16, 20 ])
+# tshours    = np.array([ 12, 14, 16, 18, 20, 22 ])
 
 # PC sizes to sweep through
+# p_cycle    = np.array([ 400, 300, 200]) 
+# p_cycle    = np.array([ 800, 700, 600, 500]) 
+p_cycle    = np.array([ 1200, 1100, 1000, 900]) 
+# p_cycle    = np.array([ 1500, 1400, 1300]) 
+# p_cycle    = np.array([ 1800, 1700, 1600]) 
+# p_cycle    = np.array([ 1350, 1300, 1250, 1200, 1150, 1100]) 
 # p_cycle    = np.array([ 850, 800, 750, 700, 650, 600 ]) 
-p_cycle    = np.array([ 550, 500, 450, 400, 350, 300 ]) 
+# p_cycle    = np.array([ 550, 500, 450, 400, 350, 300 ]) 
 
 
 
@@ -79,7 +93,7 @@ fail_log  = empty.copy() # 0 = No failure, 1 = SSC caused failure,
                          # 4 = SSC low mass flow error, 5 = 
 pyomo_bad_log     = empty.copy()
 pyomo_bad_idx_log = empty.copy()
-
+pysamdict = {}
 # =============================================================================
 # Operating Modes analysis
 # =============================================================================
@@ -143,7 +157,7 @@ for i, th in enumerate(iterator1): #over tshours
         base_financing = nuctes.SSC_dict["construction_financing_cost"]
         extra_financing = fin_yrs * fin_rate * 1000 * (turb_premium + \
                                                 nuctes.SSC_dict['P_ref'] * nuctes.SSC_dict['tshours'] * nuctes.SSC_dict["tes_spec_cost"])
-        nuctes.SSC_dict["construction_financing_costs"]=base_financing + extra_financing
+        nuctes.SSC_dict["construction_financing_cost"]=base_financing + extra_financing
                     
         # reset design point in Dispatch parameter class
         nuctes.dispatch_wrap.set_design()
@@ -227,12 +241,15 @@ for i, th in enumerate(iterator1): #over tshours
             defocus[stdv_idx]   = np.std( outputs.defocus )
             
             # log economic outputs
-            revenue[idx]   = np.sum(outputs.gen.to('kW').m * outputs.price )
+            revenue[idx]   = np.sum( outputs.gen.to('kW').m * outputs.price )
             ppa[idx]       = so.Outputs.ppa
             annual_e[idx]  = (nt.Outputs.annual_energy*u.kWh).to('TWh').m # TWh
             cap_fac[idx]   = nuctes.capacity_factor.m * 100
             nuc_cost[idx]  = nt.SystemCosts.nuclear_spec_cost
             fin_cost[idx]  = so.FinancialParameters.construction_financing_cost
+            
+            print("ppa  = {0} cents/kWh \n\n".format( ppa[idx] ) )
+            print("cost = {0} cents/kWh \n\n".format( fin_cost[idx] ) )
             
             del outputs, op_mode_array, op_mode_str_profile, so
         
@@ -282,7 +299,9 @@ for i, th in enumerate(iterator1): #over tshours
                 
             # reset the Plant and Grid, prevents memory leak
         del nt
-            
+        
+        pysamdict = nuctes.PySAM_dict
+        
         del nuctes
             
 # end time counter
@@ -327,14 +346,32 @@ Storage['tes_spec_cost']     = tes_spec_cost
 Storage['fin_yrs']     = fin_yrs
 Storage['fin_rate']    = fin_rate
 Storage['nuclear_spec_cost']            = nuc_cost
-Storage['construction_financing_costs'] = fin_cost
+Storage['construction_financing_cost'] = fin_cost
 
+coeff_list = ['ec_p',     # proft term
+              'ec_pcsu',  # PC cold SU term
+              'ec_pchsu', # PC hot SU term 
+              'ec_pcsd',  # PC SD term
+              'ec_pcr',   # PC ramping term
+              'ec_pcer',  # PC excess ramping term
+              'ec_nsu',   # LFR cold SU term
+              'ec_nhsu',  # LFR hot SU term
+              'ec_nsd',   # LFR SD term
+              'ec_pcg',   # PC power generating term
+              'ec_pcsb',  # PC SB term
+              'ec_nt'     # LFR thermal power generating term
+              ]
+        
+# setting objective function coefficients
+extr_str = ''
+for coeff in coeff_list:
+    Storage[coeff] = pysamdict[coeff] if coeff in pysamdict.keys() else 1.0
+    extr_str += "_{0}{1}".format( coeff.split('_')[1], str(Storage[coeff]))
 
 # locating output directory
 output_dir = FileMethods.output_dir
-filename = 'failureModes_PySAM__{0}__2022_01__pyomo_{1:.0f}__horizon_{2:.0f}_{3:.0f}__TES_[{4},{5}]__PC_[{6},{7}].nuctes'.format(
-                json, dispatch, sscH, pyoH, tshours.min(), tshours.max(), p_cycle.min(), p_cycle.max() )
-
+filename = 'failureModes_PySAM__{0}__2022_01__pyomo_{1:.0f}__horizon_{2:.0f}_{3:.0f}__TES_[{4},{5}]__PC_[{6},{7}]__{8}.nuctes'.format(
+                json, dispatch, sscH, pyoH, tshours.min(), tshours.max(), p_cycle.min(), p_cycle.max(), extr_str )
 NTPath = os.path.join(output_dir, filename)
 
 # pickling
