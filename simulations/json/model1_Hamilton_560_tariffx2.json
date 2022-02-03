@@ -35,7 +35,7 @@
         "dw_nuc_pump":               0,
         "Dnsu":                      1,
         "weight":                    0.999,
-        "ec_p":                      0.3,
+        "ec_p":                      0.7,
         "ec_pcsu":                   0.5,
         "ec_pchsu":                  0.2,
         "ec_pcsd":                   1.0,
@@ -47,7 +47,6 @@
         "ec_pcg":                    1.0,
         "ec_pcsb":                   1.0,
         "ec_nt":                     1.0
-    },
     },
     
     "PySAM_outputs": {
