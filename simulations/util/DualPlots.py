@@ -193,7 +193,7 @@ class DualPlots(SolarPlots):
                                     start_hr=start_hr, end_hr=end_hr, hide_x=hide_x)
 
         # custom y limits and ticks to be integers for Energy
-        ax2.set_ylim(-0.05*self.e_tes_design.m, 0.7*self.e_tes_design.m)
+        ax2.set_ylim(-0.05*self.e_tes_design.m, 1.05*self.e_tes_design.m)
 
         # plot Energy array(s)
         energy_array_list = ['e_ch_tes']
