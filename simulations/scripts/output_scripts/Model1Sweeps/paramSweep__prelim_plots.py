@@ -33,23 +33,23 @@ output_dir = FileMethods.output_dir
 start_name     = 'failureModes' # testDefocus # failureModes
 PySAM_name     = 'PySAM'  # PySAM  # ''
 add_extra_Name = True
-extra_name     = '2022_01'  # 2021_10  # 2021_11 # 2021_12
-json_name      = 'model1_CAISO_Hamilton'   # model1_CAISO_Hamilton  # model1_Hamilton_560_dfe # model1_Hamilton_560_tariffx1_5
+extra_name     = '2022_02'  # 2021_10  # 2021_11 # 2021_12
+json_name      = 'model1_CAISO_Hamilton'   # model1_CAISO_Hamilton  # model1_Hamilton_560_tariffx1_5
 dispatch       = True # True # False
 sscH           = 24   # 12 # 24
 pyoH           = 48   # 24 # 48
 TES_min        = 0    # 0  # 2
-TES_max        = 14   # 14
-PC_min         = 300  # 100 # 300 # 400 # 550
-PC_max         = 850  # 500 # 850
+TES_max        = 20   # 14
+PC_min         = 500  # 100 # 300 # 400 # 550
+PC_max         = 1200  # 500 # 850
 
 # selecting coefficient array
 
-# coeffs = [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]  
+coeffs = [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]  
 # coeffs = [0.1, 1.0, 0.1, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]  # tariffx1    // wecdsrx1
 # coeffs = [0.3, 0.5, 0.2, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]  # tariffx1_5  // wecdsrx1_5
 # coeffs = [0.5, 0.7, 0.2, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]  # tariffx2
-coeffs = [0.5, 0.7, 0.2, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]  # CAISO
+# coeffs = [0.5, 0.7, 0.2, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]  # CAISO
 # coeffs = [1.0, 0.5, 0.2, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]  # wec tariffx2
 # coeffs = [0.5, 0.5, 0.2, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]  # tariffx1.5 - BAD
 # coeffs = [0.5, 0.2, 0.2, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]  # tariffx2   - BAD

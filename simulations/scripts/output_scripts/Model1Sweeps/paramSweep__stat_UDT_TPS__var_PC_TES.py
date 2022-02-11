@@ -34,7 +34,7 @@ print("PID = ", pid)
 # =============================================================================
 sscH = 24  # 12 # 24
 pyoH = 48  # 24 # 48
-json = "model1_Hamilton_560_tariffx1"  # model1_CAISO # model1 # model1_noMin # model1_HODR # model1_Hamilton_560_tariffx2
+json = "model1_Hamilton_560_tariffx2"  # model1_CAISO # model1 # model1_Hamilton_560_tariffx2 
 dispatch = True # True # False
 run_loop = True
 
@@ -52,9 +52,9 @@ tshours    = np.array([ 0, 4, 8, 12, 16, 20 ])
 # tshours    = np.array([ 12, 14, 16, 18, 20, 22 ])
 
 # PC sizes to sweep through
-# p_cycle    = np.array([ 400, 300, 200]) 
+p_cycle    = np.array([ 400, 300, 200]) 
 # p_cycle    = np.array([ 800, 700, 600, 500]) 
-p_cycle    = np.array([ 1200, 1100, 1000, 900]) 
+# p_cycle    = np.array([ 1200, 1100, 1000, 900]) 
 # p_cycle    = np.array([ 1500, 1400, 1300]) 
 # p_cycle    = np.array([ 1800, 1700, 1600]) 
 # p_cycle    = np.array([ 1350, 1300, 1250, 1200, 1150, 1100]) 
@@ -370,7 +370,7 @@ for coeff in coeff_list:
 
 # locating output directory
 output_dir = FileMethods.output_dir
-filename = 'failureModes_PySAM__{0}__2022_01__pyomo_{1:.0f}__horizon_{2:.0f}_{3:.0f}__TES_[{4},{5}]__PC_[{6},{7}]__{8}.nuctes'.format(
+filename = 'failureModes_PySAM__{0}__2022_02__pyomo_{1:.0f}__horizon_{2:.0f}_{3:.0f}__TES_[{4},{5}]__PC_[{6},{7}]__{8}.nuctes'.format(
                 json, dispatch, sscH, pyoH, tshours.min(), tshours.max(), p_cycle.min(), p_cycle.max(), extr_str )
 NTPath = os.path.join(output_dir, filename)
 
