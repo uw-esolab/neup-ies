@@ -39,9 +39,11 @@ dispatch       = True # True # False
 sscH           = 24   # 12 # 24
 pyoH           = 48   # 24 # 48
 TES_min        = 0    # 0  # 2
-TES_max        = 20   # 14
-PC_min         = [900, 500 ]  # 100 # 300 # 400 # 550
-PC_max         = [1200, 800 ] # 500 # 850
+TES_max        = 6   # 14
+PC_min         = [ 1050, 850,  650,  450 ]  # 100 # 300 # 400 # 550
+PC_max         = [1200, 1000,  800,  600 ] # 500 # 850
+# PC_min         = [900, 500, 200 ]  # 100 # 300 # 400 # 550
+# PC_max         = [1200, 800, 400 ] # 500 # 850
 
 # selecting coefficient array
 

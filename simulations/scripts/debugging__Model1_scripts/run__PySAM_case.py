@@ -27,13 +27,13 @@ print("PID = ", pid)
 # =============================================================================
 
 # modifying inputs
-json = "model1_Hamilton_560_tariffx2"   # model1_CAISO # model1
+json = "model1_CAISO_Hamilton"   # model1_CAISO_Hamilton # model1_Hamilton_560_tariffx2
 dispatch = True
 run_loop = True
 sscH    = 24   # (hr)
 pyoH    = 48   # (hr)
-Pref    = 1600  # (MW)
-tshours = 8    # (hr)
+Pref    = 1000 # (MW)
+tshours = 1    # (hr)
 
 # ========================
 
@@ -118,14 +118,14 @@ ax2 = fig.add_subplot(312)
 ax3 = fig.add_subplot(313)
 
 plt_allTime = False
-title = 'SSC Results \nSSC horizon = {0} hr, Pyomo Horizon = {1} hr \nPref = {2:.2f} , tshours = {3}'.format( \
-                                sscH, pyoH, nuctes.SSC_dict['P_ref'], nuctes.SSC_dict['tshours'])
+title = 'SSC Results - {0}\nSSC horizon = {1} hr, Pyomo Horizon = {2} hr \nPref = {3:.2f} , tshours = {4}'.format( \
+                                json, sscH, pyoH, nuctes.SSC_dict['P_ref'], nuctes.SSC_dict['tshours'])
 start = 24*0
 end   = 24*364
 
 upl.plot_SSC_power_and_energy(ax1 , plot_all_time=plt_allTime, title_label=title, start_hr=start, end_hr=end, hide_x=True, x_legend=1.2, y_legend_L=1.0, y_legend_R=0.3)
 upl.plot_SSC_op_modes(ax2, plot_all_time=plt_allTime, start_hr=start, end_hr=end, hide_x=True )
-upl.plot_SSC_massflow(ax3, plot_all_time=plt_allTime, start_hr=start, end_hr=end, y_legend_L=0.8, y_legend_R=0.3)
+upl.plot_SSC_massflow(ax3, plot_all_time=plt_allTime, start_hr=start, end_hr=end, days_on_x=True, y_legend_L=0.8, y_legend_R=0.3)
 
 
 # =============================================================================
@@ -135,7 +135,7 @@ upl.plot_SSC_massflow(ax3, plot_all_time=plt_allTime, start_hr=start, end_hr=end
 # retrieving the DispatchPlots class
 from util.PostProcessing import DispatchPlots
 # specifying dispatch model
-ind = 195
+ind = 292
 # extracting specific, solved dispatch model
 dm = nuctes.disp_models[str(ind)]
 # create Dispatch plotting object

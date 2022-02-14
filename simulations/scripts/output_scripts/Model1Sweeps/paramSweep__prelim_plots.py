@@ -39,8 +39,8 @@ dispatch       = True # True # False
 sscH           = 24   # 12 # 24
 pyoH           = 48   # 24 # 48
 TES_min        = 0    # 0  # 2
-TES_max        = 20   # 14
-PC_min         = 500  # 100 # 300 # 400 # 550
+TES_max        = 6   # 14
+PC_min         = 450  # 100 # 300 # 400 # 550
 PC_max         = 1200  # 500 # 850
 
 # selecting coefficient array
@@ -149,7 +149,7 @@ if 'construction_financing_cost' in Storage.keys():
     fin_cost       = Storage['construction_financing_cost'] 
 
 # setting figure title
-full_title = "PySSC - {0} tariffs {1} Pyomo - {2:.0f}/{3:.0f}hr horizons ".format(
+full_title = "PySAM - {0} tariffs {1} Pyomo - {2:.0f}/{3:.0f}hr horizons ".format(
                     json, "with" if dispatch else "without", sscH, pyoH)
 
 
@@ -265,7 +265,7 @@ if 'revenue' in Storage.keys():
     # ========== Figure ==========
     fig = plt.figure(figsize=(8,14))
     ax1  = fig.add_subplot(111)
-    fig.suptitle("Simple Revenue Metric (in M$)", fontweight='bold')
+    fig.suptitle(full_title, fontweight='bold')
     
     asp_df = 1
     im1 = ax1.imshow(array.T, origin='upper', cmap=cmap, aspect=asp_df)
@@ -315,7 +315,7 @@ if 'ppa' in Storage.keys():
     # ========== Figure ==========
     fig = plt.figure(figsize=(8,14))
     ax1  = fig.add_subplot(111)
-    fig.suptitle("PPA", fontweight='bold')
+    fig.suptitle(full_title, fontweight='bold')
     
     asp_df = 1
     im1 = ax1.imshow(array.T, origin='upper', cmap=cmap, aspect=asp_df)
@@ -366,7 +366,7 @@ if 'construction_financing_cost' in Storage.keys():
     # ========== Figure ==========
     fig = plt.figure(figsize=(8,14))
     ax1  = fig.add_subplot(111)
-    fig.suptitle("PPA", fontweight='bold')
+    fig.suptitle(full_title, fontweight='bold')
     
     asp_df = 1
     im1 = ax1.imshow(array.T, origin='upper', cmap=cmap, aspect=asp_df)
@@ -416,7 +416,7 @@ mean_label = "StdDev Generated Power (MW)"
 # ========== Figure ==========
 fig = plt.figure(figsize=(8,14))
 ax1  = fig.add_subplot(111)
-# fig.suptitle("PPA", fontweight='bold')
+fig.suptitle(full_title, fontweight='bold')
 
 asp_df = 1
 im1 = ax1.imshow(array.T, origin='upper', cmap=cmap, aspect=asp_df)
@@ -465,7 +465,7 @@ mean_label = "Mean Generated Power (MW)"
 # ========== Figure ==========
 fig = plt.figure(figsize=(8,14))
 ax1  = fig.add_subplot(111)
-# fig.suptitle("PPA", fontweight='bold')
+fig.suptitle(full_title, fontweight='bold')
 
 asp_df = 1
 im1 = ax1.imshow(array.T, origin='upper', cmap=cmap, aspect=asp_df)
@@ -516,7 +516,7 @@ mean_label = "Annual Generation (TWh)"
 # ========== Figure ==========
 fig = plt.figure(figsize=(8,14))
 ax1  = fig.add_subplot(111)
-# fig.suptitle("PPA", fontweight='bold')
+fig.suptitle(full_title, fontweight='bold')
 
 asp_df = 1
 im1 = ax1.imshow(array.T, origin='upper', cmap=cmap, aspect=asp_df)

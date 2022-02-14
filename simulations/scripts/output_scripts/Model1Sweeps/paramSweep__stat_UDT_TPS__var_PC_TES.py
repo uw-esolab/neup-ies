@@ -34,7 +34,7 @@ print("PID = ", pid)
 # =============================================================================
 sscH = 24  # 12 # 24
 pyoH = 48  # 24 # 48
-json = "model1_Hamilton_560_tariffx2"  # model1_CAISO # model1 # model1_Hamilton_560_tariffx2 
+json = "model1_CAISO_Hamilton"  # model1_CAISO_Hamilton # model1 # model1_Hamilton_560_tariffx2 
 dispatch = True # True # False
 run_loop = True
 
@@ -45,16 +45,24 @@ tes_spec_cost  = 28.4
 fin_yrs  = 4.0
 fin_rate = 0.07
 
-
+# 
 # TES sizes to sweep through
+tshours    = np.array([ 0, 1, 2, 3, 4, 5, 6 ])
+# tshours    = np.array([ 0, 2, 4, 6, 8, 10 ])
 # tshours    = np.array([ 0, 2, 4, 6, 8, 10, 12, 14 ])
-tshours    = np.array([ 0, 4, 8, 12, 16, 20 ])
+# tshours    = np.array([ 0, 4, 8, 12, 16, 20 ])
 # tshours    = np.array([ 12, 14, 16, 18, 20, 22 ])
 
 # PC sizes to sweep through
-p_cycle    = np.array([ 400, 300, 200]) 
+# p_cycle    = np.array([ 400, 300, 200]) 
 # p_cycle    = np.array([ 800, 700, 600, 500]) 
 # p_cycle    = np.array([ 1200, 1100, 1000, 900]) 
+
+# p_cycle    = np.array([ 600,   550,  500,  450 ]) 
+# p_cycle    = np.array([ 800,   750,  700,  650 ]) 
+p_cycle    = np.array([ 1000,  950,  900,  850 ]) 
+# p_cycle    = np.array([ 1200, 1150, 1100, 1050 ]) 
+
 # p_cycle    = np.array([ 1500, 1400, 1300]) 
 # p_cycle    = np.array([ 1800, 1700, 1600]) 
 # p_cycle    = np.array([ 1350, 1300, 1250, 1200, 1150, 1100]) 
