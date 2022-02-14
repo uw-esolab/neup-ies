@@ -345,7 +345,8 @@ class Plots(object):
 
     def plot_SSC_generic(self, ax, array_list, label_list, y_label, lw_list=None,  
                          title_label=None,plot_all_time=True, start_hr=0, end_hr=48, 
-                         is_bar_graph=False, return_extra=False, hide_x=False, left_axis=True):
+                         is_bar_graph=False, return_extra=False, hide_x=False, days_on_x=False, 
+                         left_axis=True):
         """ Method to plot generic SSC data
 
         This method is used to plot any type of SSC data. It lives a level above the
@@ -377,20 +378,15 @@ class Plots(object):
         
         # extracting full time array and slice
         d_slice = self.full_slice
-        
-        if self.t_max > 80*u.hr :
-            t_plot = self.t_plot.to('d')
-            time_label = 'Time (days)'
-        else:
-            # full time is less than 3 days, should use hrs in label
-            t_plot = self.t_plot.to('hr')
-            time_label = 'Time (hr)'
+        t_plot  = self.t_plot
         
         # if we're not plotting the full results, slice up the arrays for the time portion we want to plot
         if not plot_all_time:
             d_slice = self.get_slice(start_hr, end_hr)
             t_plot = t_plot[d_slice]
-            time_label = 'Time (hr)'
+            
+        t_plot     = t_plot.to('d') if days_on_x else t_plot.to('hr')
+        time_label = 'Time (d)'     if days_on_x else 'Time (hr)'
 
         # nested function to plot arrays to a specific axis
         def plot_data_on_axis(axis, array, label, lw=None, color=None):
@@ -461,7 +457,8 @@ class Plots(object):
     
     def plot_SSC_power_and_energy(self, ax=None, title_label=None, plot_all_time=True, \
                                   start_hr=0, end_hr=48, hide_x=False, x_legend=1.2, \
-                                  y_legend_L=1.0, y_legend_R=1.0):
+                                  y_legend_L=1.0, y_legend_R=1.0, days_on_x=False, 
+                                  left_axis=True):
         """ Method to plot power and energy data on single plot
 
         This method is used specifically to plot power and energy data from SSC simulation
@@ -507,7 +504,8 @@ class Plots(object):
                                     y_label=power_ylabel, \
                                     title_label=title_label, \
                                     plot_all_time=plot_all_time, \
-                                    start_hr=start_hr, end_hr=end_hr, hide_x=hide_x)
+                                    start_hr=start_hr, end_hr=end_hr, hide_x=hide_x, \
+                                    days_on_x=days_on_x)
 
         # custom y limits and ticks to be integers for Energy
         ax2.set_ylim(self.fE_min*self.e_tes_design.m, self.fE_max*self.e_tes_design.m)
@@ -521,7 +519,8 @@ class Plots(object):
                                     y_label=energy_ylabel, \
                                     title_label=None, \
                                     plot_all_time=plot_all_time, \
-                                    start_hr=start_hr, end_hr=end_hr, hide_x=hide_x, left_axis=False)
+                                    start_hr=start_hr, end_hr=end_hr, hide_x=hide_x, left_axis=False, \
+                                    days_on_x=days_on_x)
         
         # set line color to default C4 (purple)
         ax2.get_lines()[0].set_color("C4")
@@ -541,7 +540,7 @@ class Plots(object):
 
     def plot_SSC_massflow(self, ax=None, title_label=None, plot_all_time=True, \
                           start_hr=0, end_hr=48, hide_x=False,  x_legend=1.2, \
-                          y_legend_L=1.0, y_legend_R=1.0):
+                          y_legend_L=1.0, y_legend_R=1.0, days_on_x=False):
         """ Method to plot mass flow and defocus data on single plot
 
         This method is used specifically to plot mass flow and defocus data from SSC simulation
@@ -580,7 +579,8 @@ class Plots(object):
                                     y_label=mass_ylabel, \
                                     title_label=title_label, \
                                     plot_all_time=plot_all_time, \
-                                    start_hr=start_hr, end_hr=end_hr, hide_x=hide_x)
+                                    start_hr=start_hr, end_hr=end_hr, hide_x=hide_x, \
+                                    days_on_x=days_on_x)
         
         # custom y limits and ticks to be integers for Defocus
         ax2.set_ylim(0, 1.3)
@@ -595,7 +595,8 @@ class Plots(object):
                                     y_label=energy_ylabel, \
                                     title_label=None, \
                                     plot_all_time=plot_all_time, \
-                                    start_hr=start_hr, end_hr=end_hr, hide_x=hide_x, left_axis=False)
+                                    start_hr=start_hr, end_hr=end_hr, hide_x=hide_x, left_axis=False, \
+                                    days_on_x=days_on_x)
         
         # set line color to default C3 (reddish)
         ax2.get_lines()[0].set_color("C3")
@@ -615,7 +616,7 @@ class Plots(object):
 
     def plot_SSC_op_modes(self, ax=None, title_label=None, plot_all_time=True, \
                           start_hr=0, end_hr=48, hide_x=False,  x_legend=1.2, \
-                          y_legend_L=1.0, y_legend_R=1.0):
+                          y_legend_L=1.0, y_legend_R=1.0, days_on_x=False):
         """ Method to plot operating modes history on single plot
 
         This method is used specifically to plot operating modes and relative 
@@ -663,7 +664,8 @@ class Plots(object):
                                     title_label=None, \
                                     plot_all_time=plot_all_time, \
                                     start_hr=start_hr, end_hr=end_hr, hide_x=hide_x, \
-                                    is_bar_graph=True, left_axis=False)
+                                    is_bar_graph=True, left_axis=False, \
+                                    days_on_x=days_on_x)
             
         # custom y limits and ticks to be integers
         ax.set_ylim(0, len(self.operating_modes) )
@@ -679,7 +681,8 @@ class Plots(object):
                                     title_label=title_label, \
                                     plot_all_time=plot_all_time, \
                                     start_hr=start_hr, end_hr=end_hr, hide_x=hide_x, \
-                                    return_extra=True)
+                                    return_extra=True, \
+                                    days_on_x=days_on_x)
         
         #==================================================#
         #---- extract operating modes to designated array
@@ -749,7 +752,8 @@ class Plots(object):
                                     y_label=temp_ylabel, \
                                     title_label=title_label, \
                                     plot_all_time=plot_all_time, \
-                                    start_hr=start_hr, end_hr=end_hr, hide_x=hide_x)
+                                    start_hr=start_hr, end_hr=end_hr, hide_x=hide_x, \
+                                    days_on_x=days_on_x)
         
         #========================#
         #---- Setting Labels ----#
