@@ -1,11 +1,14 @@
 ## Start of Git ignore ##
 *.pyc
+*.lk
 simulations/scripts/**.py
+simulations/scripts/**.html
 !simulations/scripts/PySAM_model1.py
 !simulations/scripts/PySAM_example.py
 !simulations/scripts/PySAM_generic_mspt.py
 
 simulations/scripts/PySSC_scripts/**.py
+simulations/scripts/PySSC_scripts/**.html
 !simulations/scripts/PySSC_scripts/PySSC.py
 !simulations/scripts/PySSC_scripts/sscapi.h
 !simulations/scripts/PySSC_scripts/PySSC_model1.py
@@ -15,3 +18,8 @@ simulations/scripts/PySSC_scripts/**.py
 simulations/outputs/**.csv
 simulations/outputs/**.xlsx
 simulations/outputs/**.txt
+simulations/outputs/**.dispatchTargets
+
+simulations/docs/build/
+simulations/docs/source/simulations.*.rst
+simulations/docs/source/_build/**

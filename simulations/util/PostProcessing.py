@@ -15,12 +15,159 @@ u = pint.UnitRegistry(autoconvert_offset_to_baseunit=True)
 rc('axes', linewidth=2)
 rc('font', weight='bold', size=12)
 
+class OutputExtraction(object):
+    """
+    The OutputExtraction class is a part of the PostProcessing family of classes.
+    It extracts outputs from SSC or Dispatch models. Can be called from other 
+    plotting classes to extract outputs.  
+    """
+    
+    def __init__(self, module):
+        """ Initializes the OutputExtraction module
 
-# BIG difference here is that the Plots class gets initialized
+        The instantiation of this class receives a full module object, the module
+        being one of the NE2 modules in the /neup-ies/simulations/modules directory.
+        or a Dispatch module. 
+
+        Inputs:
+            module (object)     : object representing NE2 module class after simulations
+        """
+        
+        # module class name
+        mod_class = module.__class__.__module__
+        self.mod_class_name = mod_class.split('.')[0]
+
+        # continuing with SSC plots
+        if self.mod_class_name == 'modules':
+            
+            # full PySAM module
+            self.mod = module.Plant
+            
+            # define an Output object to extract information from SSC
+            Outputs = self.mod.PySAM_Outputs if module.run_loop else self.mod.Outputs
+            
+            self.t_full = np.asarray(Outputs.time_hr)*u.hr
+            self.t_max = self.t_full.max()
+            self.t_plot = np.arange(1, len(self.t_full), 1)*u.hr
+            
+            # extracting outputs
+            self.set_ssc_outputs( Outputs )
+        
+        elif self.mod_class_name == 'dispatch':
+            
+            # saving module to self
+            self.dm = module
+            
+            # extract outputs from Dispatch model
+            self.set_pyomo_outputs()
+
+    
+    def set_ssc_outputs(self, mod_out):
+        """ Method to set SSC outputs from module
+        
+        The method extracts SSC outputs and save them to arrays. The input to this
+        method is a subclass to an NE2 class holding all outputs to simulations.          
+        
+        Inputs:
+            mod_out (object)  : object representing Outputs subclass of NE2 module
+        """
+        # saving some outputs for plotting
+        self.p_cycle      = np.asarray(mod_out.P_cycle) * u.MW
+        self.gen          = (np.asarray(mod_out.gen) * u.kW).to('MW')
+        self.q_dot_nuc_in = np.asarray(mod_out.q_dot_nuc_inc) * u.MW
+        self.q_nuc_thermal    = np.asarray(mod_out.Q_nuc_thermal) * u.MW
+        self.q_pb         = np.asarray(mod_out.q_pb) * u.MW
+        self.q_dot_pc_su  = np.asarray(mod_out.q_dot_pc_startup) * u.MW
+        self.m_dot_pc     = np.asarray(mod_out.m_dot_pc) * u.kg/u.s
+        self.m_dot_nuc    = np.asarray(mod_out.m_dot_nuc) * u.kg/u.s
+        self.T_pc_in      = np.asarray(mod_out.T_pc_in) * u.degC
+        self.T_pc_out     = np.asarray(mod_out.T_pc_out) * u.degC
+        self.T_tes_cold   = np.asarray(mod_out.T_tes_cold) * u.degC
+        self.T_tes_hot    = np.asarray(mod_out.T_tes_hot) * u.degC
+        self.T_cond_out   = np.asarray(mod_out.T_cond_out) * u.degC
+        self.e_ch_tes     = np.asarray(mod_out.e_ch_tes) * u.MWh
+        self.op_mode_1    = np.asarray(mod_out.op_mode_1)
+        self.defocus      = np.asarray(mod_out.defocus)
+        self.price        = np.asarray(self.mod.TimeOfDeliveryFactors.dispatch_factors_ts)
+
+        # setting static inputs
+        self.q_nuc_design  = self.mod.SystemDesign.q_dot_nuclear_des * u.MW  # receiver design thermal power
+        self.p_pb_design   = self.mod.SystemDesign.P_ref * u.MW              # power block design electrical power
+        self.eta_design    = self.mod.SystemDesign.design_eff                # power block design efficiency
+        self.q_pb_design  = (self.p_pb_design / self.eta_design).to('MW')    # power block design thermal rating
+        self.T_htf_hot    = (self.mod.SystemDesign.T_htf_hot_des*u.celsius).to('degK')   # heat transfer fluid Hot temp
+        self.T_htf_cold   = (self.mod.SystemDesign.T_htf_cold_des*u.celsius).to('degK')  # heat transfer fluid Cold temp
+        self.e_tes_design = (self.q_pb_design * self.mod.SystemDesign.tshours*u.hr).to('MWh')  # TES storage capacity (kWht)
+
+        # operating modes
+        op_mode_result, modes_order = np.unique(self.op_mode_1, return_index=True) # mode orders and re-ordering
+        self.op_mode_result = op_mode_result[np.argsort(modes_order)]     # re-order modes by first appearance of each
+
+
+    def set_pyomo_outputs(self):
+        """ Method to define list of Pyomo output arrays
+
+        This method extracts outputs from the Pyomo Dispatch model, converts them to numpy arrays
+        and saves them to `self`. 
+        """
+        
+        # Dispatch Model with results
+        dm = self.dm
+
+        # lambda functions
+        extract_from_model = lambda name: getattr(dm.model, name)
+        extract_array      = lambda name: np.array([ pe.value(extract_from_model(name)[t]) for t in dm.model.T ])
+        extract_energy     = lambda name: (extract_array(name)*u.kWh).to('MWh') 
+        extract_power      = lambda name: (extract_array(name)*u.kW).to('MW') 
+        
+        # Time and Pricing Arrays
+        self.t_full = extract_array('Delta_e') * u.hr
+        self.p_array = extract_array('P')
+        
+        # marking the midway point
+        self.T = len(self.t_full)
+        self.time_midway = np.ones([self.T])*int(self.T/2)
+
+        # Energy Arrays
+        self.s_array     = extract_energy('s')
+        self.ucsu_array  = extract_energy('ucsu')
+        self.unsu_array  = extract_energy('unsu')
+        
+        # Power Arrays
+        self.wdot_array             = extract_power('wdot')
+        self.wdot_delta_plus_array  = extract_power('wdot_delta_plus')
+        self.wdot_delta_minus_array = extract_power('wdot_delta_minus')
+        self.wdot_v_plus_array      = extract_power('wdot_v_plus')
+        self.wdot_v_minus_array     = extract_power('wdot_v_minus')
+        self.wdot_s_array           = extract_power('wdot_s')
+        self.wdot_p_array           = extract_power('wdot_p')
+        self.x_array                = extract_power('x')
+        self.xn_array               = extract_power('xn')
+        self.xnsu_array             = extract_power('xnsu')
+
+        # Binary Arrays (Nuclear)
+        self.yn_array    = extract_array('yn') 
+        self.ynhsp_array = extract_array('ynhsp') 
+        self.ynsb_array  = extract_array('ynsb') 
+        self.ynsd_array  = extract_array('ynsu') 
+        self.ynsu_array  = extract_array('ynsu') 
+        self.ynsup_array = extract_array('ynsup') 
+        
+        # Binary Arrays (Cycle)
+        self.y_array     = extract_array('y') 
+        self.ychsp_array = extract_array('ychsp') 
+        self.ycsb_array  = extract_array('ycsb') 
+        self.ycsd_array  = extract_array('ycsd') 
+        self.ycsu_array  = extract_array('ycsu') 
+        self.ycsup_array = extract_array('ycsup') 
+        self.ycgb_array  = extract_array('ycgb')  
+        self.ycge_array  = extract_array('ycge') 
+        
+        
 class Plots(object):
     """
     The Plots class is a part of the PostProcessing family of classes. It can 
-    output results from SSCmodels. This might be a 
+    plot outputs from SSC model runs. This might be a 
     Sisyphus-ian task as some of the parameters are very unique to whatever 
     plot you are trying to make, but will do my best to provide basic structures
     and templates to work off of. 
@@ -29,7 +176,8 @@ class Plots(object):
     """
 
     def __init__(self, module, fsl='x-small', loc='best', legend_offset=False,
-                 lp=16, lps=12, fs=12, lw=2, x_shrink=0.85, x_legend=12):
+                 lp=16, lps=12, fs=12, lw=2, x_shrink=0.85, x_legend=12,
+                 fE_min=-0.05, fE_max=0.7):
         """ Initializes the Plots module
 
         The instantiation of this class receives a full module object, the module
@@ -47,6 +195,8 @@ class Plots(object):
             fs (int)            : fontsize for labels, titles, etc.
             lw (int)            : linewidth for plotting
             x_shrink (float)    : (legend_offset==True) amount to shrink axis to make room for legend
+            fE_min (float)      : minimum fraction of TES energy for ylim
+            fE_max (float)      : maximum fraction of TES energy for ylim
         """
         
         self.u = u
@@ -58,6 +208,10 @@ class Plots(object):
         self.lw  = lw   # linewidth
         self.fsl = fsl  # fontsize legend
         self.loc = loc  # location of legend
+        
+        # ylims
+        self.fE_min = fE_min
+        self.fE_max = fE_max
 
         # offsetting legend
         self.legend_offset = legend_offset # boolean - are we plotting legends off-axis?
@@ -75,6 +229,8 @@ class Plots(object):
         mod_class = module.__class__.__module__
         self.mod_class_name = mod_class.split('.')[0]
         
+        self.set_extractor()
+        
         # continuing with SSC plots
         if self.mod_class_name == 'modules':
             
@@ -87,55 +243,23 @@ class Plots(object):
             # saving full time logs
             self.t_full = np.asarray(Outputs.time_hr)*u.hr
             self.full_slice = slice(0, len(self.t_full), 1)
+            self.t_max = self.t_full.max()
+            self.t_plot = np.arange(1, len(self.t_full), 1)*u.hr
             
             # setting operating modes, kept it way at the bottom because it's ugly
             self.set_operating_modes_list()
             
             # extracting outputs
-            self.set_ssc_outputs( Outputs )
-    
-    
-    def set_ssc_outputs(self, mod_out):
-        """ Method to set SSC outputs from module
-        
-        The method extracts SSC outputs and save them to arrays. The input to this
-        method is a subclass to an NE2 class holding all outputs to simulations.          
-        
-        Inputs:
-            mod_out (object)  : object representing Outputs subclass of NE2 module
+            self.extractor.set_ssc_outputs(self, Outputs)
+
+
+    def set_extractor(self):
+        """ Setting the output extraction class
         """
-        # saving some outputs for plotting
-        self.p_cycle      = np.asarray(mod_out.P_cycle) * u.MW
-        self.gen          = (np.asarray(mod_out.gen) * u.kW).to('MW')
-        self.q_dot_rec_in = np.asarray(mod_out.q_dot_rec_inc) * u.MW
-        self.q_pb         = np.asarray(mod_out.q_pb) * u.MW
-        self.q_dot_pc_su  = np.asarray(mod_out.q_dot_pc_startup) * u.MW
-        self.m_dot_pc     = np.asarray(mod_out.m_dot_pc) * u.kg/u.s
-        self.m_dot_rec    = np.asarray(mod_out.m_dot_rec) * u.kg/u.s
-        self.T_pc_in      = np.asarray(mod_out.T_pc_in) * u.degC
-        self.T_pc_out     = np.asarray(mod_out.T_pc_out) * u.degC
-        self.T_tes_cold   = np.asarray(mod_out.T_tes_cold) * u.degC
-        self.T_tes_hot    = np.asarray(mod_out.T_tes_hot) * u.degC
-        self.T_cond_out   = np.asarray(mod_out.T_cond_out) * u.degC
-        self.e_ch_tes     = np.asarray(mod_out.e_ch_tes) * u.MWh
-        self.op_mode_1    = np.asarray(mod_out.op_mode_1)
-        self.defocus      = np.asarray(mod_out.defocus)
-        self.price        = np.asarray(self.mod.TimeOfDeliveryFactors.dispatch_factors_ts)
-
-        # setting static inputs
-        self.q_rec_design  = self.mod.SystemDesign.q_dot_nuclear_des * u.MW  # receiver design thermal power
-        self.p_pb_design   = self.mod.SystemDesign.P_ref * u.MW              # power block design electrical power
-        self.eta_design    = self.mod.SystemDesign.design_eff                # power block design efficiency
-        self.q_pb_design  = (self.p_pb_design / self.eta_design).to('MW')    # power block design thermal rating
-        self.T_htf_hot    = (self.mod.SystemDesign.T_htf_hot_des*u.celsius).to('degK')   # heat transfer fluid Hot temp
-        self.T_htf_cold   = (self.mod.SystemDesign.T_htf_cold_des*u.celsius).to('degK')  # heat transfer fluid Cold temp
-        self.e_tes_design = (self.q_pb_design * self.mod.SystemDesign.tshours*u.hr).to('MWh')  # TES storage capacity (kWht)
-
-        # operating modes
-        op_mode_result, modes_order = np.unique(self.op_mode_1, return_index=True) # mode orders and re-ordering
-        self.op_mode_result = op_mode_result[np.argsort(modes_order)]     # re-order modes by first appearance of each
-
-
+        
+        self.extractor = OutputExtraction
+        
+        
     def get_array(self, array_str, slicer):
         """ Method to slice through arrays
 
@@ -254,19 +378,18 @@ class Plots(object):
         # extracting full time array and slice
         d_slice = self.full_slice
         
-        if self.t_full.to('hr')[-1] > 80*u.hr :
-            t_plot     = self.t_full.to('d')
+        if self.t_max > 80*u.hr :
+            t_plot = self.t_plot.to('d')
             time_label = 'Time (days)'
         else:
             # full time is less than 3 days, should use hrs in label
-            t_plot     = self.t_full.to('hr')
+            t_plot = self.t_plot.to('hr')
             time_label = 'Time (hr)'
         
-
         # if we're not plotting the full results, slice up the arrays for the time portion we want to plot
         if not plot_all_time:
             d_slice = self.get_slice(start_hr, end_hr)
-            t_plot = self.t_full[d_slice]
+            t_plot = t_plot[d_slice]
             time_label = 'Time (hr)'
 
         # nested function to plot arrays to a specific axis
@@ -280,7 +403,7 @@ class Plots(object):
 
         # lambda function to get arrays from self and slice em
         get_array = lambda array_str : self.get_array(array_str, d_slice)
-
+        
         #========================#
         #--- Creating Figure  ---#
         #========================#
@@ -296,7 +419,18 @@ class Plots(object):
 
         # plotting data from list
         for a, l, w in zip(array_list, label_list, lw_list):
-            plot_data_on_axis(ax, get_array(a), l, w)
+            extracted_array = get_array(a)
+            if is_bar_graph and extracted_array.min() < 0:
+                pos_array =  extracted_array
+                neg_array = -extracted_array
+                pos_array[pos_array<0] = 0
+                neg_array[neg_array<0] = 0
+                
+                plot_data_on_axis(ax, pos_array, l, w)
+                plot_data_on_axis(ax, neg_array, l, w, color='r')
+                plt.show()
+            else:
+                plot_data_on_axis(ax, extracted_array, l, w)
 
         #========================#
         #---- Setting Labels ----#
@@ -362,7 +496,7 @@ class Plots(object):
         ax.set_yticks([0, 250, 500, 750, 1000])
 
         # plot Power arrays
-        power_array_list = ['p_cycle', 'q_dot_rec_in', 'gen', 'q_dot_pc_su'] # list of array strings
+        power_array_list = ['p_cycle', 'q_nuc_thermal', 'gen', 'q_dot_pc_su'] # list of array strings
         power_label_list = ['P_cycle (Electric)',
                             'Q_dot to Salt (Thermal)',
                             'Power generated (Electric)',
@@ -376,7 +510,7 @@ class Plots(object):
                                     start_hr=start_hr, end_hr=end_hr, hide_x=hide_x)
 
         # custom y limits and ticks to be integers for Energy
-        ax2.set_ylim(-0.05*self.e_tes_design.m, 0.7*self.e_tes_design.m)
+        ax2.set_ylim(self.fE_min*self.e_tes_design.m, self.fE_max*self.e_tes_design.m)
 
         # plot Energy array(s)
         energy_array_list = ['e_ch_tes']
@@ -437,7 +571,7 @@ class Plots(object):
         ax2 = ax.twinx()  # this is the defocus plot
 
         # plot mass flow arrays
-        mass_array_list = ['m_dot_pc', 'm_dot_rec'] # list of array strings
+        mass_array_list = ['m_dot_pc', 'm_dot_nuc'] # list of array strings
         mass_label_list = ['PC HTF mass flow rate',
                            'Receiver Mass Flow Rate'] # list of labels for each array string to extract from Outputs
         mass_ylabel = 'Mass Flow \n(kg/s)'
@@ -511,8 +645,13 @@ class Plots(object):
         ax2 = ax.twinx()  # this is the pricing plot
 
         # custom y limits and ticks to be integers
-        ax2.set_ylim(0, 2.5)
-        ax2.set_yticks(np.arange(0, 2.5, 0.5))
+        price = self.price[ start_hr:end_hr  ]
+        minP = 0
+        maxP = 1.05*price.max()
+        spacing = 0.5 if maxP-minP < 2 else 1
+        
+        ax2.set_ylim(minP, maxP)
+        ax2.set_yticks( np.arange( minP, maxP, spacing) )
         
         # plot price array(s)
         price_array_list = ['price']
@@ -527,8 +666,8 @@ class Plots(object):
                                     is_bar_graph=True, left_axis=False)
             
         # custom y limits and ticks to be integers
-        ax.set_ylim(0, 40)
-        ax.set_yticks(np.arange(0, 40, 5))
+        ax.set_ylim(0, len(self.operating_modes) )
+        ax.set_yticks(np.arange(0, len(self.operating_modes), 5))
 
         # plot operating mode arrays
         op_array_list = ['op_mode_1'] # list of array strings
@@ -546,9 +685,10 @@ class Plots(object):
         #---- extract operating modes to designated array
         #==================================================#
         op_mode_1 = self.get_array('op_mode_1', d_slice)
-
+        # import pdb
+        # pdb.set_trace()
         # Plotting data points over the OP mode line with different colors and labels
-        for op in self.op_mode_result[d_slice]:
+        for op in self.op_mode_result:
             # getting unique operating modes
             inds = (op_mode_1 == op)
             # individual index getting plotted with unique color and label
@@ -680,8 +820,7 @@ class DispatchPlots(Plots):
     Note that the DispatchPlots class must be initialized before using. 
     """
 
-    def __init__(self, module, fsl='x-small', loc='best', legend_offset=False,
-                 lp=16, lps=12, fs=12, lw=2, x_shrink=0.85, x_legend=12):
+    def __init__(self, module, **kwargs):
         """ Initializes the Plots module
 
         The instantiation of this class receives a full Dispatch object, the module
@@ -697,23 +836,14 @@ class DispatchPlots(Plots):
             lp (int)            : labelpad for axis labels
             lps (int)           : labelpad for axis labels - short version
             fs (int)            : fontsize for labels, titles, etc.
-            lw (int)            : linewidth fo        # plot price array(s)
-        price_array_list = ['price']
-        price_label_list = [None]
-        price_ylabel = 'Tariff \n($/kWh)'
-        ax2 = self.plot_SSC_generic(ax2, array_list=price_array_list, \
-                                    label_list=price_label_list, \
-                                    y_label=price_ylabel, \
-                                    title_label=None, \
-                                    plot_all_time=plot_all_time, \
-                                    start_hr=start_hr, end_hr=end_hr, hide_x=hide_x, \
-                                    is_bar_graph=True)r plotting
+            lw (int)            : linewidth for plotting
             x_shrink (float)    : (legend_offset==True) amount to shrink axis to make room for legend
         """
         
+        self.set_plotter()
+        
         # initialize Plots class
-        Plots.__init__( self, module, fsl, loc, legend_offset, \
-                 lp, lps, fs, lw, x_shrink, x_legend)
+        self.plotter.__init__( self, module, **kwargs)
  
 
         # continuing with Pyomo Dispatch plots
@@ -723,93 +853,22 @@ class DispatchPlots(Plots):
             self.dm = module
             
             # extract outputs from Dispatch model
-            self.set_pyomo_outputs()
+            self.set_extractor()
+            self.extractor.set_pyomo_outputs(self)
             
             # slice of arrays
             self.full_slice = slice(0, len(self.t_full), 1)
-    
-    
-    def set_pyomo_outputs(self):
-        """ Method to define list of Pyomo output arrays
+            self.t_max = self.t_full.max()
+            self.t_plot = np.arange(0, len(self.t_full), 1)*u.hr
 
-        This method extracts outputs from the Pyomo Dispatch model, converts them to numpy arrays
-        and saves them to `self`. 
+
+    def set_plotter(self):
+        """ Setting class for plotting
         """
         
-        # Dispatch Model with results
-        dm = self.dm
-        u = self.u
+        self.plotter = Plots
         
-        # lambda functions
-        extract_from_model = lambda name: getattr(dm.model, name)
-        extract_array      = lambda name: np.array([ pe.value(extract_from_model(name)[t]) for t in dm.model.T ])
-        extract_energy     = lambda name: (extract_array(name)*u.kWh).to('MWh') 
-        extract_power      = lambda name: (extract_array(name)*u.kW).to('MW') 
         
-        # Time and Pricing Arrays
-        self.t_full = extract_array('Delta_e') * u.hr
-        self.p_array = extract_array('P')
-        
-        # marking the midway point
-        self.T = len(self.t_full)
-        self.time_midway = np.ones([self.T])*int(self.T/2)
-
-        # Energy Arrays
-        self.s_array     = extract_energy('s')
-        self.ucsu_array  = extract_energy('ucsu')
-        self.unsu_array  = extract_energy('unsu')
-        
-        # Power Arrays
-        self.wdot_array             = extract_power('wdot')
-        self.wdot_delta_plus_array  = extract_power('wdot_delta_plus')
-        self.wdot_delta_minus_array = extract_power('wdot_delta_minus')
-        self.wdot_v_plus_array      = extract_power('wdot_v_plus')
-        self.wdot_v_minus_array     = extract_power('wdot_v_minus')
-        self.wdot_s_array           = extract_power('wdot_s')
-        self.wdot_p_array           = extract_power('wdot_p')
-        self.x_array                = extract_power('x')
-        self.xn_array               = extract_power('xn')
-        self.xnsu_array             = extract_power('xnsu')
-
-        # Binary Arrays (Nuclear)
-        self.yn_array    = extract_array('yn') 
-        self.ynhsp_array = extract_array('ynhsp') 
-        self.ynsb_array  = extract_array('ynsb') 
-        self.ynsd_array  = extract_array('ynsu') 
-        self.ynsu_array  = extract_array('ynsu') 
-        self.ynsup_array = extract_array('ynsup') 
-        
-        # Binary Arrays (Cycle)
-        self.y_array     = extract_array('y') 
-        self.ychsp_array = extract_array('ychsp') 
-        self.ycsb_array  = extract_array('ycsb') 
-        self.ycsd_array  = extract_array('ycsd') 
-        self.ycsu_array  = extract_array('ycsu') 
-        self.ycsup_array = extract_array('ycsup') 
-        self.ycgb_array  = extract_array('ycgb')  
-        self.ycge_array  = extract_array('ycge') 
-    
-    
-    def overwrite_model(self, new_model):
-        """ Overwrites current dispatch model saved to self
-
-        This method deletes current model saved to object and overwrites it with new model that
-        is used as input to this method.
-
-        Inputs:
-            new_model (object)   : object representing Pyomo Dispatch Model with results
-        """
-        
-        # delete current Dispatch mode
-        del self.dm
-        
-        # save new model to self
-        self.dm = new_model
-        
-        # re-set the pyomo outputs from new model
-        self.set_pyomo_outputs()
-
-
     def plot_pyomo_energy(self, ax=None, title_label=None, plot_all_time=True, \
                           start_hr=0, end_hr=48, hide_x=False,  x_legend=1.2, \
                           y_legend_L=1.0, y_legend_R=1.0):
@@ -1165,11 +1224,9 @@ class DispatchPlots(Plots):
 
         # plot cycle binary arrays
         cyclebin_array_list = ['y_array',   'ychsp_array', 'ycsb_array',
-                               'ycsd_array', 'ycsu_array',  'ycsup_array',
-                               'ycgb_array', 'ycge_array'] # list of array strings
-        cyclebin_label_list = ['Is Cycle Generating Power?', 'Is Cycle HSU Pen?', 'Is Cycle SB?', 
-                               'Is Cycle SD?',               'Is Cycle SU?',      'Is Cycle CSU Pen?', 
-                               'Is Cycle Began Gen?',        'Is Cycle Stopped Gen?'] 
+                               'ycsd_array', 'ycsup_array'] # list of array strings
+        cyclebin_label_list = ['Is Cycle Generating Power?', 'Is Cycle in Hot Start Up?', 'Is Cycle in Standby?', 
+                               'Is Cycle Shutting Down?',    'Is Cycle in Cold Start Up?'] 
 
         cyclebin_wts = np.linspace(10, 1.5, 8).tolist()
         cyclebin_ylabel = 'Cycle \nBinary \nVariables'

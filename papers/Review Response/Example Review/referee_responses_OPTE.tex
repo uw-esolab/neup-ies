@@ -1,0 +1,290 @@
+\documentclass[10pt]{article}
+
+\usepackage{graphicx,amsmath,epsf, amssymb}
+\usepackage{setspace, natbib, graphicx,amsmath,epsf}
+\usepackage{color}
+\usepackage{lineno}
+\usepackage[usenames,dvipsnames]{xcolor}
+\usepackage{fancyvrb}
+\usepackage{url}
+\usepackage{setspace}
+\usepackage{graphicx}
+\usepackage{amssymb,amsmath}
+\usepackage{geometry}
+\usepackage{pifont}
+\usepackage{fleqn}
+\usepackage{txfonts}
+\usepackage{natbib}
+\usepackage{xcolor}
+\usepackage{multicol}
+\usepackage{float}
+\usepackage[mathscr]{euscript}
+\usepackage{natbib}
+
+\linenumbers
+
+\linespread{1.4}
+
+\renewcommand{\baselinestretch}{1.0}
+\setlength{\oddsidemargin}{0in}
+\setlength{\textwidth}{6.5in}
+\setlength{\topmargin}{0in}
+\setlength{\headheight}{0in}
+\setlength{\headsep}{0in}
+\setlength{\textheight}{9.in}
+\renewcommand{\floatpagefraction}{.9}
+\renewcommand{\topfraction}{.9}
+\renewcommand{\bottomfraction}{.9}
+\renewcommand{\textfraction}{.1}
+%\input epsf
+\newcommand{\beq}{\begin{equation}}
+\newcommand{\eeq}{\end{equation}}
+\renewcommand{\labelitemi}{$\bullet$}
+\renewcommand{\labelitemii}{$\star$}
+\renewcommand{\labelitemiii}{$\cdot$}
+%\theoremstyle{break}
+%\theoremstyle{plain}
+\newtheorem{Thm}{Theorem}
+\newtheorem{Cor}{Corollary}
+\newtheorem{Obs}{Observation}
+\newtheorem{Prop}{Proposition}
+\newtheorem{Exa}{Example}[section]
+\usepackage{color}
+\usepackage{url}
+\newtheorem{Def}{Definition}
+%\newtheorem{Prop}[Cor]{Proposition}
+%\theoremheadderfont{\scshape}
+\newcommand{\dblon}{\addtolength{\baselineskip}{.1in}}
+\newcommand{\dbloff}{\addtolength{\baselineskip}{-.1in}}
+\newcommand{\tcm}{\textcolor{magenta}}
+\newcommand{\tcga}{\textcolor{teal}}
+\newcommand{\tcy}{\textcolor{yellow}}
+\newcommand{\kw}[1]{$<${\it #1}$>$}
+
+\input epsf
+%\input{./packages_and_newcommands}
+% Natbib setup for author-year style
+\usepackage{natbib}
+ \bibpunct[, ]{(}{)}{,}{a}{}{,}%
+ \def\bibfont{\small}%
+ \def\bibsep{\smallskipamount}%
+ \def\bibhang{24pt}%
+ \def\newblock{\ }%
+ \def\BIBand{and}%
+ 
+\begin{document}
+
+
+
+
+\begin{center}
+{\Large Referee responses, Paper \#OPTE-2021-2022:\\ Real-time Dispatch Optimization for Concentrating Solar Power with Thermal
+Energy Storage}
+\end{center}
+
+\bigskip
+%\noindent \hrulefill \vspace{-.05cm}
+
+
+
+\noindent
+\tcp{Alexandra}\\
+\tco{John}\\
+\tcc{Alex}\\
+\tcg{Bill}\\
+\tcr{Mike}\\
+\tcb{Done}
+
+\setcitestyle{citesep={;}} %use semicolon to seperate multiple citations
+%\noindent \hrulefill \vspace{-.05cm}
+\bigskip
+
+{\bf  Editor}
+
+
+{\bf Comments to the Author:}\\
+
+Based on the feedback we received and my own review of your manuscript, I feel
+that your manuscript is of interest to the journal and can be reassessed for
+publication should you be prepared to incorporate major revisions. When
+preparing your revised manuscript, please carefully consider the referee
+comments attached, and submit an itemized list of responses and actions taken
+to address these comments.
+
+%\bigskip
+\noindent \hrulefill \vspace{-.05cm}
+
+\noindent
+
+The authors thank the editor and reviewers for thoroughly reading the paper; we have done our best to address all the comments, have thoroughly proofread the paper, and hope that the paper is now improved. We provide the reviewers' comments in black font while our responses are given in \tcb{blue}. 
+
+\noindent \hrulefill \vspace{-.05cm}
+\bigskip
+
+
+{\bf Reviewer \#1}:
+
+{\bf Comments to Author}\\
+
+I have now completed a thorough review of your manuscript titled ``Real-time
+Dispatch Optimization for Concentrating Solar Power with Thermal Energy
+Storage." Your paper presents a very detailed model for operating a concentrating solar
+power (CSP) plant with thermal energy storage (TES) to maximize profit.
+Compared to previous models for this application, your paper's model includes
+several novel features. Most importantly, you represent the receiver, storage,
+and power cycle based on mass and temperature (rather than just energy), which
+allows you to consider temperature-dependent efficiencies of processes within
+the CSP plant. Since these features add more nonlinearities to the model, you
+deploy several strategies to obtain near-optimal solutions in less than five
+minutes, which would enable practical implementation in real time. Overall,
+your model appears to be technically sound, and your paper is well written and
+presented.
+
+While I believe that your paper has the potential to become worthy of
+publication in {\it Optimization and Engineering}, there are a number of issues (some
+major, some minor) that I think you need to address before your paper can be
+accepted. Therefore, my recommendation to the Editor is a {\bf Major Revision} to
+address the following issues.
+
+\begin{enumerate}
+
+\item Your paper should do a better job clearly stating its main contributions at
+the beginning, in the Introduction. First, what novel features does your model
+of CSP plant operations include that have not been included in other models to
+date (and why are these features important)? Second, what methodological
+techniques do you develop and employ to allow you to solve the resulting
+problem efficiently and to near-optimality? Actually, your sentence in Section
+6 that begins with ``Our contributions include..." does a pretty good job of
+answering my first question, but a clear statement like this should appear in
+the Introduction and distinguish contributions to your specific CSP application
+vs. contributions to methodology. In addition, you should specify your intended
+audiences and your contributions that are of interest to them. Clearly, your
+paper and its novel model features are relevant to other modelers who work on
+CSP as an application, but this audience is quite small and niche. Are any of
+your contributions relevant to a broader audience? Would any of your solution
+strategies be useful for problems beyond CSP? Perhaps there are many other
+energy and industrial processes that involve temperature-dependent efficiencies
+with similar nonlinearities, and maybe your variable temporal resolution scheme
+could help navigate tradeoffs between resolution and computational tractability
+in many diverse settings. In short, your Introduction should more clearly
+summarize your contributions and make a stronger effort to convince more of the
+{\it Optimization and Engineering} readership that your paper is worth reading.
+
+\tcb{The penultimate paragraph of \S1 now reads as follows:  ``The combination of the variable solar resource, the capability to defer electricity production, and the efficiency trade-off resulting from the temperature-limiting control policy creates challenging decisions for plant operators competing in the day-ahead utility energy market. The contributions of our paper entail the extension of an existing mixed-integer, linear programming model  which determines the optimal dispatch solution, maximizing plant revenue less estimated operating costs \citep{Wagner_2017}.
+Specifically, we modify the model to allow real-time decision support by (i) increasing time fidelity in the near-term  horizon; (ii)  enforcing minimum up- and down-time requirements at the power cycle; (iii) improving the accuracy of the receiver and power cycle start-up processes; and, (iv) using explicit variables to represent mass and temperature  of the receiver, storage, and the power cycle. The resulting non-convex mixed-integer, quadratically-constrained program is computationally intractable with respect to supporting real-time decisions. Therefore, we present exact and inexact techniques to improve problem tractability, making it suitable for real-time decision support." That is, we state both the modeling and mathematical contributions upfront, before the paper organization (and literature review). We have additionally summarized our contributions towards the end of the \S2 Literature Review (see final two paragraphs) to contextualize our work.}
+\tcr{Mike to address the second part starting with ``In addition, you should specify your intended
+audiences and your contributions that are of interest to them...." by citing papers on grid storage with a thermal cycle or other cycle operations.}
+
+\item Your model is very detailed and it is presented clearly in Section 3, but
+this presentation is also quite long and tedious. Do you really need all of
+these equations to appear in Section 3, or could you relegate more of them to
+Appendix A? The way I would think about it is this: when you consider each of
+your novel model features (such as the four identified on page 29, line 23), if
+some equations are not relevant to these features specifically (i.e., they are
+standard in existing CSP dispatch models), then they probably should not go in
+Section 3. I would put the full, uninterrupted notation and model formulation
+in Appendix A, and in Section 3, include only the notation and equations that
+are needed to show how you represent your novel model features. It would also
+be helpful to more clearly distinguish the linear and nonlinear versions of
+various model elements. Right now, it is quite difficult for readers to do this
+because the linear and nonlinear versions of constraints are included in the
+same multi-equation blocks, and then on page 19 you have to include a
+painstakingly detailed list of only the linear constraints that are included in
+the linear version of the problem. When presenting the linear and nonlinear
+representations of each model element, you could more clearly distinguish them
+with labels, putting the two representations side-by-side in two columns, etc.
+Overall, it needs to be easier for readers to focus their attention on the most
+important model features and how your linear and nonlinear representations
+differ.
+
+\tcb{We have now placed the entire mathematical formulation in {\bf Appendix A} in a continuous fashion, with references after each ``subsection" of constraint to the paragraph following the formulation where the constraints are explained in English. These explanations mimic those given in the body of the paper (\S3 in the original draft, now \S4). Also please note the following about the math: (i) we have retained the table of notational definitions in \S4, corresponding to all the notation we use in that section; and (ii) \S4 remains unchanged from that in the original paper because every mathematical expression was either (a) new to the nonlinear model, or (b) necessary to understand the context in which the rest of the formulation exists. Unfortunately, all this detail is necessary to capture the real-time operations of the plant that depend on the ability to distinguish both the mass flow rates and temperatures in the hot and cold tanks for each time period in the relevant horizon.  Such a model is in direct contrast to  those pertaining to energy optimization   that characterizes occurrences over long periods of time, given in unit commitment models \citep{van2013unit} and regional capacity expansion models \citep{krishnan2016evaluating}.  }
+\tcc{To explain the system operations in a simpler form prior to the detailed description, we have edited Figure 1 to relate the constraint sets in \S4 to the various subsystems of the CSP plant that they represent.  Additionally, Figure has been moved to what is now \S3, an overview of CSP plant operations, which we detail in our response to comment 6 below.}
+
+\tcg{Try to construct a table with two columns that have the English associated with various attributes in the linear model and then how we handle them in the nonlinear model (e.g., omit, modify, replace).   }  \tcc{We could refer to Figure 1 when we go through the constraints and move some of the English up in addition to explaining why the organization is what it is.  The way the flow is currently set up is that we are following the energy through the system.}
+
+
+\item Your model is quite detailed, so readers have to invest a considerable
+amount of time and effort to understand it and make it to your Results section
+on page 23. As it stands, I do not think that your Results section provides
+enough findings and insights to justify all the work required to get to this
+point in the paper. Specifically, you should run more scenarios where you
+selectively include / exclude the various novel model features and solution
+tactics that you developed and employed, so that by comparing their results, we
+can understand the implications and advantages (hopefully) of your
+methodological innovations. For example,  ``formulating mass and temperature
+representations of the receiver, storage, and power cycle" to capture
+temperature-dependent efficiencies is a novel model feature that you have
+added, and one that introduces some computational challenges. So, what are the
+benefits of adding this feature? How much additional profit can be earned with
+a more sophisticated model like yours, and how is the CSP plant operated
+differently when you account for temperature-dependent efficiencies? You can
+answer these questions. For instance, derive the optimal dispatch decisions
+without accounting for these features, then simulate how those decisions would
+perform when efficiencies really do depend on temperatures, and you can
+calculate how suboptimal they would be (relative to the true solution from your
+more sophisticated model). Similarly, you could compare the solutions obtained
+and the computational times required to obtain them when you do and do
+not apply variable temporal resolution (and when you do apply it, you could
+vary the resolutions, times for switching from one resolution to another,
+etc.). In other words, your Results section should reveal the impacts of your
+specific modeling and solution innovations on CSP plant operations, profits,
+and computational times to obtain solutions.
+
+\tco{One issue regarding addressing this request is that if we don't adhere to the mass and temperature balance, the model produces solutions that are simply flat infeasible, which is not very interesting.
+Maybe we could see how quickly (in which time periods over the horizon) they go infeasible. We could also do everything on an hourly time fidelity and test the quality of those solutions.
+I do not think we want to get too much into further analysis (beyond the new features of the model we present here) because some of that will belong to paper \#2. Try to create Figures 7 and 8 for the linear model as well to state how the nonlinear ones make a more compelling case. John to go back to the original 21 instances and look at how bad the performance was without the tuning tactics (and scaling) and then we will just report what John has readily available. We can also make the case that the linear model generally doesn't produce nonlinear-feasible solutions.}
+
+\item I find it odd that you assume a single, constant price for grid electricity
+sales and purchases in all of the numerical instances you consider. The way I
+see it, dispatching energy storage optimally is far more important when prices
+are time-varying, so that would be the more interesting case to consider and
+could really amplify the advantages of your model's novel features.
+Furthermore, it seems like it is the built-in TES capability that could
+potentially make CSP competitive with solar PV, but with a single, constant
+price, there is really no reason to value storage at your facility because you
+can sell electricity for the same price whenever you send it to the grid. So, I
+suggest that you consider at least some scenarios with time-varying prices,
+especially as they might affect the differences in profits achieved using more
+and less sophisticated formulations.
+
+\tco{Can you find some time-varying price profiles for John to run? We wouldn't put those in paper \#2 because that's not the way things actually work right now, so these types of results are better relegated to this paper. Mike to find files from a node near Rice or try to find some on the CAISO database. Assume day-ahead market with hourly pricing. }
+
+\item The content in Section 5 prior to Section 5.3 feels somewhat awkward
+appearing under the section heading Results. Your descriptions of the hardware
+and software, notional plant design, and problem instances are not results.
+Normally, this information would appear in a section called something like
+Scenarios, Numerical Case Study, Input Data, etc. The fact that only Sections
+5.3  and 5.5 truly describe results is consistent with my comment (3), where I
+explained that your Results section does not provide commensurate payoff to
+readers who invest the time to get there.
+
+\tcb{We have now entitled \S5 (now \S6) ``Scenario Descriptions and Results." Please see response to Comment 3 as well.}
+
+\item In responding to my comment (2), you should consider removing the sporadic
+descriptions of how different parts of a CSP plant work from Section 3, and
+replacing them with a dedicated section that summarizes CSP plants and how they
+work in a qualitative, intuitive manner. This could go a long way toward
+helping all readers understand CSP well enough to appreciate your work. This
+section could be called something like Background on Concentrating Solar Power,
+Concentrating Solar Power: How It Works, or something like that, and appear
+between Sections 1 and 2 or Sections 2 and 3.
+
+\tcc{We have added what is now \S3, which we have titled ``CSP Plant Operations Overview,'' and moved Figure 1 to this section.  We added the following paragraph to introduce this section: ``Figure 1 depicts a notional CSP plant with TES in the power tower configuration, and relates sets of constraints in the mathematical formulation we present in Section~4 to the subsystems they represent.  The energy flow through the plant can be subdivided into two procedures.  In the first, which we call \textit{collection mode,} sunlight is absorbed as heat and transferred to thermal energy storage.  The second procedure, which we call \textit{production mode}, deploys the stored thermal energy is to generate electricity by transferring the thermal to electrical energy by driving a turbine and generator with the aid of HTF-to-steam heat exchangers.  Collected energy may be concurrently used in production mode or stored for later use; the presence of TES in this system allows for the two modes to run separately, allowing the plant to schedule production to maximize revenue.'' Then, we moved detailed information on the collection and production modes from the math in \S4 into this section.  We believe that this both (i) summarizes the ``big-picture'' operations of the plant, and (ii) provides a visualization of plant operations and energy flow as the reader proceeds through the formulation.  Please note that we restrict the constraint references in Figure 1 to those featured in the main body of the paper.}
+
+\item On page 2, line 11, ``cost per Watt generated"  does not make sense. Plants
+generate energy (e.g., MWh), not power. ``Cost per Watt" would only make
+sense as the investment cost for installing capacity.
+
+\tcb{We have now changed this to ``cost per Watt capacity."}
+
+\end{enumerate}
+
+\bibliographystyle{spbasic}   % outcomment this and next line in Case 1
+\bibliography{real-time} % if more than one, comma separated
+
+\end{document}
+
+
+
+
+

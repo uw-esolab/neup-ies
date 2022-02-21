@@ -7,7 +7,7 @@ add_subdirectory(wex)
 add_subdirectory(ssc)
 add_subdirectory(sam)
 
-option(SAM_SKIP_TOOLS "Skips the sdktool and tcsconsole builds" ON)
+option(SAM_SKIP_TOOLS "Skips the sdktool and tcsconsole builds" OFF)
 option(SAM_SKIP_TESTS "Skips building tests" ON)
 option(SAMAPI_EXPORT "Export of ssc binaries to the SAM_api directory; for Unix, compile ssc libraries for SAM_api" ON)
 option(SAM_SKIP_AUTOGEN "Re-generate the SAMAPI files from export_config" OFF)

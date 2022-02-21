@@ -17,10 +17,13 @@ import pyomo.environ as pe
 import numpy as np
 from util.FileMethods import FileMethods
 from util.SSCHelperMethods import SSCHelperMethods
+from pyomo.environ import value
 from pyomo.environ import units as u_pyomo
 if not hasattr(u_pyomo,'USD'):
     u_pyomo.load_definitions_from_strings(['USD = [currency]'])
 from pyomo.util.check_units import assert_units_consistent, assert_units_equivalent, check_units_equivalent
+from pyomo.util.infeasible import log_infeasible_constraints, log_infeasible_bounds
+import logging
 from abc import ABC, abstractmethod
 
 
@@ -55,11 +58,15 @@ class GeneralDispatch(ABC):
             unitRegistry (pint.registry) : unique unit Pint unit registry
         """
         
+        self.u_pyomo = u_pyomo
+        
         self.model = pe.ConcreteModel()
         self.generate_params(params)
         self.generate_variables()
         self.add_objective()
         self.generate_constraints()
+        
+        # assert_units_consistent(self.model)
 
 
     def generate_params(self, params):
@@ -105,6 +112,7 @@ class GeneralDispatch(ABC):
         ### Power Cycle Parameters ###
         self.model.Ec = pe.Param(mutable=True, initialize=gd("Ec"), units=gu("Ec"))           #E^c: Required energy expended to start cycle [kWt$\cdot$h]
         self.model.eta_des = pe.Param(mutable=True, initialize=gd("eta_des"), units=gu("eta_des"))   #\eta^{des}: Cycle nominal efficiency [-] 
+        self.model.Eu = pe.Param(mutable=True, initialize=gd("Eu"), units=gu("Eu"))                #E^u: Thermal energy storage capacity [kWt$\cdot$h]
         self.model.etap = pe.Param(mutable=True, initialize=gd("etap"), units=gu("etap"))     #\eta^p: Slope of linear approximation of power cycle performance curve [kWe/kWt]
         self.model.Lc = pe.Param(mutable=True, initialize=gd("Lc"), units=gu("Lc"))           #L^c: Cycle heat transfer fluid pumping power per unit energy expended [kWe/kWt]
         self.model.Qb = pe.Param(mutable=True, initialize=gd("Qb"), units=gu("Qb"))           #Q^b: Cycle standby thermal power consumption per period [kWt]
@@ -130,13 +138,14 @@ class GeneralDispatch(ABC):
         self.model.Ccsb = pe.Param(mutable=True, initialize=gd("Ccsb"), units=gu("Ccsb"))              #C^{csb}: Operating cost of power cycle standby operation [\$/kWt$\cdot$h]
         
         ### Initial Condition Parameters ###
+        self.model.s0 = pe.Param(mutable=True, initialize=gd("s0"), units=gu("s0"))           #s_0: Initial TES reserve quantity  [kWt$\cdot$h]
         self.model.ucsu0 = pe.Param(mutable=True, initialize=gd("ucsu0"), units=gu("ucsu0")) #u^{csu}_0: Initial cycle start-up energy inventory  [kWt$\cdot$h]
         self.model.wdot0 = pe.Param(mutable=True, initialize=gd("wdot0"), units=gu("wdot0")) #\dot{w}_0: Initial power cycle electricity generation [kW]e
         self.model.y0 = pe.Param(mutable=True, initialize=gd("y0"), units=gu("y0"))          #y_0: 1 if cycle is generating electric power initially, 0 otherwise
         self.model.ycsb0 = pe.Param(mutable=True, initialize=gd("ycsb0"), units=gu("ycsb0")) #y^{csb}_0: 1 if cycle is in standby mode initially, 0 otherwise
         self.model.ycsu0 = pe.Param(mutable=True, initialize=gd("ycsu0"), units=gu("ycsu0")) #y^{csu}_0: 1 if cycle is in starting up initially, 0 otherwise    [az] this is new.
         self.model.Yu0 = pe.Param(mutable=True, initialize=gd("Yu0"), units=gu("Yu0"))       #Y^u_0: duration that cycle has been generating electric power [h]
-        self.model.Yd0 = pe.Param(mutable=True, initialize=gd("Yd0"), units=gu("delta_ns"))  #Y^d_0: duration that cycle has not been generating power (i.e., shut down or in standby mode) [h]
+        self.model.Yd0 = pe.Param(mutable=True, initialize=gd("Yd0"), units=gu("Yd0"))       #Y^d_0: duration that cycle has not been generating power (i.e., shut down or in standby mode) [h]
         
         #------- Persistence Parameters ---------
         # TODO: removing references to wdot_s_prev, they only exist as Constraints and should later be added to Objective somehow
@@ -152,18 +161,19 @@ class GeneralDispatch(ABC):
         parameters. Here we define continuous and binary variables for the 
         Power Cycle. 
         """
-        
+        u = self.u_pyomo
         ### Decision Variables ###
         #------- Variables ---------
-        self.model.ucsu = pe.Var(self.model.T, domain=pe.NonNegativeReals)                             #u^{csu}: Cycle start-up energy inventory at period $t$ [kWt$\cdot$h]
-        self.model.wdot = pe.Var(self.model.T, domain=pe.NonNegativeReals)                             #\dot{w}: Power cycle electricity generation at period $t$ [kWe]
-        self.model.wdot_delta_plus = pe.Var(self.model.T, domain=pe.NonNegativeReals)	               #\dot{w}^{\Delta+}: Power cycle ramp-up in period $t$ [kWe]
-        self.model.wdot_delta_minus = pe.Var(self.model.T, domain=pe.NonNegativeReals)	               #\dot{w}^{\Delta-}: Power cycle ramp-down in period $t$ [kWe]
-        self.model.wdot_v_plus = pe.Var(self.model.T, domain=pe.NonNegativeReals, bounds = (0,self.model.W_v_plus))      #\dot{w}^{v+}: Power cycle ramp-up beyond designed limit in period $t$ [kWe]
-        self.model.wdot_v_minus = pe.Var(self.model.T, domain=pe.NonNegativeReals, bounds = (0,self.model.W_v_minus)) 	 #\dot{w}^{v-}: Power cycle ramp-down beyond designed limit in period $t$ [kWe]
-        self.model.wdot_s = pe.Var(self.model.T, domain=pe.NonNegativeReals)	                       #\dot{w}^s: Energy sold to grid in time t [kWe]
-        self.model.wdot_p = pe.Var(self.model.T, domain=pe.NonNegativeReals)	                       #\dot{w}^p: Energy purchased from the grid in time t [kWe]
-        self.model.x = pe.Var(self.model.T, domain=pe.NonNegativeReals)                                #x: Cycle thermal power utilization at period $t$ [kWt]
+        self.model.s = pe.Var(self.model.T, domain=pe.NonNegativeReals, bounds = (0,self.model.Eu), units=u.kWh)    #s: TES reserve quantity at period $t$  [kWt$\cdot$h]
+        self.model.ucsu = pe.Var(self.model.T, domain=pe.NonNegativeReals, units=u.kWh)                             #u^{csu}: Cycle start-up energy inventory at period $t$ [kWt$\cdot$h]
+        self.model.wdot = pe.Var(self.model.T, domain=pe.NonNegativeReals, units=u.kW)                              #\dot{w}: Power cycle electricity generation at period $t$ [kWe]
+        self.model.wdot_delta_plus = pe.Var(self.model.T, domain=pe.NonNegativeReals, units=u.kW/u.hr)	                #\dot{w}^{\Delta+}: Power cycle ramp-up in period $t$ [kWe/hr]
+        self.model.wdot_delta_minus = pe.Var(self.model.T, domain=pe.NonNegativeReals, units=u.kW/u.hr) 	                #\dot{w}^{\Delta-}: Power cycle ramp-down in period $t$ [kWe/hr]
+        self.model.wdot_v_plus = pe.Var(self.model.T, domain=pe.NonNegativeReals, bounds = (0,self.model.W_v_plus), units=u.kW/u.hr)      #\dot{w}^{v+}: Power cycle ramp-up beyond designed limit in period $t$ [kWe/hr]
+        self.model.wdot_v_minus = pe.Var(self.model.T, domain=pe.NonNegativeReals, bounds = (0,self.model.W_v_minus), units=u.kW/u.hr) 	 #\dot{w}^{v-}: Power cycle ramp-down beyond designed limit in period $t$ [kWe/hr]
+        self.model.wdot_s = pe.Var(self.model.T, domain=pe.NonNegativeReals, units=u.kW)	                       #\dot{w}^s: Energy sold to grid in time t [kWe]
+        self.model.wdot_p = pe.Var(self.model.T, domain=pe.NonNegativeReals, units=u.kW)	                       #\dot{w}^p: Energy purchased from the grid in time t [kWe]
+        self.model.x = pe.Var(self.model.T, domain=pe.NonNegativeReals, units=u.kW)                                #x: Cycle thermal power utilization at period $t$ [kWt]
         
         #------- Binary Variables ---------
         self.model.y = pe.Var(self.model.T, domain=pe.Binary)         #y: 1 if cycle is generating electric power at period $t$; 0 otherwise
@@ -276,7 +286,7 @@ class GeneralDispatch(ABC):
         """
         def power_rule(model, t):
             """ Model of electric power vs. heat input as linear function """
-            return model.wdot[t] == (model.etaamb[t]/model.eta_des)*(model.etap*model.x[t] + model.y[t]*(model.Wdotu - model.etap*model.Qu))
+            return model.wdot[t] <= (model.etaamb[t]/model.eta_des)*(model.etap*model.x[t] + model.y[t]*(model.Wdotu - model.etap*model.Qu))
         def power_ub_rule(model, t):
             """ Upper bound on PC electric power output """
             return model.wdot[t] <= model.Wdotu*(model.etaamb[t]/model.eta_des)*model.y[t]
@@ -391,8 +401,8 @@ class GeneralDispatch(ABC):
         def cycle_shutdown_rule(model, t):
             """ PC shutdown only after operating or standby """
             if t == 1:
-                return model.ycsd[t] >= model.y0 - model.y[t] + model.ycsb0 - model.ycsb[t]
-            return model.ycsd[t] >= model.y[t-1] - model.y[t] + model.ycsb[t-1] - model.ycsb[t]
+                return 0 >= model.y0 - model.y[t] + model.ycsb0 - model.ycsb[t]
+            return model.ycsd[t-1] >= model.y[t-1] - model.y[t] + model.ycsb[t-1] - model.ycsb[t]
         def cycle_start_pen_rule(model, t):
             """ PC cold startup penalty """
             if t == 1: 
@@ -450,7 +460,7 @@ class GeneralDispatch(ABC):
             return ineq
 
 
-    def solve_model(self, mipgap=0.7):
+    def solve_model(self, mipgap=0.7, tee=False, run_simple=False):
         """ Method to solve the Pyomo model
         
         This method solves the Pyomo Concrete model that has been instantiated
@@ -464,10 +474,12 @@ class GeneralDispatch(ABC):
             https://www.gurobi.com/resource/mip-basics/
         
         Inputs:
-            mipgap (float) : minimum gap to find optimal solution
+            mipgap (float): 
+                minimum gap to find optimal solution
         Outputs:
-            results (SolverResults) : dictionary of solver output after optimization,
-                                      contains information on convergence, etc.
+            results (SolverResults) : 
+                dictionary of solver output after optimization, contains 
+                information on convergence, etc.
         """
         
         # define solver (Coin-or branch and cut)
@@ -476,8 +488,13 @@ class GeneralDispatch(ABC):
         # setting optimality condition
         opt.options["ratioGap"] = mipgap
         
+        if run_simple:
+            opt.options["primalPivot"] = "dantzig"
+            opt.options["dualPivot"]   = "dantzig"
+
         # solving model
         results = opt.solve(self.model, tee=False, keepfiles=False)
+
         #TODO: assert successful optimization?
         
         return results
@@ -565,8 +582,9 @@ class GeneralDispatchParamWrap(object):
         u = self.u
         
         # time parameters
-        self.T       = int( self.pyomo_horizon.to('hr').magnitude )
-        self.Delta   = np.array([self.dispatch_time_step.to('hr').magnitude]*self.T)*u.hr
+        pyoH   = self.pyomo_horizon.to('hr').m
+        self.T       = int( pyoH )
+        self.Delta   = np.array([self.dispatch_time_step.to('hr').m]*self.T)*u.hr
         self.Delta_e = np.cumsum(self.Delta)
         
         # weight parameter
@@ -576,11 +594,19 @@ class GeneralDispatchParamWrap(object):
         Tdry  = self.Tdry # dry bulb temperature from solar resource file 
         Price = df_array  # pricing multipliers
         
+        # we now curtail any pyomo slice that goes above the full sim time
+        length_of_pyoH = current_pyomo_slice.stop - current_pyomo_slice.start
+        
         # if we're at the last segment, we won't have 48 hour data for the sim. here is a quick fix
-        if current_pyomo_slice.stop > len(Tdry):
-            # double-stacking
+        if length_of_pyoH < pyoH:
+            # double-stacking arrays so we can get a slice past full sim time
             Tdry  = np.hstack([Tdry,  Tdry])
             Price = np.hstack([Price, Price])
+            
+            # restructuring the pyomo slice
+            start   = current_pyomo_slice.start
+            newstop = start + pyoH
+            current_pyomo_slice = slice( start, newstop, 1)
             
         # grabbing relevant dry temperatures
         Tdry   = Tdry[current_pyomo_slice]
@@ -781,7 +807,7 @@ class GeneralDispatchParamWrap(object):
         if np.isnan(e_pb_suinitremain): # SSC seems to report NaN when startup is completed
             self.ucsu0 = self.Ec
         else:   
-            self.ucsu0 = max(0.0, self.Ec - e_pb_suinitremain ) 
+            self.ucsu0 = max(0.0*u.MWh, self.Ec - e_pb_suinitremain ) 
             if self.ucsu0 > (1.0 - tol)*self.Ec:
                 self.ucsu0 = self.Ec
         
@@ -810,7 +836,7 @@ class GeneralDispatchOutputs(object):
     and SSC calls. 
     """
     
-    def get_dispatch_targets_from_Pyomo(dispatch_model, ssc_horizon, N_full, run_loop=False):
+    def get_dispatch_targets_from_Pyomo(dispatch_model, horizon, N_full, run_loop=False):
         """ Method to set fixed costs of the Plant
         
         This method parses through the solved Pyomo model for Dispatch optimization
@@ -822,7 +848,7 @@ class GeneralDispatchOutputs(object):
         
         Inputs:
             dispatch_model (Pyomo model) : solved Pyomo Dispatch model (ConcreteModel)
-            ssc_horizon (float Quant)    : length of time of SSC horizon (in hours)
+            horizon (float Quant)        : length of time of horizon, whether SSC or Pyomo (in hours)
             N_full (int)                 : length of full simulation time (in hours, no Quant)
             run_loop (bool)              : flag to determine if simulation is segmented
         Outputs:
@@ -833,7 +859,7 @@ class GeneralDispatchOutputs(object):
         
         # range of pyomo and SSC horizon times
         t_pyomo = dm.model.T
-        f_ind   = int( ssc_horizon.to('hr').m ) # index in hours of final horizon (e.g. 24)
+        f_ind   = int( horizon.to('hr').m ) # index in hours of final horizon (e.g. 24)
         t_horizon = range(f_ind)
         
         # if we're not running a loop, define a list of 0s to pad the output so it matches full array size
