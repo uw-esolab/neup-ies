@@ -28,7 +28,7 @@ print("PID = ", pid)
 # =============================================================================
 
 # locating output directory
-output_dir = FileMethods.output_dir
+output_dir = os.path.join( FileMethods.output_dir, "model1_energies_paper")
 
 start_name     = 'failureModes' # testDefocus # failureModes
 PySAM_name     = 'PySAM'  # PySAM  # ''
