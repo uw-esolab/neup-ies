@@ -7,6 +7,7 @@ Created on Fri Apr 16 10:15:51 2021
 """
 
 import os, re, pandas, openpyxl
+import numpy as np
 from util.FileMethods import FileMethods
 import pyomo as pyo
 
@@ -224,6 +225,7 @@ class FileParser(object):
         """
         OrderedSimpleSet = pyo.core.base.set.OrderedSimpleSet
         SimpleParam  = pyo.core.base.param.SimpleParam
+        ScalarParam  = pyo.core.base.param.ScalarParam
         IndexedParam = pyo.core.base.param.IndexedParam
         
         # check that the model has the Parameter defined
@@ -235,7 +237,7 @@ class FileParser(object):
             #    different ways to retrieve them
             if type(modelParam) is OrderedSimpleSet:
                 modelData = modelParam.data()
-            elif type(modelParam) is SimpleParam:
+            elif type(modelParam) is SimpleParam or type(modelParam) is ScalarParam:
                 modelData = modelParam.value
             elif type(modelParam) is IndexedParam:
                 ParamDict = modelParam.extract_values()
@@ -418,4 +420,91 @@ class FileParser(object):
         text_file.write(' \n'.join(doc_lines))
         text_file.close()
 
-            
+
+    def write_pyomo_params_to_table(model, dispatch_name, txt_file_name, param_or_var=0):
+        """ Method to write all Pyomo parameters to an text file with LaTeX
+        
+        This method parses through a given Pyomo model and returns parameter names 
+        and information. In a text file specified by the user, it writes LaTeX formatted 
+        sections and subsections of the parameter listings. 
+        
+        Inputs:
+            model (PyomoModel)  : Pyomo model after execution
+            dispatch_name (str) : name of Dispatch model in the simulations/dispatch folder
+            txt_file_name (str) : name of desired output file (just filename, no directories)
+            param_or_var (int)  : select either Parameters or Variables to write 
+
+        """
+
+        # get dictionary of parsed parameter string properties
+        P = FileParser.get_dispatch_string_properties(dispatch_name, param_or_var)
+        
+        # assign line contents for each type of line
+        params_latex = P['params_latex'] 
+        sections = P['sections']
+        subsection = P['ssection'] 
+        detail = P['detail']
+        
+        # assign line numbers where each type of line shows up
+        params_latex_lineNo = P['params_latex_lineNo'] 
+        section_lineNo    = P['section_lineNo']  
+        subsection_lineNo = P['ssection_lineNo']
+        params_detail_lineNo = P['detail_lineNo'] 
+
+        # total amount of lines
+        n_lines = P['N_lines']
+        
+        # start counting at 0
+        doc_lines = []
+        count_sec  = 0
+        count_subsec = 0
+        count_params = 0
+        
+        for n in range(n_lines):
+            # writing section titles
+            if n in section_lineNo:
+                tmp_section = '& &\\ \'' + sections[count_sec] + '\''
+                doc_lines.append(tmp_section)
+                count_sec += 1
+                
+                # if params in next line, write a \begin{align} statement
+                if n+1 in params_latex_lineNo:
+                    doc_lines.append(' ')
+                
+
+            # writing subsection titles
+            if n in subsection_lineNo:
+                tmp_ssection = '& &\\ \'' + subsection[count_subsec]  + '\''
+                doc_lines.append(tmp_ssection)
+                count_subsec += 1
+                
+                doc_lines.append(' ')
+                
+
+            # writing LaTeX representation of params with text details
+            if n in params_latex_lineNo:
+                detail_line_match = np.where( np.asarray(params_detail_lineNo) == params_latex_lineNo[count_params])[0][0]
+                tmp_detail = detail[ int(detail_line_match)  ]
+                
+                # if there's another parameter next, end the line
+                if n+1 in params_latex_lineNo:
+                    if '[' in tmp_detail:
+                        detail_txt, unit_txt = tmp_detail.split('[')
+                        tmp_params = '${0}$ & ${1}$ & {2} \\\\'.format(
+                            params_latex[count_params], unit_txt[:-1], detail_txt )
+                    else:
+                        tmp_params = '&' + params_latex[count_params] + ' &&: \\text{' + detail[count_params] + '}'
+                        
+                    doc_lines.append(tmp_params)
+                # if no parameters up next, end the align brackets
+                else:
+                    doc_lines.append(tmp_params)
+                    doc_lines.append(' ')
+
+                count_params += 1
+        
+        # print and/or save text file
+        txt_path = os.path.join(FileMethods.samsim_dir, 'outputs', txt_file_name)
+        text_file = open(txt_path,'w')
+        text_file.write(' \n'.join(doc_lines))
+        text_file.close()
