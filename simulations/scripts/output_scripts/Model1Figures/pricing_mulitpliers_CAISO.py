@@ -9,7 +9,7 @@ Created on Tue Feb 22 15:10:42 2022
 import modules.NuclearTES as NuclearTES
 from util.FileMethods import FileMethods
 import matplotlib.pyplot as plt
-import os, pint, pandas, math
+import os, pint, pandas, math, copy
 import numpy as np
 from pylab import rc
 rc('axes', linewidth=2)
@@ -66,7 +66,7 @@ print("CAISO Tariff rates over time average out to: {0} \n Deviations are {1}.".
 # =============================================================================
 days_per_week = 7
 hrs_per_day   = 24
-weeks_till_summer = 26
+weeks_till_summer = 21
 
 
 # indexing the winter default tariff schedule
@@ -89,12 +89,13 @@ xlabels = ["Mon", "Tues", "Wed", "Thurs", "Fri", "Sat", "Sun"]
 fig = plt.figure(figsize=(10,6))
 ax = fig.add_subplot(211)
 
-ax.plot(p_time[winter_slice], default_tariff[winter_slice], linewidth= 3, label="Non-Summer")
-ax.plot(p_time[winter_slice], default_tariff[summer_slice], linewidth= 3, label="Summer")
+ax.plot(p_time[winter_slice], default_tariff[winter_slice], linewidth= 3, label="Winter Tariff")
+ax.plot(p_time[winter_slice], default_tariff[summer_slice], linewidth= 3, label="Summer Tariff")
 
 miny = np.min(default_tariff)
 maxy = np.max(default_tariff)
 
+ax.set_xlim([-0.25, 7.25])
 ax.set_ylim([miny*0.7, maxy*1.15])
 ax.set_xticks(p_time[winter_slice][xlabel_loc])
 ax.set_xticklabels(xlabels)
@@ -139,20 +140,65 @@ xlabels = ["Mon", "Tues", "Wed", "Thurs", "Fri", "Sat", "Sun"]
 
 
 #====== Figure ======#
-ax = fig.add_subplot(212)
+axp = fig.add_subplot(212)
+axn = axp.twinx()
 
-ax.plot(p_time[winter_slice], LMP_norm[winter_slice], linewidth= 3, label="Week #5")
-ax.plot(p_time[winter_slice], LMP_norm[third_slice], linewidth= 3, label="Week #23")
-ax.plot(p_time[winter_slice], LMP_norm[summer_slice], linewidth= 3, label="Week #46")
-ax.plot(p_time[winter_slice], zero_line[summer_slice], color='k', linewidth= 3, label="Zero-Pricing")
+# ax.plot(p_time[winter_slice], LMP_norm[winter_slice], linewidth= 3, label="Week #5")
+# ax.plot(p_time[winter_slice], LMP_norm[third_slice], linewidth= 3, label="Week #23")
+# ax.plot(p_time[winter_slice], LMP_norm[summer_slice], linewidth= 3, label="Week #46")
+# ax.plot(p_time[winter_slice], zero_line[summer_slice], color='k', linewidth= 3, label="Zero-Pricing")
 
-miny = np.min([LMP_norm[winter_slice], LMP_norm[summer_slice]])
-maxy = np.max([LMP_norm[winter_slice], LMP_norm[summer_slice]])
+# miny = np.min([LMP_norm[winter_slice], LMP_norm[summer_slice]])
+# maxy = np.max([LMP_norm[winter_slice], LMP_norm[summer_slice]])
 
-ax.set_ylim([miny*1.3, maxy*1.15])
-ax.set_xticks(p_time[winter_slice][xlabel_loc])
-ax.set_xticklabels(xlabels)
-ax.grid(True)
-# ax.set_xlabel("Time (d)", fontweight='bold')
-ax.set_ylabel("CAISO \nPrice Multiplier", fontweight='bold')
-ax.legend()
+# ax.set_ylim([miny*1.3, maxy*1.15])
+# ax.set_xticks(p_time[winter_slice][xlabel_loc])
+# ax.set_xticklabels(xlabels)
+# ax.grid(True)
+# # ax.set_xlabel("Time (d)", fontweight='bold')
+# ax.set_ylabel("CAISO \nPrice Multiplier", fontweight='bold')
+# ax.legend()
+
+
+for w in range(52):
+    
+    start_slice = int( days_per_week * hrs_per_day * w)
+    end_slice   = int( start_slice + days_per_week * hrs_per_day)
+    t_slice     = slice(start_slice, end_slice, 1)
+    
+    if w == 0:
+        s_slice = t_slice
+        
+    LMP_slice = LMP_norm[t_slice]
+    LMP_pos   = copy.deepcopy(LMP_slice)
+    LMP_pos[LMP_pos<0] = 0
+
+    LMP_neg   = copy.deepcopy(LMP_slice)
+    LMP_neg[LMP_neg>0] = 0
+    LMP_neg *= -1
+    
+    axp.plot(p_time[s_slice], LMP_pos, color='C0', linewidth= 1, alpha=0.5)
+    axn.plot(p_time[s_slice], LMP_neg, color='C1', linewidth= 1, alpha=1)
+    
+    axn.yaxis.label.set_color('C1')
+    axn.tick_params(axis='y', colors='C1')
+    axn.spines["right"].set_edgecolor('C1')
+    
+    axp.set_xlim([-0.25, 7.25])
+    axp.set_xticklabels(xlabels)
+    axp.set_xticks(p_time[s_slice][xlabel_loc])
+    axp.set_xticklabels(xlabels)
+    axp.grid(True)
+    axp.set_ylim([0, 8.25])
+    axp.set_ylabel("CAISO \n Price Multiplier \n Positive Prices", fontweight='bold')
+    
+    axn.set_xlim([-0.25, 7.25])
+    axn.set_xticklabels(xlabels)
+    axn.set_xticks(p_time[s_slice][xlabel_loc])
+    axn.set_xticklabels(xlabels)
+    axn.grid(True)
+    axn.set_ylim([0, 8.25])
+    axn.set_ylabel("CAISO \n Price Multiplier \n Negative Prices", fontweight='bold')
+    
+    # axp.legend(loc='best')
+    # axn.legend(loc='best')
