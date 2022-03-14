@@ -66,7 +66,7 @@ print("CAISO Tariff rates over time average out to: {0} \n Deviations are {1}.".
 # =============================================================================
 days_per_week = 7
 hrs_per_day   = 24
-weeks_till_summer = 21
+weeks_till_summer = 26
 
 
 # indexing the winter default tariff schedule
@@ -110,7 +110,7 @@ ax.legend()
 # =============================================================================
 days_per_week = 7
 hrs_per_day   = 24
-weeks_till_summer = 46
+weeks_till_summer = 30
 weeks_till_winter = 5
 weeks_till_third  = 23
 
@@ -141,7 +141,7 @@ xlabels = ["Mon", "Tues", "Wed", "Thurs", "Fri", "Sat", "Sun"]
 
 #====== Figure ======#
 axp = fig.add_subplot(212)
-axn = axp.twinx()
+# axn = axp.twinx()
 
 # ax.plot(p_time[winter_slice], LMP_norm[winter_slice], linewidth= 3, label="Week #5")
 # ax.plot(p_time[winter_slice], LMP_norm[third_slice], linewidth= 3, label="Week #23")
@@ -171,34 +171,46 @@ for w in range(52):
         
     LMP_slice = LMP_norm[t_slice]
     LMP_pos   = copy.deepcopy(LMP_slice)
-    LMP_pos[LMP_pos<0] = 0
+    # LMP_pos[LMP_pos<0] = 0
 
-    LMP_neg   = copy.deepcopy(LMP_slice)
-    LMP_neg[LMP_neg>0] = 0
-    LMP_neg *= -1
+    # LMP_neg   = copy.deepcopy(LMP_slice)
+    # LMP_neg[LMP_neg>0] = 0
+    # LMP_neg *= -1
     
-    axp.plot(p_time[s_slice], LMP_pos, color='C0', linewidth= 1, alpha=0.5)
-    axn.plot(p_time[s_slice], LMP_neg, color='C1', linewidth= 1, alpha=1)
+    axp.plot(p_time[s_slice], LMP_pos, color='C0', linewidth= 1, alpha=0.7)
     
-    axn.yaxis.label.set_color('C1')
-    axn.tick_params(axis='y', colors='C1')
-    axn.spines["right"].set_edgecolor('C1')
+    xzero = np.linspace(-1, 23.5, 1000)
+    yzero = np.zeros( len(xzero) )
+    axp.plot( xzero, yzero, 'k')
+    # axn.plot(p_time[s_slice], LMP_neg, color='C1', linewidth= 1, alpha=1)
+    
+    # axn.yaxis.label.set_color('C1')
+    # axn.tick_params(axis='y', colors='C1')
+    # axn.spines["right"].set_edgecolor('C1')
+    
+    axp.annotate("", xy=(1.75, -3), xytext=(1.75, -0.6),
+            arrowprops=dict(arrowstyle="->"))
+    axp.text(1.25, -2, "-22.3", fontfamily='monospace', fontweight='normal',fontsize=11)
+
+    axp.annotate("", xy=(6.75, -3), xytext=(6.75, -0.6),
+            arrowprops=dict(arrowstyle="->"))
+    axp.text(6.3, -2, "-8.5", fontfamily='monospace', fontweight='normal',fontsize=11)
     
     axp.set_xlim([-0.25, 7.25])
     axp.set_xticklabels(xlabels)
     axp.set_xticks(p_time[s_slice][xlabel_loc])
     axp.set_xticklabels(xlabels)
     axp.grid(True)
-    axp.set_ylim([0, 8.25])
-    axp.set_ylabel("CAISO \n Price Multiplier \n Positive Prices", fontweight='bold')
+    axp.set_ylim([-3, 8.25])
+    axp.set_ylabel("CAISO \n Price Multiplier", fontweight='bold')
     
-    axn.set_xlim([-0.25, 7.25])
-    axn.set_xticklabels(xlabels)
-    axn.set_xticks(p_time[s_slice][xlabel_loc])
-    axn.set_xticklabels(xlabels)
-    axn.grid(True)
-    axn.set_ylim([0, 8.25])
-    axn.set_ylabel("CAISO \n Price Multiplier \n Negative Prices", fontweight='bold')
+    # axn.set_xlim([-0.25, 7.25])
+    # axn.set_xticklabels(xlabels)
+    # axn.set_xticks(p_time[s_slice][xlabel_loc])
+    # axn.set_xticklabels(xlabels)
+    # axn.grid(True)
+    # axn.set_ylim([0, 8.25])
+    # axn.set_ylabel("CAISO \n Price Multiplier \n Negative Prices", fontweight='bold')
     
     # axp.legend(loc='best')
     # axn.legend(loc='best')
