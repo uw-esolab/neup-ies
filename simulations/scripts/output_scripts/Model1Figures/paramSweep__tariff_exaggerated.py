@@ -30,21 +30,28 @@ jsons = ['model1_Hamilton_560_tariffx1',
          'model1_Hamilton_560_tariffx2'
          ]
 
+titles = ['Tariff Peaks x1',
+          'Tariff Peaks x1.3',
+          'Tariff Peaks x1.5',
+          'Tariff Peaks x2']
+
+cbar_label = "PPA Price Relative to Reference \n @ P=450MWe , TES=0"
+
 # locating output directory
 output_dir = os.path.join( FileMethods.output_dir, "model1_energies_paper")
 
 # json name parameters
-start_name     = 'failureModes'
+start_name     = 'paramSweep_varTurbineCost' # failureModes
 PySAM_name     = 'PySAM' 
 add_extra_Name = True
-extra_name     = '2022_02' 
+extra_name     = '2022_03'  #  2022_02
 dispatch       = True 
 sscH           = 24   
 pyoH           = 48  
 TES_min        = 0   
-TES_max        = 7  
+TES_max        = 8    # 7
 PC_min         = 450  
-PC_max         = 1150  
+PC_max         = 900  
 
 # selecting coefficient array
 coeffs = [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]  
@@ -66,8 +73,8 @@ coeff_list = ['ec_p',     # proft term
 
 # coefficient strings
 extr_str = ''
-for n,coeff in enumerate(coeff_list):
-    extr_str += "_{0}{1}".format( coeff.split('_')[1], str(coeffs[n]))
+# for n,coeff in enumerate(coeff_list):
+#     extr_str += "_{0}{1}".format( coeff.split('_')[1], str(coeffs[n]))
 
 # generate name of file
 def updated_json( json ):
@@ -104,7 +111,7 @@ for i in plotrange:
         Storage = pickle.load(f)
         
     # storage dictionary
-    slicing = slice(5,15,1)
+    slicing = slice(0,15,1)
     
     tshours  = Storage['tshours'] 
     p_cycle  = Storage['p_cycle'][slicing] 
@@ -124,14 +131,16 @@ for i in plotrange:
     min_arr = 1 - array.min()
     max_arr = array.max() - 1
     max_diff = np.max([min_arr, max_arr])
-    mean_label = "PPA Price Relative to Reference \n P=450MWe , TES=0"
     
     
     asp_df = 1.5
     im1 = ax1.imshow(array.T, origin='upper', cmap=cmap, aspect=asp_df, \
                      vmin = 1 - max_diff, vmax = 1 + max_diff )
-    contours = plt.contour(array.T, levels=[0.95, 0.97, 0.99, 1.0], colors='black')
-    ax1.clabel(contours, inline=1, fontsize=10)
+    
+    if i>0:
+        # contours = plt.contour(array.T, levels=[0.95, 0.97, 0.99, 1.0], colors='black')
+        contours = plt.contour(array.T, levels=[0.94, 0.96, 0.98, 1.0], colors='black')
+        ax1.clabel(contours, inline=1, fontsize=10)
     
     # ========== Text ==========
     xmin,xmax,ymax,ymin = im1.get_extent() #note the order
@@ -141,12 +150,8 @@ for i in plotrange:
     # ========== labels ==========
     # setting axis labels
     ax1.set_xlabel('tshours\n(hr)', fontweight='bold')
-    
-    # creating colorbar for the 2D heatmap with label
-    # if i == plotrange[-1]:
-    #     cb1 = fig.colorbar(im1, ax=ax1, pad=0.01)
-    #     cb1.set_label(mean_label, labelpad= 8, fontweight = 'bold')
-    
+    ax1.set_title(titles[i], fontweight='bold')
+
     # setting tick marks for x and y axes
     ax1.set_xticks(range(len(tshours)))
     ax1.set_xticklabels( ['{0}'.format(t) for t in tshours] )
@@ -194,7 +199,7 @@ for i in plotrange:
     #====== Figure ======#
     ax  = fig.add_subplot(gs[2,i])
 
-    ax.plot(p_time[winter_slice], default_tariff[winter_slice], linewidth= 3, label="Non-Summer")
+    ax.plot(p_time[winter_slice], default_tariff[winter_slice], linewidth= 3, label="Winter")
     ax.plot(p_time[winter_slice], default_tariff[summer_slice], linewidth= 3, label="Summer")
 
     miny = np.min(default_tariff)
@@ -209,3 +214,13 @@ for i in plotrange:
     if i == 0:
         ax.set_ylabel("SAM Generic Peak \nPrice Multiplier", fontweight='bold')
         ax.legend()
+    else:
+        ax.yaxis.set_ticklabels([])
+    
+plt.tight_layout()
+
+fig.subplots_adjust(right=0.85)
+cbar_ax = fig.add_axes([0.875, 0.4, 0.025, 0.55])
+fig.colorbar(im1, cax=cbar_ax)
+cbar_ax.set_ylabel(cbar_label, fontweight='bold')
+# 
