@@ -30,20 +30,20 @@ print("PID = ", pid)
 # locating output directory
 output_dir = FileMethods.output_dir
 
-start_name     = 'failureModes' # testDefocus # failureModes
+start_name     = 'paramSweep_varTurbineCost' # testDefocus # failureModes
 PySAM_name     = 'PySAM'  # PySAM  # ''
 add_extra_Name = True
-extra_name     = '2022_02'  # 2021_10  # 2021_11 # 2021_12
-json_name      = 'model1_Hamilton_560_tariffx1_4'   # model1_CAISO_Hamilton  # model1_Hamilton_560_tariffx1_5  
+extra_name     = '2022_03'  # 2021_10  # 2021_11 # 2021_12
+json_name      = 'model1_CAISO_Hamilton'   # model1_CAISO_Hamilton  # model1_Hamilton_560_tariffx1_5  
 dispatch       = True # True # False
 sscH           = 24   # 12 # 24
 pyoH           = 48   # 24 # 48
 TES_min        = 0    # 0  # 2
-TES_max        = 7   # 14
-PC_min         = [ 1000,  800,  600,  450 ]  # 100 # 300 # 400 # 550
-PC_max         = [ 1150,  950,  750,  550 ] # 500 # 850
-# PC_min         = [900, 500, 200 ]  # 100 # 300 # 400 # 550
-# PC_max         = [1200, 800, 400 ] # 500 # 850
+TES_max        = 8   # 14
+# PC_min         = [ 750, 600,  450 ]  # 100 # 300 # 400 # 550
+# PC_max         = [ 900, 700,  550 ] # 500 # 850
+PC_min         = [ 950, 450 ]  # 100 # 300 # 400 # 550
+PC_max         = [1050, 900 ] # 500 # 850
 
 # selecting coefficient array
 
@@ -74,8 +74,8 @@ coeff_list = ['ec_p',     # proft term
 
 # coefficient strings
 extr_str = ''
-for n,coeff in enumerate(coeff_list):
-    extr_str += "_{0}{1}".format( coeff.split('_')[1], str(coeffs[n]))
+# for n,coeff in enumerate(coeff_list):
+#     extr_str += "_{0}{1}".format( coeff.split('_')[1], str(coeffs[n]))
 
 
 CombinedStorage = {}
