@@ -264,7 +264,7 @@ class NuclearTESLoadProfiles(object):
         return data_arrays
     
 
-    def create_violin_plot(self, ax, data, v_color='C0'):
+    def create_violin_plot(self, ax, data, v_color='C0', hide_x=False):
         """ Creates a violin plot for each hour of the day
         
         Method repurposed from https://matplotlib.org/stable/gallery/statistics/customized_violin.html
@@ -301,8 +301,8 @@ class NuclearTESLoadProfiles(object):
         ax.vlines(inds, quartile1, quartile3, color='k', linestyle='-', lw=5)
         ax.vlines(inds, whiskers_min, whiskers_max, color='k', linestyle='-', lw=1)
         
-        self.modify_violin_axes( ax, data )
-
+        self.modify_violin_axes( ax, data, hide_x )
+        # ax.grid(True)
 
 
     def violin_adjacent_values(self, vals, q1, q3):
@@ -318,10 +318,11 @@ class NuclearTESLoadProfiles(object):
         return lower_adjacent_value, upper_adjacent_value
 
 
-    def modify_violin_axes(self, ax, data ):
+    def modify_violin_axes(self, ax, data, hide_x=False ):
         
-        ax.set_xlabel("Hour of the Day", fontweight='bold')
-        
+        if not hide_x:
+            ax.set_xlabel("Hour of the Day", fontsize=14, fontweight='bold')
+            
         ax.set_xlim([-0.5, 23.5])
         ax.set_xticks(self.hrs_in_day)
         
@@ -334,15 +335,17 @@ class NuclearTESLoadProfiles(object):
         hrs_per_day   = self.hrs_per_day
         days_per_week = self.days_per_week
         weeks_till_summer = self.weeks_till_a_summer_day
-        
-        p_time = self.time_array
-        price  = self.price_array
+        year_end = self.year_end_day
+    
         
         M_or_Su = 0 if is_weekday else 6
         neutral_slice = slice(0, hrs_per_day, 1)
         
-        
+        lw = 3
         if 'tariffx' in self.filepath:
+            
+            p_time = self.time_array
+            price  = self.price_array
 
             # indexing the winter default tariff schedule
             
@@ -358,10 +361,10 @@ class NuclearTESLoadProfiles(object):
             ax2 = ax.twinx()
             
             if is_winter:
-                ax2.plot(p_time[neutral_slice]-1, price[winter_slice], linewidth= 4, color=s_color, label="Winter Tariff")
+                ax2.plot(p_time[neutral_slice]-1, price[winter_slice], linewidth= lw, color=s_color, label="Winter Tariff")
             else:
-                ax2.plot(p_time[neutral_slice]-1, price[summer_slice], linewidth= 4, color=s_color, label="Summer Tariff")
-                ax2.set_ylabel("Price Multiplier", fontweight='bold')
+                ax2.plot(p_time[neutral_slice]-1, price[summer_slice], linewidth= lw, color=s_color, label="Summer Tariff")
+                ax2.set_ylabel("Price Multiplier", fontsize=14, fontweight='bold')
             
             ax2.set_ylim([0.2, 3.5])
             ax2.yaxis.label.set_color(s_color)
@@ -372,17 +375,59 @@ class NuclearTESLoadProfiles(object):
             
         else:
 
-            ax2 = ax.twinx()
+            p_time = self.time_array_byHour
             
-            for w in range(52):
+            if is_winter:
+                price  = np.hstack([ self.price_dict['Winter'][w] for w in ['WeekDay', 'WeekEnd'] ])
+                ax.set_ylabel("Price \nMultiplier", labelpad=20, fontsize=12, fontweight='bold')
+            else:
+                price  = np.hstack([ self.price_dict['Summer'][w] for w in ['WeekDay', 'WeekEnd'] ])
+            
+            price_mins = price.min(axis=1)
+            price_maxs = price.max(axis=1)
+            
+            price_mean = np.mean(price, axis=1)
+            price_std  = np.std( price, axis=1)
+            
+            price_std_plus  = price_mean + price_std
+            price_std_minus = price_mean - price_std
+            
+            ax.fill_between( self.hrs_in_day, price_mins, price_maxs, color='C0', alpha=0.4 , label='Price Range over 1 Year')
+            ax.fill_between( self.hrs_in_day, price_std_minus, price_std_plus, color='C0', alpha=0.6 , label=r'$\pm 1\sigma$')
+            ax.plot( self.hrs_in_day, price_mean, 'darkblue', label='Mean Price')
+            
+            # zeroline
+            xzero = np.linspace(-0.5, 23.5, 1000)
+            yzero = np.zeros( len(xzero) )
+            ax.plot( xzero, yzero, 'k--')
+            
+            
+            # for d in range(len(price.T)):
+            #     ax.plot(self.hrs_in_day, price[:,d], color=s_color, alpha=0.5, linewidth=0.5)
+
+            
+            ax.set_xlim([-0.5, 23.5])
+            ax.set_xticks(self.hrs_in_day)
+            
+            if is_winter:
+                ax.set_ylim([-3, 8.5])
+                ax.set_yticks([-2,0,2,4,6,8])
+                ax.legend(loc='best', fontsize=10, bbox_to_anchor=(1.17, 1.2),
+                          fancybox=True, shadow=True)
                 
-                start_slice = int( days_per_week * hrs_per_day * w)
-                end_slice   = int( start_slice + days_per_week * hrs_per_day)
-                t_slice     = slice(start_slice, end_slice, 1)
+                peak_x  = 18
+                peak_dx = 1.7
+                peak_text = "-22.3"
+            else:
+                ax.set_ylim([-3, 5])
+                ax.set_yticks([-2,0,2,4])
                 
-                if w == 0:
-                    s_slice = t_slice
-                    
-                LMP_slice = price[t_slice]
+                peak_x = 21
+                peak_dx = 1.25
+                peak_text = "-8.5"
                 
-                ax2.plot(p_time[neutral_slice]-1, LMP_slice, color='C0', linewidth= 1, alpha=0.5)
+            
+            ax.annotate("", xy=(peak_x, -3), xytext=(peak_x, 0),
+                    arrowprops=dict(arrowstyle="->"))
+            ax.text(peak_x-peak_dx, -2, peak_text, fontfamily='monospace', fontweight='normal',fontsize=11)
+                
