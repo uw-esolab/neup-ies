@@ -55,8 +55,8 @@ pyoH           = 48   # 24 # 48
 compare = [6.537 , 6.58, 6.26]
 
 # upper and lower limits for relative PPA values
-plower  = [0.995, 0.875, 0.80]
-pupper  = [1.04,  1.125, 1.05 ]
+plower  = [0.99, 0.875, 0.82]
+pupper  = [1.08,  1.125, 1.06 ]
 
 # optimal values
 Pref_opt = [2, 1, 1]
@@ -95,7 +95,7 @@ for r in json_range:
     elif json_name is "model1_Hamilton_560_tariffx1":
         # tshours   = np.array([    0,   1,   2 ])
         # p_cycle   = np.array([  550, 500, 450 ]) 
-        tshours   = np.array([    0,   1,   2 ])
+        tshours   = np.array([    0,   2,   4 ])
         p_cycle   = np.array([  550, 500, 450 ]) 
         
     elif json_name is "model1_Hamilton_560_tariffx1_5" or "model1_Hamilton_560_tariffx2":
@@ -164,7 +164,7 @@ for r in json_range:
             TES_opt_array = tshours[TES_opt[r]] * vert
             Pref_opt_rnge = np.linspace( plower[r], pupper[r], len(vert)  )
             
-            ax.plot( TES_opt_array, Pref_opt_rnge, '-.k', linewidth=2, label='Optimum Design at $28.4/kWh')
+            ax.plot( TES_opt_array, Pref_opt_rnge, '-.k', linewidth=2, label='Optimum Design at $29.8/kWh')
         
         for j,c in zip(tscost_plotrange, colors):
             

@@ -15,9 +15,10 @@ import matplotlib.cm as cm
 import matplotlib.patheffects as PathEffects
 from matplotlib.gridspec import GridSpec
 import numpy as np
+from scipy import interpolate
 from pylab import rc
 rc('axes', linewidth=2)
-rc('font', weight='bold',size=12)
+rc('font', weight='bold',size=16)
 u = pint.UnitRegistry()
 
 # =============================================================================
@@ -81,6 +82,7 @@ def updated_json( json ):
                     PC_min, PC_max, extr_str )
     return filename
 
+
 # =============================================================================
 # Loop through jsons
 # =============================================================================
@@ -89,6 +91,7 @@ def updated_json( json ):
 fig = plt.figure(figsize=(11,8))
 ax  = fig.add_subplot(111)
 
+# get CAISO 
 filename = updated_json( jsons[0] )
     
 # generate full path to file
@@ -99,42 +102,83 @@ with open(NTPath, 'rb') as f:
     Storage = pickle.load(f)
         
 # storage dictionary
-slicing = slice(0,15,1)
-# slicing = slice(5,15,1)
-    
+slicing = slice(0,15,1) # full slice 
+# slicing = slice(5,15,1) # partial slice over Pref
+
+# extract data
 tshours  = Storage['tshours'] 
 p_cycle  = Storage['p_cycle'][slicing] 
 ppa      = Storage['ppa'][:,slicing] 
 
 # =============================================================================
-# colormap
+# sanity checks
 # =============================================================================
 
+opt_TES, opt_Pref = np.where( ppa == np.min(ppa) )
+print("Optimum PPA = {0} \n ****** at P = {1}MWe and TES = {2}hrs".format( np.min(ppa), 
+                                                                     p_cycle[opt_Pref][0], 
+                                                                     tshours[opt_TES][0] )  )
+
+
+# =============================================================================
+# colormap
+# =============================================================================
 cmap=cm.seismic
+threshold = 1.12 # max threshold to plot
+threshold_contour = np.round(1.1,2)
+
 # ========== Arrays ==========
-array = copy.deepcopy( ppa )
+
+# using PPA price as metric
+array = copy.deepcopy( ppa ) 
+# any values equal to -1 set to max (bad values, easier to spot)
 array[array==-1] = np.max(array)
-# array = np.array([array[n]/ppa.max(axis=1)[n] for n in range( len( ppa.max(axis=1) ) ) ])
+# normalizing by the reference @ 450 MWe and tshours = 0
 array /= array[0,-1]
-    
+# anything above max threshold set to same value
+array[array>threshold] = threshold
+
+# flip array, since p_ref values are technically backwards
+array = np.fliplr(array)
+
+
+# getting upper and lower bounds for colorbar
 min_arr = 1 - array.min()
 max_arr = array.max() - 1
 max_diff = np.max([min_arr, max_arr])
-    
-    
-asp_df = 1.0
-im1 = ax.imshow(array.T, origin='upper', cmap=cmap, aspect=asp_df, \
+
+# plotting heatmap
+asp_df = 1
+im1 = ax.imshow(array.T, origin='lower', #extent=[tshours[0], tshours[-1], p_cycle[-1], p_cycle[0] ],
+                cmap=cmap, aspect=asp_df, 
                  vmin = 1 - max_diff, vmax = 1 + max_diff )
+ax.set_ylim([-0.5, 9.5])
     
+# defining contours
+finterp = interpolate.interp2d(tshours, np.flipud(p_cycle), array.T, kind='cubic')
+tt = np.linspace(tshours[0], tshours[-1], 1000)
+pp = np.linspace(p_cycle[-1], p_cycle[0], 1000)
+ff = finterp(tt,pp)
 
 # contours = plt.contour(array.T, levels=[0.88, 0.94, 1.0], colors='black')
-contours = plt.contour(array.T, levels=[0.91, 0.94, 0.97, 1.0], colors='black')
-ax.clabel(contours, inline=1, fontsize=10)
+c_levels = [0.91, 0.94, 0.97, 1.0, threshold_contour]
+c_colors = 'k'
+contours = plt.contour(ff, extent=[tshours[0], tshours[-1], 0, 9 ],
+                                levels=c_levels, 
+                                colors=c_colors)
+
+# labels for each contour level
+c_fmt = {}
+for l,s in zip(contours.levels, c_levels):
+    c_fmt[l] = ' {:.2f} '.format(s)
+    
+# Add contour labels
+ax.clabel(contours, fmt=c_fmt, inline=1, fontsize=16)
     
 
 # ========== labels ==========
 # setting axis labels
-ax.set_xlabel('tshours\n(hr)', fontweight='bold')
+ax.set_xlabel('tshours\n(hr)', fontweight='bold', fontsize=16)
 
 # setting tick marks for x and y axes
 ax.set_xticks(range(len(tshours)))
@@ -142,14 +186,13 @@ ax.set_xticklabels( ['{0}'.format(t) for t in tshours] )
     
 
 ax.set_yticks(range(len(p_cycle)))
-ax.set_yticklabels( ['{0:.0f}'.format(P) for P in p_cycle] )
-ax.set_ylabel('Power Cycle Output\n(MWe)', fontweight='bold')
+ax.set_yticklabels( ['{0:.0f}'.format(P) for P in np.flipud( p_cycle ) ] )
+ax.set_ylabel('Power Cycle Output\n(MWe)', fontweight='bold', fontsize=16)
 
 
-    
 plt.tight_layout()
 
 fig.subplots_adjust(right=0.95)
 cbar_ax = fig.add_axes([0.8, 0.1, 0.035, 0.875])
 fig.colorbar(im1, cax=cbar_ax)
-cbar_ax.set_ylabel(cbar_label, labelpad=20, fontweight='bold')
+cbar_ax.set_ylabel(cbar_label, labelpad=20, fontweight='bold', fontsize=16)

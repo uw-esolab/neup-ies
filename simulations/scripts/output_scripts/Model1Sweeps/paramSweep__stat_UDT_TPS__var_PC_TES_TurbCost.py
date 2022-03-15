@@ -6,7 +6,6 @@ Created on Sat Mar 12 10:23:16 2022
 @author: gabrielsoto
 """
 
-
 import modules.NuclearTES as NuclearTES
 from util.PostProcessing import OutputExtraction
 from util.FileMethods import FileMethods
@@ -82,9 +81,6 @@ p_cycle    = np.array([ 1050, 1000,  950])
 # p_cycle    = np.array([ 750,  700,  650,  600 ]) 
 # p_cycle    = np.array([ 950,  900,  850,  800 ]) 
 # p_cycle    = np.array([ 1150, 1100, 1050, 1000 ]) 
-
-
-
 
 
 # =============================================================================
