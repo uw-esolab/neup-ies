@@ -15,6 +15,7 @@ import matplotlib.cm as cm
 import matplotlib.patheffects as PathEffects
 from matplotlib.gridspec import GridSpec
 import numpy as np
+from scipy import interpolate
 from pylab import rc
 rc('axes', linewidth=2)
 rc('font', weight='bold',size=12)
@@ -25,15 +26,17 @@ u = pint.UnitRegistry()
 # =============================================================================
 
 jsons = ['model1_Hamilton_560_tariffx1',
-         'model1_Hamilton_560_tariffx1_3',
+         # 'model1_Hamilton_560_tariffx1_3',
          'model1_Hamilton_560_tariffx1_5',
          'model1_Hamilton_560_tariffx2'
          ]
 
 titles = ['Tariff Peaks x1',
-          'Tariff Peaks x1.3',
+          # 'Tariff Peaks x1.3',
           'Tariff Peaks x1.5',
           'Tariff Peaks x2']
+
+nPlots = len(titles)
 
 cbar_label = "PPA Price Relative to Reference \n @ P=450MWe , TES=0"
 
@@ -94,9 +97,9 @@ def updated_json( json ):
 
 # ========== Figure ==========
 fig = plt.figure(figsize=(14,10))
-gs  = GridSpec(3,4, figure=fig)
+gs  = GridSpec(3,nPlots, figure=fig)
 
-plotrange = range(4)
+plotrange = range(nPlots)
 
 for i in plotrange:
     ax1  = fig.add_subplot(gs[0:2,i])
@@ -111,6 +114,7 @@ for i in plotrange:
         Storage = pickle.load(f)
         
     # storage dictionary
+    # slicing = slice(5,15,1)
     slicing = slice(0,15,1)
     
     tshours  = Storage['tshours'] 
@@ -118,29 +122,73 @@ for i in plotrange:
     ppa      = Storage['ppa'][:,slicing] 
     
     # =============================================================================
-    # colormap
+    # sanity checks
     # =============================================================================
     
-    cmap=cm.seismic
-    # ========== Arrays ==========
-    array = copy.deepcopy( ppa )
-    array[array==-1] = np.max(array)
-    # array = np.array([array[n]/ppa.max(axis=1)[n] for n in range( len( ppa.max(axis=1) ) ) ])
-    array /= array[0,-1]
+    opt_TES, opt_Pref = np.where( ppa == np.min(ppa) )
+    print("Optimum PPA = {0} \n ****** at P = {1}MWe and TES = {2}hrs".format( np.min(ppa), 
+                                                                         p_cycle[opt_Pref][0], 
+                                                                         tshours[opt_TES][0] )  )
     
+    
+    # =============================================================================
+    # colormap
+    # =============================================================================
+    cmap=cm.seismic
+    threshold = 1.109 # max threshold to plot
+    threshold_contour = 1.1
+    
+    # ========== Arrays ==========
+    
+    # using PPA price as metric
+    array = copy.deepcopy( ppa ) 
+    # any values equal to -1 set to max (bad values, easier to spot)
+    array[array==-1] = np.max(array)
+    # normalizing by the reference @ 450 MWe and tshours = 0
+    array /= array[0,-1]
+    # anything above max threshold set to same value
+    array[array>threshold] = threshold
+    
+    # flip array, since p_ref values are technically backwards
+    array = np.fliplr(array)
+    
+    # getting upper and lower bounds for colorbar
     min_arr = 1 - array.min()
     max_arr = array.max() - 1
     max_diff = np.max([min_arr, max_arr])
     
-    
+    # plotting heatmap
     asp_df = 1.5
-    im1 = ax1.imshow(array.T, origin='upper', cmap=cmap, aspect=asp_df, \
+    im1 = ax1.imshow(array.T, origin='lower', #extent=[tshours[0], tshours[-1], p_cycle[-1], p_cycle[0] ],
+                    cmap=cmap, aspect=asp_df, 
                      vmin = 1 - max_diff, vmax = 1 + max_diff )
+    ax1.set_ylim([-0.5, 9.5])
     
-    if i>0:
-        # contours = plt.contour(array.T, levels=[0.95, 0.97, 0.99, 1.0], colors='black')
-        contours = plt.contour(array.T, levels=[0.94, 0.96, 0.98, 1.0], colors='black')
-        ax1.clabel(contours, inline=1, fontsize=10)
+    # defining contours
+    finterp = interpolate.interp2d(tshours, np.flipud(p_cycle), array.T, kind='cubic')
+    tt = np.linspace(tshours[0], tshours[-1], 1000)
+    pp = np.linspace(p_cycle[-1], p_cycle[0], 1000)
+    ff = finterp(tt,pp)
+    
+    # if i>0:
+    # contours = plt.contour(array.T, levels=[0.95, 0.97, 0.99, 1.0], colors='black')
+    # contours = plt.contour(array.T, levels=[0.94, 0.96, 0.98, 1.0], colors='black')
+    # contours = plt.contour(array.T, levels=[0.88, 0.94, 1.0], colors='black')
+    c_levels = [0.91, 0.96, 0.98, 1.0, threshold_contour] if i > 0 else [threshold_contour]
+    c_colors = 'k'
+    contours = plt.contour(ff, extent=[tshours[0], tshours[-1], 0, 9 ],
+                                    levels=c_levels, 
+                                    colors=c_colors)
+    
+    # labels for each contour level
+    c_fmt = {}
+    for l,s in zip(contours.levels, c_levels):
+        c_fmt[l] = ' {:.2f} '.format(s)
+        
+    # Add contour labels
+    ax1.clabel(contours, fmt=c_fmt, inline=1, fontsize=10)
+    
+    
     
     # ========== Text ==========
     xmin,xmax,ymax,ymin = im1.get_extent() #note the order
@@ -158,10 +206,11 @@ for i in plotrange:
     
     if i == 0:
         ax1.set_yticks(range(len(p_cycle)))
-        ax1.set_yticklabels( ['{0:.0f}'.format(P) for P in p_cycle] )
+        ax1.set_yticklabels( ['{0:.0f}'.format(P) for P in np.flipud(p_cycle)] )
         ax1.set_ylabel('Power Cycle Output\n(MWe)', fontweight='bold')
     else:
-        ax1.set_yticklabels( '')
+        ax1.set_yticks(range(len(p_cycle)))
+        ax1.set_yticklabels('')
 
 
     # =============================================================================
