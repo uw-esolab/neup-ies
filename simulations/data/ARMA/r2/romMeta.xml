@@ -1,0 +1,31 @@
+<DataObjectMetadata name="romMeta">
+  <DataSet type="Static">
+    <dims />
+    <general>
+      <pointwise_meta>Clearsky DNI_fourier,Clearsky DNI_gaussianed,Clearsky DNI_nofourier,Clearsky DNI_original</pointwise_meta>
+      <sampleTag>RAVEN_sample_ID</sampleTag>
+    </general>
+  </DataSet>
+  
+  <arma type="Static">
+    <ROM>
+      <type>ARMA</type>
+    </ROM>
+    <Clearsky.DNI>
+      <Fourier>
+        <SignalIntercept>2.915356393e+02</SignalIntercept>
+        <period>4.000000000e+00
+          <frequency>2.500000000e-01</frequency>
+          <amplitude>7.343537027e+02</amplitude>
+          <phase>1.563823005e+00</phase>
+        </period>
+      </Fourier>
+    </Clearsky.DNI>
+    <Clearsky.DNI>
+      <ARMA_params>
+        <std>0.86699965237</std>
+      </ARMA_params>
+    </Clearsky.DNI>
+  </arma>
+  
+</DataObjectMetadata>

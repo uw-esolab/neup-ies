@@ -148,6 +148,7 @@
         "csp.pt.cost.plm.fixed" :  0,
         "csp.pt.sf.fixed_land_area" :  45,
         "csp.pt.sf.land_overhead_factor" :  1,
+        "is_rec_to_coldtank_allowed" : 1,
         "T_htf_cold_des" :  440,
         "T_htf_hot_des"  :  560,
         "P_ref" :           525,
