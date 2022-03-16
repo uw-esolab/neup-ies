@@ -73,10 +73,10 @@ tshours    = np.array([ 0, 1, 2, 3, 4, 5, 6, 7, 8 ])
 # tshours    = np.array([ 12, 14, 16, 18, 20, 22 ])
 
 # PC sizes to sweep through
-# p_cycle    = np.array([ 550,  500,  450]) 
+p_cycle    = np.array([ 550,  500,  450]) 
 # p_cycle    = np.array([ 700,  650,  600]) 
 # p_cycle    = np.array([ 900, 850,  800,  750]) 
-p_cycle    = np.array([ 1050, 1000,  950]) 
+# p_cycle    = np.array([ 1050, 1000,  950]) 
 
 # p_cycle    = np.array([ 750,  700,  650,  600 ]) 
 # p_cycle    = np.array([ 950,  900,  850,  800 ]) 
