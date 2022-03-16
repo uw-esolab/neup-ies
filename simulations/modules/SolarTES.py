@@ -22,7 +22,7 @@ class SolarTES(NuclearTES):
     specifically for the SSC tcsmolten_salt module. 
     """
     
-    def __init__(self, plant_name="tcsmolten_salt", json_name="model_solarTES", is_dispatch=False):
+    def __init__(self, plant_name="tcsmolten_salt", json_name="model_solarTES", **specs):
         """ Initializes the SolarTES module
         
         Inputs:
@@ -32,7 +32,7 @@ class SolarTES(NuclearTES):
         """
         
         # initialize Nuclear+Generic module, csv data arrays should be saved here
-        NuclearTES.__init__( self, plant_name, json_name, is_dispatch )
+        NuclearTES.__init__( self, plant_name, json_name, **specs )
         
         # define specific PySAM module to be called later
         self.PySAM_Module = TcsmoltenSalt
@@ -64,8 +64,8 @@ class SolarTES(NuclearTES):
         self.Plant.SystemControl.T_tank_hot_init                  = self.Plant.Outputs.T_tes_hot[ssc_slice][-1]
         self.Plant.ThermalStorage.csp_pt_tes_init_hot_htf_percent = self.Plant.Outputs.hot_tank_htf_percent_final[ssc_slice][-1]
         self.Plant.SystemControl.pc_op_mode_initial               = self.Plant.Outputs.pc_op_mode_final[ssc_slice][-1]
-        self.Plant.SystemControl.pc_startup_energy_remain_initial = self.Plant.Outputs.pc_startup_time_remain_final[ssc_slice][-1]
-        self.Plant.SystemControl.pc_startup_time_remain_init      = self.Plant.Outputs.pc_startup_energy_remain_final[ssc_slice][-1]
+        self.Plant.SystemControl.pc_startup_energy_remain_initial = self.Plant.Outputs.pc_startup_energy_remain_final[ssc_slice][-1]
+        self.Plant.SystemControl.pc_startup_time_remain_init      = self.Plant.Outputs.pc_startup_time_remain_final[ssc_slice][-1]
         self.Plant.SystemControl.is_field_tracking_init           = self.Plant.Outputs.is_field_tracking_final[ssc_slice][-1]
 
 
