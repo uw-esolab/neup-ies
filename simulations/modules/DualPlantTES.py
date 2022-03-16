@@ -84,8 +84,8 @@ class DualPlantTES(SolarTES):
         
         # PC initial conditions
         self.Plant.SystemControl.pc_op_mode_initial               = self.Plant.Outputs.pc_op_mode_final
-        self.Plant.SystemControl.pc_startup_energy_remain_initial = self.Plant.Outputs.pc_startup_time_remain_final
-        self.Plant.SystemControl.pc_startup_time_remain_init      = self.Plant.Outputs.pc_startup_energy_remain_final
+        self.Plant.SystemControl.pc_startup_energy_remain_initial = self.Plant.Outputs.pc_startup_energy_remain_final
+        self.Plant.SystemControl.pc_startup_time_remain_init      = self.Plant.Outputs.pc_startup_time_remain_final
         
         
     def initialize_arrays(self):

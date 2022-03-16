@@ -673,8 +673,8 @@ class GenericSSCModule(ABC):
         self.Plant.SystemControl.T_tank_hot_init                  = self.Plant.Outputs.T_tes_hot[self.t_ind-1]
         self.Plant.ThermalStorage.csp_pt_tes_init_hot_htf_percent = self.Plant.Outputs.hot_tank_htf_percent_final
         self.Plant.SystemControl.pc_op_mode_initial               = self.Plant.Outputs.pc_op_mode_final
-        self.Plant.SystemControl.pc_startup_energy_remain_initial = self.Plant.Outputs.pc_startup_time_remain_final
-        self.Plant.SystemControl.pc_startup_time_remain_init      = self.Plant.Outputs.pc_startup_energy_remain_final
+        self.Plant.SystemControl.pc_startup_energy_remain_initial = self.Plant.Outputs.pc_startup_energy_remain_final
+        self.Plant.SystemControl.pc_startup_time_remain_init      = self.Plant.Outputs.pc_startup_time_remain_final
       
     @abstractmethod    
     def update_Pyomo_after_SSC(self, Plant, params ):
