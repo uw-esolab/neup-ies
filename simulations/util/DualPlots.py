@@ -10,7 +10,7 @@ from pylab import rc
 import matplotlib.pyplot as plt
 import pyomo.environ as pe
 import numpy as np
-import pint
+import pint, copy
 u = pint.UnitRegistry(autoconvert_offset_to_baseunit=True)
 rc('axes', linewidth=2)
 rc('font', weight='bold', size=12)
@@ -222,6 +222,174 @@ class DualPlots(SolarPlots):
             ax2.legend(loc=self.loc_ul, fontsize=self.fsl) # plot legend for Energy arrays and also 
 
 
+    def plot_SSC_op_modes(self, ax=None, title_label=None, plot_all_time=True, \
+                          start_hr=0, end_hr=48, hide_x=False,  x_legend=1.2, \
+                          y_legend_L=1.0, y_legend_R=1.0):
+        """ Method to plot operating modes history on single plot
+
+        This method is used specifically to plot operating modes and relative 
+        pricing data from SSC simulation results. Built-in options to plot legend off-axis. 
+
+        Inputs:
+            ax (object)         : axis object to plot on
+            plot_all_time(bool) : are we plotting all results or just a portion?
+            title_label(str)    : title name for plot
+            start_hr (int)      : (plot_all_time==False) hour used for starting index 
+            end_hr (int)        : (plot_all_time==False) hour used for ending index
+            hide_x(bool)        : hiding the x-axis from this particular plot
+            x_legend (float)    : (legend_offset==True) x-offset defining left-most side of legend
+            y_legend_L (float)  : (legend_offset==True) y-offset of left y-axis plot
+            y_legend_R (float)  : (legend_offset==True) y-offset of right y-axis plot
+        """
+        #========================#
+        #--- Creating Figure  ---#
+        #========================#
+
+        # if no axis object specified, create a figure and axis from it
+        if ax is None:
+            fig = plt.figure(figsize=[10, 5])
+            ax = fig.gca()   # this is the Op Modes plot
+
+        # twin axis to plot pricing on opposite y-axis
+        axO = ax  # this is the OP modes plot
+        ax2 = axO.twinx()  # this is the pricing plot
+
+        # custom y limits and ticks to be integers
+        price = self.price[ start_hr:end_hr ]
+        minP = 0
+        maxP = 1.05*price.max()
+        spacing = 0.5 if maxP-minP < 2 else 1
+        
+        ax2.set_ylim(minP, maxP)
+        ax2.set_yticks( np.arange( minP, maxP, spacing) )
+        
+        # plot price array(s)
+        price_array_list = ['price']
+        price_label_list = [None]
+        price_ylabel = 'Tariff \n($/kWh)'
+        ax2 = self.plot_SSC_generic(ax2, array_list=price_array_list, \
+                                    label_list=price_label_list, \
+                                    y_label=price_ylabel, \
+                                    title_label=None, \
+                                    plot_all_time=plot_all_time, \
+                                    start_hr=start_hr, end_hr=end_hr, hide_x=hide_x, \
+                                    is_bar_graph=True, left_axis=False)
+        
+        #========================#
+        #--- Rearranging Modes --#
+        #========================#
+        
+        # time series of operating mode indeces
+        op_mode_1 = self.op_mode_1
+        
+        # array of unique mode indeces and the time-order in which they appear
+        op_mode_unique, op_mode_order = np.unique(op_mode_1, return_index=True) 
+        
+        # arranging unique modes by order in which they appear
+        op_mode_unique = op_mode_unique[np.argsort(op_mode_order)]   
+        
+        new_order = np.arange(1, len(op_mode_unique)+1)
+        op_mode_ordered = copy.deepcopy( op_mode_1 )
+        for i,op in enumerate(op_mode_unique):
+            op_mode_ordered[np.where(op_mode_ordered == op)] = new_order[i]
+        
+        
+        self.op_mode_ordered = op_mode_ordered
+
+        
+        #========================#
+        #--- original plot     --#
+        #========================#
+
+        # plot operating mode arrays
+        op_array_list = ['op_mode_ordered'] # list of array strings
+        op_label_list = [None]        # list of labels for each array string to extract from Outputs
+        op_ylabel = '' # 'Operating \nMode'
+        axO, d_slice, t_plot  = self.plot_SSC_generic(axO, array_list=op_array_list, \
+                                    label_list=op_label_list, \
+                                    y_label=op_ylabel, \
+                                    title_label=title_label, \
+                                    plot_all_time=plot_all_time, \
+                                    start_hr=start_hr, end_hr=end_hr, hide_x=hide_x, \
+                                    return_extra=True)
+            
+        # custom y limits and ticks to be integers
+        axO.set_ylim(0, len(op_mode_unique)+2 )
+        axO.set_yticks(np.arange(0, len(op_mode_unique)+2, 1))
+        
+        #==================================================#
+        #---- extract operating modes to designated array
+        #==================================================#
+        prop_cycle = plt.rcParams['axes.prop_cycle']
+        colors = prop_cycle.by_key()['color']
+        colors = np.tile( colors, 12 )
+        
+        # time series of operating mode indeces
+        op_mode_1 = self.op_mode_1[d_slice]
+        
+        # array of unique mode indeces and the time-order in which they appear
+        op_mode_unique, op_mode_order = np.unique(op_mode_1, return_index=True) 
+        
+        # arranging unique modes by order in which they appear
+        op_mode_unique = op_mode_unique[np.argsort(op_mode_order)]   
+        
+        # Plotting data points over the OP mode line with different colors and labels
+        count = 0
+        for op in op_mode_unique:
+            # getting unique operating modes
+            inds = (op_mode_1 == op)
+            # individual index getting plotted with unique color and label
+            if np.sum(inds):
+                axO.plot(t_plot[inds].m, (count+1)*np.ones(np.sum(inds)), 'o', color=colors[count], label=self.operating_modes[int(op)])
+                count +=1
+                
+        #==================================================#
+        #---- handling labels
+        #==================================================#
+        op_modes_labels = [self.operating_modes[int(l)] for l in op_mode_unique]
+        
+        op_modes_subsystem_splits = [op.split('__') for op in op_modes_labels]
+        op_modes_dict = {subsys.split('_')[0]:[] for subsys in op_modes_subsystem_splits[0]}
+        
+        for op_mode in op_modes_subsystem_splits:
+            for subsys in op_mode:
+                op_modes_dict[subsys.split('_')[0]].append( subsys.split('_')[1] )
+        
+        max_chars = np.array([ len( max(op_modes_dict[subsys], key=len) ) for subsys in op_modes_dict.keys()])
+        new_tick_labels = []
+        for label in op_modes_labels:
+            formatted_label = ''
+            for i,(c,s) in enumerate( zip(max_chars, op_modes_dict.keys()) ):
+                subsys_mode = label.split('__')[i].split('_')[1:]
+                subsys_mode_label = '_'.join(subsys_mode)
+                subsys_mode_label = subsys_mode_label.ljust(c+2,'_')
+                
+                # subsys_op_mode_label = "{0}_{1}".format(s,subsys_mode_label )
+                formatted_label += "{0}_{1}".format(s,subsys_mode_label ) + '__'
+            new_tick_labels.append( formatted_label )
+        
+        blahx = axO.set_yticks( np.arange(1,count+1) )
+        axO.set_yticklabels(new_tick_labels)
+        for ytick, color in zip(axO.get_yticklabels(), colors):
+            ytick.set_color(color)
+
+        #========================#
+        #---- Setting Labels ----#
+        #========================#
+        
+        # set OP Mode line color to black
+        axO.get_lines()[0].set_color("w")
+        
+        plt.tight_layout()
+        
+        # customizing legend(s)
+        # if self.legend_offset:
+        #     ax.legend( loc=self.loc_ul, fontsize=self.fsl, bbox_to_anchor=(x_legend, y_legend_L)) # plot legend for Op Modes arrays
+        # else:
+        #     ax.legend( loc=self.loc_ul, fontsize=self.fsl) # plot legend for Op Modes arrays
+
+
+
     def set_operating_modes_list(self):
         """ Method to define list of operating modes
 
@@ -232,43 +400,43 @@ class DualPlots(SolarPlots):
 
         self.operating_modes = [
             'ITER_START',
-            'CR_OFF__PC_OFF__TES_OFF',
-            'CR_SU__PC_OFF__TES_OFF',
-            'CR_ON__PC_SU__TES_OFF',
-            'CR_ON__PC_SB__TES_OFF',
-            'CR_ON__PC_RM_HI__TES_OFF',
-            'CR_ON__PC_RM_LO__TES_OFF',
-            'CR_DF__PC_MAX__TES_OFF',
-            'CR_OFF__PC_SU__TES_DC',
-            'CR_ON__PC_OFF__TES_CH',
-            'CR_ON__PC_TARGET__TES_CH',
-            'CR_ON__PC_TARGET__TES_DC',
-            'CR_ON__PC_RM_LO__TES_EMPTY',
-            'CR_DF__PC_OFF__TES_FULL',
-            'CR_OFF__PC_SB__TES_DC',
-            'CR_OFF__PC_MIN__TES_EMPTY',
-            'CR_OFF__PC_RM_LO__TES_EMPTY',
-            'CR_ON__PC_SB__TES_CH',
-            'CR_SU__PC_MIN__TES_EMPTY',
-            'CR_SU__PC_SB__TES_DC',
-            'CR_ON__PC_SB__TES_DC',
-            'CR_OFF__PC_TARGET__TES_DC',
-            'CR_SU__PC_TARGET__TES_DC',
-            'CR_ON__PC_RM_HI__TES_FULL',
-            'CR_ON__PC_MIN__TES_EMPTY',
-            'CR_SU__PC_RM_LO__TES_EMPTY',
-            'CR_DF__PC_MAX__TES_FULL',
-            'CR_ON__PC_SB__TES_FULL',
-            'CR_SU__PC_SU__TES_DC',
-            'CR_ON__PC_SU__TES_CH',
-            'CR_DF__PC_SU__TES_FULL',
-            'CR_DF__PC_SU__TES_OFF',
-            'CR_TO_COLD__PC_TARGET__TES_DC',
-            'CR_TO_COLD__PC_RM_LO__TES_EMPTY',
-            'CR_TO_COLD__PC_SB__TES_DC',
-            'CR_TO_COLD__PC_MIN__TES_EMPTY',
-            'CR_TO_COLD__PC_OFF__TES_OFF',
-            'CR_TO_COLD__PC_SU__TES_DC',
+            'CR_OFF__PC_OFF__TES_OFF__NUC_ON',
+            'CR_SU__PC_OFF__TES_OFF__NUC_ON',
+            'CR_ON__PC_SU__TES_OFF__NUC_ON',
+            'CR_ON__PC_SB__TES_OFF__NUC_ON',
+            'CR_ON__PC_RM_HI__TES_OFF__NUC_ON',
+            'CR_ON__PC_RM_LO__TES_OFF__NUC_ON',
+            'CR_DF__PC_MAX__TES_OFF__NUC_ON',
+            'CR_OFF__PC_SU__TES_DC__NUC_ON',
+            'CR_ON__PC_OFF__TES_CH__NUC_ON',
+            'CR_ON__PC_TARGET__TES_CH__NUC_ON',
+            'CR_ON__PC_TARGET__TES_DC__NUC_ON',
+            'CR_ON__PC_RM_LO__TES_EMPTY__NUC_ON',
+            'CR_DF__PC_OFF__TES_FULL__NUC_ON',
+            'CR_OFF__PC_SB__TES_DC__NUC_ON',
+            'CR_OFF__PC_MIN__TES_EMPTY__NUC_ON',
+            'CR_OFF__PC_RM_LO__TES_EMPTY__NUC_ON',
+            'CR_ON__PC_SB__TES_CH__NUC_ON',
+            'CR_SU__PC_MIN__TES_EMPTY__NUC_ON',
+            'CR_SU__PC_SB__TES_DC__NUC_ON',
+            'CR_ON__PC_SB__TES_DC__NUC_ON',
+            'CR_OFF__PC_TARGET__TES_DC__NUC_ON',
+            'CR_SU__PC_TARGET__TES_DC__NUC_ON',
+            'CR_ON__PC_RM_HI__TES_FULL__NUC_ON',
+            'CR_ON__PC_MIN__TES_EMPTY__NUC_ON',
+            'CR_SU__PC_RM_LO__TES_EMPTY__NUC_ON',
+            'CR_DF__PC_MAX__TES_FULL__NUC_ON',
+            'CR_ON__PC_SB__TES_FULL__NUC_ON',
+            'CR_SU__PC_SU__TES_DC__NUC_ON',
+            'CR_ON__PC_SU__TES_CH__NUC_ON',
+            'CR_DF__PC_SU__TES_FULL__NUC_ON',
+            'CR_DF__PC_SU__TES_OFF__NUC_ON',
+            'CR_TO_COLD__PC_TARGET__TES_DC__NUC_ON',
+            'CR_TO_COLD__PC_RM_LO__TES_EMPTY__NUC_ON',
+            'CR_TO_COLD__PC_SB__TES_DC__NUC_ON',
+            'CR_TO_COLD__PC_MIN__TES_EMPTY__NUC_ON',
+            'CR_TO_COLD__PC_OFF__TES_OFF__NUC_ON',
+            'CR_TO_COLD__PC_SU__TES_DC__NUC_ON',
             'CR_OFF__PC_OFF__TES_CH__NUC_ON',
             'CR_OFF__PC_SU__TES_CH__NUC_ON',
             'CR_OFF__PC_SU__TES_OFF__NUC_ON',
