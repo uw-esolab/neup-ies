@@ -513,9 +513,9 @@ class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
         param_dict['En']     = self.En.to('kWh')       #E^n: Required energy expended to start nuclear plant [kWt$\cdot$h]
         param_dict['Eu']     = self.Eu.to('kWh')       #E^u: Thermal energy storage capacity [kWt$\cdot$h]
         param_dict['Ln']     = self.Ln.to('')          #L^n: Nuclear pumping power per unit power produced [kWe/kWt]
-        param_dict['Qnl']    = self.Qnl.to('kW')      #Q^{nl}: Minimum operational thermal power delivered by nuclear [kWt$\cdot$h]
-        param_dict['Qnsb']   = self.Qnsb.to('kW')     #Q^{nsb}: Required thermal power for nuclear standby [kWt$\cdot$h]
-        param_dict['Qnsd']   = self.Qnsd.to('kW')     #Q^{nsd}: Required thermal power for nuclear shut down [kWt$\cdot$h] 
+        param_dict['Qnl']    = self.Qnl.to('kW')       #Q^{nl}: Minimum operational thermal power delivered by nuclear [kWt$\cdot$h]
+        param_dict['Qnsb']   = self.Qnsb.to('kW')      #Q^{nsb}: Required thermal power for nuclear standby [kWt$\cdot$h]
+        param_dict['Qnsd']   = self.Qnsd.to('kW')      #Q^{nsd}: Required thermal power for nuclear shut down [kWt$\cdot$h] 
         param_dict['Qnu']    = self.Qnu.to('kW')       #Q^{nu}: Allowable power per period for nuclear start-up [kWt$\cdot$h]
         param_dict['Wnht']   = self.Wnht.to('kW')      #W^{nht}: Nuclear piping heat trace parasitic loss [kWe]
         
