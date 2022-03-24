@@ -50,16 +50,17 @@ def get_turbine_cost( p, pref ):
 # =============================================================================
 
 p_cycle    = np.arange(450, 1000, 50) 
-turb_cost  = np.array([ get_turbine_cost( p, 465 ) for p in p_cycle ])
+p_ref = 465
+turb_cost  = np.array([ get_turbine_cost( p, p_ref ) for p in p_cycle ])
 
 # 
 fig = plt.figure(figsize=(10,4))
 
 ax = fig.gca()
-ax.plot(p_cycle, turb_cost, linewidth=3, color='C2')
+ax.plot(p_cycle /p_ref*100, turb_cost, linewidth=3, color='C2')
 ax.grid(True)
 
-ax.set_xlabel('Power Cycle Output (MWe)', fontweight='bold')
-ax.set_ylabel('Turbine Cost ($/kWe)', fontweight='bold')
+ax.set_xlabel('Power Cycle Output Relative to Nominal (%)', fontweight='bold')
+ax.set_ylabel('Cost of Additional Turbine \n Capacity above Nominal \n($/kWe)', fontweight='bold')
 
 plt.tight_layout()
