@@ -107,20 +107,20 @@ for i, dayOfWeek in enumerate(["WeekDay", "WeekEnd"]):
         Plots.create_tariff_overlay( tch_ax__, is_winter, is_weekday, s_color=s_color)
 
         hide_x = False if i == 1 else True
-        Plots.create_violin_plot(  gen_ax__, plotting_gen_array, v_color=gen_color, hide_x=True )
-        Plots.create_violin_plot(  tch_ax__, plotting_tch_array, v_color=tch_color, hide_x=hide_x )
+        Plots.create_violin_plot(  gen_ax__, plotting_gen_array, gen_data_array, v_color=gen_color, hide_x=True )
+        Plots.create_violin_plot(  tch_ax__, plotting_tch_array, tch_data_array, v_color=tch_color, hide_x=hide_x )
 
         gen_ax__.xaxis.set_ticklabels([])
         
         if i == 0:
             gen_ax__.set_title(season, fontsize=18, fontweight='bold')
-            weekday.set_ylabel("Weekdays", labelpad=60, fontsize=18, fontweight='bold')
+            weekday.set_ylabel("Weekdays", labelpad=80, fontsize=18, fontweight='bold')
         else:
-            weekend.set_ylabel("Weekends", labelpad=60, fontsize=18, fontweight='bold')
+            weekend.set_ylabel("Weekends", labelpad=80, fontsize=18, fontweight='bold')
         
         if j == 0:
-            gen_ax__.set_ylabel("Power Generated \n(MWe)", labelpad=16, fontsize=14, fontweight='bold')
-            tch_ax__.set_ylabel("Tank Charge \n(MWh)", fontsize=14, fontweight='bold')
+            gen_ax__.set_ylabel("Power \nGenerated \n(MWe)", labelpad=16, fontsize=14, fontweight='bold')
+            tch_ax__.set_ylabel("Tank \nCharge \n(MWh)", fontsize=14, fontweight='bold')
 
         count += 1
         
