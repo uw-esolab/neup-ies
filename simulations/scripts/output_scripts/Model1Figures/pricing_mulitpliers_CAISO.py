@@ -177,7 +177,7 @@ for w in range(52):
     # LMP_neg[LMP_neg>0] = 0
     # LMP_neg *= -1
     
-    axp.plot(p_time[s_slice], LMP_pos, color='C0', linewidth= 1, alpha=0.7)
+    axp.plot(p_time[s_slice], LMP_pos, color='C0', linewidth= 0.5, alpha=0.35)
     
     xzero = np.linspace(-1, 23.5, 1000)
     yzero = np.zeros( len(xzero) )
