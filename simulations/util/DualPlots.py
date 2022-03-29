@@ -346,8 +346,11 @@ class DualPlots(SolarPlots):
         #==================================================#
         #---- handling labels
         #==================================================#
+        
+        # list of unique op mode strings
         op_modes_labels = [self.operating_modes[int(l)] for l in op_mode_unique]
         
+        # split strings by "__" and create dictionary of all subsystems (PC, TES, etc)
         op_modes_subsystem_splits = [op.split('__') for op in op_modes_labels]
         op_modes_dict = {subsys.split('_')[0]:[] for subsys in op_modes_subsystem_splits[0]}
         
@@ -370,8 +373,19 @@ class DualPlots(SolarPlots):
         
         blahx = axO.set_yticks( np.arange(1,count+1) )
         axO.set_yticklabels(new_tick_labels)
-        for ytick, color in zip(axO.get_yticklabels(), colors):
-            ytick.set_color(color)
+        for i,(ytick,color) in enumerate( zip(axO.get_yticklabels(), colors) ):
+            
+            current_label = "OFF"
+            
+            count = 0
+            for j, _ in enumerate(new_tick_labels[i]):
+                if new_tick_labels[i][j:j + len('OFF')] == 'OFF':
+                    count +=1
+
+            if count == 3:
+                ytick.set_color('k')
+            else:
+                ytick.set_color(color)
 
         #========================#
         #---- Setting Labels ----#
