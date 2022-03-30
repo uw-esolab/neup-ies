@@ -89,8 +89,8 @@ xlabels = ["Mon", "Tues", "Wed", "Thurs", "Fri", "Sat", "Sun"]
 fig = plt.figure(figsize=(10,6))
 ax = fig.add_subplot(211)
 
-ax.plot(p_time[winter_slice], default_tariff[winter_slice], linewidth= 3, label="Winter Tariff")
-ax.plot(p_time[winter_slice], default_tariff[summer_slice], linewidth= 3, label="Summer Tariff")
+ax.plot(p_time[winter_slice], default_tariff[winter_slice], linewidth= 3, label="Oct-May")
+ax.plot(p_time[winter_slice], default_tariff[summer_slice], linewidth= 3, label="Jun-Sep")
 
 miny = np.min(default_tariff)
 maxy = np.max(default_tariff)
@@ -177,7 +177,7 @@ for w in range(52):
     # LMP_neg[LMP_neg>0] = 0
     # LMP_neg *= -1
     
-    axp.plot(p_time[s_slice], LMP_pos, color='C0', linewidth= 0.5, alpha=0.35)
+    axp.plot(p_time[s_slice], LMP_pos, color='C0', linewidth= 0.5, alpha=0.5)
     
     xzero = np.linspace(-1, 23.5, 1000)
     yzero = np.zeros( len(xzero) )
