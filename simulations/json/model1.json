@@ -1,6 +1,6 @@
 {
     "PySAM_inputs": {
-        "ssc_lib":                   "build_ssc/ssc/libssc.so",
+        "ssc_lib":                   "build_ssc_release/ssc/libssc.so",
         "solar_resource_rel_parent": "sam/deploy/solar_resource/phoenix_az_33.450495_-111.983688_psmv3_60_tmy.csv",
         "dispatch_factors_file":     "data/dispatch_factors_ts.csv",
         "ud_file":                   "data/ud_ind_od.csv",
@@ -25,7 +25,7 @@
         "pc_hot_su":                 1250.0,
         "pc_delta_w":                0.01,
         "pc_delta_w_v":              0.4,
-        "pc_sb":                     0,
+        "pc_sb":                     0.0004,
         "nuc_op_cost":               15,
         "nuc_cold_su":               1600,
         "nuc_hot_su":                320,
@@ -148,6 +148,7 @@
         "csp.pt.cost.plm.fixed" :  0,
         "csp.pt.sf.fixed_land_area" :  45,
         "csp.pt.sf.land_overhead_factor" :  1,
+        "is_rec_to_coldtank_allowed" : 1,
         "T_htf_cold_des" :  440,
         "T_htf_hot_des"  :  560,
         "P_ref" :           525,

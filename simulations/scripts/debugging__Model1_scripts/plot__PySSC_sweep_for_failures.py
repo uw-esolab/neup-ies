@@ -31,17 +31,17 @@ print("PID = ", pid)
 output_dir = FileMethods.output_dir
 
 start_name     = 'failureModes' # testDefocus # failureModes
-PySAM_name     = ''  # PySAM  # ''
+PySAM_name     = 'PySAM'  # PySAM  # ''
 add_extra_Name = True
-extra_name    = '2022_01'  # 2021_10  # 2021_11 # 2021_12
-json_name     = 'model1_wecdsr'   # model1_CAISO  # model1_Hamilton_560_dfe # model1_Hamilton_560_tariffx1_5
-dispatch      = False # True # False
-sscH          = 24   # 12 # 24
-pyoH          = 48   # 24 # 48
-TES_min       = 0    # 0  # 2
-TES_max       = 14   # 14
-PC_min        = 100  # 100 # 300 # 400 # 550
-PC_max        = 850  # 500 # 850
+extra_name     = '2022_01'  # 2021_10  # 2021_11 # 2021_12
+json_name      = 'model1_Hamilton_560_tariffx2'   # model1_CAISO  # model1_Hamilton_560_dfe # model1_Hamilton_560_tariffx1_5
+dispatch       = True # True # False
+sscH           = 24   # 12 # 24
+pyoH           = 48   # 24 # 48
+TES_min        = 0    # 0  # 2
+TES_max        = 14   # 14
+PC_min         = 600  # 100 # 300 # 400 # 550
+PC_max         = 850  # 500 # 850
 
 # generate name of file
 filename = '{0}_{1}__{2}__{3}__pyomo_{4:.0f}__horizon_{5:.0f}_{6:.0f}__TES_[{7},{8}]__PC_[{9},{10}].nuctes'.format(
@@ -98,12 +98,14 @@ TES_CH       = Storage['TES_CH']
 TES_DC       = Storage['TES_DC'] 
 iter_log     = Storage['iter_log']   
 fail_log     = Storage['fail_log']  
-exceptions   = Storage['exceptions'] 
+exceptions   = Storage['exceptions'] if 'exceptions' in Storage else None 
 op_modes_list     = Storage['op_modes_list'] 
 pyomo_bad_log     = Storage['pyomo_bad_log']
 pyomo_bad_idx_log = Storage['pyomo_bad_idx_log'] 
 if 'revenue' in Storage.keys():
     revenue = Storage['revenue']
+if 'ppa' in Storage.keys():
+    ppa     = Storage['ppa'] 
 
 # setting figure title
 full_title = "PySSC - {0} tariffs {1} Pyomo - {2:.0f}/{3:.0f}hr horizons ".format(
@@ -210,13 +212,13 @@ ax1.set_yticks(range(len(p_cycle)))
 ax1.set_yticklabels( ['{0:.0f}'.format(P) for P in p_cycle] )
 
 # =============================================================================
-# 
+# Revenue
 # =============================================================================
 if 'revenue' in Storage.keys():
     cmap=cm.Greens
     # ========== Arrays ==========
-    p_array = copy.deepcopy( revenue[:,2:] ) /1e9
-    array = copy.deepcopy( revenue[:,2:] ) /1e9
+    p_array = copy.deepcopy( revenue[:,1:] ) /1e9
+    array = copy.deepcopy( revenue[:,1:] ) /1e9
     mean_label = "Simple Revenue Metric \n($B)"
     
     # ========== Figure ==========
@@ -256,3 +258,54 @@ if 'revenue' in Storage.keys():
     
     ax1.set_yticks(range(len(p_cycle)-2))
     ax1.set_yticklabels( ['{0:.0f}'.format(P) for P in p_cycle[2:]] )
+
+# =============================================================================
+# PPA
+# =============================================================================
+if 'ppa' in Storage.keys():
+    cmap=cm.Reds
+    # ========== Arrays ==========
+    p_array = copy.deepcopy( ppa ) 
+    array = copy.deepcopy( ppa ) 
+    array[array==-1] = 0
+    # array = np.array([array[n]/ppa.max(axis=1)[n] for n in range( len( ppa.max(axis=1) ) ) ])
+    array /= np.max(array)
+    mean_label = "Relative PPA"
+    
+    # ========== Figure ==========
+    fig = plt.figure(figsize=(8,14))
+    ax1  = fig.add_subplot(111)
+    fig.suptitle("Relative PPA", fontweight='bold')
+    
+    asp_df = 1
+    im1 = ax1.imshow(array.T, origin='upper', cmap=cmap, aspect=asp_df)
+    
+    # ========== Text ==========
+    xmin,xmax,ymax,ymin = im1.get_extent() #note the order
+    x_series = np.linspace(xmin+0.5, xmax-0.5, len(tshours))
+    y_series = np.linspace(ymin+0.5, ymax-0.5, len(p_cycle)-2)
+    
+    # x, y = np.meshgrid(x_series, y_series)
+    # for i, x_val in enumerate(x_series):
+    #     for j, y_val in enumerate(y_series):
+    #          condition = fail_log[i,j]
+    #          color = 'w'
+    #          text = ax1.text(x_val, y_val, "{0:.2f}".format(p_array[i,j]), color=color, fontsize=10, va='center', ha='center')
+    #          text.set_path_effects([PathEffects.Stroke(linewidth=3, foreground='black'), PathEffects.Normal()])
+    #          del text
+    
+    # ========== labels ==========
+    # setting axis labels
+    ax1.set_xlabel('tshours\n(hr)', fontweight='bold')
+    ax1.set_ylabel('Power Cycle Output\n(MWe)', fontweight='bold')
+    
+    # creating colorbar for the 2D heatmap with label
+    cb1 = fig.colorbar(im1, ax=ax1, pad=0.01)
+    cb1.set_label(mean_label, labelpad= 8, fontweight = 'bold')
+    
+    # setting tick marks for x and y axes
+    ax1.set_xticks(range(len(tshours)))
+    ax1.set_xticklabels( ['{0}'.format(t) for t in tshours] )
+    
+    ax1.set_yticks(range(len(p_cycle)))
+    ax1.set_yticklabels( ['{0:.0f}'.format(P) for P in p_cycle] )

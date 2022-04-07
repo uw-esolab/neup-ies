@@ -914,9 +914,9 @@ class GenericSSCModule(ABC):
             u = self.u
             # summing up energy for the full simulation and defining reference energy output
             self.annual_energy = np.sum(self.gen_log)*u.kWh
-            ref_energy    = self.SSC_dict['P_ref']*u.MW * self.SSC_dict['gross_net_conversion_factor']
+            self.system_capacity = self.SSC_dict['P_ref']*u.MW * self.SSC_dict['gross_net_conversion_factor']
             # setting capacity factor to self and (optionally) to PySAM outputs
-            self.capacity_factor = (self.annual_energy / (ref_energy * 1*u.yr) ).to(' ')
+            self.capacity_factor = (self.annual_energy / (self.system_capacity * 1*u.yr) ).to(' ')
             
             if log_final:
                 setattr( self.Plant.PySAM_Outputs, 'capacity_factor', self.capacity_factor )

@@ -16,11 +16,17 @@ rc('axes', linewidth=2)
 rc('font', weight='bold',size=12)
 u = pint.UnitRegistry()
 
+jsons = ['model1_Hamilton_560_tariffx1',
+         'model1_Hamilton_560_tariffx1_3',
+         'model1_Hamilton_560_tariffx1_5',
+         'model1_Hamilton_560_tariffx2'
+         ]
+
 # create object for NuclearTES for some setup steps
-nuctes = NuclearTES.NuclearTES( is_dispatch=False )
+nuctes = NuclearTES.NuclearTES( json_name= jsons[-1], is_dispatch=False )
 
 # setting tolerance for tariff rate norm
-tolerance = 1e-4 # deviations are in the thousandths of a cent
+tolerance = 1e-2
 
 # =============================================================================
 # Default
@@ -35,7 +41,7 @@ summed_tariff  = default_tariff.sum() / len(default_tariff)
 # print results
 print("Default Tariff rates over time average out to: {0} \n Deviations are {1}.".format( \
                                     summed_tariff, 
-                                    "within tolerance" if math.isclose( summed_tariff, 1, rel_tol=1e-4 ) else "too large."
+                                    "within tolerance" if math.isclose( summed_tariff, 1, rel_tol=tolerance ) else "too large."
                                     ) )
 
 # =============================================================================
@@ -58,7 +64,7 @@ LMP_norm = LMP / np.mean(LMP) # normalized tariff rates
 summed_LMP = LMP_norm.sum() / len(LMP)
 print("CAISO Tariff rates over time average out to: {0} \n Deviations are {1}.".format( \
                                     summed_LMP, 
-                                    "within tolerance" if math.isclose( summed_LMP, 1, rel_tol=1e-4 ) else "too large."
+                                    "within tolerance" if math.isclose( summed_LMP, 1, rel_tol=tolerance ) else "too large."
                                     ) )
 
 # =============================================================================
