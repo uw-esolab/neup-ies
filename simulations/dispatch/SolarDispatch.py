@@ -473,7 +473,7 @@ class SolarDispatchParamWrap(GeneralDispatchParamWrap):
         Drsu                    = self.SSC_dict['rec_su_delay']*u.hr
         heliostat_SU_energy     = self.SSC_dict['p_start']*u.kWh
         heliostat_track_energy  = self.SSC_dict['p_track']*u.kW
-        receiver_SU_ratio       = self.SSC_dict['rec_qf_delay'] * u.kWh / u.MW 
+        receiver_SU_ratio       = self.SSC_dict['rec_qf_delay'] * u.MWh / u.MW 
         TES_load_hrs            = self.SSC_dict['tshours']*u.hr
         min_massflow_td_frac    = self.SSC_dict['f_rec_min']
         
