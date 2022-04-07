@@ -353,22 +353,33 @@ class DualPlots(SolarPlots):
         # split strings by "__" and create dictionary of all subsystems (PC, TES, etc)
         op_modes_subsystem_splits = [op.split('__') for op in op_modes_labels]
         op_modes_dict = {subsys.split('_')[0]:[] for subsys in op_modes_subsystem_splits[0]}
+        if "ITER_START" in op_modes_labels:
+            op_modes_dict['ITER_START'] = []
         
         for op_mode in op_modes_subsystem_splits:
-            for subsys in op_mode:
-                op_modes_dict[subsys.split('_')[0]].append( subsys.split('_')[1] )
+            if 'ITER_START' in op_mode:
+                op_modes_dict['ITER_START'].append( op_mode[0].split('_')[1] )
+            else:
+                for subsys in op_mode:
+                    op_modes_dict[subsys.split('_')[0]].append( subsys.split('_')[1] )
         
         max_chars = np.array([ len( max(op_modes_dict[subsys], key=len) ) for subsys in op_modes_dict.keys()])
         new_tick_labels = []
         for label in op_modes_labels:
             formatted_label = ''
-            for i,(c,s) in enumerate( zip(max_chars, op_modes_dict.keys()) ):
-                subsys_mode = label.split('__')[i].split('_')[1:]
-                subsys_mode_label = '_'.join(subsys_mode)
-                subsys_mode_label = subsys_mode_label.ljust(c+2,'_')
-                
-                # subsys_op_mode_label = "{0}_{1}".format(s,subsys_mode_label )
-                formatted_label += "{0}_{1}".format(s,subsys_mode_label ) + '__'
+            
+            if label is "ITER_START":
+                formatted_label += label
+            else:
+                for i,(c,s) in enumerate( zip(max_chars, op_modes_dict.keys()) ):
+                    if s is not "ITER_START":
+                        subsys_mode = label.split('__')[i].split('_')[1:]
+                        subsys_mode_label = '_'.join(subsys_mode)
+                        subsys_mode_label = subsys_mode_label.ljust(c+2,'_')
+                        
+                        # subsys_op_mode_label = "{0}_{1}".format(s,subsys_mode_label )
+                        formatted_label += "{0}_{1}".format(s,subsys_mode_label ) + '__'
+                        
             new_tick_labels.append( formatted_label )
         
         blahx = axO.set_yticks( np.arange(1,count+1) )
@@ -383,6 +394,7 @@ class DualPlots(SolarPlots):
                     count +=1
 
             if count == 3:
+                axO.plot(t_plot.m, (i+1)*np.ones(len(t_plot.m)), '-k')
                 ytick.set_color('k')
             else:
                 ytick.set_color(color)
@@ -471,6 +483,16 @@ class DualPlots(SolarPlots):
             'CR_SU__PC_TARGET__TES_CH__NUC_ON',
             'CR_SU__PC_RM_HI__TES_OFF__NUC_ON',
             'CR_SU__PC_RM_HI__TES_FULL__NUC_ON',
+            'CR_TO_COLD__PC_OFF__TES_CH__NUC_ON',
+            'CR_TO_COLD__PC_SU__TES_CH__NUC_ON',
+            'CR_TO_COLD__PC_SU__TES_OFF__NUC_ON',
+            'CR_TO_COLD__PC_SB__TES_OFF__NUC_ON',
+            'CR_TO_COLD__PC_SB__TES_CH__NUC_ON',
+            'CR_TO_COLD__PC_SB__TES_FULL__NUC_ON',
+            'CR_TO_COLD__PC_RM_LO__TES_OFF__NUC_ON',
+            'CR_TO_COLD__PC_TARGET__TES_CH__NUC_ON',
+            'CR_TO_COLD__PC_RM_HI__TES_OFF__NUC_ON',
+            'CR_TO_COLD__PC_RM_HI__TES_FULL__NUC_ON',
             'ITER_END']
 
 
