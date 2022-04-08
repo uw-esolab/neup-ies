@@ -16,7 +16,7 @@ Modified by Gabriel Soto
 
 import pyomo.environ as pe
 from dispatch.GeneralDispatch import GeneralDispatch
-from dispatch.GeneralDispatch import GeneralDispatchParamWrap
+from dispatch.NuclearDispatch import NuclearDispatchParamWrap
 from dispatch.NuclearDispatch import NuclearDispatch
 import numpy as np
 from util.FileMethods import FileMethods
@@ -68,7 +68,7 @@ class IndirectNuclearDispatch(NuclearDispatch):
         # generating GeneralDispatch parameters first (PowerCycle, etc.)
         if not skip_parent:
             GeneralDispatch.generate_params(self, params)
-            NuclearDispatch.generate_params(self, params)
+            NuclearDispatch.generate_params(self, params, skip_parent=True)
         
         # lambdas to convert units and data to proper syntax
         gd = self.gd
@@ -92,7 +92,7 @@ class IndirectNuclearDispatch(NuclearDispatch):
         # generating GeneralDispatch variables first (PowerCycle, etc.)
         if not skip_parent:
             GeneralDispatch.generate_variables(self)
-            NuclearDispatch.generate_variables(self)
+            NuclearDispatch.generate_variables(self, skip_parent=True)
         
         u = self.u_pyomo
         
@@ -104,7 +104,7 @@ class IndirectNuclearDispatch(NuclearDispatch):
 
         #------- Binary Variables ---------
         self.model.ytesp = pe.Var(self.model.T, domain=pe.Binary)         #y: 1 if cycle is receiving thermal power from TES at period $t$; 0 otherwise
-        self.model.yntes = pe.Var(self.model.T, domain=pe.Binary)         #y: 1 if storage is receiving thermal power from nuclear at period $t$; 0 otherwise
+        # self.model.yntes = pe.Var(self.model.T, domain=pe.Binary)         #y: 1 if storage is receiving thermal power from nuclear at period $t$; 0 otherwise
 
 
     def add_objective(self):
@@ -151,7 +151,7 @@ class IndirectNuclearDispatch(NuclearDispatch):
         def high_demand_power_rule(model, t):
             """ NEW: Model of electric power vs. heat input as linear function for high demand efficiency """
             return model.wdot[t] <= (model.etaamb[t]/model.eta_des)*(model.eta_HD*(model.xnp[t] + model.xtesp[t])
-                                                                    +  model.Wdotu - model.eta_HD*model.Qu)
+                                                                    +  model.y[t]*(model.Wdotu - model.eta_HD*model.Qu))
         def grid_sun_rule(model, t):
             """ Balance of power flow, i.e. sold vs purchased """
             return (model.wdot_s[t] - model.wdot_p[t] == (1-model.etac[t])*model.wdot[t]
@@ -163,6 +163,7 @@ class IndirectNuclearDispatch(NuclearDispatch):
         GeneralDispatch.addPiecewiseLinearEfficiencyConstraints(self)
         
         # overloaded constraints
+        self.model.del_component( self.model.power_con )
         self.model.power_con = pe.Constraint(self.model.T,rule=power_rule)
         self.model.grid_sun_con = pe.Constraint(self.model.T,rule=grid_sun_rule)
         
@@ -199,6 +200,10 @@ class IndirectNuclearDispatch(NuclearDispatch):
         GeneralDispatch.addCycleStartupConstraints(self)
         
         # overloaded constraints
+        self.model.del_component( self.model.pc_production_con )
+        self.model.del_component( self.model.pc_generation_con )
+        self.model.del_component( self.model.pc_min_gen_con )
+        
         self.model.pc_production_con = pe.Constraint(self.model.T,rule=pc_production_rule)
         self.model.pc_generation_con = pe.Constraint(self.model.T,rule=pc_generation_rule)
         self.model.pc_min_gen_con = pe.Constraint(self.model.T,rule=pc_min_gen_rule)
@@ -230,11 +235,14 @@ class IndirectNuclearDispatch(NuclearDispatch):
             return model.s[t-1] >= model.Delta[t]*model.delta_ns[t]*( (model.Qu + model.Qb)*( -3 + model.ynsu[t] + model.y[t-1] + model.y[t] + model.ycsb[t-1] + model.ycsb[t] ) + model.xntes[t] + model.Qb*model.ycsb[t] )
         
         # call the parent version of this method
-        GeneralDispatch.addTESEnergyBalanceConstraints(self)
+        NuclearDispatch.addTESEnergyBalanceConstraints(self)
         
         # overloaded constraints
+        self.model.del_component( self.model.tes_balance_con )
+        self.model.del_component( self.model.tes_start_up_con )
+        
         self.model.tes_balance_con = pe.Constraint(self.model.T,rule=tes_balance_rule)
-        self.model.tes_start_up_con = pe.Constraint(self.model.T,rule=tes_start_up_rule)
+        # self.model.tes_start_up_con = pe.Constraint(self.model.T,rule=tes_start_up_rule)
 
 
     def addNuclearSupplyAndDemandConstraints(self):
@@ -249,7 +257,7 @@ class IndirectNuclearDispatch(NuclearDispatch):
             return model.xnp[t] + model.xntes[t] + model.xnsu[t] + model.Qnsd*model.ynsd[t] <= model.Qin_nuc[t]
         def nuc_generation_rule(model,t):
             """ Thermal energy production by NP only when operating """
-            return model.xnp[t] <= model.Qin_nuc[t] * model.yn[t]
+            return model.xnp[t] + model.xntes[t] <= model.Qin_nuc[t] * model.yn[t]
         def nuc_min_generation_rule(model,t):
             """ Lower bound on thermal energy produced by NP """
             return model.xnp[t] >= model.Qnl * model.yn[t]
@@ -264,13 +272,17 @@ class IndirectNuclearDispatch(NuclearDispatch):
         NuclearDispatch.addNuclearSupplyAndDemandConstraints(self)
         
         # overloaded constraints
+        self.model.del_component( self.model.nuc_production_con )
+        self.model.del_component( self.model.nuc_generation_con )
+        self.model.del_component( self.model.nuc_min_generation_con )
+        
         self.model.nuc_production_con = pe.Constraint(self.model.T,rule=nuc_production_rule)
         self.model.nuc_generation_con = pe.Constraint(self.model.T,rule=nuc_generation_rule)
         self.model.nuc_min_generation_con = pe.Constraint(self.model.T,rule=nuc_min_generation_rule)
         
         # new constraints
-        self.model.nuc_generation_tes_con = pe.Constraint(self.model.T,rule=nuc_generation_tes_rule)
-        self.model.nuc_tes_charging_con = pe.Constraint(self.model.T,rule=nuc_tes_charging_rule)
+        # self.model.nuc_generation_tes_con = pe.Constraint(self.model.T,rule=nuc_generation_tes_rule)
+        # self.model.nuc_tes_charging_con = pe.Constraint(self.model.T,rule=nuc_tes_charging_rule)
 
 
     def generate_constraints(self, skip_parent=False):
@@ -283,12 +295,12 @@ class IndirectNuclearDispatch(NuclearDispatch):
         """
         
         # calling some GeneralDispatch methods for PC that still apply
-        GeneralDispatch.addMinUpAndDowntimeConstraints()
-        GeneralDispatch.addCycleLogicConstraints()
+        GeneralDispatch.addMinUpAndDowntimeConstraints(self)
+        GeneralDispatch.addCycleLogicConstraints(self)
         
         # calling some NuclearDispatch methods for nuclear that still apply
-        NuclearDispatch.addNuclearStartupConstraints()
-        NuclearDispatch.addNuclearNodeLogicConstraints()
+        NuclearDispatch.addNuclearStartupConstraints(self)
+        NuclearDispatch.addNuclearNodeLogicConstraints(self)
         
         # new/overloaded constraints
         self.addPiecewiseLinearEfficiencyConstraints()
@@ -352,11 +364,110 @@ class IndirectNuclearDispatchParamWrap(NuclearDispatchParamWrap):
         
         Wnc     = self.q_nuc_design * self.eta_design
         eta_LD  = self.etap     
-        eta_HD  = self.etap
+        eta_HD  = self.etap * 0.95
         
         ### Cost Parameters ###
         param_dict['Wnc']    = Wnc.to('kW')       #W^nc: Cycle capacity for nuclear power only [kWe]
-        param_dict['Wnc']    = eta_LD             #\eta^{LD}: Linearized cycle efficiency during low demand operation [-]
-        param_dict['Wnc']    = eta_HD             #\eta^{HD}: Linearized cycle efficiency during high demand operation [-]
+        param_dict['eta_LD'] = eta_LD             #\eta^{LD}: Linearized cycle efficiency during low demand operation [-]
+        param_dict['eta_HD'] = eta_HD             #\eta^{HD}: Linearized cycle efficiency during high demand operation [-]
         
         return param_dict
+
+# =============================================================================
+# Dispatch Outputs
+# =============================================================================
+  
+class IndirectNuclearDispatchOutputs(object):
+    """
+    The IndirectNuclearDispatchOutputs class is meant to handle outputs from a given,
+    solved Pyomo Dispatch model. It returns desired outputs in appropriate formats
+    and syntaxes for PostProcessing and linking simulation segments between Pyomo
+    and SSC calls. 
+    """
+    
+    def get_dispatch_targets_from_Pyomo(dispatch_model, horizon, N_full, run_loop=False):
+        """ Method to set fixed costs of the Plant
+        
+        This method parses through the solved Pyomo model for Dispatch optimization
+        and extracts results that are used as Dispatch Targets in the *SAME* simulation
+        segment but in SSC rather than Pyomo. If we're not running a loop, we can
+        still update SSC only I guess this happens once for whatever Pyomo horizon
+        is defined (this might not be a feature we keep long-term, perhaps only for
+                    debugging). 
+        
+        Inputs:
+            dispatch_model (Pyomo model) : solved Pyomo Dispatch model (ConcreteModel)
+            horizon (float Quant)        : length of time of horizon, whether SSC or Pyomo (in hours)
+            N_full (int)                 : length of full simulation time (in hours, no Quant)
+            run_loop (bool)              : flag to determine if simulation is segmented
+        Outputs:
+            disp_targs (dict) : dictionary of dispatch target arrays for use in SSC 
+        """
+        
+        dm = dispatch_model
+        
+        # range of pyomo and SSC horizon times
+        t_pyomo = dm.model.T
+        f_ind   = int( horizon.to('hr').m ) # index in hours of final horizon (e.g. 24)
+        t_horizon = range(f_ind)
+        
+        # if we're not running a loop, define a list of 0s to pad the output so it matches full array size
+        if not run_loop:
+            N_leftover = N_full - f_ind
+            empty_array = [0]*N_leftover
+        
+        #----Receiver Binary Outputs----
+        yn   = np.array([pe.value(dm.model.yn[t])   for t in t_pyomo])
+        ynsu = np.array([pe.value(dm.model.ynsu[t]) for t in t_pyomo])
+        ynsb = np.array([pe.value(dm.model.ynsb[t]) for t in t_pyomo])
+        
+        #----Cycle Binary Outputs----
+        y    = np.array([pe.value(dm.model.y[t])    for t in t_pyomo])
+        ycsu = np.array([pe.value(dm.model.ycsu[t]) for t in t_pyomo])
+        ycsb = np.array([pe.value(dm.model.ycsb[t]) for t in t_pyomo])
+    
+        #----Cycle Thermal Power Utilization----
+        x = np.array([pe.value(dm.model.xnp[t])   for t in t_pyomo])/1000. # from kWt -> MWt
+        x += np.array([pe.value(dm.model.xtesp[t])   for t in t_pyomo])/1000. # from kWt -> MWt
+        
+        #----Thermal Capacity for Cycle Startup and Operation----
+        Qc = np.array([pe.value(dm.model.Qc[t]) for t in t_pyomo])/1000. # from kWt -> MWt
+        Qu = dm.model.Qu.value/1000. # from kWt -> MWt
+    
+        # dispatch target -- nuclear startup/standby binaries
+        is_nuc_su_allowed_in = [1 if (yn[t] + ynsu[t] + ynsb[t]) > 0.001 else 0 for t in t_horizon]  # Nuclear on, startup, or standby
+        is_nuc_sb_allowed_in = [1 if ynsb[t] > 0.001                     else 0 for t in t_horizon]  # Nuclear standby
+        
+        # dispatch target -- cycle startup/standby binaries
+        is_pc_su_allowed_in  = [1 if (y[t] + ycsu[t]) > 0.001 else 0 for t in t_horizon]  # Cycle on or startup
+        is_pc_sb_allowed_in  = [1 if ycsb[t] > 0.001          else 0 for t in t_horizon]  # Cycle standby
+    
+        # dispatch target -- cycle thermal inputs and capacities
+        q_pc_target_su_in    = [Qc[t] if ycsu[t] > 0.001 else 0.0 for t in t_horizon]
+        q_pc_target_on_in    = [x[t]                              for t in t_horizon]
+        q_pc_max_in          = [Qu                                for t in t_horizon]
+        
+        # empty dictionary for output
+        disp_targs = {}
+        
+        # if we're running full simulation in steps, save SSC horizon portion of Pyomo horizon results
+        if run_loop:
+            disp_targs['is_rec_su_allowed_in'] = is_nuc_su_allowed_in 
+            disp_targs['is_rec_sb_allowed_in'] = is_nuc_sb_allowed_in
+            disp_targs['is_pc_su_allowed_in']  = is_pc_su_allowed_in 
+            disp_targs['is_pc_sb_allowed_in']  = is_pc_sb_allowed_in  
+            disp_targs['q_pc_target_su_in']    = q_pc_target_su_in  
+            disp_targs['q_pc_target_on_in']    = q_pc_target_on_in
+            disp_targs['q_pc_max_in']          = q_pc_max_in
+        # if we're running full simulation all at once, need arrays to match size of full sim
+        # TODO: is this a feature we want in the long term? Or just for debugging the first Pyomo call?
+        else:
+            disp_targs['is_rec_su_allowed_in'] = np.hstack( [is_nuc_su_allowed_in , empty_array] ).tolist()
+            disp_targs['is_rec_sb_allowed_in'] = np.hstack( [is_nuc_sb_allowed_in , empty_array] ).tolist()
+            disp_targs['is_pc_su_allowed_in']  = np.hstack( [is_pc_su_allowed_in  , empty_array] ).tolist()
+            disp_targs['is_pc_sb_allowed_in']  = np.hstack( [is_pc_sb_allowed_in  , empty_array] ).tolist()
+            disp_targs['q_pc_target_su_in']    = np.hstack( [q_pc_target_su_in    , empty_array] ).tolist()
+            disp_targs['q_pc_target_on_in']    = np.hstack( [q_pc_target_on_in    , empty_array] ).tolist()
+            disp_targs['q_pc_max_in']          = np.hstack( [q_pc_max_in          , empty_array] ).tolist()
+            
+        return disp_targs
