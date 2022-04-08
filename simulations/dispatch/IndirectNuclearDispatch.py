@@ -1,0 +1,362 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Pyomo real-time dispatch model
+
+
+Model authors:
+* Mike Wagner - UW-Madison
+* Bill Hamilton - NREL 
+* John Cox - Colorado School of Mines
+* Alex Zolan - NREL
+
+Pyomo code by Alex Zolan
+Modified by Gabriel Soto
+"""
+
+import pyomo.environ as pe
+from dispatch.GeneralDispatch import GeneralDispatch
+from dispatch.GeneralDispatch import GeneralDispatchParamWrap
+from dispatch.NuclearDispatch import NuclearDispatch
+import numpy as np
+from util.FileMethods import FileMethods
+from util.SSCHelperMethods import SSCHelperMethods
+import os, copy
+
+class IndirectNuclearDispatch(NuclearDispatch):
+    """
+    The IndirectNuclearDispatch class is meant to set up and run Dispatch
+    optimization as a mixed integer linear program problem using Pyomo,
+    specifically for the IndirectNuclearTES NE2+SSC module.
+    """
+    
+    def __init__(self, params, unitRegistry):
+        """ Initializes the IndirectNuclearDispatch module
+        
+        The instantiation of this class receives a parameter dictionary from
+        the NE2 module (created using the NuclearDispatchWrapper class). It calls
+        on the GeneralDispatch __init__ to create the model. The GeneralDispatcher first
+        creates an empty Concrete Model from Pyomo, then generates Parameters
+        from the parameter dictionary, Variables, Objectives and Constraints.
+        
+        Inputs:
+            params (dict)                : dictionary of Pyomo dispatch parameters
+            unitRegistry (pint.registry) : unique unit Pint unit registry
+        """
+        
+        # initialize General Dispatch, has all the necessary method calls
+        GeneralDispatch.__init__( self, params, unitRegistry )
+
+
+    def generate_params(self, params, skip_parent=False):
+        """ Method to generate parameters within Pyomo Nuclear Model
+        
+        This method reads in a dictionary of pyomo parameters and uses these
+        inputs to initialize parameters for the Pyomo Concrete Model. This method
+        sets up parameters particularly for the Power Cycle. It also defines
+        some lambda functions that helps convert Pint units to Pyomo units. It
+        first instantiates PowerCycle parameters through GeneralDispatch, then
+        instantiates Nuclear parameters.
+        
+        Note: initial conditions are defined for the time period immediately 
+        preceding the start of this new Pyomo time segment. 
+        
+        Inputs:
+            params (dict)  : dictionary of Pyomo dispatch parameters
+        """
+        
+        # generating GeneralDispatch parameters first (PowerCycle, etc.)
+        if not skip_parent:
+            GeneralDispatch.generate_params(self, params)
+            NuclearDispatch.generate_params(self, params)
+        
+        # lambdas to convert units and data to proper syntax
+        gd = self.gd
+        gu = self.gu 
+        
+        # New Cycle Parameters
+        self.model.Wnc = pe.Param(mutable=True, initialize=gd("Wnc"), units=gu("Wnc"))            #W^nc: Cycle capacity for nuclear power only [kWe]
+        self.model.eta_LD = pe.Param(mutable=True, initialize=gd("eta_LD"), units=gu("eta_LD"))   #\eta^{LD}: Linearized cycle efficiency during low demand operation [-]
+        self.model.eta_HD = pe.Param(mutable=True, initialize=gd("eta_HD"), units=gu("eta_HD"))   #\eta^{HD}: Linearized cycle efficiency during high demand operation [-]
+        
+        
+    def generate_variables(self, skip_parent=False):
+        """ Method to generate parameters within Pyomo Nuclear Model
+        
+        This method instantiates variables for the Pyomo Concrete Model, with
+        domains. Does not need initial guesses here, they are defined in the 
+        parameters. We first define continuous and binary variables for the 
+        Power Cycle through GeneralDispatch, then declare nuclear variables.
+        """
+        
+        # generating GeneralDispatch variables first (PowerCycle, etc.)
+        if not skip_parent:
+            GeneralDispatch.generate_variables(self)
+            NuclearDispatch.generate_variables(self)
+        
+        u = self.u_pyomo
+        
+        ### Decision Variables ###
+        #------- Variables ---------
+        self.model.xnp = pe.Var(self.model.T, domain=pe.NonNegativeReals, units=u.kW)    #\dot{x}^{np}_t: Thermal power delivered to cycle from nuclear at period $t$ [kWt]                            #x: Cycle thermal power utilization at period $t$ [kWt]
+        self.model.xtesp = pe.Var(self.model.T, domain=pe.NonNegativeReals, units=u.kW)  #\dot{x}^{tesp}_t: Thermal power delivered to cycle from storage at period $t$ [kWt]
+        self.model.xntes = pe.Var(self.model.T, domain=pe.NonNegativeReals, units=u.kW)  #\dot{x}^{ntes}_t: Thermal power delivered to storage from nuclear at period $t$ [kWt]
+
+        #------- Binary Variables ---------
+        self.model.ytesp = pe.Var(self.model.T, domain=pe.Binary)         #y: 1 if cycle is receiving thermal power from TES at period $t$; 0 otherwise
+        self.model.yntes = pe.Var(self.model.T, domain=pe.Binary)         #y: 1 if storage is receiving thermal power from nuclear at period $t$; 0 otherwise
+
+
+    def add_objective(self):
+        """ Method to add an objective function to the Pyomo Nuclear Model
+        
+        This method adds an objective function to the Pyomo Nuclear Dispatch
+        model. Typically, the LORE team defined a nested function and passes it
+        into the Pyomo model. 
+        """
+        def objectiveRule(model):
+            """ Maximize profits vs. costs """
+            return (
+                    sum( model.D[t] * 
+                    #obj_profit
+                    model.Delta[t]*model.P[t]*(model.wdot_s[t] - model.wdot_p[t])
+                    #obj_cost_cycle_su_hs_sd
+                    - (model.Ccsu*model.ycsup[t] + model.Cchsp*model.ychsp[t] + model.alpha*model.ycsd[t])
+                    #obj_cost_cycle_ramping
+                    - model.Delta[t]*(model.C_delta_w*(model.wdot_delta_plus[t]+model.wdot_delta_minus[t]) + model.C_v_w*(model.wdot_v_plus[t] + model.wdot_v_minus[t]))
+                    #obj_cost_nuc_su_hs_sd
+                    - (model.Cnsu*model.ynsup[t] + model.Cnhsp*model.ynhsp[t] + model.alpha*model.ynsd[t])
+                    #obj_cost_ops
+                    - model.Delta[t]*model.Cpc*model.wdot[t] - model.Delta[t]*model.Ccsb*model.Qb*model.ycsb[t] - model.Delta[t]*model.Cnuc*(model.xnp[t] + model.xntes[t])
+                    for t in model.T) 
+                    )
+        
+        self.model.OBJ = pe.Objective(rule=objectiveRule, sense = pe.maximize)
+        
+        
+    def addPiecewiseLinearEfficiencyConstraints(self):
+        """ Method to add efficiency constraints to the Pyomo IndirectNuclear Model
+        
+        This method adds constraints pertaining to efficiency constraints defined
+        as a piecewise linear approximation. Also referred to as Cycle supply and 
+        demand constraints. In the IndirectNuclearDispatch, we add an extra balance of power
+        with respect to energy storage and power produced from the nuclear reactor. 
+        
+        TODO: This should be revisited when adding MED!!
+        """
+        def power_rule(model, t):
+            """ Model of electric power vs. heat input as linear function """
+            return model.wdot[t] <= (model.etaamb[t]/model.eta_des)*(model.eta_LD*model.xnp[t] 
+                                                                     + model.y[t]*(model.Wdotu - model.eta_LD*model.Qu))
+        def high_demand_power_rule(model, t):
+            """ NEW: Model of electric power vs. heat input as linear function for high demand efficiency """
+            return model.wdot[t] <= (model.etaamb[t]/model.eta_des)*(model.eta_HD*(model.xnp[t] + model.xtesp[t])
+                                                                    +  model.Wdotu - model.eta_HD*model.Qu)
+        def grid_sun_rule(model, t):
+            """ Balance of power flow, i.e. sold vs purchased """
+            return (model.wdot_s[t] - model.wdot_p[t] == (1-model.etac[t])*model.wdot[t]
+                		- model.Ln*(model.xnp[t] + model.xntes[t] + model.xnsu[t] + model.Qnl*model.ynsb[t])
+                		- model.Lc*(model.xnp[t] + model.xtesp[t])
+                        - model.Wb*model.ycsb[t] - model.Wnht*(model.ynsb[t]+model.ynsu[t])   )		#Is Wrsb energy [kWh] or power [kW]?  [az] Wrsb = Wht in the math?
+        
+        # call the parent version of this method
+        GeneralDispatch.addPiecewiseLinearEfficiencyConstraints(self)
+        
+        # overloaded constraints
+        self.model.power_con = pe.Constraint(self.model.T,rule=power_rule)
+        self.model.grid_sun_con = pe.Constraint(self.model.T,rule=grid_sun_rule)
+        
+        # new constraint
+        self.model.hd_power_con = pe.Constraint(self.model.T,rule=high_demand_power_rule)
+
+
+    def addCycleStartupConstraints(self):
+        """ Method to add cycle startup constraints to the Pyomo General Model
+        
+        This method adds constraints pertaining to cycle startup within the Pyomo
+        General Dispatch class. Several nested functions are defined. 
+        """
+        def pc_production_rule(model, t):
+            """ Heat input used for PC startup doesn't exceed max """
+            return model.xnp[t] + model.xtesp[t] + model.Qc[t]*model.ycsu[t] <= model.Qu
+        def pc_generation_rule(model, t):
+            """ Upper bound on heat input to PC """
+            return model.xnp[t] + model.xtesp[t] <= model.Qu * model.y[t]
+        def pc_min_gen_rule(model, t):
+            """ Lower bound on heat input to PC """
+            return model.xnp[t] + model.xtesp[t] >= model.Ql * model.y[t]
+        def pc_generation_thru_tes_rule(model, t):
+            """ NEW: Upper bound on heat input from TES to PC """
+            return model.xtesp[t] <= model.Qu * model.ytesp[t]
+        def tes_dispatch_to_pc_rule(model, t):
+            """ NEW: Enabling TES dispatch only when demand is higher than nominal """
+            return model.ytesp[t] <= model.wdot[t] / model.Wnc
+        def tes_dispatch_persist_rule(model, t):
+            """ NEW: TES Dispatch only allowed if PC is on """
+            return model.ytesp[t] <= model.y[t]
+        
+        # call the parent version of this method
+        GeneralDispatch.addCycleStartupConstraints(self)
+        
+        # overloaded constraints
+        self.model.pc_production_con = pe.Constraint(self.model.T,rule=pc_production_rule)
+        self.model.pc_generation_con = pe.Constraint(self.model.T,rule=pc_generation_rule)
+        self.model.pc_min_gen_con = pe.Constraint(self.model.T,rule=pc_min_gen_rule)
+        
+        # new constraints
+        self.model.pc_generation_thru_tes_con = pe.Constraint(self.model.T,rule=pc_generation_thru_tes_rule)
+        self.model.tes_dispatch_to_pc_con = pe.Constraint(self.model.T,rule=tes_dispatch_to_pc_rule)
+        self.model.tes_dispatch_persist_con = pe.Constraint(self.model.T,rule=tes_dispatch_persist_rule)
+
+
+    def addTESEnergyBalanceConstraints(self):
+        """ Method to add TES constraints to the Pyomo Nuclear Model
+        
+        This method adds constraints pertaining to TES energy balance from charging
+        with thermal power and discharging to the power cycle. 
+        
+        TODO: revisit tes_start_up_rule -> do we need this for nuclear?
+        TODO: do we need maintain_tes_rule?
+        """
+        def tes_balance_rule(model, t):
+            """ Balance of energy to and from TES """
+            if t == 1:
+                return model.s[t] - model.s0 == model.Delta[t] * (model.xntes[t] - (model.Qc[t]*model.ycsu[t] + model.Qb*model.ycsb[t] + model.xtesp[t] + model.Qnsb*model.ynsb[t]))
+            return model.s[t] - model.s[t-1] == model.Delta[t] * (model.xntes[t] - (model.Qc[t]*model.ycsu[t] + model.Qb*model.ycsb[t] + model.xtesp[t] + model.Qnsb*model.ynsb[t]))
+        def tes_start_up_rule(model, t):
+            """ Ensuring sufficient TES charge level to startup NP """
+            if t == 1:
+                return model.s0 >= model.Delta[t]*model.delta_ns[t]*( (model.Qu + model.Qb)*( -3 + model.ynsu[t] + model.y0 + model.y[t] + model.ycsb0 + model.ycsb[t] ) + model.xntes[t] + model.Qb*model.ycsb[t] )
+            return model.s[t-1] >= model.Delta[t]*model.delta_ns[t]*( (model.Qu + model.Qb)*( -3 + model.ynsu[t] + model.y[t-1] + model.y[t] + model.ycsb[t-1] + model.ycsb[t] ) + model.xntes[t] + model.Qb*model.ycsb[t] )
+        
+        # call the parent version of this method
+        GeneralDispatch.addTESEnergyBalanceConstraints(self)
+        
+        # overloaded constraints
+        self.model.tes_balance_con = pe.Constraint(self.model.T,rule=tes_balance_rule)
+        self.model.tes_start_up_con = pe.Constraint(self.model.T,rule=tes_start_up_rule)
+
+
+    def addNuclearSupplyAndDemandConstraints(self):
+        """ Method to add nuclear supply and demand constraints to the Pyomo Nuclear Model
+        
+        This method adds constraints pertaining to nuclear supply and demand energy
+        constraints. Some constraints might be redundant, they are adapted from the CSP
+        constraints (thanks LORE team).
+        """
+        def nuc_production_rule(model,t):
+            """ Upper bound on thermal energy produced by NP """
+            return model.xnp[t] + model.xntes[t] + model.xnsu[t] + model.Qnsd*model.ynsd[t] <= model.Qin_nuc[t]
+        def nuc_generation_rule(model,t):
+            """ Thermal energy production by NP only when operating """
+            return model.xnp[t] <= model.Qin_nuc[t] * model.yn[t]
+        def nuc_min_generation_rule(model,t):
+            """ Lower bound on thermal energy produced by NP """
+            return model.xnp[t] >= model.Qnl * model.yn[t]
+        def nuc_generation_tes_rule(model,t):
+            """ Thermal energy production by NP going to TES only when necessary"""
+            return model.xntes[t] <= model.Qin_nuc[t] * model.yntes[t]
+        def nuc_tes_charging_rule(model,t):
+            """ Charging of TES via nuclear only when NP operating"""
+            return model.yntes[t] <= model.yn[t]
+        
+        # call the parent version of this method
+        NuclearDispatch.addNuclearSupplyAndDemandConstraints(self)
+        
+        # overloaded constraints
+        self.model.nuc_production_con = pe.Constraint(self.model.T,rule=nuc_production_rule)
+        self.model.nuc_generation_con = pe.Constraint(self.model.T,rule=nuc_generation_rule)
+        self.model.nuc_min_generation_con = pe.Constraint(self.model.T,rule=nuc_min_generation_rule)
+        
+        # new constraints
+        self.model.nuc_generation_tes_con = pe.Constraint(self.model.T,rule=nuc_generation_tes_rule)
+        self.model.nuc_tes_charging_con = pe.Constraint(self.model.T,rule=nuc_tes_charging_rule)
+
+
+    def generate_constraints(self, skip_parent=False):
+        """ Method to add ALL constraints to the Pyomo Nuclear Model
+        
+        This method calls the previously defined constraint methods to instantiate
+        them and add to the existing model. This method first calls the GeneralDispatch
+        version to set PowerCycle constraints, then calls nuclear constraint methods
+        to add them to the model. 
+        """
+        
+        # calling some GeneralDispatch methods for PC that still apply
+        GeneralDispatch.addMinUpAndDowntimeConstraints()
+        GeneralDispatch.addCycleLogicConstraints()
+        
+        # calling some NuclearDispatch methods for nuclear that still apply
+        NuclearDispatch.addNuclearStartupConstraints()
+        NuclearDispatch.addNuclearNodeLogicConstraints()
+        
+        # new/overloaded constraints
+        self.addPiecewiseLinearEfficiencyConstraints()
+        self.addCycleStartupConstraints()
+        self.addTESEnergyBalanceConstraints()
+        self.addNuclearSupplyAndDemandConstraints()
+
+        
+# =============================================================================
+# Dispatch Wrapper
+# =============================================================================
+
+class IndirectNuclearDispatchParamWrap(NuclearDispatchParamWrap):
+    """
+    The NuclearDispatchParamWrap class is meant to be the staging area for the 
+    creation of Parameters ONLY for the NuclearDispatch class. It communicates 
+    with the NE2 modules, receiving SSC and PySAM input dictionaries to calculate 
+    both static parameters used for every simulation segment AND initial conditions 
+    that can be updated.
+    """
+    
+    def __init__(self, unit_registry, SSC_dict=None, PySAM_dict=None, pyomo_horizon=48, 
+                   dispatch_time_step=1):
+        """ Initializes the NuclearDispatchParamWrap module
+        
+        Inputs:
+            unitRegistry (pint.registry)   : unique unit Pint unit registry
+            SSC_dict (dict)                : dictionary of SSC inputs needed to run modules
+            PySAM_dict (dict)              : dictionary of PySAM inputs + file names
+            pyomo_horizon (int Quant)      : length of Pyomo simulation segment (hours)
+            dispatch_time_step (int Quant) : length of each Pyomo time step (hours)
+        """
+        
+        NuclearDispatchParamWrap.__init__( self, unit_registry, SSC_dict, PySAM_dict, 
+                            pyomo_horizon, dispatch_time_step )
+
+
+    def set_design(self, skip_parent=False):
+        """ Method to calculate and save design point values of Plant operation
+        
+        This method extracts values and calculates for design point parameters 
+        of our Plant (e.g., nuclear thermal power output, power cycle efficiency,
+        inlet and outlet temperatures, etc.). 
+        """
+        
+        NuclearDispatchParamWrap.set_design(self)
+
+
+    def set_indirect_config_parameters(self, param_dict):
+        """ Method to set fixed costs of the Plant
+        
+        This method calculates some fixed costs for the Plant operations, startup,
+        standby, etc. 
+        
+        Inputs:
+            param_dict (dict) : dictionary of Pyomo dispatch parameters
+        Outputs:
+            param_dict (dict) : updated dictionary of Pyomo dispatch parameters
+        """
+        u = self.u
+        
+        Wnc     = self.q_nuc_design * self.eta_design
+        eta_LD  = self.etap     
+        eta_HD  = self.etap
+        
+        ### Cost Parameters ###
+        param_dict['Wnc']    = Wnc.to('kW')       #W^nc: Cycle capacity for nuclear power only [kWe]
+        param_dict['Wnc']    = eta_LD             #\eta^{LD}: Linearized cycle efficiency during low demand operation [-]
+        param_dict['Wnc']    = eta_HD             #\eta^{HD}: Linearized cycle efficiency during high demand operation [-]
+        
+        return param_dict

@@ -221,7 +221,7 @@ class NuclearDispatch(GeneralDispatch):
         def nuc_generation_rule(model,t):
             """ Thermal energy production by NP only when operating """
             return model.xn[t] <= model.Qin_nuc[t] * model.yn[t]
-        def min_generation_rule(model,t):
+        def nuc_min_generation_rule(model,t):
             """ Lower bound on thermal energy produced by NP """
             return model.xn[t] >= model.Qnl * model.yn[t]
         def nuc_gen_persist_rule(model,t):
@@ -230,7 +230,7 @@ class NuclearDispatch(GeneralDispatch):
         
         self.model.nuc_production_con = pe.Constraint(self.model.T,rule=nuc_production_rule)
         self.model.nuc_generation_con = pe.Constraint(self.model.T,rule=nuc_generation_rule)
-        self.model.nuc_min_generation_con = pe.Constraint(self.model.T,rule=min_generation_rule)
+        self.model.nuc_min_generation_con = pe.Constraint(self.model.T,rule=nuc_min_generation_rule)
         self.model.nuc_gen_persist_con = pe.Constraint(self.model.T,rule=nuc_gen_persist_rule)
         
         
