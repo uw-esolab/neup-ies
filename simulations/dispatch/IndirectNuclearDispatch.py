@@ -104,7 +104,7 @@ class IndirectNuclearDispatch(NuclearDispatch):
 
         #------- Binary Variables ---------
         self.model.ytesp = pe.Var(self.model.T, domain=pe.Binary)         #y: 1 if cycle is receiving thermal power from TES at period $t$; 0 otherwise
-        # self.model.yntes = pe.Var(self.model.T, domain=pe.Binary)         #y: 1 if storage is receiving thermal power from nuclear at period $t$; 0 otherwise
+        self.model.yntes = pe.Var(self.model.T, domain=pe.Binary)         #y: 1 if storage is receiving thermal power from nuclear at period $t$; 0 otherwise
 
 
     def add_objective(self):
@@ -146,7 +146,7 @@ class IndirectNuclearDispatch(NuclearDispatch):
         """
         def power_rule(model, t):
             """ Model of electric power vs. heat input as linear function """
-            return model.wdot[t] <= (model.etaamb[t]/model.eta_des)*(model.eta_LD*model.xnp[t] 
+            return model.wdot[t] <= (model.etaamb[t]/model.eta_des)*(model.eta_LD*(model.xnp[t] + model.xtesp[t]) 
                                                                      + model.y[t]*(model.Wdotu - model.eta_LD*model.Qu))
         def high_demand_power_rule(model, t):
             """ NEW: Model of electric power vs. heat input as linear function for high demand efficiency """
@@ -231,8 +231,8 @@ class IndirectNuclearDispatch(NuclearDispatch):
         def tes_start_up_rule(model, t):
             """ Ensuring sufficient TES charge level to startup NP """
             if t == 1:
-                return model.s0 >= model.Delta[t]*model.delta_ns[t]*( (model.Qu + model.Qb)*( -3 + model.ynsu[t] + model.y0 + model.y[t] + model.ycsb0 + model.ycsb[t] ) + model.xntes[t] + model.Qb*model.ycsb[t] )
-            return model.s[t-1] >= model.Delta[t]*model.delta_ns[t]*( (model.Qu + model.Qb)*( -3 + model.ynsu[t] + model.y[t-1] + model.y[t] + model.ycsb[t-1] + model.ycsb[t] ) + model.xntes[t] + model.Qb*model.ycsb[t] )
+                return model.s0 >= model.Delta[t]*model.delta_ns[t]*( (model.Qu + model.Qb)*( -3 + model.ynsu[t] + model.y0 + model.y[t] + model.ycsb0 + model.ycsb[t] ) + model.xtesp[t] + model.Qb*model.ycsb[t] )
+            return model.s[t-1] >= model.Delta[t]*model.delta_ns[t]*( (model.Qu + model.Qb)*( -3 + model.ynsu[t] + model.y[t-1] + model.y[t] + model.ycsb[t-1] + model.ycsb[t] ) + model.xtesp[t] + model.Qb*model.ycsb[t] )
         
         # call the parent version of this method
         NuclearDispatch.addTESEnergyBalanceConstraints(self)
@@ -242,7 +242,7 @@ class IndirectNuclearDispatch(NuclearDispatch):
         self.model.del_component( self.model.tes_start_up_con )
         
         self.model.tes_balance_con = pe.Constraint(self.model.T,rule=tes_balance_rule)
-        # self.model.tes_start_up_con = pe.Constraint(self.model.T,rule=tes_start_up_rule)
+        self.model.tes_start_up_con = pe.Constraint(self.model.T,rule=tes_start_up_rule)
 
 
     def addNuclearSupplyAndDemandConstraints(self):
@@ -260,13 +260,16 @@ class IndirectNuclearDispatch(NuclearDispatch):
             return model.xnp[t] + model.xntes[t] <= model.Qin_nuc[t] * model.yn[t]
         def nuc_min_generation_rule(model,t):
             """ Lower bound on thermal energy produced by NP """
-            return model.xnp[t] >= model.Qnl * model.yn[t]
+            return model.xnp[t] + model.xntes[t] >= model.Qnl * model.yn[t]
         def nuc_generation_tes_rule(model,t):
             """ Thermal energy production by NP going to TES only when necessary"""
             return model.xntes[t] <= model.Qin_nuc[t] * model.yntes[t]
         def nuc_tes_charging_rule(model,t):
             """ Charging of TES via nuclear only when NP operating"""
             return model.yntes[t] <= model.yn[t]
+        def nuc_tes_charging_able_rule(model,t):
+            """ Charging of TES via nuclear only when NP operating"""
+            return model.yntes[t] + model.ytesp[t] <= 1
         
         # call the parent version of this method
         NuclearDispatch.addNuclearSupplyAndDemandConstraints(self)
@@ -281,8 +284,9 @@ class IndirectNuclearDispatch(NuclearDispatch):
         self.model.nuc_min_generation_con = pe.Constraint(self.model.T,rule=nuc_min_generation_rule)
         
         # new constraints
-        # self.model.nuc_generation_tes_con = pe.Constraint(self.model.T,rule=nuc_generation_tes_rule)
-        # self.model.nuc_tes_charging_con = pe.Constraint(self.model.T,rule=nuc_tes_charging_rule)
+        self.model.nuc_generation_tes_con = pe.Constraint(self.model.T,rule=nuc_generation_tes_rule)
+        self.model.nuc_tes_charging_con = pe.Constraint(self.model.T,rule=nuc_tes_charging_rule)
+        self.model.nuc_tes_charging_able_rule_con = pe.Constraint(self.model.T,rule=nuc_tes_charging_able_rule)
 
 
     def generate_constraints(self, skip_parent=False):
