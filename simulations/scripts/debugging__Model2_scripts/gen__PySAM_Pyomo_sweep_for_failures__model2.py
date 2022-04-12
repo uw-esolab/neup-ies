@@ -110,7 +110,7 @@ op_modes_list = tmp_modes.operating_modes
 # =============================================================================
 sscH = 24  # 12 # 24
 pyoH = 48  # 24 # 48
-json = "model2_Hamilton_560_tariffx1" # model2_Hamilton_560_tariffx1 # model2_Hamilton_560_TwoPeaks_x1 # model2_CAISO_Hamilton
+json = "model2_Hamilton_560_TwinPeaks_x1" # model2_Hamilton_560_tariffx1 # model2_Hamilton_560_TwoPeaks_x1 # model2_CAISO_Hamilton
 dispatch = True # True # False
 run_loop = True
 
@@ -180,7 +180,7 @@ for i, th in enumerate(iterator1): #over tshours
         # =========================================
         # actually run this simulation
         # =========================================
-        
+
         else:
             
             # =========================================
