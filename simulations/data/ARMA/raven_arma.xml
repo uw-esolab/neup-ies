@@ -2,14 +2,14 @@
 <Simulation verbosity="all">
   <TestInfo>
     <name>input.pysam</name>
-    <author>ubaker</author>
-    <created>18-04-2021</created>
+    <author>acrigby</author>
+    <created>16-03-2021</created>
     <classesTested>Models.Code</classesTested>
     <description>Testing RAVEN coupled to PySAM with ARMA</description>
   </TestInfo>
 
   <RunInfo>
-    <WorkingDir>r1</WorkingDir>
+    <WorkingDir>r3</WorkingDir>
     <Sequence>read, train, print, sample, dump</Sequence>
     <batchSize>1</batchSize>
   </RunInfo>
@@ -51,18 +51,18 @@
         <limit>100</limit>
         <initialSeed>42</initialSeed>
       </samplerInit>
-      <constant name="scaling">1.0</constant>
+      <constant name="scaling">9.0</constant>
     </MonteCarlo>
   </Samplers>
 
   <Models>
     <ROM name="arma" subType="ARMA">
-      <Target>Temperature,Time</Target>
+      <Target>DNI,Time</Target>
       <Features>scaling</Features>
       <pivotParameter>Time</pivotParameter>
-      <P>1</P>
-      <Q>1</Q>
-      <Fourier>1440,525600</Fourier>
+      <P>3</P>
+      <Q>3</Q>
+	  <ZeroFilter>DNI</ZeroFilter>
     </ROM>
   </Models>
 
@@ -84,14 +84,14 @@
     </PointSet>
     <HistorySet name="rawData">
       <Input>scaling</Input>
-      <Output>Temperature,Time</Output>
+      <Output>DNI,Time</Output>
       <options>
         <pivotParameter>Time</pivotParameter>
       </options>
     </HistorySet>
     <HistorySet name="synData">
       <Input>scaling</Input>
-      <Output>Temperature,Time</Output>
+      <Output>DNI,Time</Output>
       <options>
         <pivotParameter>Time</pivotParameter>
       </options>

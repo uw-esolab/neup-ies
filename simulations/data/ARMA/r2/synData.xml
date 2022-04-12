@@ -2,6 +2,7 @@
   <DataSet type="Static">
     <dims />
     <general>
+      <datasetName>synData</datasetName>
       <inputs>scaling</inputs>
       <outputs>Clearsky DNI</outputs>
       <pointwise_meta>PointProbability,ProbabilityWeight,prefix</pointwise_meta>
