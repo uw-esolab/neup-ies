@@ -104,7 +104,7 @@ class IndirectNuclearDispatch(NuclearDispatch):
 
         #------- Binary Variables ---------
         self.model.ytesp = pe.Var(self.model.T, domain=pe.Binary)         #y: 1 if cycle is receiving thermal power from TES at period $t$; 0 otherwise
-        self.model.yntes = pe.Var(self.model.T, domain=pe.Binary)         #y: 1 if storage is receiving thermal power from nuclear at period $t$; 0 otherwise
+        # self.model.yntes = pe.Var(self.model.T, domain=pe.Binary)         #y: 1 if storage is receiving thermal power from nuclear at period $t$; 0 otherwise
 
 
     def add_objective(self):
@@ -284,9 +284,9 @@ class IndirectNuclearDispatch(NuclearDispatch):
         self.model.nuc_min_generation_con = pe.Constraint(self.model.T,rule=nuc_min_generation_rule)
         
         # new constraints
-        self.model.nuc_generation_tes_con = pe.Constraint(self.model.T,rule=nuc_generation_tes_rule)
-        self.model.nuc_tes_charging_con = pe.Constraint(self.model.T,rule=nuc_tes_charging_rule)
-        self.model.nuc_tes_charging_able_rule_con = pe.Constraint(self.model.T,rule=nuc_tes_charging_able_rule)
+        # self.model.nuc_generation_tes_con = pe.Constraint(self.model.T,rule=nuc_generation_tes_rule)
+        # self.model.nuc_tes_charging_con = pe.Constraint(self.model.T,rule=nuc_tes_charging_rule)
+        # self.model.nuc_tes_charging_able_rule_con = pe.Constraint(self.model.T,rule=nuc_tes_charging_able_rule)
 
 
     def generate_constraints(self, skip_parent=False):
@@ -368,7 +368,7 @@ class IndirectNuclearDispatchParamWrap(NuclearDispatchParamWrap):
         
         Wnc     = self.q_nuc_design * self.eta_design
         eta_LD  = self.etap     
-        eta_HD  = self.etap * 0.95
+        eta_HD  = self.etap * 0.95 # TODO: simulating a drop in efficiency when wdot > 465 MWe
         
         ### Cost Parameters ###
         param_dict['Wnc']    = Wnc.to('kW')       #W^nc: Cycle capacity for nuclear power only [kWe]
