@@ -321,6 +321,14 @@ with open("model1_wec.csv","w") as f:
     for j in range(x[0].shape[0]):
         f.write("{0:.0f},{1:.3f},{2:.0f},{3:.6f},{4:.6f},1,1\n".format(
             x[0][j],x[1][j],x[2][j],new_gen1[j],new_gen2[j]))
+        
+        
+#Produce a table that is Hamilton but all the temperatures raised by 73C (in absence of good WEC curve fit)
+with open("hamilton_higher_T.csv","w") as f:
+    for j in range(x[0].shape[0]):
+        f.write("{0:.0f},{1:.3f},{2:.0f},{3:.6f},{4:.6f},1,1\n".format(
+            x[0][j]+73,x[1][j],x[2][j],y1[j],y2[j]))
+
 
 #Look at a contour map of the Hamilton and WEC Data
 #The heat map for WEC data is not working, at high mass flows efficiency drops with temperature
