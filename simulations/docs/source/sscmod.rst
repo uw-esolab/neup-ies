@@ -41,3 +41,19 @@ After creating the two corresponding files, add them to SSC by following these s
 * Add ``csp_solver_name.cpp`` and ``csp_solver_name.h`` to ``$DEVIR/ssc/tcs/CMakeLists.txt``
 
 No additional steps are necessary (you only add ``cmod`` module files to ``ssc_api``, not solvers). 
+
+
+Creating new operating mode 
+----------------------------
+
+1. Add a new class to either ``tcs/csp_solver_core.h`` or ``tcs/csp_dual_solver_core.h``
+   * Should be a child of the `C_operating_mode_core` class
+   * Needs a constructor (e.g., ``C_CR_OFF__PC_SB__TES_OFF__NUC_ON())``) based on base class constructor.
+   * Constructor requires operating modes for CSP and PC as well as solver modes for timestep and m_dot_tes
+   * Might need either `check_system_limits` or `handle_solver_error` if the base class methods need to be overloaded
+  
+2. Add implementations of constructors and methods in ``tcs/csp_solver_core.cpp`` or ``tcs/csp_dual_solver_core.cpp``
+   
+3. Add new operating mode to ``E_operating_modes`` or ``E_dual_operating_modes`` in the header file
+   
+4. Add new operating mode class to the ``switch-case`` in ``get_pointer_to_op_mode``

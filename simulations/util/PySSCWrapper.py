@@ -355,7 +355,10 @@ class PySSCWrapper(object):
         """
         
         # static start of the filename
-        filename = "NuclearTES__" if self.sscdict['compute_module_0'] == 'nuclear_tes' else "SolarTES__"
+        filename = "NuclearTES__"   if self.sscdict['compute_module_0'] == 'nuclear_tes' else \
+                   "SolarTES__"     if self.sscdict['compute_module_0'] == 'tcsmolten_salt' else \
+                   "DualPlantTES__" if self.sscdict['compute_module_0'] == 'nuclear_mspt_tes' else \
+                   "__"
         
         # initializing empty string
         extstr = ''

@@ -296,7 +296,7 @@ class TestPySAMModules(unittest.TestCase):
         """
         
         # some key attributes to check for in outputs
-        attrs = ['time_hr', 'gen', 'P_cycle', 'q_dot_rec_inc' ]
+        attrs = ['time_hr', 'gen', 'P_cycle', 'q_dot_nuc_inc' ]
         
         # looping through all modules
         for mod in self.mod_list:

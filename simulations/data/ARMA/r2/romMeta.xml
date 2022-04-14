@@ -2,6 +2,7 @@
   <DataSet type="Static">
     <dims />
     <general>
+      <datasetName>romMeta</datasetName>
       <pointwise_meta>Clearsky DNI_fourier,Clearsky DNI_gaussianed,Clearsky DNI_nofourier,Clearsky DNI_original</pointwise_meta>
       <sampleTag>RAVEN_sample_ID</sampleTag>
     </general>
@@ -13,17 +14,37 @@
     </ROM>
     <Clearsky.DNI>
       <Fourier>
-        <SignalIntercept>2.915356393e+02</SignalIntercept>
-        <period>4.000000000e+00
-          <frequency>2.500000000e-01</frequency>
-          <amplitude>7.343537027e+02</amplitude>
-          <phase>1.563823005e+00</phase>
+        <SignalIntercept>-9.180592320e+02</SignalIntercept>
+        <period>1.440000000e+04
+          <frequency>6.944444444e-05</frequency>
+          <amplitude>2.637969624e+03</amplitude>
+          <phase>1.568981458e+00</phase>
+        </period>
+        <period>7.200000000e+03
+          <frequency>1.388888889e-04</frequency>
+          <amplitude>8.409113085e+02</amplitude>
+          <phase>-1.576471789e+00</phase>
+        </period>
+        <period>3.600000000e+03
+          <frequency>2.777777778e-04</frequency>
+          <amplitude>8.220097075e+01</amplitude>
+          <phase>1.553540953e+00</phase>
+        </period>
+        <period>1.800000000e+03
+          <frequency>5.555555556e-04</frequency>
+          <amplitude>5.815751659e+00</amplitude>
+          <phase>-1.532595118e+00</phase>
+        </period>
+        <period>9.000000000e+02
+          <frequency>1.111111111e-03</frequency>
+          <amplitude>5.758357697e+00</amplitude>
+          <phase>-1.612859955e+00</phase>
         </period>
       </Fourier>
     </Clearsky.DNI>
     <Clearsky.DNI>
       <ARMA_params>
-        <std>0.86699965237</std>
+        <std>0.55014414313</std>
       </ARMA_params>
     </Clearsky.DNI>
   </arma>

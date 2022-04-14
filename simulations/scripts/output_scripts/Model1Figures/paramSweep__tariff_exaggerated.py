@@ -124,12 +124,43 @@ for i in plotrange:
     # =============================================================================
     # sanity checks
     # =============================================================================
-    
+    # no TES efficiency penalty
+    print("************* {0} ******************** \n No TES Penalty".format(jsons[i]))
     opt_TES, opt_Pref = np.where( ppa == np.min(ppa) )
-    print("Optimum PPA = {0} \n ****** at P = {1}MWe and TES = {2}hrs".format( np.min(ppa), 
+    print("Optimum PPA = {0} \n ****** at P = {1}MWe and TES = {2}hrs \n".format( (1 - np.min(ppa) / ppa[0,-1])*100, 
                                                                          p_cycle[opt_Pref][0], 
                                                                          tshours[opt_TES][0] )  )
     
+    # some TES efficiency penalty
+    pen = 1.01
+    ppa_1 = copy.deepcopy(ppa)
+    ppa_1[1:,:] *= pen
+    print("************* {0} ******************** \n TES Penalty = {1}".format( jsons[i], (pen-1)*100 ) )
+    opt_TES_p1, opt_Pref_p1 = np.where( ppa_1 == np.min(ppa_1) )
+    print("Optimum PPA = {0} \n ****** at P = {1}MWe and TES = {2}hrs \n".format( (1 - np.min(ppa_1) / ppa[0,-1])*100,  
+                                                                         p_cycle[opt_Pref_p1][0], 
+                                                                         tshours[opt_TES_p1][0] )  )
+    
+    # some TES efficiency penalty
+    pen = 1.025
+    ppa_1 = copy.deepcopy(ppa)
+    ppa_1[1:,:] *= pen
+    print("************* {0} ******************** \n TES Penalty = {1}".format( jsons[i], (pen-1)*100 ) )
+    opt_TES_p1, opt_Pref_p1 = np.where( ppa_1 == np.min(ppa_1) )
+    print("Optimum PPA = {0} \n ****** at P = {1}MWe and TES = {2}hrs \n".format( (1 - np.min(ppa_1) / ppa[0,-1])*100,  
+                                                                         p_cycle[opt_Pref_p1][0], 
+                                                                         tshours[opt_TES_p1][0] )  )
+    
+    # some TES efficiency penalty
+    pen = 1.05
+    ppa_1 = copy.deepcopy(ppa)
+    ppa_1[1:,:] *= pen
+    print("************* {0} ******************** \n TES Penalty = {1}".format( jsons[i], (pen-1)*100 ) )
+    opt_TES_p1, opt_Pref_p1 = np.where( ppa_1 == np.min(ppa_1) )
+    print("Optimum PPA = {0} \n ****** at P = {1}MWe and TES = {2}hrs \n".format( (1 - np.min(ppa_1) / ppa[0,-1])*100,  
+                                                                         p_cycle[opt_Pref_p1][0], 
+                                                                         tshours[opt_TES_p1][0] )  )
+
     
     # =============================================================================
     # colormap

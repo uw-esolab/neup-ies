@@ -264,7 +264,7 @@ class NuclearTESLoadProfiles(object):
         return data_arrays
     
 
-    def create_violin_plot(self, ax, data, v_color='C0', hide_x=False):
+    def create_violin_plot(self, ax, data, full_data, v_color='C0', hide_x=False):
         """ Creates a violin plot for each hour of the day
         
         Method repurposed from https://matplotlib.org/stable/gallery/statistics/customized_violin.html
@@ -301,7 +301,7 @@ class NuclearTESLoadProfiles(object):
         ax.vlines(inds, quartile1, quartile3, color='k', linestyle='-', lw=5)
         ax.vlines(inds, whiskers_min, whiskers_max, color='k', linestyle='-', lw=1)
         
-        self.modify_violin_axes( ax, data, hide_x )
+        self.modify_violin_axes( ax, data, full_data, hide_x )
         # ax.grid(True)
 
 
@@ -318,7 +318,7 @@ class NuclearTESLoadProfiles(object):
         return lower_adjacent_value, upper_adjacent_value
 
 
-    def modify_violin_axes(self, ax, data, hide_x=False ):
+    def modify_violin_axes(self, ax, data, full_data, hide_x=False ):
         
         if not hide_x:
             ax.set_xlabel("Hour of the Day", fontsize=14, fontweight='bold')
@@ -326,7 +326,13 @@ class NuclearTESLoadProfiles(object):
         ax.set_xlim([-0.5, 23.5])
         ax.set_xticks(self.hrs_in_day)
         
-        upper_lim = np.max(data) * 1.1
+        max_data = []
+        for s in full_data.keys():
+            season_data = full_data[s]
+            for k in season_data.keys():
+                max_data.append(season_data[k].max())
+    
+        upper_lim = np.max(max_data) * 1.1
         ax.set_ylim([-5, upper_lim])
 
 
@@ -364,7 +370,7 @@ class NuclearTESLoadProfiles(object):
                 ax2.plot(p_time[neutral_slice]-1, price[winter_slice], linewidth= lw, color=s_color, label="Winter Tariff")
             else:
                 ax2.plot(p_time[neutral_slice]-1, price[summer_slice], linewidth= lw, color=s_color, label="Summer Tariff")
-                ax2.set_ylabel("Price Multiplier", fontsize=14, fontweight='bold')
+                ax2.set_ylabel("Price \nMultiplier", fontsize=14, fontweight='bold')
             
             ax2.set_ylim([0.2, 3.5])
             ax2.yaxis.label.set_color(s_color)

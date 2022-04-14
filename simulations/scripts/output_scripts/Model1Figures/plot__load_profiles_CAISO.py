@@ -121,9 +121,9 @@ for j, season in enumerate(["Winter", "Summer"]):
         gen_ax__.xaxis.set_ticklabels([])
         
         if i == 0:
-            weekday.set_ylabel("Weekdays", labelpad=60, fontsize=18, fontweight='bold')
+            weekday.set_ylabel("Weekdays", labelpad=80, fontsize=18, fontweight='bold')
         else:
-            weekend.set_ylabel("Weekends", labelpad=60, fontsize=18, fontweight='bold')
+            weekend.set_ylabel("Weekends", labelpad=80, fontsize=18, fontweight='bold')
         
         if j == 0:
             gen_ax__.set_ylabel("Power \nGenerated \n(MWe)", labelpad=16, fontsize=12, fontweight='bold')

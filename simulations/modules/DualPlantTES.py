@@ -31,7 +31,7 @@ class DualPlantTES(SolarTES):
     out to the power cycle. 
     """
 
-    def __init__(self, plant_name="nuclear_mspt_tes", json_name="model2", is_dispatch=False):
+    def __init__(self, plant_name="nuclear_mspt_tes", json_name="model2", **specs):
         """ Initializes the DualPlantTES module
         
         Inputs:
@@ -41,7 +41,7 @@ class DualPlantTES(SolarTES):
         """
         
         # initialize Solar+Nuclear+Generic module, csv data arrays should be saved here
-        SolarTES.__init__( self, plant_name, json_name, is_dispatch )
+        SolarTES.__init__( self, plant_name, json_name, **specs )
         
         # define specific PySAM module to be called later
         self.PySAM_Module = NuclearMsptTes
@@ -84,8 +84,8 @@ class DualPlantTES(SolarTES):
         
         # PC initial conditions
         self.Plant.SystemControl.pc_op_mode_initial               = self.Plant.Outputs.pc_op_mode_final
-        self.Plant.SystemControl.pc_startup_energy_remain_initial = self.Plant.Outputs.pc_startup_time_remain_final
-        self.Plant.SystemControl.pc_startup_time_remain_init      = self.Plant.Outputs.pc_startup_energy_remain_final
+        self.Plant.SystemControl.pc_startup_energy_remain_initial = self.Plant.Outputs.pc_startup_energy_remain_final
+        self.Plant.SystemControl.pc_startup_time_remain_init      = self.Plant.Outputs.pc_startup_time_remain_final
         
         
     def initialize_arrays(self):

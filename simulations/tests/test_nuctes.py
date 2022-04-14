@@ -17,7 +17,7 @@ class TestNuclearTES(unittest.TestCase):
     
     This testing suite is meant to test the nuclear TES module meant to
     represent Model 1 of the NE-2 project. This models an LFR plant supplying 
-    power to an sCO2 power block with thermal energy storage (TES) in the form 
+    power to a power block with thermal energy storage (TES) in the form 
     of molten salt tanks. 
     """
 
@@ -72,6 +72,10 @@ class TestNuclearTES(unittest.TestCase):
                      'Qin_nuc',   # from NuclearDispatch.set_time_series_nuclear_parameters()
                      'y0',        # from GeneralDispatch.set_initial_state()
                      'yn0' ]      # from NuclearDispatch.set_initial_state()
+    
+        final_attr = ['nuc_op_mode_final',                 
+                      'hot_tank_htf_percent_final',      
+                      'pc_startup_energy_remain_final' ] 
                  
         
         mod = self.nuctes
@@ -91,7 +95,6 @@ class TestNuclearTES(unittest.TestCase):
 
         # ==============================================================
         # pre-run the duplicate plant to gather guesses for Q_nuc
-        
         ssc_run_success, prePlant = mod.run_Plant_through_SSC(
                                             prePlant, time_start , mod.sim_time_end 
                                             )
@@ -118,6 +121,32 @@ class TestNuclearTES(unittest.TestCase):
             self.assertIn( attr, params_dict.keys() ,
                             "Parameter {0} is not found in dispatch parameter dictionary for {1}".format(attr, mod) )
             
+        # ==============================================================
+        # run optimization
+        dispatch_success = mod.run_pyomo( params_dict )
+        
+        self.assertTrue( dispatch_success, 
+                          "Dispatch optimization failed for {0}".format( mod ))
+        
+        # ==============================================================
+        # update actual Plant after running Pyomo
+        Plant = mod.update_Plant_after_Pyomo( mod.Plant, pre_dispatch_run=False )
+        
+        # helper method to check that obj has attribute, will raise exception if fails
+        def check_attr( obj, att ):
+            return hasattr( obj, att)
+
+        # running through final attributes at end of timestep
+        for attr in final_attr:
+            
+            # checking that the attribute exists for the pre-run (should have op_final, etc.)
+            self.assertTrue(  hasattr(prePlant.Outputs, attr) ,
+                            "The pre-run for {0} does not have output {1}".format( mod, attr) )
+            
+            # trying to see if final operating modes, etc. are assigned for the original Plant
+            #  they should NOT be assigned, so calling the check_attr method should raise exception
+            self.assertRaises( Exception, check_attr, Plant.Outputs, attr )
+
         # erase mod
         del mod
         
