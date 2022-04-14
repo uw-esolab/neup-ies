@@ -161,6 +161,7 @@ class GeneralDispatch(ABC):
         parameters. Here we define continuous and binary variables for the 
         Power Cycle. 
         """
+        
         u = self.u_pyomo
         ### Decision Variables ###
         #------- Variables ---------

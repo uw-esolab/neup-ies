@@ -75,7 +75,8 @@ class IndirectNuclearDispatch(NuclearDispatch):
         gu = self.gu 
         
         # New Cycle Parameters
-        self.model.Wnc = pe.Param(mutable=True, initialize=gd("Wnc"), units=gu("Wnc"))            #W^nc: Cycle capacity for nuclear power only [kWe]
+        self.model.Wnc    = pe.Param(mutable=True, initialize=gd("Wnc"), units=gu("Wnc"))            #W^nc: Cycle capacity for nuclear power only [kWe]
+        self.model.Qnhx   = pe.Param(mutable=True, initialize=gd("Qnhx"), units=gu("Qnhx"))       #Q^{nhx}: Upper limit on nuclear power to charge TES due to HX efficiency [kWt]
         self.model.eta_LD = pe.Param(mutable=True, initialize=gd("eta_LD"), units=gu("eta_LD"))   #\eta^{LD}: Linearized cycle efficiency during low demand operation [-]
         self.model.eta_HD = pe.Param(mutable=True, initialize=gd("eta_HD"), units=gu("eta_HD"))   #\eta^{HD}: Linearized cycle efficiency during high demand operation [-]
         
@@ -104,7 +105,7 @@ class IndirectNuclearDispatch(NuclearDispatch):
 
         #------- Binary Variables ---------
         self.model.ytesp = pe.Var(self.model.T, domain=pe.Binary)         #y: 1 if cycle is receiving thermal power from TES at period $t$; 0 otherwise
-        # self.model.yntes = pe.Var(self.model.T, domain=pe.Binary)         #y: 1 if storage is receiving thermal power from nuclear at period $t$; 0 otherwise
+        self.model.yntes = pe.Var(self.model.T, domain=pe.Binary)         #y: 1 if storage is receiving thermal power from nuclear at period $t$; 0 otherwise
 
 
     def add_objective(self):
@@ -263,7 +264,7 @@ class IndirectNuclearDispatch(NuclearDispatch):
             return model.xnp[t] + model.xntes[t] >= model.Qnl * model.yn[t]
         def nuc_generation_tes_rule(model,t):
             """ Thermal energy production by NP going to TES only when necessary"""
-            return model.xntes[t] <= model.Qin_nuc[t] * model.yntes[t]
+            return model.xntes[t] <= model.Qnhx  * model.yntes[t]
         def nuc_tes_charging_rule(model,t):
             """ Charging of TES via nuclear only when NP operating"""
             return model.yntes[t] <= model.yn[t]
@@ -284,9 +285,9 @@ class IndirectNuclearDispatch(NuclearDispatch):
         self.model.nuc_min_generation_con = pe.Constraint(self.model.T,rule=nuc_min_generation_rule)
         
         # new constraints
-        # self.model.nuc_generation_tes_con = pe.Constraint(self.model.T,rule=nuc_generation_tes_rule)
-        # self.model.nuc_tes_charging_con = pe.Constraint(self.model.T,rule=nuc_tes_charging_rule)
-        # self.model.nuc_tes_charging_able_rule_con = pe.Constraint(self.model.T,rule=nuc_tes_charging_able_rule)
+        self.model.nuc_generation_tes_con = pe.Constraint(self.model.T,rule=nuc_generation_tes_rule)
+        self.model.nuc_tes_charging_con = pe.Constraint(self.model.T,rule=nuc_tes_charging_rule)
+        self.model.nuc_tes_charging_able_rule_con = pe.Constraint(self.model.T,rule=nuc_tes_charging_able_rule)
 
 
     def generate_constraints(self, skip_parent=False):
@@ -366,12 +367,14 @@ class IndirectNuclearDispatchParamWrap(NuclearDispatchParamWrap):
         """
         u = self.u
         
-        Wnc     = self.q_nuc_design * self.eta_design
-        eta_LD  = self.etap     
-        eta_HD  = self.etap * 0.95 # TODO: simulating a drop in efficiency when wdot > 465 MWe
+        Wnc     = self.q_nuc_design * self.eta_design  
+        Qnhx    = self.q_nuc_design * 0.9  # TODO: simulating hit in efficiency for nuclear thermal power when charging TES
+        eta_LD  = self.etap        # efficiency when only heat source to steam is LFR
+        eta_HD  = self.etap * 0.7 # TODO: simulating a drop in efficiency when wdot > 465 MWe
         
         ### Cost Parameters ###
-        param_dict['Wnc']    = Wnc.to('kW')       #W^nc: Cycle capacity for nuclear power only [kWe]
+        param_dict['Wnc']    = Wnc.to('kW')       #W^{nc}: Cycle capacity for nuclear power only [kWe]
+        param_dict['Qnhx']   = Qnhx.to('kW')      #Q^{nhx}: Upper limit on nuclear power to charge TES due to HX efficiency [kWt]
         param_dict['eta_LD'] = eta_LD             #\eta^{LD}: Linearized cycle efficiency during low demand operation [-]
         param_dict['eta_HD'] = eta_HD             #\eta^{HD}: Linearized cycle efficiency during high demand operation [-]
         
