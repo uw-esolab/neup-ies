@@ -366,11 +366,18 @@ class IndirectNuclearDispatchParamWrap(NuclearDispatchParamWrap):
             param_dict (dict) : updated dictionary of Pyomo dispatch parameters
         """
         u = self.u
-        
-        Wnc     = self.q_nuc_design * self.eta_design  
+
+        Qnc     = self.q_nuc_design
+        Wnc     = Qnc * self.eta_design  
         Qnhx    = self.q_nuc_design * 0.9  # TODO: simulating hit in efficiency for nuclear thermal power when charging TES
         eta_LD  = self.etap        # efficiency when only heat source to steam is LFR
-        eta_HD  = self.etap * 0.7 # TODO: simulating a drop in efficiency when wdot > 465 MWe
+        
+        # TODO: first pass at figuring out estimate for high demand efficiency at knee
+        B  = 1.2 # TODO: estimate increase in high demand efficiency y-intercept
+        Wu = self.Wdotu
+        Qu = self.Qu
+        b_LD    = Wu - eta_LD * Qu   # low demand intercept
+        eta_HD  = eta_LD + (1-B) * (b_LD/Qnc).to('')  # simulating drop in efficiency when wdot > 465 MWe
         
         ### Cost Parameters ###
         param_dict['Wnc']    = Wnc.to('kW')       #W^{nc}: Cycle capacity for nuclear power only [kWe]
