@@ -253,6 +253,8 @@ x=np.array(x)
 y1=np.array(y1)
 y2=np.array(y2)
 
+x[0]+=73 #adjust hamilton temperatures to WEC design point
+
 #Curve fit the hamilton data 1=W, 2=Q
 def find_popt(x,y,fn):
     popt,pcov=curve_fit(fn,x,y)
@@ -278,12 +280,21 @@ westinghouse_data=\
 573	0.417704599	40	    0.39599914	0.459999368"""
 
 #Westinghouse curve fit gives reducing efficiecy with temperature at higher mass flows
+#because only gives us mass flow relationship
 #Consider using Carnot Scaling to fix this...
-#def carnot(Thot,Tcold):
-#    return 1-(Tcold+273.15)/(Thot+273.15)
+#THIS NEEDS HUGE AMOUNTS OF TERMS TO WORK - my view is no easy fix
+def carnot(Thot,Tcold):
+    return 1-(Tcold+273.15)/(Thot+273.15)
 #NOT WORKING COMMENT OUT
-#westinghouse_data+=\
-#"""653 1 32.44 {0:.4f} 1""".format(carnot(653,32.44)/carnot(633,32.44))
+westinghouse_data+=\
+"""\n653 1 32.44 {0:.4f} 1""".format(carnot(653,32.44)/carnot(633,32.44))
+westinghouse_data+=\
+"""\n633 1.121291922	 32.44 {0:.4f} {1:.4f}""".format(1.018498602*carnot(633,32.44)/carnot(573,32.44),0.999936849)
+westinghouse_data+=\
+"""\n633 1 0.964793198 {0:.4f} {1:.4f}""".format(1.0036567*carnot(633,32.44)/carnot(653,32.44),1.000431529)
+westinghouse_data+=\
+"""\n573 1 0.417704599 {0:.4f} {1:.4f}""".format(0.455151646*carnot(573,32.44)/carnot(633,32.44),1.000431529)
+
 
 #Parse te Westinghouse Data and turn into arrays
 wec_x,wec_y1,wec_y2 = get_x_and_y(westinghouse_data)
@@ -327,23 +338,24 @@ with open("model1_wec.csv","w") as f:
 with open("hamilton_higher_T.csv","w") as f:
     for j in range(x[0].shape[0]):
         f.write("{0:.0f},{1:.3f},{2:.0f},{3:.6f},{4:.6f},1,1\n".format(
-            x[0][j]+73,x[1][j],x[2][j],y1[j],y2[j]))
+            x[0][j],x[1][j],x[2][j],y1[j],y2[j]))
 
 
 #Look at a contour map of the Hamilton and WEC Data
 #The heat map for WEC data is not working, at high mass flows efficiency drops with temperature
-mdot_contour=np.zeros((20,20))
-T_contour=np.zeros((20,20))
-wec_contour=np.zeros((20,20))
-hamilton_contour=np.zeros((20,20))
-for j in range(20):
-    for k in range(20):
-        mdot = 0.1*(j+1)
+mdot_contour=np.zeros((10,10))
+T_contour=np.zeros((10,10))
+wec_contour=np.zeros((10,10))
+hamilton_contour=np.zeros((10,10))
+for j in range(10):
+    for k in range(10):
+        mdot = 0.4+0.1*(j+1)
         T = 550+10*k
         T_contour[j,k]=T
         mdot_contour[j,k]=mdot
         x=np.array([[T],[mdot],[32.44]])
         wec_contour[j,k]=fn(x,*popt1_WEC)/fn(x,*popt2_WEC)
+        print(mdot,T,wec_contour[j,k])
         hamilton_contour[j,k]=fn(x,*popt1)/fn(x,*popt2)
 plt.imshow(wec_contour, cmap='hot', interpolation='nearest')
 plt.show()
@@ -352,7 +364,9 @@ plt.show()
 
 #Find d(nu)/dP
 #THIS CURRENTLY USES THE HAMILTON DATA AS I DONT TRUST THE WEC CURVE FIT
-relative_nu=[]
+relative_eta=[]
+P=[]
+Q=[]
 for j,T_CSP in enumerate([550,633]): #633 sets the temperatures both to 633 for reference
 
     propn_LFR_flow = 0.8 #Proportion of turbine rating delivered by LFR only at full power . Can change   
@@ -369,7 +383,7 @@ for j,T_CSP in enumerate([550,633]): #633 sets the temperatures both to 633 for 
     csp_steam = IAPWS97(T=T_CSP+273.15,P=pressure)
     
     x=[[],[],[]] #Tf,mdot,T_amb
-    mdots = [0.1*j for j in range(1,20)]
+    mdots = [0.01]+[0.1*j for j in range(1,20)]
     for mdot in mdots:
         #calculate the temperature of the hot stream
         x[1].append(mdot)
@@ -382,31 +396,112 @@ for j,T_CSP in enumerate([550,633]): #633 sets the temperatures both to 633 for 
             T_mix = IAPWS97(h=h,P=pressure).T-273.15
             x[0].append(T_mix)
     
-    #Plot mass flow rate vs efficiency
+
     x = np.array(x)
     SAM_gen1 = fn(x,*popt1)
     SAM_gen2 = fn(x,*popt2)
-    relative_nu.append(SAM_gen1/SAM_gen2)
-    
-    
-plt.plot(x[1],relative_nu[-1],label="T_CSP=633 (for reference only)")
-plt.plot(x[1],relative_nu[0],label="T_CSP=550 (actual case)")
+    Q.append(SAM_gen2)
+    P.append(SAM_gen1)
+    relative_eta.append(SAM_gen1/SAM_gen2)
+
+Q=np.array(Q)
+P=np.array(P)    
+
+plt.plot(Q[-1],P[-1]/Q[-1],label="T_CSP=633 (for reference only)")
+plt.plot(Q[0],P[0]/Q[0],label="T_CSP=550 (actual case)")
 plt.ylabel("efficiency multipier")
-plt.xlabel("mdot")
+plt.xlabel("Q")
+plt.legend(loc='lower right')
+plt.show()
+
+
+plt.scatter(Q[-1],P[-1],label="T_CSP=633 (reference)",marker='^')
+plt.scatter(Q[0],P[0],label="T_CSP=550 (actual case)",marker='o')
+
+#Plot a straight line for each case going through mdot=100%
+m = np.divide(P[:,11]-P[:,9],Q[:,11]-Q[:,9])
+c = P[:,10]-np.multiply(m,Q[:,10])
+
+Px=np.zeros((2,20))
+Px[0]=m[0]*Q[0]+c[0]
+Px[1]=m[1]*Q[1]+c[1]
+
+plt.plot(Q[-1],Px[-1],label="T_CSP=633 straight line design pt")
+plt.plot(Q[0],Px[0],label="T_CSP=550 straight line design pt")
+
+#forward and backward gradient for T_CSP=550
+mf=np.zeros(2)
+mf[0] = (P[0,11]-P[0,10])/(Q[0,11]-Q[0,10])
+mf[1] = (P[0,10]-P[0,9])/(Q[0,10]-Q[0,9])
+cf = P[:,10]-np.multiply(mf,Q[0,10])
+
+Pf=np.zeros((2,20))
+Pf[0]=mf[0]*Q[0]+cf[0]
+Pf[1]=mf[1]*Q[1]+cf[1]
+
+#plt.plot(Q[0],Pf[0],label="T_CSP=550 straight line design pt forward")
+#plt.plot(Q[1],Pf[1],label="T_CSP=550 straight line design pt backward")
+
+plt.ylabel("Relative P")
+plt.xlabel("Relative Q")
 plt.legend(loc='lower right')
 plt.show()
 
 """
+Now make crude assumptions
+(1) at low mdot, we retain Q not going to salt. This is (633-570)/(633-20)*(1-mdot)
+(2) at low mdot, we retain P that charges the higher stage of the turbine
+    this is assumed 60% of Carnot (very rough!)
+    0.6*(1-(570+273)/(633+273))*Q_retained
+"""
+Q2=np.array(Q)
+P2=np.array(P)
+for j in range(10):
+    adder=(1-x[1][j])*(633-570)/(633-20)
+    Q2[:,j]+=adder
+    P2[:,j]+=adder*0.6
+
+plt.scatter(Q2[-1],P2[-1],label="T_CSP=633 (for reference only)",marker='^')
+plt.scatter(Q2[0],P2[0],label="T_CSP=550 (actual case)",marker='o')
+
+#Plot a straight line for each case going through mdot=100%
+m2 = (P2[:,11]-P2[:,9])/(Q2[:,11]-Q2[:,9])
+c2 = P2[:,10]-np.multiply(m2,Q2[:,10])
+
+Px2=np.zeros((2,20))
+Px2[0]=m2[0]*Q2[0]+c2[0]
+Px2[1]=m2[1]*Q2[1]+c2[1]
+
+
+plt.plot(Q2[-1],Px2[-1],label="T_CSP=633 straight line design pt")
+plt.plot(Q2[0],Px2[0],label="T_CSP=550 straight line design pt")
+
+plt.ylabel("Relative P2")
+plt.xlabel("Relative Q")
+plt.legend(loc='lower right')
+plt.show()
+
+#Finally, replot the relative eta for this scenario
+relative_eta2=np.divide(P2,Q2)
+
+plt.plot(Q2[-1],relative_eta2[-1],label="T_CSP=633 (for reference only)")
+plt.plot(Q2[0],relative_eta2[0],label="T_CSP=550 (actual case)")
+plt.ylabel("efficiency multipier2")
+plt.xlabel("Q")
+plt.legend(loc='lower right')
+plt.show()
+
+"""
+
 #Check efficiencies at design point
 nu_633 = fn(np.array([[633],[1],[32.44]]),*popt1)/fn(np.array([[633],[1],[32.44]]),*popt2)
 nu_550 = fn(np.array([[550],[1],[32.44]]),*popt1)/fn(np.array([[550],[1],[32.44]]),*popt2)
 print(nu_633,nu_550)
-"""
 
 
 #Take gradients of efficiencies for +/- 10% at design point with different temperature
 #Do it at 550 and 633 to check sensitivity. 
 idx = int(10*propn_LFR_flow)-1
-print(relative_nu[0][idx]-relative_nu[0][idx-1],relative_nu[0][idx+1]-relative_nu[0][idx])
-print(relative_nu[1][idx]-relative_nu[1][idx-1],relative_nu[1][idx+1]-relative_nu[1][idx])    
-    
+print(relative_eta[0][idx]-relative_eta[0][idx-1],relative_eta[0][idx+1]-relative_eta[0][idx])
+print(relative_eta[1][idx]-relative_eta[1][idx-1],relative_eta[1][idx+1]-relative_eta[1][idx])    
+""" 
