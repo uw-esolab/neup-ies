@@ -69,7 +69,7 @@ class IndirectNuclearTES(NuclearTES):
         return dispatch_wrap
 
 
-    def create_dispatch_params(self, Plant ):
+    def create_dispatch_params(self, Plant):
         """ Populating a dictionary with dispatch parameters before optimization
         
         Note:
@@ -87,13 +87,12 @@ class IndirectNuclearTES(NuclearTES):
         Returns:
             dispatch_wrap (obj): 
                 wrapper object for the class that creates dispatch parameters
-                
         """
         # get the object
         DW = self.dispatch_wrap
         
         # run the setters from the GenericSSCModule parent class
-        params = NuclearTES.create_dispatch_params(self, Plant )
+        params = NuclearTES.create_dispatch_params(self, Plant)
         
         # specific params for IndirectNuclearDispatch
         params = DW.set_indirect_config_parameters( params )

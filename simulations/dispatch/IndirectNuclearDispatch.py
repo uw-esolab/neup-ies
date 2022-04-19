@@ -67,8 +67,7 @@ class IndirectNuclearDispatch(NuclearDispatch):
         
         # generating GeneralDispatch parameters first (PowerCycle, etc.)
         if not skip_parent:
-            GeneralDispatch.generate_params(self, params)
-            NuclearDispatch.generate_params(self, params, skip_parent=True)
+            NuclearDispatch.generate_params(self, params)
         
         # lambdas to convert units and data to proper syntax
         gd = self.gd
@@ -92,8 +91,7 @@ class IndirectNuclearDispatch(NuclearDispatch):
         
         # generating GeneralDispatch variables first (PowerCycle, etc.)
         if not skip_parent:
-            GeneralDispatch.generate_variables(self)
-            NuclearDispatch.generate_variables(self, skip_parent=True)
+            NuclearDispatch.generate_variables(self)
         
         u = self.u_pyomo
         
@@ -299,13 +297,14 @@ class IndirectNuclearDispatch(NuclearDispatch):
         to add them to the model. 
         """
         
-        # calling some GeneralDispatch methods for PC that still apply
-        GeneralDispatch.addMinUpAndDowntimeConstraints(self)
-        GeneralDispatch.addCycleLogicConstraints(self)
-        
-        # calling some NuclearDispatch methods for nuclear that still apply
-        NuclearDispatch.addNuclearStartupConstraints(self)
-        NuclearDispatch.addNuclearNodeLogicConstraints(self)
+        if not skip_parent:
+            # calling some GeneralDispatch methods for PC that still apply
+            GeneralDispatch.addMinUpAndDowntimeConstraints(self)
+            GeneralDispatch.addCycleLogicConstraints(self)
+            
+            # calling some NuclearDispatch methods for nuclear that still apply
+            NuclearDispatch.addNuclearStartupConstraints(self)
+            NuclearDispatch.addNuclearNodeLogicConstraints(self)
         
         # new/overloaded constraints
         self.addPiecewiseLinearEfficiencyConstraints()

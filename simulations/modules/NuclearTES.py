@@ -375,7 +375,7 @@ class NuclearTES(GenericSSCModule):
         return dispatch_wrap
 
     
-    def create_dispatch_params(self, Plant ):
+    def create_dispatch_params(self, Plant):
         """ Populating a dictionary with dispatch parameters before optimization
         
         Note:

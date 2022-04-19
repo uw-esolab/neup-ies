@@ -16,6 +16,7 @@ import pyomo.environ as pe
 from dispatch.GeneralDispatch import GeneralDispatch
 from dispatch.GeneralDispatch import GeneralDispatchParamWrap
 from dispatch.NuclearDispatch import NuclearDispatch
+from dispatch.IndirectNuclearDispatch import IndirectNuclearDispatch
 import numpy as np
 from util.FileMethods import FileMethods
 from util.SSCHelperMethods import SSCHelperMethods
@@ -43,7 +44,7 @@ class SolarDispatch(NuclearDispatch):
         """
         
         # initialize Generic module, csv data arrays should be saved here
-        GeneralDispatch.__init__( self, params, unitRegistry )
+        NuclearDispatch.__init__( self, params, unitRegistry )
 
 
     def generate_params(self, params, skip_parent=False):
