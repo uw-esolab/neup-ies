@@ -7,10 +7,10 @@ import pvlib
 from datetime import datetime
 
 # Read in data from .csv file for time and DNI
-input_data = pd.read_csv("/home/una/github/postdoc_uw_madison/NE2/sam_dev/neup-ies/simulations/data/ARMA/solar_data_parsed.csv")
+input_data = pd.read_csv("C:/Users/aidan/projects/neup-ies/simulations/data/ARMA/r1/solar_data_parsed_DNI.csv")
 df = pd.DataFrame()
 df["Time"]= input_data["Time"]
-df["DHI"] = input_data["DHI"]
+df["DNI"] = input_data["DNI"]
 
 
 # Convert to DatetimeIndex for use in pvlib
@@ -28,4 +28,4 @@ equation_of_time = pvlib.solarposition.equation_of_time_spencer71(1)
 # Find hour angle
 df["Hour angle"] = pvlib.solarposition.hour_angle(df.index, -89.401230, equation_of_time)
 
-df.to_csv(r'/home/una/github/postdoc_uw_madison/NE2/sam_dev/neup-ies/simulations/data/ARMA/hour_angle_parsed_data.csv')
+df.to_csv(r'C:/Users/aidan/projects/neup-ies/simulations/data/ARMA/hour_angle_parsed_data_new.csv')
