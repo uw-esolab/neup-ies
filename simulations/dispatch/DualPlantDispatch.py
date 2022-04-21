@@ -19,6 +19,7 @@ from dispatch.NuclearDispatch import NuclearDispatch
 from dispatch.NuclearDispatch import NuclearDispatchParamWrap
 from dispatch.SolarDispatch   import SolarDispatch
 from dispatch.SolarDispatch   import SolarDispatchParamWrap
+from dispatch.IndirectNuclearDispatch import IndirectNuclearDispatch
 import numpy as np
 from util.FileMethods import FileMethods
 from util.SSCHelperMethods import SSCHelperMethods
@@ -31,7 +32,7 @@ class DualPlantDispatch(SolarDispatch):
     specifically for the NuclearMsptTES NE2+SSC module.
     """
 
-    def __init__(self, params, unitRegistry):
+    def __init__(self,  dual=True, **kwargs):
         """ Initializes the DualPlantDispatch module
         
         The instantiation of this class receives a parameter dictionary from
@@ -44,9 +45,7 @@ class DualPlantDispatch(SolarDispatch):
             params (dict)                : dictionary of Pyomo dispatch parameters
             unitRegistry (pint.registry) : unique unit Pint unit registry
         """
-        
-        # initialize Nuclear module, csv data arrays should be saved here
-        NuclearDispatch.__init__( self, params, unitRegistry )
+        super().__init__(dual=dual, **kwargs)
 
 
     def generate_params(self, params):
@@ -65,10 +64,10 @@ class DualPlantDispatch(SolarDispatch):
         Inputs:
             params (dict)  : dictionary of Pyomo dispatch parameters
         """
-        
+        super().generate_params(params)
         # generating NuclearDispatch parameters first (PowerCycle, etc.)
-        NuclearDispatch.generate_params(self, params)
-        SolarDispatch.generate_params(self, params, skip_parent=True)
+        # NuclearDispatch.generate_params(self, params)
+        # SolarDispatch.generate_params(self, params, skip_parent=True)
 
 
     def generate_variables(self):
@@ -80,9 +79,10 @@ class DualPlantDispatch(SolarDispatch):
         Power Cycle through GeneralDispatch, then declare nuclear variables.
         """
         
+        super().generate_variables()
         # generating NuclearDispatch variables first (PowerCycle, etc.)
-        NuclearDispatch.generate_variables(self)
-        SolarDispatch.generate_variables(self, skip_parent=True)
+        # NuclearDispatch.generate_variables(self)
+        # SolarDispatch.generate_variables(self, skip_parent=True)
 
 
     def add_objective(self):
@@ -112,6 +112,17 @@ class DualPlantDispatch(SolarDispatch):
                     )
         
         self.model.OBJ = pe.Objective(rule=objectiveRule, sense = pe.maximize)
+        
+
+    def addNuclearSupplyAndDemandConstraints(self):
+        """ Method to add nuclear supply and demand constraints to the Pyomo Nuclear Model
+        
+        This method adds constraints pertaining to nuclear supply and demand energy
+        constraints. Some constraints might be redundant, they are adapted from the CSP
+        constraints (thanks LORE team).
+        """
+        
+        super(IndirectNuclearDispatch, self).addNuclearSupplyAndDemandConstraints()
         
         
     def addTESEnergyBalanceConstraints(self):
@@ -153,6 +164,9 @@ class DualPlantDispatch(SolarDispatch):
         
         TODO: This should be revisited when adding MED!!
         """
+        
+        super(NuclearDispatch, self).addPiecewiseLinearEfficiencyConstraints()
+        
         def grid_therm_rule(model, t):
             """ Balance of power flow, i.e. sold vs purchased """
             return (
@@ -166,7 +180,7 @@ class DualPlantDispatch(SolarDispatch):
             )
         
         # call the parent version of this method
-        GeneralDispatch.addPiecewiseLinearEfficiencyConstraints(self)
+        # GeneralDispatch.addPiecewiseLinearEfficiencyConstraints(self)
         
         # additional constraints
         self.model.grid_sun_con = pe.Constraint(self.model.T,rule=grid_therm_rule)
@@ -180,10 +194,10 @@ class DualPlantDispatch(SolarDispatch):
         version to set PowerCycle constraints, then calls nuclear constraint methods
         to add them to the model. 
         """
-        
+        super().generate_constraints()
         # generating NuclearDispatch constraints first (PowerCycle, etc.)
-        NuclearDispatch.generate_constraints(self)
-        SolarDispatch.generate_constraints(self, skip_parent=True)
+        # NuclearDispatch.generate_constraints(self)
+        # SolarDispatch.generate_constraints(self, skip_parent=True)
 
 
 # =============================================================================

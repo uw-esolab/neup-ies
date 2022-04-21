@@ -25,7 +25,7 @@ class DualIndirectDispatch(SolarDispatch):
     specifically for the NuclearMsptTES NE2+SSC module.
     """
 
-    def __init__(self, params, unitRegistry):
+    def __init__(self, dual=True, direct=False, **kwargs):
         """ Initializes the IndirectDualDispatch module
         
         The instantiation of this class receives a parameter dictionary from
@@ -38,9 +38,7 @@ class DualIndirectDispatch(SolarDispatch):
             params (dict)                : dictionary of Pyomo dispatch parameters
             unitRegistry (pint.registry) : unique unit Pint unit registry
         """
-        
-        # initialize IndirectNuclear module, csv data arrays should be saved here
-        SolarDispatch.__init__( self, params, unitRegistry )
+        super().__init__(dual=dual, direct=direct, **kwargs)
 
 
     def generate_params(self, params):
@@ -59,10 +57,10 @@ class DualIndirectDispatch(SolarDispatch):
         Inputs:
             params (dict)  : dictionary of Pyomo dispatch parameters
         """
-        
+        super().generate_params(params)
         # generating NuclearDispatch parameters first (PowerCycle, etc.)
-        IndirectNuclearDispatch.generate_params(self, params)
-        SolarDispatch.generate_params(self, params, skip_parent=True)
+        # IndirectNuclearDispatch.generate_params(self, params)
+        # SolarDispatch.generate_params(self, params, skip_parent=True)
 
 
     def generate_variables(self):
@@ -73,10 +71,10 @@ class DualIndirectDispatch(SolarDispatch):
         parameters. We first define continuous and binary variables for the 
         Power Cycle through GeneralDispatch, then declare nuclear variables.
         """
-        
+        super().generate_variables()
         # generating NuclearDispatch variables first (PowerCycle, etc.)
-        IndirectNuclearDispatch.generate_variables(self)
-        SolarDispatch.generate_variables(self, skip_parent=True)
+        # IndirectNuclearDispatch.generate_variables(self)
+        # SolarDispatch.generate_variables(self, skip_parent=True)
     
     
     def add_objective(self):
@@ -119,6 +117,9 @@ class DualIndirectDispatch(SolarDispatch):
         
         TODO: This should be revisited when adding MED!!
         """
+        
+        super(SolarDispatch, self).addPiecewiseLinearEfficiencyConstraints()
+        
         def grid_therm_rule(model, t):
             """ Balance of power flow, i.e. sold vs purchased """
             return (
@@ -132,7 +133,7 @@ class DualIndirectDispatch(SolarDispatch):
             )
         
         # call the parent version of this method
-        IndirectNuclearDispatch.addPiecewiseLinearEfficiencyConstraints(self)
+        # IndirectNuclearDispatch.addPiecewiseLinearEfficiencyConstraints(self)
         
         # additional constraints
         self.model.del_component( self.model.grid_sun_con )
@@ -177,9 +178,10 @@ class DualIndirectDispatch(SolarDispatch):
         to add them to the model. 
         """
         
+        super().generate_constraints()
         # generating NuclearDispatch constraints first (PowerCycle, etc.)
-        IndirectNuclearDispatch.generate_constraints(self)
-        SolarDispatch.generate_constraints(self, skip_parent=True)
+        # IndirectNuclearDispatch.generate_constraints(self)
+        # SolarDispatch.generate_constraints(self, skip_parent=True)
 
 # =============================================================================
 # Dispatch Wrapper

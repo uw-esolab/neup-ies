@@ -22,14 +22,14 @@ from util.FileMethods import FileMethods
 from util.SSCHelperMethods import SSCHelperMethods
 import os, copy
 
-class SolarDispatch(NuclearDispatch):
+class SolarDispatch(IndirectNuclearDispatch, NuclearDispatch):
     """
     The SolarDispatch class is meant to set up and run Dispatch
     optimization as a mixed integer linear program problem using Pyomo,
     specifically for the NuclearTES NE2+SSC module.
     """
     
-    def __init__(self, params, unitRegistry):
+    def __init__(self, **kwargs):
         """ Initializes the SolarDispatch module
         
         The instantiation of this class receives a parameter dictionary from
@@ -43,8 +43,13 @@ class SolarDispatch(NuclearDispatch):
             unitRegistry (pint.registry) : unique unit Pint unit registry
         """
         
-        # initialize Generic module, csv data arrays should be saved here
-        NuclearDispatch.__init__( self, params, unitRegistry )
+        # check to see if we need to invoke the IndirectNuclear or bypass
+        if "direct" in kwargs:
+            # doing indirect TES charging
+            super().__init__(**kwargs)
+        else:
+            # bypassing, we are doing direct TES charging (or solar only)
+            super(IndirectNuclearDispatch, self).__init__(**kwargs)
 
 
     def generate_params(self, params, skip_parent=False):
@@ -63,10 +68,13 @@ class SolarDispatch(NuclearDispatch):
         Inputs:
             params (dict)  : dictionary of Pyomo dispatch parameters
         """
-        
-        # generating GeneralDispatch parameters first (PowerCycle, etc.)
-        if not skip_parent:
-            GeneralDispatch.generate_params(self, params)
+        if self.dual is False:
+            super(NuclearDispatch, self).generate_params(params)
+        else:
+            if self.direct:
+                super(IndirectNuclearDispatch, self).generate_params(params)
+            else:
+                super().generate_params(params)
         
         # lambdas to convert units and data to proper syntax
         gd = self.gd
@@ -110,9 +118,14 @@ class SolarDispatch(NuclearDispatch):
         """
         
         # generating GeneralDispatch variables first (PowerCycle, etc.)
-        if not skip_parent:
-            GeneralDispatch.generate_variables(self)
-        
+        if self.dual is False:
+            super(NuclearDispatch, self).generate_variables()
+        else:
+            if self.direct:
+                super(IndirectNuclearDispatch, self).generate_variables()
+            else:
+                super().generate_variables()
+                
         u = self.u_pyomo
         ### Decision Variables ###
         #------- Variables ---------
@@ -269,6 +282,16 @@ class SolarDispatch(NuclearDispatch):
         self.model.rec_shutdown_con = pe.Constraint(self.model.T,rule=rec_shutdown_rule)
 
 
+    def addCycleStartupConstraints(self):
+        """ Method to add cycle startup constraints to the Pyomo General Model
+        
+        This method adds constraints pertaining to cycle startup within the Pyomo
+        General Dispatch class. Several nested functions are defined. 
+        """
+        
+        super(NuclearDispatch, self).addCycleStartupConstraints()
+
+
     def addTESEnergyBalanceConstraints(self):
         """ Method to add TES constraints to the Pyomo Solar Model
         
@@ -308,6 +331,8 @@ class SolarDispatch(NuclearDispatch):
         
         TODO: This should be revisited when adding MED!!
         """
+        super(NuclearDispatch, self).addPiecewiseLinearEfficiencyConstraints()
+        
         def grid_sun_rule(model, t):
             """ Balance of power flow, i.e. sold vs purchased """
             return (
@@ -317,9 +342,6 @@ class SolarDispatch(NuclearDispatch):
                         - model.Wh*model.yr[t] - model.Wb*model.ycsb[t] - model.Wht*(model.yrsb[t]+model.yrsu[t])		#Is Wrsb energy [kWh] or power [kW]?  [az] Wrsb = Wht in the math?
                 		- (model.Ehs/model.Delta[t])*(model.yrsu[t] + model.yrsb[t] + model.yrsd[t])
             )
-        
-        # call the parent version of this method
-        GeneralDispatch.addPiecewiseLinearEfficiencyConstraints(self)
         
         # additional constraints
         self.model.grid_sun_con = pe.Constraint(self.model.T,rule=grid_sun_rule)
@@ -333,14 +355,15 @@ class SolarDispatch(NuclearDispatch):
         version to set PowerCycle constraints, then calls nuclear constraint methods
         to add them to the model. 
         """
-        
-        # generating GeneralDispatch constraints first (PowerCycle, etc.)
-        if not skip_parent:
-            # call general PC constraints
-            GeneralDispatch.generate_constraints(self)
-            # call TES energy balance constraints specific to current dispatch model
+        if self.dual is False:
+            super(NuclearDispatch, self).generate_constraints()
             self.addTESEnergyBalanceConstraints()
-        
+        else:
+            if self.direct:
+                super(IndirectNuclearDispatch, self).generate_constraints()
+            else:
+                super().generate_constraints()
+                
         self.addReceiverStartupConstraints()
         self.addReceiverSupplyAndDemandConstraints()
         self.addReceiverNodeLogicConstraints()

@@ -44,7 +44,7 @@ class GeneralDispatch(ABC):
     """
     
     @abstractmethod
-    def __init__(self, params, unitRegistry):
+    def __init__(self, unitRegistry, dual=False, direct=True, **kwargs):
         """ Initializes the GeneralDispatch module
         
         The instantiation of this class receives a parameter dictionary from
@@ -57,9 +57,14 @@ class GeneralDispatch(ABC):
             params (dict)                : dictionary of Pyomo dispatch parameters
             unitRegistry (pint.registry) : unique unit Pint unit registry
         """
-        
+
         self.u_pyomo = u_pyomo
+        self.dual    = dual    # are we combining solar + nuclear?
+        self.direct  = direct  # are we directly heating storage?
+
         
+    def set_up(self, params):
+                
         self.model = pe.ConcreteModel()
         self.generate_params(params)
         self.generate_variables()
@@ -67,7 +72,7 @@ class GeneralDispatch(ABC):
         self.generate_constraints()
         
         # assert_units_consistent(self.model)
-
+        
 
     def generate_params(self, params):
         """ Method to generate parameters within Pyomo General Model

@@ -27,7 +27,7 @@ class NuclearDispatch(GeneralDispatch):
     specifically for the NuclearTES NE2+SSC module.
     """
     
-    def __init__(self, params, unitRegistry):
+    def __init__(self, **kwargs):
         """ Initializes the NuclearDispatch module
         
         The instantiation of this class receives a parameter dictionary from
@@ -40,9 +40,7 @@ class NuclearDispatch(GeneralDispatch):
             params (dict)                : dictionary of Pyomo dispatch parameters
             unitRegistry (pint.registry) : unique unit Pint unit registry
         """
-        
-        # initialize Generic module, csv data arrays should be saved here
-        GeneralDispatch.__init__( self, params, unitRegistry )
+        super().__init__(**kwargs)
 
 
     def generate_params(self, params, skip_parent=False):
@@ -62,10 +60,8 @@ class NuclearDispatch(GeneralDispatch):
             params (dict)  : dictionary of Pyomo dispatch parameters
         """
         
-        # generating GeneralDispatch parameters first (PowerCycle, etc.)
-        if not skip_parent:
-            GeneralDispatch.generate_params(self, params)
-        
+        super().generate_params(params)
+
         # lambdas to convert units and data to proper syntax
         gd = self.gd
         gu = self.gu 
@@ -119,10 +115,8 @@ class NuclearDispatch(GeneralDispatch):
         Power Cycle through GeneralDispatch, then declare nuclear variables.
         """
         
-        # generating GeneralDispatch variables first (PowerCycle, etc.)
-        if not skip_parent:
-            GeneralDispatch.generate_variables(self)
-        
+        super().generate_variables()
+
         u = self.u_pyomo
         ### Decision Variables ###
         #------- Variables ---------
@@ -175,6 +169,7 @@ class NuclearDispatch(GeneralDispatch):
         is essentially used as a sanity check, if Pyomo deems that nuclear should shutdown
         or startup then something is wrong and SSC will complain. 
         """
+        
         def nuc_inventory_rule(model,t):
             """ NP energy inventory for startup is balanced """
             if t == 1:
@@ -326,6 +321,9 @@ class NuclearDispatch(GeneralDispatch):
         
         TODO: This should be revisited when adding MED!!
         """
+        
+        super().addPiecewiseLinearEfficiencyConstraints()
+        
         def grid_sun_rule(model, t):
             """ Balance of power flow, i.e. sold vs purchased """
             return (
@@ -334,9 +332,6 @@ class NuclearDispatch(GeneralDispatch):
                 		- model.Lc*model.x[t] 
                         - model.Wb*model.ycsb[t] - model.Wnht*(model.ynsb[t]+model.ynsu[t])		#Is Wrsb energy [kWh] or power [kW]?  [az] Wrsb = Wht in the math?
             )
-        
-        # call the parent version of this method
-        GeneralDispatch.addPiecewiseLinearEfficiencyConstraints(self)
         
         # additional constraints
         self.model.grid_sun_con = pe.Constraint(self.model.T,rule=grid_sun_rule)
@@ -350,14 +345,9 @@ class NuclearDispatch(GeneralDispatch):
         version to set PowerCycle constraints, then calls nuclear constraint methods
         to add them to the model. 
         """
-        
-        # generating GeneralDispatch constraints first (PowerCycle, etc.)
-        if not skip_parent:
-            # call general PC constraints
-            GeneralDispatch.generate_constraints(self)
-            # call TES energy balance constraints specific to current dispatch model
-            self.addTESEnergyBalanceConstraints()
-        
+        super().generate_constraints()
+
+        self.addTESEnergyBalanceConstraints()
         self.addNuclearStartupConstraints()
         self.addNuclearSupplyAndDemandConstraints()
         self.addNuclearNodeLogicConstraints()

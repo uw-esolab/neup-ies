@@ -297,7 +297,8 @@ class NuclearTES(GenericSSCModule):
         """
         
         # Creation of Dispatch model (could be overloaded)
-        dispatch_model = self.Dispatch_Module(params, self.u)
+        dispatch_model = self.Dispatch_Module( unitRegistry=self.u )
+        dispatch_model.set_up( params )
         
         # Solving Dispatch optimization model
         dispatch_success = True

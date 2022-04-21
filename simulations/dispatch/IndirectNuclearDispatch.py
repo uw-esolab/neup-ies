@@ -30,7 +30,7 @@ class IndirectNuclearDispatch(NuclearDispatch):
     specifically for the IndirectNuclearTES NE2+SSC module.
     """
     
-    def __init__(self, params, unitRegistry):
+    def __init__(self, **kwargs):
         """ Initializes the IndirectNuclearDispatch module
         
         The instantiation of this class receives a parameter dictionary from
@@ -44,8 +44,9 @@ class IndirectNuclearDispatch(NuclearDispatch):
             unitRegistry (pint.registry) : unique unit Pint unit registry
         """
         
-        # initialize General Dispatch, has all the necessary method calls
-        GeneralDispatch.__init__( self, params, unitRegistry )
+        # overriding base class default value unless we get a keyword from higher up
+        kwargs['direct'] = kwargs['direct'] if 'direct' in kwargs else False
+        super().__init__(**kwargs)
 
 
     def generate_params(self, params, skip_parent=False):
@@ -65,10 +66,8 @@ class IndirectNuclearDispatch(NuclearDispatch):
             params (dict)  : dictionary of Pyomo dispatch parameters
         """
         
-        # generating GeneralDispatch parameters first (PowerCycle, etc.)
-        if not skip_parent:
-            NuclearDispatch.generate_params(self, params)
-        
+        super().generate_params(params)
+
         # lambdas to convert units and data to proper syntax
         gd = self.gd
         gu = self.gu 
@@ -89,10 +88,8 @@ class IndirectNuclearDispatch(NuclearDispatch):
         Power Cycle through GeneralDispatch, then declare nuclear variables.
         """
         
-        # generating GeneralDispatch variables first (PowerCycle, etc.)
-        if not skip_parent:
-            NuclearDispatch.generate_variables(self)
-        
+        super().generate_variables()
+
         u = self.u_pyomo
         
         ### Decision Variables ###
@@ -143,6 +140,9 @@ class IndirectNuclearDispatch(NuclearDispatch):
         
         TODO: This should be revisited when adding MED!!
         """
+        
+        super(NuclearDispatch, self).addPiecewiseLinearEfficiencyConstraints()
+        
         def power_rule(model, t):
             """ Model of electric power vs. heat input as linear function """
             return model.wdot[t] <= (model.etaamb[t]/model.eta_des)*(model.eta_LD*(model.xnp[t] + model.xtesp[t]) 
@@ -157,9 +157,6 @@ class IndirectNuclearDispatch(NuclearDispatch):
                 		- model.Ln*(model.xnp[t] + model.xntes[t] + model.xnsu[t] + model.Qnl*model.ynsb[t])
                 		- model.Lc*(model.xnp[t] + model.xtesp[t])
                         - model.Wb*model.ycsb[t] - model.Wnht*(model.ynsb[t]+model.ynsu[t])   )		#Is Wrsb energy [kWh] or power [kW]?  [az] Wrsb = Wht in the math?
-        
-        # call the parent version of this method
-        GeneralDispatch.addPiecewiseLinearEfficiencyConstraints(self)
         
         # overloaded constraints
         self.model.del_component( self.model.power_con )
@@ -176,6 +173,9 @@ class IndirectNuclearDispatch(NuclearDispatch):
         This method adds constraints pertaining to cycle startup within the Pyomo
         General Dispatch class. Several nested functions are defined. 
         """
+        
+        super(NuclearDispatch, self).addCycleStartupConstraints()
+        
         def pc_production_rule(model, t):
             """ Heat input used for PC startup doesn't exceed max """
             return model.xnp[t] + model.xtesp[t] + model.Qc[t]*model.ycsu[t] <= model.Qu
@@ -194,9 +194,6 @@ class IndirectNuclearDispatch(NuclearDispatch):
         def tes_dispatch_persist_rule(model, t):
             """ NEW: TES Dispatch only allowed if PC is on """
             return model.ytesp[t] <= model.y[t]
-        
-        # call the parent version of this method
-        GeneralDispatch.addCycleStartupConstraints(self)
         
         # overloaded constraints
         self.model.del_component( self.model.pc_production_con )
@@ -222,6 +219,9 @@ class IndirectNuclearDispatch(NuclearDispatch):
         TODO: revisit tes_start_up_rule -> do we need this for nuclear?
         TODO: do we need maintain_tes_rule?
         """
+        
+        super().addTESEnergyBalanceConstraints()
+        
         def tes_balance_rule(model, t):
             """ Balance of energy to and from TES """
             if t == 1:
@@ -232,9 +232,6 @@ class IndirectNuclearDispatch(NuclearDispatch):
             if t == 1:
                 return model.s0 >= model.Delta[t]*model.delta_ns[t]*( (model.Qu + model.Qb)*( -3 + model.ynsu[t] + model.y0 + model.y[t] + model.ycsb0 + model.ycsb[t] ) + model.xtesp[t] + model.Qb*model.ycsb[t] )
             return model.s[t-1] >= model.Delta[t]*model.delta_ns[t]*( (model.Qu + model.Qb)*( -3 + model.ynsu[t] + model.y[t-1] + model.y[t] + model.ycsb[t-1] + model.ycsb[t] ) + model.xtesp[t] + model.Qb*model.ycsb[t] )
-        
-        # call the parent version of this method
-        NuclearDispatch.addTESEnergyBalanceConstraints(self)
         
         # overloaded constraints
         self.model.del_component( self.model.tes_balance_con )
@@ -251,6 +248,8 @@ class IndirectNuclearDispatch(NuclearDispatch):
         constraints. Some constraints might be redundant, they are adapted from the CSP
         constraints (thanks LORE team).
         """
+        
+        super().addNuclearSupplyAndDemandConstraints()
         def nuc_production_rule(model,t):
             """ Upper bound on thermal energy produced by NP """
             return model.xnp[t] + model.xntes[t] + model.xnsu[t] + model.Qnsd*model.ynsd[t] <= model.Qin_nuc[t]
@@ -269,10 +268,7 @@ class IndirectNuclearDispatch(NuclearDispatch):
         def nuc_tes_charging_able_rule(model,t):
             """ Charging of TES via nuclear only when NP operating"""
             return model.yntes[t] + model.ytesp[t] <= 1
-        
-        # call the parent version of this method
-        NuclearDispatch.addNuclearSupplyAndDemandConstraints(self)
-        
+
         # overloaded constraints
         self.model.del_component( self.model.nuc_production_con )
         self.model.del_component( self.model.nuc_generation_con )
@@ -297,20 +293,7 @@ class IndirectNuclearDispatch(NuclearDispatch):
         to add them to the model. 
         """
         
-        if not skip_parent:
-            # calling some GeneralDispatch methods for PC that still apply
-            GeneralDispatch.addMinUpAndDowntimeConstraints(self)
-            GeneralDispatch.addCycleLogicConstraints(self)
-            
-            # calling some NuclearDispatch methods for nuclear that still apply
-            NuclearDispatch.addNuclearStartupConstraints(self)
-            NuclearDispatch.addNuclearNodeLogicConstraints(self)
-        
-        # new/overloaded constraints
-        self.addPiecewiseLinearEfficiencyConstraints()
-        self.addCycleStartupConstraints()
-        self.addTESEnergyBalanceConstraints()
-        self.addNuclearSupplyAndDemandConstraints()
+        super().generate_constraints()
 
         
 # =============================================================================
