@@ -270,6 +270,9 @@ class IndirectNuclearDispatch(NuclearDispatch):
         def nuc_tes_charging_able_rule(model,t):
             """ Charging of TES via nuclear only when NP operating"""
             return model.yntes[t] + model.ytesp[t] <= 1
+        def nuc_tes_dispatch_rule(model,t):
+            """ Charging of TES via nuclear only when NP operating"""
+            return model.xnp[t] >= model.ytesp[t] * model.Qin_nuc[t]
 
         # overloaded constraints
         self.model.del_component( self.model.nuc_production_con )
@@ -284,6 +287,7 @@ class IndirectNuclearDispatch(NuclearDispatch):
         self.model.nuc_generation_tes_con = pe.Constraint(self.model.T,rule=nuc_generation_tes_rule)
         self.model.nuc_tes_charging_con = pe.Constraint(self.model.T,rule=nuc_tes_charging_rule)
         self.model.nuc_tes_charging_able_rule_con = pe.Constraint(self.model.T,rule=nuc_tes_charging_able_rule)
+        self.model.nuc_tes_dispatch_con = pe.Constraint(self.model.T,rule=nuc_tes_dispatch_rule)
 
 
     def generate_constraints(self, skip_parent=False):
@@ -311,8 +315,7 @@ class IndirectNuclearDispatchParamWrap(NuclearDispatchParamWrap):
     that can be updated.
     """
     
-    def __init__(self, unit_registry, SSC_dict=None, PySAM_dict=None, pyomo_horizon=48, 
-                   dispatch_time_step=1):
+    def __init__(self, **kwargs):
         """ Initializes the NuclearDispatchParamWrap module
         
         Inputs:
@@ -322,12 +325,11 @@ class IndirectNuclearDispatchParamWrap(NuclearDispatchParamWrap):
             pyomo_horizon (int Quant)      : length of Pyomo simulation segment (hours)
             dispatch_time_step (int Quant) : length of each Pyomo time step (hours)
         """
-        
-        NuclearDispatchParamWrap.__init__( self, unit_registry, SSC_dict, PySAM_dict, 
-                            pyomo_horizon, dispatch_time_step )
+        kwargs['direct'] = kwargs['direct'] if 'direct' in kwargs else False
+        super().__init__(**kwargs)
 
 
-    def set_design(self, skip_parent=False):
+    def set_design(self):
         """ Method to calculate and save design point values of Plant operation
         
         This method extracts values and calculates for design point parameters 
@@ -335,7 +337,7 @@ class IndirectNuclearDispatchParamWrap(NuclearDispatchParamWrap):
         inlet and outlet temperatures, etc.). 
         """
         
-        NuclearDispatchParamWrap.set_design(self)
+        super().set_design()
 
 
     def set_indirect_config_parameters(self, param_dict):

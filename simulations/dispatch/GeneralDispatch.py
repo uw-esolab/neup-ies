@@ -519,8 +519,8 @@ class GeneralDispatchParamWrap(object):
     for every simulation segment AND initial conditions that can be updated.
     """
     
-    def __init__(self, unit_registry, SSC_dict, PySAM_dict, pyomo_horizon, 
-                       dispatch_time_step):
+    def __init__(self, unit_registry, SSC_dict, PySAM_dict, pyomo_horizon=48, 
+                       dispatch_time_step=1, dual=False, direct=True, **kwarg):
         """ Initializes the GeneralDispatchParamWrap module
         
         Inputs:
@@ -535,6 +535,9 @@ class GeneralDispatchParamWrap(object):
         self.PySAM_dict         = PySAM_dict
         self.pyomo_horizon      = pyomo_horizon
         self.dispatch_time_step = dispatch_time_step 
+        
+        self.dual    = dual    # are we combining solar + nuclear?
+        self.direct  = direct  # are we directly heating storage?
         
         # setting a standard unit registry
         self.u = unit_registry 

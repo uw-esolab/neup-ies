@@ -16,7 +16,9 @@ import pyomo.environ as pe
 from dispatch.GeneralDispatch import GeneralDispatch
 from dispatch.GeneralDispatch import GeneralDispatchParamWrap
 from dispatch.NuclearDispatch import NuclearDispatch
+from dispatch.NuclearDispatch import NuclearDispatchParamWrap
 from dispatch.IndirectNuclearDispatch import IndirectNuclearDispatch
+from dispatch.IndirectNuclearDispatch import IndirectNuclearDispatchParamWrap
 import numpy as np
 from util.FileMethods import FileMethods
 from util.SSCHelperMethods import SSCHelperMethods
@@ -373,7 +375,7 @@ class SolarDispatch(IndirectNuclearDispatch, NuclearDispatch):
 # Dispatch Wrapper
 # =============================================================================
 
-class SolarDispatchParamWrap(GeneralDispatchParamWrap):
+class SolarDispatchParamWrap(IndirectNuclearDispatchParamWrap, NuclearDispatchParamWrap):
     """
     The SolarDispatchParamWrap class is meant to be the staging area for the 
     creation of Parameters ONLY for the SolarDispatch class. It communicates 
@@ -382,8 +384,7 @@ class SolarDispatchParamWrap(GeneralDispatchParamWrap):
     that can be updated.
     """
     
-    def __init__(self, unit_registry, SSC_dict=None, PySAM_dict=None, pyomo_horizon=48, 
-                   dispatch_time_step=1):
+    def __init__(self, **kwargs):
         """ Initializes the SolarDispatchParamWrap module
         
         Inputs:
@@ -394,8 +395,15 @@ class SolarDispatchParamWrap(GeneralDispatchParamWrap):
             dispatch_time_step (int Quant) : length of each Pyomo time step (hours)
         """
         
-        GeneralDispatchParamWrap.__init__( self, unit_registry, SSC_dict, PySAM_dict, 
-                            pyomo_horizon, dispatch_time_step )
+        
+        # check to see if we need to invoke the IndirectNuclear or bypass
+        if "direct" in kwargs:
+            # doing indirect TES charging
+            super().__init__(**kwargs)
+        else:
+            # bypassing, we are doing direct TES charging (or solar only)
+            super(IndirectNuclearDispatchParamWrap, self).__init__(**kwargs)
+
 
 
     def set_design(self, skip_parent=False, given_des=False):
@@ -408,8 +416,15 @@ class SolarDispatchParamWrap(GeneralDispatchParamWrap):
         
         u = self.u
         
-        if not skip_parent:
-            GeneralDispatchParamWrap.set_design(self)
+        if self.dual is False:
+            super(NuclearDispatchParamWrap, self).set_design()
+            self.q_rec_design = self.SSC_dict["P_ref"]/self.SSC_dict["design_eff"]*self.SSC_dict["solarm"]* u.MW 
+        else:
+            if self.direct:
+                super(IndirectNuclearDispatchParamWrap, self).set_design()
+            else:
+                super().set_design()
+            self.q_rec_design = self.SSC_dict["q_dot_rec_des"] * u.MW
         
         # specific heat values at design point
         T_htf  = 0.5*(self.T_htf_hot + self.T_htf_cold)
@@ -437,7 +452,7 @@ class SolarDispatchParamWrap(GeneralDispatchParamWrap):
         self.m_tes_design = m_tes_des.to('kg')     # TES active storage mass (kg)
 
 
-    def set_fixed_cost_parameters(self, param_dict, skip_parent=False):
+    def set_fixed_cost_parameters(self, param_dict):
         """ Method to set fixed costs of the Plant
         
         This method calculates some fixed costs for the Plant operations, startup,
@@ -453,8 +468,13 @@ class SolarDispatchParamWrap(GeneralDispatchParamWrap):
         u = self.u
     
         # set up costs from parent class
-        if not skip_parent:
-            param_dict = GeneralDispatchParamWrap.set_fixed_cost_parameters( self, param_dict )
+        if self.dual is False:
+            super(NuclearDispatchParamWrap, self).set_fixed_cost_parameters(param_dict)
+        else:
+            if self.direct:
+                super(IndirectNuclearDispatchParamWrap, self).set_fixed_cost_parameters(param_dict)
+            else:
+                super().set_fixed_cost_parameters(param_dict)
         
         # TODO: old values from LORE files
         C_rec  = self.PySAM_dict['rec_op_cost'] * u.USD / u.MWh #Q_ratio * 0.002  * u.USD/u.kWh        
@@ -605,9 +625,14 @@ class SolarDispatchParamWrap(GeneralDispatchParamWrap):
         u = self.u
         
         # First filling out initial states from GeneralDispatcher
-        if not skip_parent:
-            param_dict = GeneralDispatchParamWrap.set_initial_state( self, param_dict, updated_dict, plant, npts )
-        
+        if self.dual is False:
+            super(NuclearDispatchParamWrap, self).set_initial_state(param_dict, updated_dict, plant, npts )
+        else:
+            if self.direct:
+                super(IndirectNuclearDispatchParamWrap, self).set_initial_state(param_dict, updated_dict, plant, npts )
+            else:
+                super().set_initial_state(param_dict, updated_dict, plant, npts )
+                
         if updated_dict is None:
             self.current_Plant = copy.deepcopy(self.SSC_dict)
             self.first_run = True

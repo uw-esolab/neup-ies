@@ -367,8 +367,7 @@ class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
     that can be updated.
     """
     
-    def __init__(self, unit_registry, SSC_dict=None, PySAM_dict=None, pyomo_horizon=48, 
-                   dispatch_time_step=1):
+    def __init__(self, **kwargs):
         """ Initializes the NuclearDispatchParamWrap module
         
         Inputs:
@@ -379,11 +378,10 @@ class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
             dispatch_time_step (int Quant) : length of each Pyomo time step (hours)
         """
         
-        GeneralDispatchParamWrap.__init__( self, unit_registry, SSC_dict, PySAM_dict, 
-                            pyomo_horizon, dispatch_time_step )
+        super().__init__(**kwargs)
 
 
-    def set_design(self, skip_parent=False):
+    def set_design(self):
         """ Method to calculate and save design point values of Plant operation
         
         This method extracts values and calculates for design point parameters 
@@ -391,10 +389,9 @@ class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
         inlet and outlet temperatures, etc.). 
         """
         
-        u = self.u
+        super().set_design()
         
-        if not skip_parent:
-            GeneralDispatchParamWrap.set_design(self)
+        u = self.u
         
         # nuclear parameters
         self.q_nuc_design = self.SSC_dict['q_dot_nuclear_des'] * u.MW      # nuclear design thermal power
@@ -431,8 +428,7 @@ class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
         u = self.u
     
         # set up costs from parent class
-        if not skip_parent:
-            param_dict = GeneralDispatchParamWrap.set_fixed_cost_parameters( self, param_dict )
+        super().set_fixed_cost_parameters(param_dict)
         
         C_nuc  = self.PySAM_dict['nuc_op_cost'] * u.USD / u.MWh  # value taken from Cory @ Westinghouse, later converted to $/kWh        
         C_nsu  = self.PySAM_dict['nuc_cold_su'] * u.USD
@@ -584,11 +580,13 @@ class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
         Outputs:
             param_dict (dict) : updated dictionary of Pyomo dispatch parameters
         """
+        
+        
+        
         u = self.u
         
         # First filling out initial states from GeneralDispatcher
-        if not skip_parent:
-            param_dict = GeneralDispatchParamWrap.set_initial_state( self, param_dict, updated_dict, plant, npts )
+        super().set_initial_state(param_dict, updated_dict, plant, npts )
         
         if updated_dict is None:
             self.current_Plant = copy.deepcopy(self.SSC_dict)

@@ -187,7 +187,7 @@ class DualIndirectDispatch(SolarDispatch):
 # Dispatch Wrapper
 # =============================================================================
 
-class DualIndirectDispatchParamWrap(IndirectNuclearDispatchParamWrap):
+class DualIndirectDispatchParamWrap(SolarDispatchParamWrap):
     """
     The DualPlantDispatchParamWrap class is meant to be the staging area for the 
     creation of Parameters ONLY for the DualPlantDispatch class. It communicates 
@@ -196,8 +196,7 @@ class DualIndirectDispatchParamWrap(IndirectNuclearDispatchParamWrap):
     that can be updated.
     """
 
-    def __init__(self, unit_registry, SSC_dict=None, PySAM_dict=None, pyomo_horizon=48, 
-                   dispatch_time_step=1):
+    def __init__(self, dual=True, direct=False, **kwargs):
         """ Initializes the NuclearDispatchParamWrap module
         
         Inputs:
@@ -211,11 +210,11 @@ class DualIndirectDispatchParamWrap(IndirectNuclearDispatchParamWrap):
         # here, we invoke the NuclearParamWrap init which calls on the General version
         # within this call, the set_design() method is called which then calls upon both
         #   the nuclear and solar versions
-        IndirectNuclearDispatchParamWrap.__init__( self, unit_registry, SSC_dict, PySAM_dict, 
-                            pyomo_horizon, dispatch_time_step )
+        super().__init__(dual=dual, direct=direct, **kwargs)
 
 
-    def set_design(self, skip_parent=False):
+
+    def set_design(self):
         """ Method to calculate and save design point values of Plant operation
         
         This method extracts values and calculates for design point parameters 
@@ -223,8 +222,7 @@ class DualIndirectDispatchParamWrap(IndirectNuclearDispatchParamWrap):
         inlet and outlet temperatures, etc.). 
         """
         
-        IndirectNuclearDispatchParamWrap.set_design(self)
-        SolarDispatchParamWrap.set_design(self, skip_parent=True, given_des=True)
+        super().set_design()
 
 
     def set_fixed_cost_parameters(self, param_dict):
@@ -240,8 +238,7 @@ class DualIndirectDispatchParamWrap(IndirectNuclearDispatchParamWrap):
         """
         
         # set up costs from parent class
-        param_dict = IndirectNuclearDispatchParamWrap.set_fixed_cost_parameters( self, param_dict )
-        param_dict = SolarDispatchParamWrap.set_fixed_cost_parameters(self, param_dict, skip_parent=True) 
+        super().set_fixed_cost_parameters(param_dict)
 
         return param_dict
 
@@ -268,8 +265,7 @@ class DualIndirectDispatchParamWrap(IndirectNuclearDispatchParamWrap):
         """
 
         # First filling out initial states from GeneralDispatcher
-        param_dict = IndirectNuclearDispatchParamWrap.set_initial_state( self, param_dict, updated_dict, plant, npts )
-        param_dict = SolarDispatchParamWrap.set_initial_state( self, param_dict, updated_dict, plant, npts, skip_parent=True)
+        super().set_initial_state(param_dict, updated_dict, plant, npts )
         
         return param_dict
 
