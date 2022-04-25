@@ -77,7 +77,9 @@ class IndirectNuclearDispatch(NuclearDispatch):
         self.model.Qnhx   = pe.Param(mutable=True, initialize=gd("Qnhx"), units=gu("Qnhx"))       #Q^{nhx}: Upper limit on nuclear power to charge TES due to HX efficiency [kWt]
         self.model.eta_LD = pe.Param(mutable=True, initialize=gd("eta_LD"), units=gu("eta_LD"))   #\eta^{LD}: Linearized cycle efficiency during low demand operation [-]
         self.model.eta_HD = pe.Param(mutable=True, initialize=gd("eta_HD"), units=gu("eta_HD"))   #\eta^{HD}: Linearized cycle efficiency during high demand operation [-]
-        
+        self.model.intcpts_LD = pe.Param(mutable=True, initialize=gd("intcpts_LD"), units=gu("intcpts_LD"))   #\c^{LD}: Linearized cycle efficiency y-intercepts during low demand operation [-]
+        self.model.intcpts_HD = pe.Param(mutable=True, initialize=gd("intcpts_HD"), units=gu("intcpts_HD"))   #\c^{HD}: Linearized cycle efficiency y-intercepts during high demand operation [-]
+                
         
     def generate_variables(self, skip_parent=False):
         """ Method to generate parameters within Pyomo Nuclear Model
@@ -146,11 +148,11 @@ class IndirectNuclearDispatch(NuclearDispatch):
         def power_rule(model, t):
             """ Model of electric power vs. heat input as linear function """
             return model.wdot[t] <= (model.etaamb[t]/model.eta_des)*(model.eta_LD*(model.xnp[t] + model.xtesp[t]) 
-                                                                     + model.y[t]*(model.Wdotu - model.eta_LD*model.Qu))
+                                                                     + model.y[t]*model.intcpts_LD)
         def high_demand_power_rule(model, t):
             """ NEW: Model of electric power vs. heat input as linear function for high demand efficiency """
             return model.wdot[t] <= (model.etaamb[t]/model.eta_des)*(model.eta_HD*(model.xnp[t] + model.xtesp[t])
-                                                                    +  model.y[t]*(model.Wdotu - model.eta_HD*model.Qu))
+                                                                    + model.y[t]*model.intcpts_HD)
         def grid_sun_rule(model, t):
             """ Balance of power flow, i.e. sold vs purchased """
             return (model.wdot_s[t] - model.wdot_p[t] == (1-model.etac[t])*model.wdot[t]
@@ -350,22 +352,22 @@ class IndirectNuclearDispatchParamWrap(NuclearDispatchParamWrap):
         u = self.u
 
         Qnc     = self.q_nuc_design
+        propn_LFR_flow = (self.q_nuc_design / self.q_pb_design).m
+        slope,intercept = SSCHelperMethods.linearize_indirectTES_eff(propn_LFR_flow)
+        
+        eta_lin  = slope * self.eta_design
+        intcpts  = intercept * self.p_pb_design
+        
         Wnc     = Qnc * self.eta_design  
         Qnhx    = self.q_nuc_design * 0.9  # TODO: simulating hit in efficiency for nuclear thermal power when charging TES
-        eta_LD  = self.etap        # efficiency when only heat source to steam is LFR
-        
-        # TODO: first pass at figuring out estimate for high demand efficiency at knee
-        B  = 1.2 # TODO: estimate increase in high demand efficiency y-intercept
-        Wu = self.Wdotu
-        Qu = self.Qu
-        b_LD    = Wu - eta_LD * Qu   # low demand intercept
-        eta_HD  = eta_LD + (1-B) * (b_LD/Qnc).to('')  # simulating drop in efficiency when wdot > 465 MWe
-        
+
         ### Cost Parameters ###
         param_dict['Wnc']    = Wnc.to('kW')       #W^{nc}: Cycle capacity for nuclear power only [kWe]
         param_dict['Qnhx']   = Qnhx.to('kW')      #Q^{nhx}: Upper limit on nuclear power to charge TES due to HX efficiency [kWt]
-        param_dict['eta_LD'] = eta_LD             #\eta^{LD}: Linearized cycle efficiency during low demand operation [-]
-        param_dict['eta_HD'] = eta_HD             #\eta^{HD}: Linearized cycle efficiency during high demand operation [-]
+        param_dict['eta_LD'] = eta_lin[1]         #\eta^{LD}: Linearized cycle efficiency during low demand operation [-]
+        param_dict['eta_HD'] = eta_lin[0]         #\eta^{HD}: Linearized cycle efficiency during high demand operation [-]
+        param_dict['intcpts_LD'] = intcpts[1].to('kW')         #\eta^{LD}: Linearized cycle efficiency during low demand operation [-]
+        param_dict['intcpts_HD'] = intcpts[0].to('kW')         #\eta^{HD}: Linearized cycle efficiency during high demand operation [-]
         
         return param_dict
 
