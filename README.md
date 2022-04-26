@@ -12,17 +12,21 @@ This is a private repository for sharing code and project files.
 Documentation written using [Sphinx](<http://sphinx-doc.org/>). 
 Follow these steps to build the documentation for this project!
 
-First, make sure you have a dedicated Python environment to build everything in. If using [Anaconda](<https://docs.anaconda.com/anaconda/install/linux/>), you could try:
+Prior to creating the documentation, make sure you have a dedicated Python environment to build everything in. If using [Anaconda](<https://docs.anaconda.com/anaconda/install/linux/>), you could try:
 
-    conda create -n pysam_env python=3.7
+    conda create -n <pysam_env> python=3.7
 
-or with a name other than `pysam_env`. I have only tested things with Python 3.7, anything else is uncharted territory. Make sure you have the proper packages installed in that Python environment:
+(without the brackets) or with a name other than `pysam_env`. I have only tested things with Python 3.7, anything else is uncharted territory. Make sure you have the proper packages installed in that Python environment:
     
     pip install Sphinx
     pip install numpydoc
     pip install sphinxcontrib-napoleon
 
-First make sure you are in the correct conda environment. Then, make sure you run:
+To actually create the docs, make sure you are in the correct conda environment. 
+    
+    conda activate <pysam_env>
+    
+Then, run the following:
 
     cd neup-ies/simulations/docs
     sphinx-apidoc -M -f -o source/ ../../simulations/
