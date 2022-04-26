@@ -252,6 +252,7 @@ class IndirectNuclearDispatch(NuclearDispatch):
         """
         
         super().addNuclearSupplyAndDemandConstraints()
+        
         def nuc_production_rule(model,t):
             """ Upper bound on thermal energy produced by NP """
             return model.xnp[t] + model.xntes[t] + model.xnsu[t] + model.Qnsd*model.ynsd[t] <= model.Qin_nuc[t]
@@ -270,9 +271,6 @@ class IndirectNuclearDispatch(NuclearDispatch):
         def nuc_tes_charging_able_rule(model,t):
             """ Charging of TES via nuclear only when NP operating"""
             return model.yntes[t] + model.ytesp[t] <= 1
-        def nuc_tes_dispatch_rule(model,t):
-            """ Charging of TES via nuclear only when NP operating"""
-            return model.xnp[t] >= model.ytesp[t] * model.Qin_nuc[t]
 
         # overloaded constraints
         self.model.del_component( self.model.nuc_production_con )
@@ -287,7 +285,6 @@ class IndirectNuclearDispatch(NuclearDispatch):
         self.model.nuc_generation_tes_con = pe.Constraint(self.model.T,rule=nuc_generation_tes_rule)
         self.model.nuc_tes_charging_con = pe.Constraint(self.model.T,rule=nuc_tes_charging_rule)
         self.model.nuc_tes_charging_able_rule_con = pe.Constraint(self.model.T,rule=nuc_tes_charging_able_rule)
-        self.model.nuc_tes_dispatch_con = pe.Constraint(self.model.T,rule=nuc_tes_dispatch_rule)
 
 
     def generate_constraints(self, skip_parent=False):

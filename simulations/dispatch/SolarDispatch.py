@@ -290,8 +290,13 @@ class SolarDispatch(IndirectNuclearDispatch, NuclearDispatch):
         This method adds constraints pertaining to cycle startup within the Pyomo
         General Dispatch class. Several nested functions are defined. 
         """
-        
-        super(NuclearDispatch, self).addCycleStartupConstraints()
+        if self.dual is False:
+            super(NuclearDispatch, self).addCycleStartupConstraints()
+        else:
+            if self.direct:
+                super(IndirectNuclearDispatch, self).addCycleStartupConstraints()
+            else:
+                super().addCycleStartupConstraints()
 
 
     def addTESEnergyBalanceConstraints(self):
@@ -406,7 +411,7 @@ class SolarDispatchParamWrap(IndirectNuclearDispatchParamWrap, NuclearDispatchPa
 
 
 
-    def set_design(self, skip_parent=False, given_des=False):
+    def set_design(self, skip_parent=False):
         """ Method to calculate and save design point values of Plant operation
         
         This method extracts values and calculates for design point parameters 
@@ -431,12 +436,6 @@ class SolarDispatchParamWrap(IndirectNuclearDispatchParamWrap, NuclearDispatchPa
         self.T_htf_avg = T_htf
         cp_des = SSCHelperMethods.get_cp_htf(self.u, T_htf, self.SSC_dict['rec_htf'] )
         cp_des = cp_des.to('J/g/kelvin')   
-        
-        # CSP parameters
-        if given_des:
-            self.q_rec_design = self.SSC_dict["q_dot_rec_des"] * u.MW
-        else:
-            self.q_rec_design = self.SSC_dict["P_ref"]/self.SSC_dict["design_eff"]*self.SSC_dict["solarm"]* u.MW      # CSP design thermal power
         
         dm_rec_des = self.q_rec_design / (cp_des * (self.T_htf_hot - self.T_htf_cold) )  
         self.dm_rec_design = dm_rec_des.to('kg/s') 

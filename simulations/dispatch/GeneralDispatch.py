@@ -519,8 +519,9 @@ class GeneralDispatchParamWrap(object):
     for every simulation segment AND initial conditions that can be updated.
     """
     
-    def __init__(self, unit_registry, SSC_dict, PySAM_dict, pyomo_horizon=48, 
-                       dispatch_time_step=1, dual=False, direct=True, **kwarg):
+    def __init__(self, unit_registry, SSC_dict, PySAM_dict, 
+                       pyomo_horizon, dispatch_time_step, dual=False, direct=True, 
+                       **kwargs):
         """ Initializes the GeneralDispatchParamWrap module
         
         Inputs:
