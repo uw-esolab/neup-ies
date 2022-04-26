@@ -177,8 +177,10 @@ class DualPlantTES(SolarTES):
         
         self.DispatchParameterClass = DDP
         
-        dispatch_wrap = self.DispatchParameterClass( self.u, self.SSC_dict, PySAM_dict,
-                    self.pyomo_horizon, self.dispatch_time_step)
+        dispatch_wrap = self.DispatchParameterClass( unit_registry=self.u, 
+                    SSC_dict=self.SSC_dict, PySAM_dict=PySAM_dict,
+                    pyomo_horizon=self.pyomo_horizon, 
+                    dispatch_time_step=self.dispatch_time_step)
         
         return dispatch_wrap
 
