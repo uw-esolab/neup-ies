@@ -23,15 +23,16 @@ def log_state(*args):
 step = lambda xold,xnew: xold + (xnew-xold)*0.66
 # --------------------------
 
-
+def update_mf(m_dot_new, m_dot_old):
+    return m_dot_old + (m_dot_new - m_dot_old)*0.15
 
 tstart = time.time()
 
 DT = 5.55 #[K]    #Target Approach Temperature 
  
-N_hxrs = 10 #20 #[-]    #Number of heat exchangers
+N_hxrs = 20 #[-]    #Number of heat exchangers
 
-ns = 32
+ns = 32  #number of states used + 1
  
 fout = open('iter-log.csv','w')
 fout.write(log_header(ns, "T P h x m".split(' ')))
@@ -105,9 +106,9 @@ h[30] = 226272
 T[1] = 611.4 #[C]
  
 it = 0
-it_max = 22
+it_max = 50
 err_iter = 999.
-tol = 0.00001
+tol = 0.0001
 
 while((err_iter > tol and it<it_max) or it<3 ):
 
@@ -128,7 +129,7 @@ while((err_iter > tol and it<it_max) or it<3 ):
     m[14] = m[9] - m[10] - m[11] - m[12] - m[13]    #LPT to condenser
     # -----------------------------
 
-    P[2] = 25e6     #Boiler outlet pressure
+    P[2] = 30e6     #Boiler outlet pressure
     T[2] = 632+273.15    #Boiler outlet temperature
     h[2] = enthalpy( T = T[2], P = P[2])    #Boiler outlet enthalpy
 
@@ -257,7 +258,8 @@ while((err_iter > tol and it<it_max) or it<3 ):
     m[24] = m[23]
     
     print("..HXG", end='')
-    m[4], h_test_1_, h[25], T_H_G[1:3*N_hxrs+1+1], T_C_G[1:3*N_hxrs+1+1] = fwh(0, 0, 0, m[24], h[24], P[24], h[4], P[4], DT_int_G, DT_G, N_hxrs)
+    m4_req, h_test_1_, h[25], T_H_G[1:3*N_hxrs+1+1], T_C_G[1:3*N_hxrs+1+1] = fwh(0, 0, 0, m[24], h[24], P[24], h[4], P[4], DT_int_G, DT_G, N_hxrs)
+    m[4] = update_mf(m4_req, m[4])
     m[3] = m[4]    #Across CSP 
     f_hp3 = m[3]/m[2]    #HPT outlet fraction
     m[5] = m[2] - m[3]    #HPT to IPT
@@ -298,7 +300,9 @@ while((err_iter > tol and it<it_max) or it<3 ):
     print("..OpenFWH", end='')
      
     # T[27] = temperature( P = P[27], H = h[27])
-    m[21], h[21], P[21] = open_fwh( m[20], h[20], P[20], m[8], h[8], P[8], m[27], h[27], P[27] )
+    m21_req, h[21], P[21] = open_fwh( m[20], h[20], P[20], m[8], h[8], P[8], m[27], h[27], P[27] )
+    m[21] = update_mf(m21_req, m[21])
+
     m[22] = m[21]
     m[23] = m[22]
     # T[21] = temperature( H = h[21], P = P[21])    #Open FWH outlet temperature
@@ -318,32 +322,39 @@ while((err_iter > tol and it<it_max) or it<3 ):
     #HX A Closed FWH ---------------------------------
     print("..HXA", end='')
     # T[30] = temperature( P = P[30], H = h[30])
-    m[13], h[17], h[31], T_H_A[1:3*N_hxrs+1+1], T_C_A[1:3*N_hxrs+1+1] = fwh( m[30], h[30], P[30], m[16], h[16], P[16], h[13], P[13], DT_int_A, DT_A, N_hxrs)
+    m13_req, h[17], h[31], T_H_A[1:3*N_hxrs+1+1], T_C_A[1:3*N_hxrs+1+1] = fwh( m[30], h[30], P[30], m[16], h[16], P[16], h[13], P[13], DT_int_A, DT_A, N_hxrs)
+    m[13] = update_mf(m13_req, m[13])
+
     # T[17] = temperature( P = P[17], H = h[17])
     P[31] = P[13]
 
     #HX B Closed FWH ----------------------------------
     print("..HXB", end='')
     # T[29] = temperature( P = P[29], H = h[29])
-    m[12], h[18], h[30], T_H_B[1:3*N_hxrs+1+1], T_C_B[1:3*N_hxrs+1+1] = fwh( m[29], h[29], P[29], m[17], h[17], P[17], h[12], P[12], DT_int_B, DT_B, N_hxrs)
+    m12_req, h[18], h[30], T_H_B[1:3*N_hxrs+1+1], T_C_B[1:3*N_hxrs+1+1] = fwh( m[29], h[29], P[29], m[17], h[17], P[17], h[12], P[12], DT_int_B, DT_B, N_hxrs)
+    m[12] = update_mf(m12_req, m[12])
+
     # T[18] = temperature( P = P[18], H = h[18])
 
     #HX C Closed FWH ---------------------------------
     print("..HXC", end='')
     # T[28] = temperature( P = P[28], H = h[28])
-    m[11], h[19], h[29], T_H_C[1:3*N_hxrs+1+1], T_C_C[1:3*N_hxrs+1+1] = fwh( m[28], h[28], P[28], m[18], h[18], P[18], h[11], P[11], DT_int_C, DT_C, N_hxrs)
+    m11_req, h[19], h[29], T_H_C[1:3*N_hxrs+1+1], T_C_C[1:3*N_hxrs+1+1] = fwh( m[28], h[28], P[28], m[18], h[18], P[18], h[11], P[11], DT_int_C, DT_C, N_hxrs)
+    m[11] = update_mf(m11_req, m[11])
     # T[19] = temperature( P = P[19], H = h[19])
 
     #HX D Closed FWH ---------------------------------
     print("..HXD", end='')
-    m[10], h[20], h[28], T_H_D[1:3*N_hxrs+1+1], T_C_D[1:3*N_hxrs+1+1] = fwh( 0, 0, 0, m[19], h[19], P[19], h[10], P[10], DT_int_D, DT_D, N_hxrs)
+    m10_req, h[20], h[28], T_H_D[1:3*N_hxrs+1+1], T_C_D[1:3*N_hxrs+1+1] = fwh( 0, 0, 0, m[19], h[19], P[19], h[10], P[10], DT_int_D, DT_D, N_hxrs)
+    m[10] = update_mf(m10_req, m[10])
     # T[20] = temperature( P = P[20], H = h[20])
 
 
     #HX F Closed FWH --------------------------------
     print("..HXF", end='')
     # T[25] = temperature( P = P[25], H = h[25])
-    m[6], h[24], h[26], T_H_F[1:3*N_hxrs+1+1], T_C_F[1:3*N_hxrs+1+1] = fwh( m[25], h[25], P[25], m[23], h[23], P[23], h[6], P[6], DT_int_F, DT_F, N_hxrs)
+    m6_req, h[24], h[26], T_H_F[1:3*N_hxrs+1+1], T_C_F[1:3*N_hxrs+1+1] = fwh( m[25], h[25], P[25], m[23], h[23], P[23], h[6], P[6], DT_int_F, DT_F, N_hxrs)
+    m[6] = update_mf(m6_req, m[6])
     m[26] = m[25]+m[6]
     # T[24] = temperature( P = P[24], H = h[24])
     f_ip6 = m[6]/m[5]      #IPT1 outlet fraction
@@ -352,7 +363,8 @@ while((err_iter > tol and it<it_max) or it<3 ):
     print("..HXE", end='')
     # T[22] = temperature( P = P[22], H = h[22])
     # T[26] = temperature( P = P[26], H = h[26])
-    m[7], h[23], h[27], T_H_E[1:3*N_hxrs+1+1], T_C_E[1:3*N_hxrs+1+1] = fwh( m[26], h[26], P[26], m[22], h[22], P[22], h[7], P[7], DT_int_E, DT_E, N_hxrs)
+    m7_req, h[23], h[27], T_H_E[1:3*N_hxrs+1+1], T_C_E[1:3*N_hxrs+1+1] = fwh( m[26], h[26], P[26], m[22], h[22], P[22], h[7], P[7], DT_int_E, DT_E, N_hxrs)
+    m[7] = update_mf(m7_req, m[7])
     m[27] = m[26]+m[7]
     # T[23] = temperature( P = P[23], H = h[23])
 
@@ -370,7 +382,8 @@ while((err_iter > tol and it<it_max) or it<3 ):
     h1old = h[1]
     T1old = T[1]
     h1new = (h[24]*m[24] + h[4]*m[4] - h[25]*m[25])/m[1]
-    h[1] = h1old + (h1new-h1old)*0.5
+    h[1] = update_mf(h1new, h1old)
+    # h[1] = h1old + (h1new-h1old)*0.5
 
     T[1] = temperature( P = P[1], H = h[1])
     err_iter = abs((T[1] - T1old)/T1old)
