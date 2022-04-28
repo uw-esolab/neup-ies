@@ -62,7 +62,7 @@
     },
     
     "SSC_inputs": {
-    	"compute_module_0" : "nuclear_mspt_tes",
+    	"compute_module_0" : "nuclear_mspt_indirect_tes",
     	"field_model_type" :    3,
         "eta_map_aod_format" :  0,
         "A_sf_in" :             1269054.492,

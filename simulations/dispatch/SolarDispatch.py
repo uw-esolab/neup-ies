@@ -523,9 +523,9 @@ class SolarDispatchParamWrap(IndirectNuclearDispatchParamWrap, NuclearDispatchPa
         # second-to-last step before setting param_dict
         self.deltal = Drsu
         self.Ehs    = N_hel * heliostat_SU_energy
-        self.Er     = receiver_SU_ratio * self.q_rec_design 
+        self.Er     = receiver_SU_ratio * self.q_rec_design if self.q_rec_design > 0 else 125*u.MWh 
         self.Eu     = TES_load_hrs      * self.q_pb_design
-        self.Lr     = wdot / self.q_rec_design
+        self.Lr     = wdot / self.q_rec_design if self.q_rec_design.m > 0 else 0 * u.W / u.W
         self.Qrl    = min_massflow_td_frac    * self.q_rec_design 
         self.Qrsb   = q_rec_standby_fraction  * self.q_rec_design 
         self.Qrsd   = q_rec_shutdown_fraction * self.q_rec_design

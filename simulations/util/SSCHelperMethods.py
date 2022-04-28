@@ -374,6 +374,9 @@ class SSCHelperMethods(object):
             
         """
         
+        if dm_rec_design == 0:
+            return 0*u.MW
+        
         # flow parameters
         rho  = SSCHelperMethods.get_rho_htf(  u, Tavg, SSC_dict['rec_htf'] )
         visc = SSCHelperMethods.get_visc_htf( u, Tavg, SSC_dict['rec_htf'] )
