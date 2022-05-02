@@ -12,7 +12,8 @@ import matplotlib.pyplot as plt
 import os, pint, time, copy, pickle
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
-import matplotlib.patheffects as PathEffects
+import matplotlib.patheffects as pe
+from matplotlib.offsetbox import TextArea, VPacker, AnnotationBbox
 from matplotlib.gridspec import GridSpec
 import numpy as np
 from scipy import interpolate
@@ -207,20 +208,38 @@ for i in plotrange:
     # contours = plt.contour(array.T, levels=[0.88, 0.94, 1.0], colors='black')
     c_levels = [0.91, 0.96, 0.98, 1.0, threshold_contour] if i > 0 else [threshold_contour]
     c_colors = 'k'
-    contours = plt.contour(ff, extent=[tshours[0], tshours[-1], 0, 9 ],
+    contours = ax1.contour(ff, extent=[tshours[0], tshours[-1], 0, 9 ],
                                     levels=c_levels, 
                                     colors=c_colors)
     
     # labels for each contour level
     c_fmt = {}
+    c_empty = {}
     for l,s in zip(contours.levels, c_levels):
         c_fmt[l] = ' {:.2f} '.format(s)
+        c_empty[l] = '      '
         
-    # Add contour labels
-    ax1.clabel(contours, fmt=c_fmt, inline=1, fontsize=10)
+    # Add empty labels, just want to get locations for text
+    ax1.clabel(contours, fmt=c_empty, inline=True, fontsize=10)
     
+    # sometimes, number of levels doesnt correspond to actual number of contours drawn
+    if len(contours.labelTexts) != len(contours.levels):
+        ind = 0 - len(contours.labelTexts)   # get actual number of contours
+        c_levels_out = contours.levels[ind:] # actual contours are at the back of the list
+        c_fmt_out    = { k:c_fmt[k] for k in c_levels_out } # new dict
+    else:
+        c_levels_out = contours.levels
+        c_fmt_out    = c_fmt
     
-    
+    # draw white text with black border for rel ppa price
+    for textLabels,l,s in zip(contours.labelTexts, c_levels_out, c_fmt_out):
+        loc = textLabels.get_position()
+        xloc = loc[0] - 0.65
+        yloc = loc[1] - 0.1
+        txt = ax1.text(xloc, yloc, c_fmt[l], size=13, fontweight='bold', color='w')
+        txt.set_path_effects([pe.withStroke(linewidth=3, foreground='k')])
+        plt.draw()
+        
     # ========== Text ==========
     xmin,xmax,ymax,ymin = im1.get_extent() #note the order
     x_series = np.linspace(xmin+0.5, xmax-0.5, len(tshours))
@@ -228,17 +247,19 @@ for i in plotrange:
     
     # ========== labels ==========
     # setting axis labels
-    ax1.set_xlabel('tshours\n(hr)', fontweight='bold')
+    ax1.set_xlabel('tshours\n(hr)', fontsize=14, fontweight='bold')
     ax1.set_title(titles[i], fontweight='bold')
 
     # setting tick marks for x and y axes
     ax1.set_xticks(range(len(tshours)))
-    ax1.set_xticklabels( ['{0}'.format(t) for t in tshours] )
+    ax1.set_xticklabels( ['{0}'.format(t) for t in tshours], fontsize=14 )
+    ax1.tick_params(axis='x',labelsize=14)
+    ax1.tick_params(axis='y',labelsize=14)
     
     if i == 0:
         ax1.set_yticks(range(len(p_cycle)))
         ax1.set_yticklabels( ['{0:.0f}'.format(P) for P in np.flipud(p_cycle)] )
-        ax1.set_ylabel('Power Cycle Output\n(MWe)', fontweight='bold')
+        ax1.set_ylabel('Power Cycle Output\n(MWe)', fontsize=14, fontweight='bold')
     else:
         ax1.set_yticks(range(len(p_cycle)))
         ax1.set_yticklabels('')
@@ -287,12 +308,15 @@ for i in plotrange:
 
     ax.set_ylim([0.2, 3.5])
     ax.set_xticks(p_time[winter_slice][xlabel_loc])
-    ax.set_xticklabels(xlabels)
+    ax.set_xticklabels(xlabels, fontsize=14)
+    ax.tick_params(axis='x',labelsize=14)
+    ax.tick_params(axis='y',labelsize=14)
+
     ax.grid(True)
 
     # ax.set_xlabel("Time (d)", fontweight='bold')
     if i == 0:
-        ax.set_ylabel("SAM Generic Peak \nPrice Multiplier", fontweight='bold')
+        ax.set_ylabel("SAM Generic Peak \nPrice Multiplier", fontsize=14, fontweight='bold')
         ax.legend()
     else:
         ax.yaxis.set_ticklabels([])
@@ -302,5 +326,9 @@ plt.tight_layout()
 fig.subplots_adjust(right=0.85)
 cbar_ax = fig.add_axes([0.875, 0.4, 0.025, 0.55])
 fig.colorbar(im1, cax=cbar_ax)
-cbar_ax.set_ylabel(cbar_label, fontweight='bold')
-# 
+cbar_ax.set_ylabel(cbar_label, labelpad=18, fontsize=14, fontweight='bold')
+cbar_ax.tick_params(axis='y',labelsize=14)
+
+
+fig_name = 'tariff_exaggeration_effect_on_ppa.pdf'
+fig.savefig( os.path.join(output_dir, fig_name), dpi=300 )

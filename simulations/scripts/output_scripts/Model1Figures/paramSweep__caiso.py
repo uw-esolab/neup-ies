@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 import os, pint, time, copy, pickle
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
-import matplotlib.patheffects as PathEffects
+import matplotlib.patheffects as pe
 from matplotlib.gridspec import GridSpec
 import numpy as np
 from scipy import interpolate
@@ -201,11 +201,32 @@ contours = plt.contour(ff, extent=[tshours[0], tshours[-1], 0, 9 ],
 
 # labels for each contour level
 c_fmt = {}
+c_empty = {}
 for l,s in zip(contours.levels, c_levels):
     c_fmt[l] = ' {:.2f} '.format(s)
+    c_empty[l] = '      '
     
 # Add contour labels
-ax.clabel(contours, fmt=c_fmt, inline=1, fontsize=16)
+ax.clabel(contours, fmt=c_empty, inline=True, fontsize=14)
+
+    
+# sometimes, number of levels doesnt correspond to actual number of contours drawn
+if len(contours.labelTexts) != len(contours.levels):
+    ind = 0 - len(contours.labelTexts)   # get actual number of contours
+    c_levels_out = contours.levels[ind:] # actual contours are at the back of the list
+    c_fmt_out    = { k:c_fmt[k] for k in c_levels_out } # new dict
+else:
+    c_levels_out = contours.levels
+    c_fmt_out    = c_fmt
+
+# draw white text with black border for rel ppa price
+for textLabels,l,s in zip(contours.labelTexts, c_levels_out, c_fmt_out):
+    loc = textLabels.get_position()
+    xloc = loc[0] - 0.4
+    yloc = loc[1] - 0.05
+    txt = ax.text(xloc, yloc, c_fmt[l], size=13, fontweight='bold', color='w')
+    txt.set_path_effects([pe.withStroke(linewidth=3, foreground='k')])
+    plt.draw()
     
 
 # ========== labels ==========
@@ -228,3 +249,6 @@ fig.subplots_adjust(right=0.95)
 cbar_ax = fig.add_axes([0.8, 0.1, 0.035, 0.875])
 fig.colorbar(im1, cax=cbar_ax)
 cbar_ax.set_ylabel(cbar_label, labelpad=20, fontweight='bold', fontsize=16)
+
+fig_name = 'caiso_trade_study.pdf'
+fig.savefig( os.path.join(output_dir, fig_name), dpi=300 )
