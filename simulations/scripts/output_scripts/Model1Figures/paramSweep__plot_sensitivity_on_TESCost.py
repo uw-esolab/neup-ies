@@ -152,7 +152,7 @@ for r in json_range:
         ax.set_title( "P_cycle = {0} ".format(iterator2[i]), fontweight='bold' )
         
         if i == 0:
-            ax.set_ylabel( "PPA Relative to Ref \n {0}".format(short_jsons[r]), fontsize=12,  fontweight='bold' )
+            ax.set_ylabel( "{0} \n PPA Relative to Ref".format(short_jsons[r]), labelpad=12, fontsize=12,  fontweight='bold' )
         
         
         tol = 0.3
@@ -193,3 +193,7 @@ for r in json_range:
             
 
 plt.tight_layout()
+
+
+fig_name = 'TESCost_sensitivity.pdf'
+fig.savefig( os.path.join(output_dir, fig_name), dpi=300 )

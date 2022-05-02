@@ -28,13 +28,13 @@ print("PID = ", pid)
 # =============================================================================
 
 # modifying inputs
-json = "model1_Hamilton_560_tariffx1"   # model1_CAISO_Hamilton # model1_Hamilton_560_tariffx2 # model1_Hamilton_560_tariffx1
+json = "model1_Hamilton_560_tariffx2"   # model1_CAISO_Hamilton # model1_Hamilton_560_tariffx2 # model1_Hamilton_560_tariffx1
 dispatch = True
 run_loop = True
 sscH    = 24   # (hr)
 pyoH    = 48   # (hr)
-Pref    = 800  # (MW)  # 700 # 800
-tshours = 6    # (hr)  # 2   # 6 
+Pref    = 700  # (MW)  # 700 # 800
+tshours = 2    # (hr)  # 2   # 6 
 
 # =============================================================================
 #  Extracting Information
@@ -61,9 +61,9 @@ gen_data_array   = Plots.gen_dict
 tch_data_array   = Plots.e_ch_tes_dict
 
 title = "SAM Generic Peak Market {0}".format("x1" if "x1" in json else "x2")
-    
+
 # create full figure
-full_fig = plt.figure(figsize=(18,10))
+full_fig = plt.figure(figsize=(19,9))
 title = "{0} \n P={1} MWe, TES={2} hrs".format(title,Pref,tshours)
 full_fig.suptitle(title, fontsize=18, fontweight='bold')
 
@@ -103,8 +103,8 @@ for i, dayOfWeek in enumerate(["WeekDay", "WeekEnd"]):
         plotting_gen_array = gen_data_array[season][dayOfWeek].tolist()
         plotting_tch_array = tch_data_array[season][dayOfWeek].tolist()
         
-        Plots.create_tariff_overlay( gen_ax__, is_winter, is_weekday, s_color=s_color)
-        Plots.create_tariff_overlay( tch_ax__, is_winter, is_weekday, s_color=s_color)
+        Plots.create_tariff_overlay( gen_ax__, is_winter, is_weekday, s_color=s_color )
+        Plots.create_tariff_overlay( tch_ax__, is_winter, is_weekday, s_color=s_color )
 
         hide_x = False if i == 1 else True
         Plots.create_violin_plot(  gen_ax__, plotting_gen_array, gen_data_array, v_color=gen_color, hide_x=True )
@@ -120,10 +120,12 @@ for i, dayOfWeek in enumerate(["WeekDay", "WeekEnd"]):
         
         if j == 0:
             gen_ax__.set_ylabel("Power \nGenerated \n(MWe)", labelpad=16, fontsize=14, fontweight='bold')
-            tch_ax__.set_ylabel("Tank \nCharge \n(MWh)", fontsize=14, fontweight='bold')
+            tch_ax__.set_ylabel("Tank \nCharge \n(GWt·hr)", labelpad=32, fontsize=14, fontweight='bold')
 
         count += 1
         
 full_fig.tight_layout()
 
 
+fig_name = '{0}___Pref_{1}__TES_{2}.pdf'.format(json,Pref,tshours)
+full_fig.savefig( os.path.join(output_dir, fig_name), dpi=300 )

@@ -83,6 +83,9 @@ class NuclearTESLoadProfiles(object):
             tmp_array = self.Storage[key]
             
             # check if data has an associated pint unit, remove if so
+            if hasattr(tmp_array, 'u'):
+                tmp_array = tmp_array.to('GWh') if '_hour' in str(tmp_array.u) else tmp_array
+
             tmp_array = tmp_array.m if hasattr(tmp_array, 'm') else tmp_array
             
             # save data as object attribute
@@ -321,19 +324,35 @@ class NuclearTESLoadProfiles(object):
     def modify_violin_axes(self, ax, data, full_data, hide_x=False ):
         
         if not hide_x:
-            ax.set_xlabel("Hour of the Day", fontsize=14, fontweight='bold')
+            ax.set_xlabel("Hour of the Day", fontsize=16, fontweight='bold')
             
         ax.set_xlim([-0.5, 23.5])
         ax.set_xticks(self.hrs_in_day)
         
         max_data = []
+        min_data = []
         for s in full_data.keys():
             season_data = full_data[s]
             for k in season_data.keys():
                 max_data.append(season_data[k].max())
-    
-        upper_lim = np.max(max_data) * 1.1
-        ax.set_ylim([-5, upper_lim])
+                min_data.append(season_data[k].min())
+        
+        max_ = np.max(max_data)
+        min_ = np.min(min_data)
+        upper_lim = max_ * 1.05
+        lower_lim = min_ * 0.05
+        lower_lim = -1*lower_lim if lower_lim < 0 else lower_lim
+        
+        n10 = np.round( np.log10( upper_lim ) )
+        upper_rounded = np.round( upper_lim / 10**n10) * 10**n10  if n10 > 0 else np.round(upper_lim*10) / 10
+        steps = upper_rounded/4 if n10 > 0 else upper_rounded / 3
+        tick_range = np.arange(0, upper_rounded, steps)
+        
+        ax.set_ylim([lower_lim, upper_lim])
+        ax.set_yticks( tick_range.tolist() )
+        
+        ax.tick_params(axis='x', labelsize=14)
+        ax.tick_params(axis='y', labelsize=14)
 
 
     def create_tariff_overlay(self, ax, is_winter=True, is_weekday=True, s_color='C0'):
@@ -374,7 +393,7 @@ class NuclearTESLoadProfiles(object):
             
             ax2.set_ylim([0.2, 3.5])
             ax2.yaxis.label.set_color(s_color)
-            ax2.tick_params(axis='y', colors=s_color)
+            ax2.tick_params(axis='y', colors=s_color, labelsize=14)
             ax2.spines["right"].set_edgecolor(s_color)
             
             
@@ -418,7 +437,7 @@ class NuclearTESLoadProfiles(object):
             if is_winter:
                 ax.set_ylim([-3, 8.5])
                 ax.set_yticks([-2,0,2,4,6,8])
-                ax.legend(loc='best', fontsize=10, bbox_to_anchor=(1.17, 1.2),
+                ax.legend(loc='best', fontsize=12, bbox_to_anchor=(1.17, 1.2),
                           fancybox=True, shadow=True)
                 
                 peak_x  = 18
@@ -435,5 +454,5 @@ class NuclearTESLoadProfiles(object):
             
             ax.annotate("", xy=(peak_x, -3), xytext=(peak_x, 0),
                     arrowprops=dict(arrowstyle="->"))
-            ax.text(peak_x-peak_dx, -2, peak_text, fontfamily='monospace', fontweight='normal',fontsize=11)
+            ax.text(peak_x-peak_dx, -2, peak_text, fontfamily='monospace', fontweight='bold',fontsize=12)
                 
