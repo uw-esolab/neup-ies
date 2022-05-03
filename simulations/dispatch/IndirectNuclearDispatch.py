@@ -412,7 +412,7 @@ class IndirectNuclearDispatchOutputs(object):
         if not run_loop:
             N_leftover = N_full - f_ind
             empty_array = [0]*N_leftover
-        
+            
         #----Receiver Binary Outputs----
         yn   = np.array([pe.value(dm.model.yn[t])   for t in t_pyomo])
         ynsu = np.array([pe.value(dm.model.ynsu[t]) for t in t_pyomo])
@@ -424,13 +424,19 @@ class IndirectNuclearDispatchOutputs(object):
         ycsb = np.array([pe.value(dm.model.ycsb[t]) for t in t_pyomo])
     
         #----Cycle Thermal Power Utilization----
-        x = np.array([pe.value(dm.model.xnp[t])   for t in t_pyomo])/1000. # from kWt -> MWt
-        x += np.array([pe.value(dm.model.xtesp[t])   for t in t_pyomo])/1000. # from kWt -> MWt
+        Qnhx = pe.value(dm.model.Qnhx)
+        # nuclear power going to PC turbine
+        xn = np.array([pe.value(dm.model.xnp[t])   for t in t_pyomo])/1000. # from kWt -> MWt
+        # total power into PC (nuclear + TES dispatch)
+        x = xn + np.array([pe.value(dm.model.xtesp[t])   for t in t_pyomo])/1000. # from kWt -> MWt
+        # nuclear power going to TES charging
+        xntes = np.array([pe.value(dm.model.xntes[t])   for t in t_pyomo])/1000.
         
         #----Thermal Capacity for Cycle Startup and Operation----
         Qc = np.array([pe.value(dm.model.Qc[t]) for t in t_pyomo])/1000. # from kWt -> MWt
+        Qn = np.array([pe.value(dm.model.Qin_nuc[t]) for t in t_pyomo])/1000. # from kWt -> MWt
         Qu = dm.model.Qu.value/1000. # from kWt -> MWt
-    
+        
         # dispatch target -- nuclear startup/standby binaries
         is_nuc_su_allowed_in = [1 if (yn[t] + ynsu[t] + ynsb[t]) > 0.001 else 0 for t in t_horizon]  # Nuclear on, startup, or standby
         is_nuc_sb_allowed_in = [1 if ynsb[t] > 0.001                     else 0 for t in t_horizon]  # Nuclear standby
@@ -443,6 +449,7 @@ class IndirectNuclearDispatchOutputs(object):
         q_pc_target_su_in    = [Qc[t] if ycsu[t] > 0.001 else 0.0 for t in t_horizon]
         q_pc_target_on_in    = [x[t]                              for t in t_horizon]
         q_pc_max_in          = [Qu                                for t in t_horizon]
+        f_nuc_to_tes_target  = [xntes[t] / Qnhx if xn[t] < 0.001 else xntes[t] / Qn[t] for t in t_horizon]
         
         # empty dictionary for output
         disp_targs = {}
@@ -456,6 +463,8 @@ class IndirectNuclearDispatchOutputs(object):
             disp_targs['q_pc_target_su_in']    = q_pc_target_su_in  
             disp_targs['q_pc_target_on_in']    = q_pc_target_on_in
             disp_targs['q_pc_max_in']          = q_pc_max_in
+            disp_targs['f_nuc_to_tes_target']  = f_nuc_to_tes_target
+            
         # if we're running full simulation all at once, need arrays to match size of full sim
         # TODO: is this a feature we want in the long term? Or just for debugging the first Pyomo call?
         else:
@@ -466,5 +475,6 @@ class IndirectNuclearDispatchOutputs(object):
             disp_targs['q_pc_target_su_in']    = np.hstack( [q_pc_target_su_in    , empty_array] ).tolist()
             disp_targs['q_pc_target_on_in']    = np.hstack( [q_pc_target_on_in    , empty_array] ).tolist()
             disp_targs['q_pc_max_in']          = np.hstack( [q_pc_max_in          , empty_array] ).tolist()
+            disp_targs['f_nuc_to_tes_target']  = np.hstack( [f_nuc_to_tes_target  , empty_array] ).tolist()
             
         return disp_targs
