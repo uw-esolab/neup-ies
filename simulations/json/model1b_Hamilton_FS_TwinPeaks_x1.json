@@ -68,7 +68,7 @@
     },
     
     "SSC_inputs": {
-    	"compute_module_0" : "nuclear_tes",
+    	"compute_module_0" : "nuclear_mspt_indirect_tes",
     	"field_model_type" :    3,
         "eta_map_aod_format" :  0,
         "A_sf_in" :             1269054.492,
@@ -162,7 +162,8 @@
         "csp.pt.sf.land_overhead_factor" :  1,
         "is_rec_to_coldtank_allowed" : 1,
         "T_htf_cold_des" :  340,
-        "T_htf_hot_des"  :  560,
+        "T_htf_hot_des_salt"  :  560,
+        "T_htf_hot_des_steam" :  633,
         "P_ref" :           525,
         "design_eff" :      0.489473684,
         "tshours" :         10,
