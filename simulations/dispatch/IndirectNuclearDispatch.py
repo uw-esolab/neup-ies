@@ -138,7 +138,7 @@ class IndirectNuclearDispatch(NuclearDispatch):
         This method adds constraints pertaining to efficiency constraints defined
         as a piecewise linear approximation. Also referred to as Cycle supply and 
         demand constraints. In the IndirectNuclearDispatch, we add an extra balance of power
-        with respect to energy storage and power produced from the nuclear reactor. 
+        with respect to energy storage and power producfrom scipy.interpolate import interp1ded from the nuclear reactor. 
         
         TODO: This should be revisited when adding MED!!
         """
@@ -334,7 +334,27 @@ class IndirectNuclearDispatchParamWrap(NuclearDispatchParamWrap):
         inlet and outlet temperatures, etc.). 
         """
         
-        super().set_design()
+        super(NuclearDispatchParamWrap, self ).set_design()
+        
+        u = self.u
+        
+        # nuclear parameters
+        self.q_nuc_design = self.SSC_dict['q_dot_nuclear_des'] * u.MW      # nuclear design thermal power
+        
+        # specific heat values at design point
+        T_htf  = 0.5*(self.T_htf_hot + self.T_htf_cold)
+        cp_des = SSCHelperMethods.get_cp_htf(self.u, T_htf, self.SSC_dict['nuc_htf'], self.PySAM_dict['cp_interp'] )
+        cp_des = cp_des.to('J/g/kelvin')       
+        
+        # mass flow rate
+        dm_des = self.q_pb_design / (cp_des * (self.T_htf_hot - self.T_htf_cold) )  
+        self.dm_pb_design = dm_des.to('kg/s')                               # power block design mass flow rate
+        
+        # TES design point
+        e_tes_design = self.q_pb_design * self.SSC_dict['tshours']*u.hr  
+        m_tes_des = e_tes_design / cp_des / (self.T_htf_hot - self.T_htf_cold)     
+        self.e_tes_design = e_tes_design.to('kWh') # TES storage capacity (kWht)
+        self.m_tes_design = m_tes_des.to('kg')     # TES active storage mass (kg)
 
 
     def set_indirect_config_parameters(self, param_dict):

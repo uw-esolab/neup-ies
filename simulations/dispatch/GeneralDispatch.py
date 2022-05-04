@@ -570,7 +570,10 @@ class GeneralDispatchParamWrap(object):
         self.q_pb_design  = (self.p_pb_design / self.eta_design).to('MW')  # power block design thermal rating
         
         # temperature values at design point
-        self.T_htf_hot  = (self.SSC_dict['T_htf_hot_des']*u.celsius).to('degK')
+        if 'T_htf_hot_des' in self.SSC_dict.keys():
+            self.T_htf_hot  = (self.SSC_dict['T_htf_hot_des']*u.celsius).to('degK')
+        else:
+            self.T_htf_hot  = (self.SSC_dict['T_htf_hot_des_steam']*u.celsius).to('degK')           
         self.T_htf_cold = (self.SSC_dict['T_htf_cold_des']*u.celsius).to('degK')
         
         
@@ -780,7 +783,7 @@ class GeneralDispatchParamWrap(object):
         Inputs:
             param_dict (dict)    : dictionary of Pyomo dispatch parameters
             updated_dict (dict)  : dictionary with updated SSC initial conditions from previous run
-            plant (obj)          : the full PySAM Plant object. 
+            plant (obj)          : the full PySAM Plant object 
             npts (int)           : length of the SSC horizon
         Outputs:
             param_dict (dict) : updated dictionary of Pyomo dispatch parameters
