@@ -217,7 +217,8 @@ class SSCHelperMethods(object):
         elif rec_htf == 4:
             # steam data retrieved @ 33MPa from:
             # https://webbook.nist.gov/chemistry/fluid/
-            cp = interp(T)
+            cp = interp(T.m)
+            cp = cp * u.J / u.g / u.kelvin
         else:
             print ('HTF %d not recognized'%rec_htf)
             return 0.0
