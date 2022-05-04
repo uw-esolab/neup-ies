@@ -116,9 +116,10 @@ class GenericSSCModule(ABC):
             self.disp_results = {}
             self.disp_success = {}
             
+            self.interpolants = {}
             if hasattr(self, 'cp_interp'):
-                self.PySAM_dict['cp_interp'] = self.cp_interp
-                self.PySAM_dict['hp_interp'] = self.hp_interp
+                self.interpolants['cp_interp'] = self.cp_interp
+                self.interpolants['hp_interp'] = self.hp_interp
             
             # initialize dispatch wrap class
             self.dispatch_wrap = self.create_dispatch_wrapper( self.PySAM_dict )
@@ -798,7 +799,8 @@ class GenericSSCModule(ABC):
         dispatch_wrap = self.DispatchParameterClass( unit_registry=self.u, 
                     SSC_dict=self.SSC_dict, PySAM_dict=PySAM_dict,
                     pyomo_horizon=self.pyomo_horizon, 
-                    dispatch_time_step=self.dispatch_time_step)
+                    dispatch_time_step=self.dispatch_time_step,
+                    interpolants=self.interpolants)
         
         return dispatch_wrap
 

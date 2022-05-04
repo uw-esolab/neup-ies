@@ -521,7 +521,7 @@ class GeneralDispatchParamWrap(object):
     
     def __init__(self, unit_registry, SSC_dict, PySAM_dict, 
                        pyomo_horizon, dispatch_time_step, dual=False, direct=True, 
-                       **kwargs):
+                       interpolants=None, **kwargs):
         """ Initializes the GeneralDispatchParamWrap module
         
         Inputs:
@@ -536,6 +536,7 @@ class GeneralDispatchParamWrap(object):
         self.PySAM_dict         = PySAM_dict
         self.pyomo_horizon      = pyomo_horizon
         self.dispatch_time_step = dispatch_time_step 
+        self.interpolants       = interpolants
         
         self.dual    = dual    # are we combining solar + nuclear?
         self.direct  = direct  # are we directly heating storage?

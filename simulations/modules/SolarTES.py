@@ -99,7 +99,8 @@ class SolarTES(IndirectNuclearTES, NuclearTES):
         dispatch_wrap = self.DispatchParameterClass( unit_registry=self.u, 
                     SSC_dict=self.SSC_dict, PySAM_dict=PySAM_dict,
                     pyomo_horizon=self.pyomo_horizon, 
-                    dispatch_time_step=self.dispatch_time_step)
+                    dispatch_time_step=self.dispatch_time_step,
+                    interpolants=self.interpolants)
         
         return dispatch_wrap
 

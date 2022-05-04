@@ -343,7 +343,7 @@ class IndirectNuclearDispatchParamWrap(NuclearDispatchParamWrap):
         
         # specific heat values at design point
         T_htf  = 0.5*(self.T_htf_hot + self.T_htf_cold)
-        cp_des = SSCHelperMethods.get_cp_htf(self.u, T_htf, self.SSC_dict['nuc_htf'], self.PySAM_dict['cp_interp'] )
+        cp_des = SSCHelperMethods.get_cp_htf(self.u, T_htf, self.SSC_dict['nuc_htf'], self.interpolants['cp_interp'] )
         cp_des = cp_des.to('J/g/kelvin')       
         
         # mass flow rate

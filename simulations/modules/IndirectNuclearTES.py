@@ -38,8 +38,8 @@ class IndirectNuclearTES(NuclearTES):
         # calculating steam properties from steam table
         steampath = os.path.join( FileMethods.data_dir, "steam_table.csv")
         T, cp, Hp = FileMethods.read_steam_table_file( steampath, self.u )
-        self.cp_interp = interp1d( T, cp, kind='linear' )
-        self.hp_interp = interp1d( T, Hp, kind='linear' )
+        self.cp_interp = interp1d( T.m, cp.m, kind='linear' ) # T: in deg K || cp: in kJ/kg*K
+        self.hp_interp = interp1d( T.m, Hp.m, kind='linear' ) # T: in dek K || Hp: in kJ/kg
         
         # overriding base class default value unless we get a keyword from higher up
         kwargs['direct'] = kwargs['direct'] if 'direct' in kwargs else False
@@ -78,7 +78,8 @@ class IndirectNuclearTES(NuclearTES):
         dispatch_wrap = self.DispatchParameterClass( unit_registry=self.u, 
                     SSC_dict=self.SSC_dict, PySAM_dict=PySAM_dict,
                     pyomo_horizon=self.pyomo_horizon, 
-                    dispatch_time_step=self.dispatch_time_step)
+                    dispatch_time_step=self.dispatch_time_step,
+                    interpolants=self.interpolants)
         
         return dispatch_wrap
 
