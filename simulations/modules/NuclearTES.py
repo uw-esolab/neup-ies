@@ -26,7 +26,7 @@ class NuclearTES(GenericSSCModule):
     
     """
     
-    def __init__(self, plant_name="nuclear_tes", json_name="model1", **specs):
+    def __init__(self, plant_name="nuclear_tes", json_name="model1", **kwargs):
         """ Initializes the NuclearTES module
         
         Args:
@@ -42,7 +42,7 @@ class NuclearTES(GenericSSCModule):
         """
         
         # initialize Generic module, csv data arrays should be saved here
-        GenericSSCModule.__init__( self, plant_name, json_name, **specs)
+        super().__init__( plant_name, json_name, **kwargs )
         
         # define specific PySAM module to be called later
         self.PySAM_Module = NuclearTes
@@ -50,6 +50,7 @@ class NuclearTES(GenericSSCModule):
         # define specific Dispatch module to be called later
         self.Dispatch_Module = ND
         
+        # define specific Dispatch Outputs class to be called to generate pyomo targets 
         self.Dispatch_Outputs = NDO
         
         

@@ -25,7 +25,7 @@ class IndirectNuclearTES(NuclearTES):
     specifically for the SSC tcsmolten_salt module. 
     """
     
-    def __init__(self, plant_name="nuclear_mspt_indirect_tes", json_name="model1", **specs):
+    def __init__(self, plant_name="nuclear_mspt_indirect_tes", json_name="model1", **kwargs):
         """ Initializes the SolarTES module
         
         Inputs:
@@ -41,8 +41,9 @@ class IndirectNuclearTES(NuclearTES):
         self.cp_interp = interp1d( T, cp, kind='linear' )
         self.hp_interp = interp1d( T, Hp, kind='linear' )
         
-        # initialize Nuclear+Generic module, csv data arrays should be saved here
-        NuclearTES.__init__( self, plant_name, json_name, **specs )
+        # overriding base class default value unless we get a keyword from higher up
+        kwargs['direct'] = kwargs['direct'] if 'direct' in kwargs else False
+        super().__init__( plant_name, json_name, **kwargs )
         
         # define specific PySAM module to be called later
         self.PySAM_Module = NuclearMsptIndirectTes

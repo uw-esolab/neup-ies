@@ -21,6 +21,7 @@ from tqdm import tqdm
 import pickle as pickle
 import numpy as np
 import copy, time
+from numba import vectorize
 from abc import ABC, abstractmethod
 from multiprocessing import Process
 
@@ -42,9 +43,10 @@ class GenericSSCModule(ABC):
     
     @abstractmethod
     def __init__(self, plant_name="abstract", json_name="abstract", 
+                       dual=False, direct=True, 
                        is_dispatch=False, dispatch_time_step=1,
                        log_dispatch_targets=False, exec_debug=False, 
-                       exec_timeout=10.):
+                       exec_timeout=10., **kwargs):
         """ Initializes the GenericSSCModules
         
         Args:
@@ -67,6 +69,10 @@ class GenericSSCModule(ABC):
         # grab names, either default here or from child class
         self.json_name  = json_name
         self.plant_name = plant_name
+        
+        # object parameters to distinguish inheritance
+        self.dual    = dual    # are we combining solar + nuclear?
+        self.direct  = direct  # are we directly heating storage?
         
         # create and save a specific unit registry
         if not hasattr(self, 'u'):

@@ -31,7 +31,8 @@ class DualIndirectTES(SolarTES):
     out to the power cycle. 
     """
 
-    def __init__(self, plant_name="nuclear_mspt_tes", json_name="model2", **specs):
+    def __init__(self, plant_name="nuclear_mspt_indirect_tes", json_name="model2",  
+                       dual=True, direct=False, **kwargs):
         """ Initializes the DualPlantTES module
         
         Inputs:
@@ -41,7 +42,7 @@ class DualIndirectTES(SolarTES):
         """
         
         # initialize Solar+Nuclear+Generic module, csv data arrays should be saved here
-        SolarTES.__init__( self, plant_name, json_name, **specs )
+        super().__init__( plant_name, json_name, dual=dual, direct=direct, **kwargs )
         
         # define specific PySAM module to be called later
         self.PySAM_Module = NuclearMsptIndirectTes
@@ -49,6 +50,7 @@ class DualIndirectTES(SolarTES):
         # define specific Dispatch module to be called later
         self.Dispatch_Module = DI
         
+        # define the specific Dispatch Outputs module to be called later to create dispatch targets for SSC
         self.Dispatch_Outputs = DIO
 
 
