@@ -166,6 +166,7 @@
         "T_htf_hot_des_steam" :  633,
         "P_ref" :           525,
         "design_eff" :      0.489473684,
+        "q_dot_rec_des":     0,
         "tshours" :         10,
         "solarm" :      1.0,
         "N_panels" :    20,
