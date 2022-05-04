@@ -69,7 +69,8 @@ class GenericSSCModule(ABC):
         self.plant_name = plant_name
         
         # create and save a specific unit registry
-        self.u = SSCHelperMethods.define_unit_registry()
+        if not hasattr(self, 'u'):
+            self.u = SSCHelperMethods.define_unit_registry()
         u = self.u
         
         # read in dictionaries from json script
@@ -108,6 +109,10 @@ class GenericSSCModule(ABC):
             self.disp_models  = {}
             self.disp_results = {}
             self.disp_success = {}
+            
+            if hasattr(self, 'cp_interp'):
+                self.PySAM_dict['cp_interp'] = self.cp_interp
+                self.PySAM_dict['hp_interp'] = self.hp_interp
             
             # initialize dispatch wrap class
             self.dispatch_wrap = self.create_dispatch_wrapper( self.PySAM_dict )
@@ -250,7 +255,7 @@ class GenericSSCModule(ABC):
 
     @abstractmethod
     def create_Grid(self):
-        """ Method to create Grid object for the first time
+        """ Method to create Grid onuclear_mspt_indirect_tesbject for the first time
         
         This method creates a Grid object again using built-in PySAM functions.
         The Grid object is created similarly to the Plant object, from SSC inputs

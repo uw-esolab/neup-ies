@@ -9,7 +9,7 @@ Created on Fri Apr 15 16:28:05 2022
 import sys, copy
 sys.path.append('..')
 import numpy as np
-import PySAM.NuclearMsptTes as NuclearMsptTes
+import PySAM.NuclearMsptIndirectTes as NuclearMsptIndirectTes
 from modules.GenericSSCModule import GenericSSCModule
 from modules.IndirectNuclearTES import IndirectNuclearTES
 from modules.SolarTES import SolarTES
@@ -44,7 +44,7 @@ class DualIndirectTES(SolarTES):
         SolarTES.__init__( self, plant_name, json_name, **specs )
         
         # define specific PySAM module to be called later
-        self.PySAM_Module = NuclearMsptTes
+        self.PySAM_Module = NuclearMsptIndirectTes
 
         # define specific Dispatch module to be called later
         self.Dispatch_Module = DI

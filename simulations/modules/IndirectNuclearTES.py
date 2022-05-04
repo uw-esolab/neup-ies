@@ -6,10 +6,13 @@ Created on Fri Apr  8 16:58:30 2022
 @author: gabrielsoto
 """
 
-import sys, copy
+import sys, copy, os
 sys.path.append('..')
 import numpy as np
-import PySAM.NuclearTes as NuclearTes
+from util.FileMethods import FileMethods
+from scipy.interpolate import interp1d
+from util.SSCHelperMethods import SSCHelperMethods
+import PySAM.NuclearMsptIndirectTes as NuclearMsptIndirectTes
 from modules.GenericSSCModule import GenericSSCModule
 from modules.NuclearTES import NuclearTES
 from dispatch.IndirectNuclearDispatch import IndirectNuclearDispatch as IND
@@ -22,7 +25,7 @@ class IndirectNuclearTES(NuclearTES):
     specifically for the SSC tcsmolten_salt module. 
     """
     
-    def __init__(self, plant_name="nuclear_tes", json_name="model1", **specs):
+    def __init__(self, plant_name="nuclear_mspt_indirect_tes", json_name="model1", **specs):
         """ Initializes the SolarTES module
         
         Inputs:
@@ -30,16 +33,24 @@ class IndirectNuclearTES(NuclearTES):
             json_name (str)          : name of JSON script with input data for module
             is_dispatch (bool)       : boolean, if True runs Pyomo dispatch optimization
         """
+        self.u = SSCHelperMethods.define_unit_registry()
+        
+        # calculating steam properties from steam table
+        steampath = os.path.join( FileMethods.data_dir, "steam_table.csv")
+        T, cp, Hp = FileMethods.read_steam_table_file( steampath, self.u )
+        self.cp_interp = interp1d( T, cp, kind='linear' )
+        self.hp_interp = interp1d( T, Hp, kind='linear' )
         
         # initialize Nuclear+Generic module, csv data arrays should be saved here
         NuclearTES.__init__( self, plant_name, json_name, **specs )
         
         # define specific PySAM module to be called later
-        self.PySAM_Module = NuclearTes
+        self.PySAM_Module = NuclearMsptIndirectTes
         
         # define specific Dispatch module to be called later
         self.Dispatch_Module = IND
         
+        # define the specific Dispatch Outputs module to be called later to create dispatch targets for SSC
         self.Dispatch_Outputs = INDO
 
 
