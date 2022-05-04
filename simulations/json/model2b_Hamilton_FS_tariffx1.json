@@ -157,7 +157,7 @@
         "csp.pt.cost.plm.fixed" :     0,
         "csp.pt.sf.fixed_land_area" :  45,
         "csp.pt.sf.land_overhead_factor" :  1,
-        "T_htf_cold_des" :  440,
+        "T_htf_cold_des" :  340,
         "T_htf_hot_des_salt"  :  560,
         "T_htf_hot_des_steam" :  633,
         "P_ref" :           430,
