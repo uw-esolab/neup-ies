@@ -8,9 +8,11 @@ Created on Fri May  7 10:50:27 2021
 
 import numpy as np
 import pint
+from numba import jit
 from pyomo.environ import units
 from util.FileMethods import FileMethods
 from scipy.optimize import curve_fit,fsolve
+
 from iapws import IAPWS97
 
 class SSCHelperMethods(object):
@@ -155,7 +157,7 @@ class SSCHelperMethods(object):
         else:
             return None
         
-
+    
     def interpret_user_defined_cycle_data(ud_array):
         """ Method to return user defined cycle data (written by LORE team)
         
@@ -188,8 +190,8 @@ class SSCHelperMethods(object):
         
         return output_dict
 
-
-    def get_cp_htf( u, T, rec_htf):
+    
+    def get_cp_htf( u, T, rec_htf, interp=None):
         """ Method to calculate specific heat of some heat transfer fluid (written by LORE team)
         
         Inputs:
@@ -201,23 +203,28 @@ class SSCHelperMethods(object):
             
         """
         
+        T = T.to('kelvin')
+        
         # HTF: 17 = Salt (60% NaNO3, 40% KNO3)
-        if rec_htf != 17:
+        if rec_htf == 17:
+            a = -1.0e-10 * u.J/u.g/u.kelvin**4
+            b =  2.0e-7  * u.J/u.g/u.kelvin**3
+            c =  5.0e-6  * u.J/u.g/u.kelvin**2
+            d =  1.4387  * u.J/u.g/u.kelvin
+            
+            cp = (a*T**3 + b*T**2 + c*T + d).to('J/g/kelvin')
+        # HTF: 4  = Steam (Supercritical Steam)
+        elif rec_htf == 4:
+            # steam data retrieved @ 33MPa from:
+            # https://webbook.nist.gov/chemistry/fluid/
+            cp = interp(T)
+        else:
             print ('HTF %d not recognized'%rec_htf)
             return 0.0
         
-        T = T.to('kelvin')
-        
-        a = -1.0e-10 * u.J/u.g/u.kelvin**4
-        b =  2.0e-7  * u.J/u.g/u.kelvin**3
-        c =  5.0e-6  * u.J/u.g/u.kelvin**2
-        d =  1.4387  * u.J/u.g/u.kelvin
-        
-        cp = (a*T**3 + b*T**2 + c*T + d).to('J/g/kelvin')
-        
         return cp 
 
-
+    
     def get_rho_htf( u, T, rec_htf):
         """ Method to calculate density of some heat transfer fluid 
         
@@ -252,7 +259,7 @@ class SSCHelperMethods(object):
         
         return rho 
 
-
+    
     def get_visc_htf( u, T, rec_htf):
         """ Method to calculate viscosity of some heat transfer fluid (written by LORE team)
         
