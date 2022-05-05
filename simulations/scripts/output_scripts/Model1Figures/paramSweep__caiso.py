@@ -206,25 +206,17 @@ for l,s in zip(contours.levels, c_levels):
     c_fmt[l] = ' {:.2f} '.format(s)
     c_empty[l] = '      '
     
-# Add contour labels
-ax.clabel(contours, fmt=c_empty, inline=True, fontsize=14)
-
-    
-# sometimes, number of levels doesnt correspond to actual number of contours drawn
-if len(contours.labelTexts) != len(contours.levels):
-    ind = 0 - len(contours.labelTexts)   # get actual number of contours
-    c_levels_out = contours.levels[ind:] # actual contours are at the back of the list
-    c_fmt_out    = { k:c_fmt[k] for k in c_levels_out } # new dict
-else:
-    c_levels_out = contours.levels
-    c_fmt_out    = c_fmt
+# Add empty labels, just want to get locations for text
+label = ax.clabel(contours, fmt=c_fmt, inline=True, fontsize=10)
 
 # draw white text with black border for rel ppa price
-for textLabels,l,s in zip(contours.labelTexts, c_levels_out, c_fmt_out):
+for textLabels in contours.labelTexts:
     loc = textLabels.get_position()
-    xloc = loc[0] - 0.4
-    yloc = loc[1] - 0.05
-    txt = ax.text(xloc, yloc, c_fmt[l], size=13, fontweight='bold', color='w')
+    text = textLabels.get_text()
+    textLabels.set_text('      ')
+    xloc = loc[0] - 0.35
+    yloc = loc[1] - 0.1
+    txt = ax.text(xloc, yloc, text, size=13, fontweight='bold', color='w')
     txt.set_path_effects([pe.withStroke(linewidth=3, foreground='k')])
     plt.draw()
     

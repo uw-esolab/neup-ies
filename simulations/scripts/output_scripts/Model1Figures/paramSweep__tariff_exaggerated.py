@@ -206,7 +206,7 @@ for i in plotrange:
     # contours = plt.contour(array.T, levels=[0.95, 0.97, 0.99, 1.0], colors='black')
     # contours = plt.contour(array.T, levels=[0.94, 0.96, 0.98, 1.0], colors='black')
     # contours = plt.contour(array.T, levels=[0.88, 0.94, 1.0], colors='black')
-    c_levels = [0.91, 0.96, 0.98, 1.0, threshold_contour] if i > 0 else [threshold_contour]
+    c_levels = [0.94, 0.96, 0.98, 1.0, threshold_contour] if i > 0 else [threshold_contour]
     c_colors = 'k'
     contours = ax1.contour(ff, extent=[tshours[0], tshours[-1], 0, 9 ],
                                     levels=c_levels, 
@@ -220,23 +220,16 @@ for i in plotrange:
         c_empty[l] = '      '
         
     # Add empty labels, just want to get locations for text
-    ax1.clabel(contours, fmt=c_empty, inline=True, fontsize=10)
-    
-    # sometimes, number of levels doesnt correspond to actual number of contours drawn
-    if len(contours.labelTexts) != len(contours.levels):
-        ind = 0 - len(contours.labelTexts)   # get actual number of contours
-        c_levels_out = contours.levels[ind:] # actual contours are at the back of the list
-        c_fmt_out    = { k:c_fmt[k] for k in c_levels_out } # new dict
-    else:
-        c_levels_out = contours.levels
-        c_fmt_out    = c_fmt
+    label = ax1.clabel(contours, fmt=c_fmt, inline=True, fontsize=10)
     
     # draw white text with black border for rel ppa price
-    for textLabels,l,s in zip(contours.labelTexts, c_levels_out, c_fmt_out):
+    for textLabels in contours.labelTexts:
         loc = textLabels.get_position()
+        text = textLabels.get_text()
+        textLabels.set_text('      ')
         xloc = loc[0] - 0.65
         yloc = loc[1] - 0.1
-        txt = ax1.text(xloc, yloc, c_fmt[l], size=13, fontweight='bold', color='w')
+        txt = ax1.text(xloc, yloc, text, size=13, fontweight='bold', color='w')
         txt.set_path_effects([pe.withStroke(linewidth=3, foreground='k')])
         plt.draw()
         
