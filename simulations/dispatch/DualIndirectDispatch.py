@@ -324,7 +324,7 @@ class DualIndirectDispatchOutputs(object):
         ycsb = np.array([pe.value(dm.model.ycsb[t]) for t in t_pyomo])
     
         #----Cycle Thermal Power Utilization----
-        Qnhx = pe.value(dm.model.Qnhx)
+        Qnhx = pe.value(dm.model.Qnhx) / 1000.
         # nuclear power going to PC turbine
         xn = np.array([pe.value(dm.model.xnp[t])   for t in t_pyomo])/1000. # from kWt -> MWt
         # total power into PC (nuclear + TES dispatch)
