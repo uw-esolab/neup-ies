@@ -37,14 +37,19 @@ Below is a diagram of the full code flow.
 **Note** that this only shows interfacing with ``SSC`` through ``PySAM``. The ``PySSC`` interface would replace the middle "Python Module Class" block.
 The ``PySSC`` block would look more streamlined: it does not have a time loop, instead calling ``SSC`` directly. It does not have capabilities to call ``pyomo`` optimization. 
 
+
+Guides
+####################################################################################
+
 Here are links to other documentation pages within this project:
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 4
    
    quickstart
    sscmod
    model2OutletMixing
+   steam2salthx
    ne2mod
    simulations
 

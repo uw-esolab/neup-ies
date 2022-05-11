@@ -63,7 +63,7 @@ todo_include_todos = True
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'alabaster'
+html_theme = 'bizstyle'
 
 # If true, SmartyPants will be used to convert quotes and dashes to
 # typographically correct entities.

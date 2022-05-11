@@ -1,9 +1,9 @@
 .. model2mixing:
 
-Model 2 Mixing of LFR and CSP Outlet Streams
+Model 2a Mixing of LFR and CSP Outlet Streams
 #################################################
 
-In Model 2 we independently call the ``collector_receiver`` and ``nuclear_plant`` to determine some outlet temperature and mass flow for each. Before entering the hot salt tank, the two streams must mix together. 
+In Model 2a we independently call the ``collector_receiver`` and ``nuclear_plant`` to determine some outlet temperature and mass flow for each. Before entering the hot salt tank, the two streams must mix together. 
 
 Outlet Temperature Differences
 ---------------------------------
