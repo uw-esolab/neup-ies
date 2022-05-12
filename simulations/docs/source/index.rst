@@ -38,19 +38,60 @@ Below is a diagram of the full code flow.
 The ``PySSC`` block would look more streamlined: it does not have a time loop, instead calling ``SSC`` directly. It does not have capabilities to call ``pyomo`` optimization. 
 
 
-Guides
-####################################################################################
+Project Guides
+============================================
 
-Here are links to other documentation pages within this project:
+Below are some guides to different aspects of the project.
+
+Guides to Building Project
+########################################
 
 .. toctree::
    :maxdepth: 4
    
    quickstart
    sscmod
-   model2OutletMixing
-   steam2salthx
+   
+Guides to Model 1a
+###################################
+
+Model 1a is the direct TES charging configuration with only LFR heat supply.
+
+.. toctree::
+   :maxdepth: 4
+   
    ne2mod
+
+Guides to Model 2a
+###################################
+
+Model 2a is the direct TES charging configuration with LFR and CSP heat supply.
+
+.. toctree::
+   :maxdepth: 4
+   
+   directTESoutletMixing
+ 
+ 
+Guides to Model 1b and 2b
+###################################
+
+Model 1b is the **indirect** TES charging configuration with only LFR heat supply.
+
+Model 2b is the **indirect** TES charging configuration with LFR and CSP heat supply.
+
+.. toctree::
+   :maxdepth: 4
+   
+   steam2salthx
+
+
+NE2 Classes and Methods
+#################################
+
+.. toctree::
+   :maxdepth: 4
+   
    simulations
 
 

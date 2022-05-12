@@ -15,7 +15,7 @@ The heat exchanged between the two streams can be written in terms of the hot st
 
 .. math:: 
 
-   \dot{Q}_{HX} = \dot{m}^H ( \dot{h}^H_{in} - \dot{h}^H_{out} ).
+   \dot{Q}_{HX} = \dot{m}^H ( h^H_{in} - h^H_{out} ).
 
 For the steam, we have loop-up tables for enthalpy as a function of temperature and pressure. 
 We assume that the steam inlet temperature, mass flow and pressure are known:
@@ -37,7 +37,7 @@ The heat exchanged between the two streams can be written in terms of the cold s
 
 .. math:: 
 
-   \dot{Q}_{HX} = \dot{m}^C ( \dot{h}^C_{out} - \dot{h}^C_{in} ).
+   \dot{Q}_{HX} = \dot{m}^C ( h^C_{out} - h^C_{in} ).
    
 We want to calculate both the mass flow of the salt. Based on the discussion in `model2mixing`_ we can make an assumption that the change in enthalpy of the molten salt is proportional to the change in temperature
 
@@ -74,13 +74,13 @@ In this case, from the POV of the hot stream we assume that the outlet hot strea
 
 .. math::
 
-   \dot{Q}_{max} = \dot{m}^H(\dot{h}^H_{in} - \dot{h}^H(T^C_{in})  ).
+   \dot{Q}_{max} = \texttt{min}(\dot{m}^H, \dot{m}^C) (h^H_{in} - h^C_{in}  ).
    
 We then calculate the actual heat exchanged as
 
 .. math::
 
-   \dot{Q}_{HX} = \epsilon \dot{m}^H(\dot{h}^H_{in} - \dot{h}^H(T^C_{in}))
+   \dot{Q}_{HX} = \epsilon \texttt{min}(\dot{m}^H, \dot{m}^C) (h^H_{in} - h^C_{in}  )
 
 
 
@@ -91,6 +91,6 @@ The cold stream mass flow can be calculated by combining the two final equations
 
 .. math::
 
-   \dot{m}^C = \frac{\epsilon \dot{m}^H(\dot{h}^H_{in} - \dot{h}^H(T^C_{in}))}{c^{\text{salt}}_P (  T^C_{out} - T^C_{in} )}
+   \dot{m}^C = \frac{\epsilon \texttt{min}(\dot{m}^H, \dot{m}^C) (h^H_{in} - h^C_{in}  )}{c^{\text{salt}}_P (  T^C_{out} - T^C_{in} )}
 
 
