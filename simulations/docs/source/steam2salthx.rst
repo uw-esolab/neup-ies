@@ -15,7 +15,7 @@ The heat exchanged between the two streams can be written in terms of the hot st
 
 .. math:: 
 
-   \dot{Q}_{HX} = \dot{m}^H ( h^H_{in} - h^H_{out} ).
+   \color{red}{\dot{Q}_{HX}} = \dot{m}^H ( h^H_{in} - \color{red}{h^H_{out}} ).
 
 For the steam, we have loop-up tables for enthalpy as a function of temperature and pressure. 
 We assume that the steam inlet temperature, mass flow and pressure are known:
@@ -27,7 +27,7 @@ We assume that the steam inlet temperature, mass flow and pressure are known:
    	P^H_{in} &= 33 \text{MPa}
    \end{align}
 
-Outlet temperature conditions for the steam are not known ahead of this calculation.
+Outlet temperature conditions for the steam are not known ahead of this calculation (unknown values are highlighted in red).
 
 Cold Stream - Molten Salt
 -------------------------------------
@@ -37,19 +37,20 @@ The heat exchanged between the two streams can be written in terms of the cold s
 
 .. math:: 
 
-   \dot{Q}_{HX} = \dot{m}^C ( h^C_{out} - h^C_{in} ).
+   \color{red}{\dot{Q}_{HX}} = \color{red}{\dot{m}^C} ( h^C_{out} - h^C_{in} ).
    
-We want to calculate both the mass flow of the salt. Based on the discussion in `model2mixing`_ we can make an assumption that the change in enthalpy of the molten salt is proportional to the change in temperature
+We want to calculate the mass flow of the salt. 
+Based on the discussion in `model2mixing`_ we can make an assumption that the change in enthalpy of the molten salt is proportional to the change in temperature
 
 .. math::
 
    \Delta h^C = c^{\text{salt}}_P ( T^C_{out} - T^C_{in})
    
-so we can rewrite the heat exchanged as 
+so we can then rewrite the heat exchanged as 
 
 .. math:: 
 
-   \dot{Q}_{HX} = \dot{m}^C c^{\text{salt}}_P (  T^C_{out} - T^C_{in} ).
+   \color{red}{\dot{Q}_{HX}} = \color{red}{\dot{m}^C} c^{\text{salt}}_P (  T^C_{out} - T^C_{in} ).
 
 The known values here are:
 
@@ -57,30 +58,30 @@ The known values here are:
    \begin{align}
    	T^C_{in} &= \text{calculated from } \texttt{tes_two_tank} \\
    	T^C_{out} &= 560 {}^\circ \text{C} \\
-   	c^{\text{salt}} &= \text{calculated from } T^C_{in}
+   	c^{\text{salt}}_P &= \text{calculated from } T^C_{in}
    \end{align}
    
-Heat Exchanger Efficiency
+Heat Exchanger Effectiveness
 -------------------------------------
 
-The efficiency of the heat exchanger is written as
+The effectiveness of the heat exchanger is written as
 
 .. math::
 
-   \epsilon = \frac{\dot{Q}_{HX}}{\dot{Q}_{max}}
+   \epsilon = \frac{\color{red}{\dot{Q}_{HX}}}{\color{red}{\dot{Q}_{max}}}
 
 where the maximum heat exchanged is defined under perfect exchange conditions. 
-In this case, from the POV of the hot stream we assume that the outlet hot stream temperature is the same as the inlet cold stream temperature:
+In this case, we use the minimum capacitance rate of the two fluids (assuming hot fluid here). We also use the maximum difference in enthalpies:
 
 .. math::
 
-   \dot{Q}_{max} = \texttt{min}(\dot{m}^H, \dot{m}^C) (h^H_{in} - h^C_{in}  ).
+   \color{red}{\dot{Q}_{max}} = \dot{m}^H (h^H_{in} - h^C_{in}  ).
    
 We then calculate the actual heat exchanged as
 
 .. math::
 
-   \dot{Q}_{HX} = \epsilon \texttt{min}(\dot{m}^H, \dot{m}^C) (h^H_{in} - h^C_{in}  )
+   \color{red}{\dot{Q}_{HX}} = \epsilon \dot{m}^H (h^H_{in} - h^C_{in}  )
 
 
 
@@ -91,6 +92,6 @@ The cold stream mass flow can be calculated by combining the two final equations
 
 .. math::
 
-   \dot{m}^C = \frac{\epsilon \texttt{min}(\dot{m}^H, \dot{m}^C) (h^H_{in} - h^C_{in}  )}{c^{\text{salt}}_P (  T^C_{out} - T^C_{in} )}
+   \color{red}{\dot{m}^C} = \frac{\epsilon \dot{m}^H (h^H_{in} - h^C_{in}  )}{c^{\text{salt}}_P (  T^C_{out} - T^C_{in} )}
 
 

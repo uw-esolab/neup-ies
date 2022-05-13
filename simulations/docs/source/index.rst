@@ -83,6 +83,7 @@ Model 2b is the **indirect** TES charging configuration with LFR and CSP heat su
 .. toctree::
    :maxdepth: 4
    
+   indirectTESdesignPointMassFlow
    steam2salthx
 
 
