@@ -441,15 +441,15 @@ class NuclearTESLoadProfiles(object):
                           fancybox=True, shadow=True)
                 
                 peak_x  = 18
-                peak_dx = 1.7
-                peak_text = "-22.3"
+                peak_dx = 2.0
+                peak_text = r"$-$22.3"
             else:
                 ax.set_ylim([-3, 5])
                 ax.set_yticks([-2,0,2,4])
                 
                 peak_x = 21
-                peak_dx = 1.25
-                peak_text = "-8.5"
+                peak_dx = 1.55
+                peak_text = r"$-$8.5"
                 
             
             ax.annotate("", xy=(peak_x, -3), xytext=(peak_x, 0),

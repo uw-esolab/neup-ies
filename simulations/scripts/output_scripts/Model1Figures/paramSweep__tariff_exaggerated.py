@@ -324,4 +324,4 @@ cbar_ax.tick_params(axis='y',labelsize=14)
 
 
 fig_name = 'tariff_exaggeration_effect_on_ppa.pdf'
-fig.savefig( os.path.join(output_dir, fig_name), dpi=300 )
+fig.savefig( os.path.join(output_dir, fig_name),  dpi=300 )

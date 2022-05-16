@@ -22,6 +22,8 @@ nuctes = NuclearTES.NuclearTES( is_dispatch=False )
 # setting tolerance for tariff rate norm
 tolerance = 1e-4 # deviations are in the thousandths of a cent
 
+
+
 # =============================================================================
 # Default
 # =============================================================================
@@ -190,11 +192,11 @@ for w in range(52):
     
     axp.annotate("", xy=(1.75, -3), xytext=(1.75, -0.6),
             arrowprops=dict(arrowstyle="->"))
-    axp.text(1.25, -2, "-22.3", fontfamily='monospace', fontweight='normal',fontsize=11)
+    axp.text(1.25, -2, r"$-$22.3", fontfamily='monospace', fontweight='normal',fontsize=11)
 
     axp.annotate("", xy=(6.75, -3), xytext=(6.75, -0.6),
             arrowprops=dict(arrowstyle="->"))
-    axp.text(6.3, -2, "-8.5", fontfamily='monospace', fontweight='normal',fontsize=11)
+    axp.text(6.3, -2, r"$-$8.5", fontfamily='monospace', fontweight='normal',fontsize=11)
     
     axp.set_xlim([-0.25, 7.25])
     axp.set_xticklabels(xlabels)
@@ -214,3 +216,7 @@ for w in range(52):
     
     # axp.legend(loc='best')
     # axn.legend(loc='best')
+
+output_dir = os.path.join( FileMethods.output_dir, "model1_energies_paper" )
+fig_name = 'price_multipliers.pdf'
+fig.savefig( os.path.join(output_dir, fig_name), dpi=300 )
