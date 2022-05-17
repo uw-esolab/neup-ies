@@ -6,10 +6,11 @@ Indirect Configuration Steam-to-Salt Heat Exchanger
 .. image:: _static/steam2salt_hx.png
    :target: _static/steam2salt_hx.png
 
-Heat exchanger diagram, based on White et al. (2021). Heat lost to surroundings assumed to be 0.
+Heat exchanger diagram, based on `White et al. (2021) <https://doi.org/10.3390/su132212428>`_. Heat lost to surroundings assumed to be 0.
 
 Hot Stream - Steam
 -------------------------------------
+
 Hot stream in this case is the fraction of steam coming from the LFR loop.
 The heat exchanged between the two streams can be written in terms of the hot stream properties as: 
 

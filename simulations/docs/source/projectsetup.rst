@@ -1,6 +1,6 @@
-.. quickstart:
+.. _projectsetup:
 
-Quick Start Guide
+Project Set-Up
 ###################################
 
 Here is a brief overview of steps to set up the full project. 

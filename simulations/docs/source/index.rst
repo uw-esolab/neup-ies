@@ -43,14 +43,29 @@ Project Guides
 
 Below are some guides to different aspects of the project.
 
-Guides to Building Project
+Guides to Building/Running
 ########################################
 
 .. toctree::
    :maxdepth: 4
    
-   quickstart
+   projectsetup
    sscmod
+   runningpysam
+   runningpyssc
+
+
+General Project Structure
+########################################
+
+.. toctree::
+   :maxdepth: 4
+   
+   highlevelcode
+   jsonscripts
+   modulecombinations
+   sscoverview
+   
    
 Guides to Model 1a
 ###################################
@@ -60,7 +75,8 @@ Model 1a is the direct TES charging configuration with only LFR heat supply.
 .. toctree::
    :maxdepth: 4
    
-   ne2mod
+   nuctesoverview
+
 
 Guides to Model 2a
 ###################################
@@ -70,6 +86,7 @@ Model 2a is the direct TES charging configuration with LFR and CSP heat supply.
 .. toctree::
    :maxdepth: 4
    
+   dualplanttesoverview
    directTESoutletMixing
  
  
@@ -83,6 +100,8 @@ Model 2b is the **indirect** TES charging configuration with LFR and CSP heat su
 .. toctree::
    :maxdepth: 4
    
+   indirectnuctesoverview
+   dualindnuctesoverview
    indirectTESdesignPointMassFlow
    steam2salthx
 
