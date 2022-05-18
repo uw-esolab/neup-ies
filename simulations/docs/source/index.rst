@@ -76,6 +76,7 @@ Model 1a is the direct TES charging configuration with only LFR heat supply.
    :maxdepth: 4
    
    nuctesoverview
+   nuctesscripts
 
 
 Guides to Model 2a
@@ -87,6 +88,7 @@ Model 2a is the direct TES charging configuration with LFR and CSP heat supply.
    :maxdepth: 4
    
    dualplanttesoverview
+   dualplanttesscripts
    directTESoutletMixing
  
  
@@ -102,6 +104,7 @@ Model 2b is the **indirect** TES charging configuration with LFR and CSP heat su
    
    indirectnuctesoverview
    dualindnuctesoverview
+   dualindnuctesscripts
    indirectTESdesignPointMassFlow
    steam2salthx
 
