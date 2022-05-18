@@ -8,8 +8,8 @@ Here is a list of relevant scripts for Model 1b and 2b.
 In `neup-ies/simulations/scripts/debugging__ModelB_scripts <https://github.com/uw-esolab/neup-ies/tree/master/simulations/indtes/debugging__ModelB_scripts>`_ you can find a multitude of scripts used to debug Model 1b and 2b. These scripts are not as polished as the ones for Model 1a.
 
 
-Debugging
-===========
+Debugging Scripts
+===================
 
 Most of these scripts are found in the ``indtes`` branch of the ``neup-ies`` repository. They will be pushed to master soon.
 
