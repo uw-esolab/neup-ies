@@ -7,6 +7,7 @@ Created on Wed May  4 12:24:18 2022
 """
 
 from util.PySSCWrapper import PySSCWrapper
+import matplotlib.pyplot as plt
 import os
 
 # print the PID of this script run
@@ -17,7 +18,7 @@ print("PID = ", pid)
 pw = PySSCWrapper(json_name='model1b_Hamilton_FS_TwinPeaks_x1',is_debug=True)
 
 # update SSC dictionary parameters
-pw.sscdict['P_ref']         = 1000
+pw.sscdict['P_ref']         = 700
 pw.sscdict['tshours']       = 4
 
 # run SSC through PySSC
@@ -34,3 +35,6 @@ T_pc_out      = pw.get_array('T_pc_out')
 e_ch_tes      = pw.get_array('e_ch_tes')
 t_plot        = pw.get_array('time_hr') / 24
 op_mode_1     = pw.get_array('op_mode_1')
+
+plt.figure()
+plt.plot( t_plot, gen)

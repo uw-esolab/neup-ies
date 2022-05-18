@@ -32,7 +32,7 @@ dispatch = True
 run_loop = True
 sscH    = 24   # (hr)
 pyoH    = 48   # (hr)
-Pref    = 1000 # (MW)
+Pref    = 700 # (MW)
 tshours = 4    # (hr)
 
 # ========================
