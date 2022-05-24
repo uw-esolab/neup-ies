@@ -58,4 +58,6 @@ Need to:
 	
 	- Recombine steam mass flows through LFR and through TES before calling PC method 
 	
-	
+
+		.. image:: _static/modelB_mdotsolver.png
+    			:target: _static/modelB_mdotsolver.png

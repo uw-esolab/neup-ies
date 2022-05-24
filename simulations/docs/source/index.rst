@@ -179,6 +179,7 @@ Here are some guides to indirect TES charging model calculations and assumptions
    
    indirectTESdesignPointMassFlow
    steam2salthx
+   salt2steamhx
 
 
 There is also a documentation of the current state of Model 1b and 2b within this project.

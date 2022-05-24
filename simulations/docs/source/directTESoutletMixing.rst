@@ -1,4 +1,4 @@
-.. directTESoutletMixing:
+.. _directTESoutletMixing:
 
 Model 2a Mixing of LFR and CSP Outlet Streams
 #################################################
