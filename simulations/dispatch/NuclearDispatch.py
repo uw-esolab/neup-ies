@@ -27,7 +27,7 @@ class NuclearDispatch(GeneralDispatch):
     specifically for the NuclearTES NE2+SSC module.
     """
     
-    def __init__(self, params, unitRegistry):
+    def __init__(self, **kwargs):
         """ Initializes the NuclearDispatch module
         
         The instantiation of this class receives a parameter dictionary from
@@ -40,9 +40,7 @@ class NuclearDispatch(GeneralDispatch):
             params (dict)                : dictionary of Pyomo dispatch parameters
             unitRegistry (pint.registry) : unique unit Pint unit registry
         """
-        
-        # initialize Generic module, csv data arrays should be saved here
-        GeneralDispatch.__init__( self, params, unitRegistry )
+        super().__init__(**kwargs)
 
 
     def generate_params(self, params, skip_parent=False):
@@ -62,10 +60,8 @@ class NuclearDispatch(GeneralDispatch):
             params (dict)  : dictionary of Pyomo dispatch parameters
         """
         
-        # generating GeneralDispatch parameters first (PowerCycle, etc.)
-        if not skip_parent:
-            GeneralDispatch.generate_params(self, params)
-        
+        super().generate_params(params)
+
         # lambdas to convert units and data to proper syntax
         gd = self.gd
         gu = self.gu 
@@ -119,10 +115,8 @@ class NuclearDispatch(GeneralDispatch):
         Power Cycle through GeneralDispatch, then declare nuclear variables.
         """
         
-        # generating GeneralDispatch variables first (PowerCycle, etc.)
-        if not skip_parent:
-            GeneralDispatch.generate_variables(self)
-        
+        super().generate_variables()
+
         u = self.u_pyomo
         ### Decision Variables ###
         #------- Variables ---------
@@ -175,6 +169,7 @@ class NuclearDispatch(GeneralDispatch):
         is essentially used as a sanity check, if Pyomo deems that nuclear should shutdown
         or startup then something is wrong and SSC will complain. 
         """
+        
         def nuc_inventory_rule(model,t):
             """ NP energy inventory for startup is balanced """
             if t == 1:
@@ -221,7 +216,7 @@ class NuclearDispatch(GeneralDispatch):
         def nuc_generation_rule(model,t):
             """ Thermal energy production by NP only when operating """
             return model.xn[t] <= model.Qin_nuc[t] * model.yn[t]
-        def min_generation_rule(model,t):
+        def nuc_min_generation_rule(model,t):
             """ Lower bound on thermal energy produced by NP """
             return model.xn[t] >= model.Qnl * model.yn[t]
         def nuc_gen_persist_rule(model,t):
@@ -230,7 +225,7 @@ class NuclearDispatch(GeneralDispatch):
         
         self.model.nuc_production_con = pe.Constraint(self.model.T,rule=nuc_production_rule)
         self.model.nuc_generation_con = pe.Constraint(self.model.T,rule=nuc_generation_rule)
-        self.model.nuc_min_generation_con = pe.Constraint(self.model.T,rule=min_generation_rule)
+        self.model.nuc_min_generation_con = pe.Constraint(self.model.T,rule=nuc_min_generation_rule)
         self.model.nuc_gen_persist_con = pe.Constraint(self.model.T,rule=nuc_gen_persist_rule)
         
         
@@ -326,6 +321,9 @@ class NuclearDispatch(GeneralDispatch):
         
         TODO: This should be revisited when adding MED!!
         """
+        
+        super().addPiecewiseLinearEfficiencyConstraints()
+        
         def grid_sun_rule(model, t):
             """ Balance of power flow, i.e. sold vs purchased """
             return (
@@ -334,9 +332,6 @@ class NuclearDispatch(GeneralDispatch):
                 		- model.Lc*model.x[t] 
                         - model.Wb*model.ycsb[t] - model.Wnht*(model.ynsb[t]+model.ynsu[t])		#Is Wrsb energy [kWh] or power [kW]?  [az] Wrsb = Wht in the math?
             )
-        
-        # call the parent version of this method
-        GeneralDispatch.addPiecewiseLinearEfficiencyConstraints(self)
         
         # additional constraints
         self.model.grid_sun_con = pe.Constraint(self.model.T,rule=grid_sun_rule)
@@ -350,14 +345,9 @@ class NuclearDispatch(GeneralDispatch):
         version to set PowerCycle constraints, then calls nuclear constraint methods
         to add them to the model. 
         """
-        
-        # generating GeneralDispatch constraints first (PowerCycle, etc.)
-        if not skip_parent:
-            # call general PC constraints
-            GeneralDispatch.generate_constraints(self)
-            # call TES energy balance constraints specific to current dispatch model
-            self.addTESEnergyBalanceConstraints()
-        
+        super().generate_constraints()
+
+        self.addTESEnergyBalanceConstraints()
         self.addNuclearStartupConstraints()
         self.addNuclearSupplyAndDemandConstraints()
         self.addNuclearNodeLogicConstraints()
@@ -377,8 +367,7 @@ class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
     that can be updated.
     """
     
-    def __init__(self, unit_registry, SSC_dict=None, PySAM_dict=None, pyomo_horizon=48, 
-                   dispatch_time_step=1):
+    def __init__(self, **kwargs):
         """ Initializes the NuclearDispatchParamWrap module
         
         Inputs:
@@ -389,11 +378,10 @@ class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
             dispatch_time_step (int Quant) : length of each Pyomo time step (hours)
         """
         
-        GeneralDispatchParamWrap.__init__( self, unit_registry, SSC_dict, PySAM_dict, 
-                            pyomo_horizon, dispatch_time_step )
+        super().__init__(**kwargs)
 
 
-    def set_design(self, skip_parent=False):
+    def set_design(self):
         """ Method to calculate and save design point values of Plant operation
         
         This method extracts values and calculates for design point parameters 
@@ -401,17 +389,16 @@ class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
         inlet and outlet temperatures, etc.). 
         """
         
-        u = self.u
+        super().set_design()
         
-        if not skip_parent:
-            GeneralDispatchParamWrap.set_design(self)
+        u = self.u
         
         # nuclear parameters
         self.q_nuc_design = self.SSC_dict['q_dot_nuclear_des'] * u.MW      # nuclear design thermal power
         
         # specific heat values at design point
         T_htf  = 0.5*(self.T_htf_hot + self.T_htf_cold)
-        cp_des = SSCHelperMethods.get_cp_htf(self.u, T_htf, self.SSC_dict['rec_htf'] )
+        cp_des = SSCHelperMethods.get_cp_htf(self.u, T_htf, self.SSC_dict['nuc_htf'] )
         cp_des = cp_des.to('J/g/kelvin')       
         
         # mass flow rate
@@ -441,8 +428,7 @@ class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
         u = self.u
     
         # set up costs from parent class
-        if not skip_parent:
-            param_dict = GeneralDispatchParamWrap.set_fixed_cost_parameters( self, param_dict )
+        super().set_fixed_cost_parameters(param_dict)
         
         C_nuc  = self.PySAM_dict['nuc_op_cost'] * u.USD / u.MWh  # value taken from Cory @ Westinghouse, later converted to $/kWh        
         C_nsu  = self.PySAM_dict['nuc_cold_su'] * u.USD
@@ -594,11 +580,13 @@ class NuclearDispatchParamWrap(GeneralDispatchParamWrap):
         Outputs:
             param_dict (dict) : updated dictionary of Pyomo dispatch parameters
         """
+        
+        
+        
         u = self.u
         
         # First filling out initial states from GeneralDispatcher
-        if not skip_parent:
-            param_dict = GeneralDispatchParamWrap.set_initial_state( self, param_dict, updated_dict, plant, npts )
+        super().set_initial_state(param_dict, updated_dict, plant, npts )
         
         if updated_dict is None:
             self.current_Plant = copy.deepcopy(self.SSC_dict)

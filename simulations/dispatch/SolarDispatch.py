@@ -16,19 +16,22 @@ import pyomo.environ as pe
 from dispatch.GeneralDispatch import GeneralDispatch
 from dispatch.GeneralDispatch import GeneralDispatchParamWrap
 from dispatch.NuclearDispatch import NuclearDispatch
+from dispatch.NuclearDispatch import NuclearDispatchParamWrap
+from dispatch.IndirectNuclearDispatch import IndirectNuclearDispatch
+from dispatch.IndirectNuclearDispatch import IndirectNuclearDispatchParamWrap
 import numpy as np
 from util.FileMethods import FileMethods
 from util.SSCHelperMethods import SSCHelperMethods
 import os, copy
 
-class SolarDispatch(NuclearDispatch):
+class SolarDispatch(IndirectNuclearDispatch, NuclearDispatch):
     """
     The SolarDispatch class is meant to set up and run Dispatch
     optimization as a mixed integer linear program problem using Pyomo,
     specifically for the NuclearTES NE2+SSC module.
     """
     
-    def __init__(self, params, unitRegistry):
+    def __init__(self, **kwargs):
         """ Initializes the SolarDispatch module
         
         The instantiation of this class receives a parameter dictionary from
@@ -42,8 +45,13 @@ class SolarDispatch(NuclearDispatch):
             unitRegistry (pint.registry) : unique unit Pint unit registry
         """
         
-        # initialize Generic module, csv data arrays should be saved here
-        GeneralDispatch.__init__( self, params, unitRegistry )
+        # check to see if we need to invoke the IndirectNuclear or bypass
+        if "direct" in kwargs:
+            # doing indirect TES charging
+            super().__init__(**kwargs)
+        else:
+            # bypassing, we are doing direct TES charging (or solar only)
+            super(IndirectNuclearDispatch, self).__init__(**kwargs)
 
 
     def generate_params(self, params, skip_parent=False):
@@ -62,10 +70,13 @@ class SolarDispatch(NuclearDispatch):
         Inputs:
             params (dict)  : dictionary of Pyomo dispatch parameters
         """
-        
-        # generating GeneralDispatch parameters first (PowerCycle, etc.)
-        if not skip_parent:
-            GeneralDispatch.generate_params(self, params)
+        if self.dual is False:
+            super(NuclearDispatch, self).generate_params(params)
+        else:
+            if self.direct:
+                super(IndirectNuclearDispatch, self).generate_params(params)
+            else:
+                super().generate_params(params)
         
         # lambdas to convert units and data to proper syntax
         gd = self.gd
@@ -109,9 +120,14 @@ class SolarDispatch(NuclearDispatch):
         """
         
         # generating GeneralDispatch variables first (PowerCycle, etc.)
-        if not skip_parent:
-            GeneralDispatch.generate_variables(self)
-        
+        if self.dual is False:
+            super(NuclearDispatch, self).generate_variables()
+        else:
+            if self.direct:
+                super(IndirectNuclearDispatch, self).generate_variables()
+            else:
+                super().generate_variables()
+                
         u = self.u_pyomo
         ### Decision Variables ###
         #------- Variables ---------
@@ -268,6 +284,21 @@ class SolarDispatch(NuclearDispatch):
         self.model.rec_shutdown_con = pe.Constraint(self.model.T,rule=rec_shutdown_rule)
 
 
+    def addCycleStartupConstraints(self):
+        """ Method to add cycle startup constraints to the Pyomo General Model
+        
+        This method adds constraints pertaining to cycle startup within the Pyomo
+        General Dispatch class. Several nested functions are defined. 
+        """
+        if self.dual is False:
+            super(NuclearDispatch, self).addCycleStartupConstraints()
+        else:
+            if self.direct:
+                super(IndirectNuclearDispatch, self).addCycleStartupConstraints()
+            else:
+                super().addCycleStartupConstraints()
+
+
     def addTESEnergyBalanceConstraints(self):
         """ Method to add TES constraints to the Pyomo Solar Model
         
@@ -307,6 +338,8 @@ class SolarDispatch(NuclearDispatch):
         
         TODO: This should be revisited when adding MED!!
         """
+        super(NuclearDispatch, self).addPiecewiseLinearEfficiencyConstraints()
+        
         def grid_sun_rule(model, t):
             """ Balance of power flow, i.e. sold vs purchased """
             return (
@@ -316,9 +349,6 @@ class SolarDispatch(NuclearDispatch):
                         - model.Wh*model.yr[t] - model.Wb*model.ycsb[t] - model.Wht*(model.yrsb[t]+model.yrsu[t])		#Is Wrsb energy [kWh] or power [kW]?  [az] Wrsb = Wht in the math?
                 		- (model.Ehs/model.Delta[t])*(model.yrsu[t] + model.yrsb[t] + model.yrsd[t])
             )
-        
-        # call the parent version of this method
-        GeneralDispatch.addPiecewiseLinearEfficiencyConstraints(self)
         
         # additional constraints
         self.model.grid_sun_con = pe.Constraint(self.model.T,rule=grid_sun_rule)
@@ -332,14 +362,15 @@ class SolarDispatch(NuclearDispatch):
         version to set PowerCycle constraints, then calls nuclear constraint methods
         to add them to the model. 
         """
-        
-        # generating GeneralDispatch constraints first (PowerCycle, etc.)
-        if not skip_parent:
-            # call general PC constraints
-            GeneralDispatch.generate_constraints(self)
-            # call TES energy balance constraints specific to current dispatch model
+        if self.dual is False:
+            super(NuclearDispatch, self).generate_constraints()
             self.addTESEnergyBalanceConstraints()
-        
+        else:
+            if self.direct:
+                super(IndirectNuclearDispatch, self).generate_constraints()
+            else:
+                super().generate_constraints()
+                
         self.addReceiverStartupConstraints()
         self.addReceiverSupplyAndDemandConstraints()
         self.addReceiverNodeLogicConstraints()
@@ -349,7 +380,7 @@ class SolarDispatch(NuclearDispatch):
 # Dispatch Wrapper
 # =============================================================================
 
-class SolarDispatchParamWrap(GeneralDispatchParamWrap):
+class SolarDispatchParamWrap(IndirectNuclearDispatchParamWrap, NuclearDispatchParamWrap):
     """
     The SolarDispatchParamWrap class is meant to be the staging area for the 
     creation of Parameters ONLY for the SolarDispatch class. It communicates 
@@ -358,8 +389,7 @@ class SolarDispatchParamWrap(GeneralDispatchParamWrap):
     that can be updated.
     """
     
-    def __init__(self, unit_registry, SSC_dict=None, PySAM_dict=None, pyomo_horizon=48, 
-                   dispatch_time_step=1):
+    def __init__(self, **kwargs):
         """ Initializes the SolarDispatchParamWrap module
         
         Inputs:
@@ -370,11 +400,18 @@ class SolarDispatchParamWrap(GeneralDispatchParamWrap):
             dispatch_time_step (int Quant) : length of each Pyomo time step (hours)
         """
         
-        GeneralDispatchParamWrap.__init__( self, unit_registry, SSC_dict, PySAM_dict, 
-                            pyomo_horizon, dispatch_time_step )
+        
+        # check to see if we need to invoke the IndirectNuclear or bypass
+        if "direct" in kwargs:
+            # doing indirect TES charging
+            super().__init__(**kwargs)
+        else:
+            # bypassing, we are doing direct TES charging (or solar only)
+            super(IndirectNuclearDispatchParamWrap, self).__init__(**kwargs)
 
 
-    def set_design(self, skip_parent=False, given_des=False):
+
+    def set_design(self, skip_parent=False):
         """ Method to calculate and save design point values of Plant operation
         
         This method extracts values and calculates for design point parameters 
@@ -384,20 +421,21 @@ class SolarDispatchParamWrap(GeneralDispatchParamWrap):
         
         u = self.u
         
-        if not skip_parent:
-            GeneralDispatchParamWrap.set_design(self)
+        if self.dual is False:
+            super(NuclearDispatchParamWrap, self).set_design()
+            self.q_rec_design = self.SSC_dict["P_ref"]/self.SSC_dict["design_eff"]*self.SSC_dict["solarm"]* u.MW 
+        else:
+            if self.direct:
+                super(IndirectNuclearDispatchParamWrap, self).set_design()
+            else:
+                super().set_design()
+            self.q_rec_design = self.SSC_dict["q_dot_rec_des"] * u.MW
         
         # specific heat values at design point
         T_htf  = 0.5*(self.T_htf_hot + self.T_htf_cold)
         self.T_htf_avg = T_htf
         cp_des = SSCHelperMethods.get_cp_htf(self.u, T_htf, self.SSC_dict['rec_htf'] )
         cp_des = cp_des.to('J/g/kelvin')   
-        
-        # CSP parameters
-        if given_des:
-            self.q_rec_design = self.SSC_dict["q_dot_rec_des"] * u.MW
-        else:
-            self.q_rec_design = self.SSC_dict["P_ref"]/self.SSC_dict["design_eff"]*self.SSC_dict["solarm"]* u.MW      # CSP design thermal power
         
         dm_rec_des = self.q_rec_design / (cp_des * (self.T_htf_hot - self.T_htf_cold) )  
         self.dm_rec_design = dm_rec_des.to('kg/s') 
@@ -413,7 +451,7 @@ class SolarDispatchParamWrap(GeneralDispatchParamWrap):
         self.m_tes_design = m_tes_des.to('kg')     # TES active storage mass (kg)
 
 
-    def set_fixed_cost_parameters(self, param_dict, skip_parent=False):
+    def set_fixed_cost_parameters(self, param_dict):
         """ Method to set fixed costs of the Plant
         
         This method calculates some fixed costs for the Plant operations, startup,
@@ -429,8 +467,13 @@ class SolarDispatchParamWrap(GeneralDispatchParamWrap):
         u = self.u
     
         # set up costs from parent class
-        if not skip_parent:
-            param_dict = GeneralDispatchParamWrap.set_fixed_cost_parameters( self, param_dict )
+        if self.dual is False:
+            super(NuclearDispatchParamWrap, self).set_fixed_cost_parameters(param_dict)
+        else:
+            if self.direct:
+                super(IndirectNuclearDispatchParamWrap, self).set_fixed_cost_parameters(param_dict)
+            else:
+                super().set_fixed_cost_parameters(param_dict)
         
         # TODO: old values from LORE files
         C_rec  = self.PySAM_dict['rec_op_cost'] * u.USD / u.MWh #Q_ratio * 0.002  * u.USD/u.kWh        
@@ -480,9 +523,9 @@ class SolarDispatchParamWrap(GeneralDispatchParamWrap):
         # second-to-last step before setting param_dict
         self.deltal = Drsu
         self.Ehs    = N_hel * heliostat_SU_energy
-        self.Er     = receiver_SU_ratio * self.q_rec_design 
+        self.Er     = receiver_SU_ratio * self.q_rec_design if self.q_rec_design > 0 else 125*u.MWh 
         self.Eu     = TES_load_hrs      * self.q_pb_design
-        self.Lr     = wdot / self.q_rec_design
+        self.Lr     = wdot / self.q_rec_design if self.q_rec_design.m > 0 else 0 * u.W / u.W
         self.Qrl    = min_massflow_td_frac    * self.q_rec_design 
         self.Qrsb   = q_rec_standby_fraction  * self.q_rec_design 
         self.Qrsd   = q_rec_shutdown_fraction * self.q_rec_design
@@ -581,9 +624,14 @@ class SolarDispatchParamWrap(GeneralDispatchParamWrap):
         u = self.u
         
         # First filling out initial states from GeneralDispatcher
-        if not skip_parent:
-            param_dict = GeneralDispatchParamWrap.set_initial_state( self, param_dict, updated_dict, plant, npts )
-        
+        if self.dual is False:
+            super(NuclearDispatchParamWrap, self).set_initial_state(param_dict, updated_dict, plant, npts )
+        else:
+            if self.direct:
+                super(IndirectNuclearDispatchParamWrap, self).set_initial_state(param_dict, updated_dict, plant, npts )
+            else:
+                super().set_initial_state(param_dict, updated_dict, plant, npts )
+                
         if updated_dict is None:
             self.current_Plant = copy.deepcopy(self.SSC_dict)
             self.first_run = True

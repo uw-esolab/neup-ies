@@ -31,7 +31,7 @@ class DualPlantTES(SolarTES):
     out to the power cycle. 
     """
 
-    def __init__(self, plant_name="nuclear_mspt_tes", json_name="model2", **specs):
+    def __init__(self, plant_name="nuclear_mspt_tes", json_name="model2", dual=True, **kwargs):
         """ Initializes the DualPlantTES module
         
         Inputs:
@@ -41,7 +41,7 @@ class DualPlantTES(SolarTES):
         """
         
         # initialize Solar+Nuclear+Generic module, csv data arrays should be saved here
-        SolarTES.__init__( self, plant_name, json_name, **specs )
+        super().__init__( plant_name, json_name, dual=dual, **kwargs )
         
         # define specific PySAM module to be called later
         self.PySAM_Module = NuclearMsptTes
@@ -49,6 +49,7 @@ class DualPlantTES(SolarTES):
         # define specific Dispatch module to be called later
         self.Dispatch_Module = DD
         
+        # define the specific Dispatch Outputs module to be called later to create dispatch targets for SSC
         self.Dispatch_Outputs = SDO
 
 
@@ -177,8 +178,11 @@ class DualPlantTES(SolarTES):
         
         self.DispatchParameterClass = DDP
         
-        dispatch_wrap = self.DispatchParameterClass( self.u, self.SSC_dict, PySAM_dict,
-                    self.pyomo_horizon, self.dispatch_time_step)
+        dispatch_wrap = self.DispatchParameterClass( unit_registry=self.u, 
+                    SSC_dict=self.SSC_dict, PySAM_dict=PySAM_dict,
+                    pyomo_horizon=self.pyomo_horizon, 
+                    dispatch_time_step=self.dispatch_time_step,
+                    interpolants=self.interpolants)
         
         return dispatch_wrap
 

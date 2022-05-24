@@ -26,7 +26,7 @@ class NuclearTES(GenericSSCModule):
     
     """
     
-    def __init__(self, plant_name="nuclear_tes", json_name="model1", **specs):
+    def __init__(self, plant_name="nuclear_tes", json_name="model1", **kwargs):
         """ Initializes the NuclearTES module
         
         Args:
@@ -42,7 +42,7 @@ class NuclearTES(GenericSSCModule):
         """
         
         # initialize Generic module, csv data arrays should be saved here
-        GenericSSCModule.__init__( self, plant_name, json_name, **specs)
+        super().__init__( plant_name, json_name, **kwargs )
         
         # define specific PySAM module to be called later
         self.PySAM_Module = NuclearTes
@@ -50,6 +50,7 @@ class NuclearTES(GenericSSCModule):
         # define specific Dispatch module to be called later
         self.Dispatch_Module = ND
         
+        # define specific Dispatch Outputs class to be called to generate pyomo targets 
         self.Dispatch_Outputs = NDO
         
         
@@ -297,7 +298,8 @@ class NuclearTES(GenericSSCModule):
         """
         
         # Creation of Dispatch model (could be overloaded)
-        dispatch_model = self.Dispatch_Module(params, self.u)
+        dispatch_model = self.Dispatch_Module( unitRegistry=self.u )
+        dispatch_model.set_up( params )
         
         # Solving Dispatch optimization model
         dispatch_success = True
@@ -369,13 +371,16 @@ class NuclearTES(GenericSSCModule):
         
         self.DispatchParameterClass = NDP
         
-        dispatch_wrap = self.DispatchParameterClass( self.u, self.SSC_dict, PySAM_dict,
-                    self.pyomo_horizon, self.dispatch_time_step)
+        dispatch_wrap = self.DispatchParameterClass( unit_registry=self.u, 
+                    SSC_dict=self.SSC_dict, PySAM_dict=PySAM_dict,
+                    pyomo_horizon=self.pyomo_horizon, 
+                    dispatch_time_step=self.dispatch_time_step,
+                    interpolants=self.interpolants)
         
         return dispatch_wrap
 
     
-    def create_dispatch_params(self, Plant ):
+    def create_dispatch_params(self, Plant):
         """ Populating a dictionary with dispatch parameters before optimization
         
         Note:

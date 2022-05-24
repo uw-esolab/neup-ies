@@ -360,6 +360,9 @@ class PySSCWrapper(object):
                    "DualPlantTES__" if self.sscdict['compute_module_0'] == 'nuclear_mspt_tes' else \
                    "__"
         
+        if self.sscdict['compute_module_0'] == 'nuclear_mspt_indirect_tes':
+            filename = 'IndirectNuclearTES__' if self.sscdict['q_dot_rec_des'] == 0 else 'DualIndirectTES__'
+        
         # initializing empty string
         extstr = ''
         

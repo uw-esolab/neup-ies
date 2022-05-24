@@ -71,6 +71,32 @@ class FileMethods(object):
         return t_dry.to('kelvin')
 
 
+    def read_steam_table_file(filepath, unit_registry):
+        """ Method to read csv file and return data array
+        
+        Inputs:
+            filepath (str)               : full path to file
+            unitRegistry (pint.registry) : unique unit Pint unit registry
+        Outputs:
+            T_K (float Quant) : steam temperature (in deg K)
+            c_p (float Quant) : steam temperature (in kJ/kg*K)
+            H_p (float Quant) : steam temperature (in kJ/kg)
+        """
+        
+        # setting a standard unit registry
+        u = unit_registry 
+        
+        # import csv dataframe
+        dataframe = pandas.read_csv(filepath, delimiter='\t')
+        
+        # extract Temperature from dataframe
+        T_C = dataframe['Temperature (C)'].to_numpy() * u.degC
+        c_p = dataframe['Cp (J/g*K)'].to_numpy() * u.kJ / u.kg * u.degK
+        H_p = dataframe['Enthalpy (kJ/kg)'].to_numpy() * u.kJ / u.kg
+
+        return T_C.to('kelvin'), c_p, H_p
+
+
     def read_json(json_name):
         """ Method to read json file and return dictionaries
         

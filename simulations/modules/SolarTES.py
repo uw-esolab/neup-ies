@@ -12,17 +12,18 @@ import numpy as np
 import PySAM.TcsmoltenSalt as TcsmoltenSalt
 from modules.GenericSSCModule import GenericSSCModule
 from modules.NuclearTES import NuclearTES
+from modules.IndirectNuclearTES import IndirectNuclearTES
 from dispatch.SolarDispatch import SolarDispatch as SD
 from dispatch.SolarDispatch import SolarDispatchParamWrap as SDP
 from dispatch.SolarDispatch import SolarDispatchOutputs as SDO
 
-class SolarTES(NuclearTES): 
+class SolarTES(IndirectNuclearTES, NuclearTES): 
     """
     The SolarTES class intializes, updates, and runs SSC simulations through PySAM,
     specifically for the SSC tcsmolten_salt module. 
     """
     
-    def __init__(self, plant_name="tcsmolten_salt", json_name="model_solarTES", **specs):
+    def __init__(self, plant_name="tcsmolten_salt", json_name="model_solarTES", **kwargs):
         """ Initializes the SolarTES module
         
         Inputs:
@@ -31,15 +32,21 @@ class SolarTES(NuclearTES):
             is_dispatch (bool)       : boolean, if True runs Pyomo dispatch optimization
         """
         
-        # initialize Nuclear+Generic module, csv data arrays should be saved here
-        NuclearTES.__init__( self, plant_name, json_name, **specs )
-        
+        # check to see if we need to invoke the IndirectNuclear or bypass
+        if "direct" in kwargs:
+            # doing indirect TES charging
+            super().__init__( plant_name, json_name, **kwargs )
+        else:
+            # bypassing, we are doing direct TES charging (or solar only)
+            super(IndirectNuclearTES, self).__init__( plant_name, json_name, **kwargs )
+            
         # define specific PySAM module to be called later
         self.PySAM_Module = TcsmoltenSalt
         
         # define specific Dispatch module to be called later
         self.Dispatch_Module = SD
-
+        
+        # define the specific Dispatch Outputs module to be called later to create dispatch targets for SSC
         self.Dispatch_Outputs = SDO
 
 
@@ -89,8 +96,11 @@ class SolarTES(NuclearTES):
         
         self.DispatchParameterClass = SDP
         
-        dispatch_wrap = self.DispatchParameterClass( self.u, self.SSC_dict, PySAM_dict,
-                    self.pyomo_horizon, self.dispatch_time_step)
+        dispatch_wrap = self.DispatchParameterClass( unit_registry=self.u, 
+                    SSC_dict=self.SSC_dict, PySAM_dict=PySAM_dict,
+                    pyomo_horizon=self.pyomo_horizon, 
+                    dispatch_time_step=self.dispatch_time_step,
+                    interpolants=self.interpolants)
         
         return dispatch_wrap
 

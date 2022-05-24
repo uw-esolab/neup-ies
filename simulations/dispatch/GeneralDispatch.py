@@ -44,7 +44,7 @@ class GeneralDispatch(ABC):
     """
     
     @abstractmethod
-    def __init__(self, params, unitRegistry):
+    def __init__(self, unitRegistry, dual=False, direct=True, **kwargs):
         """ Initializes the GeneralDispatch module
         
         The instantiation of this class receives a parameter dictionary from
@@ -57,9 +57,14 @@ class GeneralDispatch(ABC):
             params (dict)                : dictionary of Pyomo dispatch parameters
             unitRegistry (pint.registry) : unique unit Pint unit registry
         """
-        
+
         self.u_pyomo = u_pyomo
+        self.dual    = dual    # are we combining solar + nuclear?
+        self.direct  = direct  # are we directly heating storage?
+
         
+    def set_up(self, params):
+                
         self.model = pe.ConcreteModel()
         self.generate_params(params)
         self.generate_variables()
@@ -67,7 +72,7 @@ class GeneralDispatch(ABC):
         self.generate_constraints()
         
         # assert_units_consistent(self.model)
-
+        
 
     def generate_params(self, params):
         """ Method to generate parameters within Pyomo General Model
@@ -161,6 +166,7 @@ class GeneralDispatch(ABC):
         parameters. Here we define continuous and binary variables for the 
         Power Cycle. 
         """
+        
         u = self.u_pyomo
         ### Decision Variables ###
         #------- Variables ---------
@@ -513,8 +519,9 @@ class GeneralDispatchParamWrap(object):
     for every simulation segment AND initial conditions that can be updated.
     """
     
-    def __init__(self, unit_registry, SSC_dict, PySAM_dict, pyomo_horizon, 
-                       dispatch_time_step):
+    def __init__(self, unit_registry, SSC_dict, PySAM_dict, 
+                       pyomo_horizon, dispatch_time_step, dual=False, direct=True, 
+                       interpolants=None, **kwargs):
         """ Initializes the GeneralDispatchParamWrap module
         
         Inputs:
@@ -529,6 +536,10 @@ class GeneralDispatchParamWrap(object):
         self.PySAM_dict         = PySAM_dict
         self.pyomo_horizon      = pyomo_horizon
         self.dispatch_time_step = dispatch_time_step 
+        self.interpolants       = interpolants
+        
+        self.dual    = dual    # are we combining solar + nuclear?
+        self.direct  = direct  # are we directly heating storage?
         
         # setting a standard unit registry
         self.u = unit_registry 
@@ -560,7 +571,10 @@ class GeneralDispatchParamWrap(object):
         self.q_pb_design  = (self.p_pb_design / self.eta_design).to('MW')  # power block design thermal rating
         
         # temperature values at design point
-        self.T_htf_hot  = (self.SSC_dict['T_htf_hot_des']*u.celsius).to('degK')
+        if 'T_htf_hot_des' in self.SSC_dict.keys():
+            self.T_htf_hot  = (self.SSC_dict['T_htf_hot_des']*u.celsius).to('degK')
+        else:
+            self.T_htf_hot  = (self.SSC_dict['T_htf_hot_des_steam']*u.celsius).to('degK')           
         self.T_htf_cold = (self.SSC_dict['T_htf_cold_des']*u.celsius).to('degK')
         
         
@@ -770,7 +784,7 @@ class GeneralDispatchParamWrap(object):
         Inputs:
             param_dict (dict)    : dictionary of Pyomo dispatch parameters
             updated_dict (dict)  : dictionary with updated SSC initial conditions from previous run
-            plant (obj)          : the full PySAM Plant object. 
+            plant (obj)          : the full PySAM Plant object 
             npts (int)           : length of the SSC horizon
         Outputs:
             param_dict (dict) : updated dictionary of Pyomo dispatch parameters

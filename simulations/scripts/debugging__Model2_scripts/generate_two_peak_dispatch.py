@@ -11,6 +11,9 @@ from util.FileMethods import FileMethods
 import numpy as np
 import copy, pandas, os
 import matplotlib.pyplot as plt
+from pylab import rc
+rc('axes', linewidth=2)
+rc('font', weight='bold',size=12)
 
 
 days_per_year = 365
@@ -79,9 +82,18 @@ for d in Days_in_Year:
 
 WD_slice = slice(0,7*24,1)
 SD_slice = slice(210*24,217*24,1)
-plt.figure()
-plt.plot( np.arange(0,7*24), hourly_schedule[WD_slice], label='Winter' )
-plt.plot( np.arange(0,7*24), hourly_schedule[SD_slice], label='Summer' )
+
+fig = plt.figure()
+ax = fig.gca()
+ax.plot( np.arange(0,7*24), hourly_schedule[WD_slice], linewidth=3, label='Winter' )
+ax.plot( np.arange(0,7*24), hourly_schedule[SD_slice], linewidth=3, label='Summer' )
+xlabel_loc = np.arange(0, 7 * 24, 24)
+xlabels = ["Mon", "Tues", "Wed", "Thurs", "Fri", "Sat", "Sun"]
+ax.set_xlim([-1, 8])
+ax.set_xticks(np.arange(0,7*24)[xlabel_loc])
+ax.set_xticklabels(xlabels, fontweight='bold')
+
+ax.set_ylabel('Price Multiplier', fontweight='bold')
 plt.legend()
 
 

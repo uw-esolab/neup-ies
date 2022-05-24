@@ -348,7 +348,7 @@ class NuclearTESLoadProfiles(object):
         neutral_slice = slice(0, hrs_per_day, 1)
         
         lw = 3
-        if 'tariffx' in self.filepath:
+        if 'tariffx' in self.filepath or 'TwinPeaks' in self.filepath:
             
             p_time = self.time_array
             price  = self.price_array

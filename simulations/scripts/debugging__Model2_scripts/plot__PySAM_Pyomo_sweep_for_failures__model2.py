@@ -31,17 +31,17 @@ print("PID = ", pid)
 # locating output directory
 output_dir = FileMethods.output_dir
 
-start_name     = 'failureModesNoCSPSB' # testDefocus # failureModes # failureModesNoCSPSB
+start_name     = 'failureModes' # testDefocus # failureModes # failureModesNoCSPSB
 PySAM_name     = 'PySAM'  # PySAM  # ''
 add_extra_Name = True
 extra_name    = '2022_04'  # 2021_10  # 2021_11 # 2021_12
-json_name     = 'model2_Hamilton_560_tariffx1'   # model2_CAISO_Hamilton  # model2_Hamilton_560_TwoPeaks_x1 # model2_Hamilton_560_tariffx1
+json_name     = 'model2_Hamilton_560_TwinPeaks_x1'   # model2_CAISO_Hamilton  # model2_Hamilton_560_TwinPeaks_x1 # model2_Hamilton_560_tariffx1
 dispatch      = True # True # False
 sscH          = 24   # 12 # 24
 pyoH          = 48   # 24 # 48
-q_dot_CSP     = 500
-TES_min       = 2    # 0  # 2
-TES_max       = 12   # 14
+q_dot_CSP     = 750
+TES_min       = 0    # 0  # 2
+TES_max       = 14   # 14
 PC_min        = 600  # 100 # 300 # 400 # 550 # 600 # 900
 PC_max        = 850  # 500 # 850 # 1150
 

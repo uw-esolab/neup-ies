@@ -21,6 +21,7 @@ from tqdm import tqdm
 import pickle as pickle
 import numpy as np
 import copy, time
+from numba import vectorize
 from abc import ABC, abstractmethod
 from multiprocessing import Process
 
@@ -42,9 +43,10 @@ class GenericSSCModule(ABC):
     
     @abstractmethod
     def __init__(self, plant_name="abstract", json_name="abstract", 
+                       dual=False, direct=True, 
                        is_dispatch=False, dispatch_time_step=1,
                        log_dispatch_targets=False, exec_debug=False, 
-                       exec_timeout=10.):
+                       exec_timeout=10., **kwargs):
         """ Initializes the GenericSSCModules
         
         Args:
@@ -68,8 +70,13 @@ class GenericSSCModule(ABC):
         self.json_name  = json_name
         self.plant_name = plant_name
         
+        # object parameters to distinguish inheritance
+        self.dual    = dual    # are we combining solar + nuclear?
+        self.direct  = direct  # are we directly heating storage?
+        
         # create and save a specific unit registry
-        self.u = SSCHelperMethods.define_unit_registry()
+        if not hasattr(self, 'u'):
+            self.u = SSCHelperMethods.define_unit_registry()
         u = self.u
         
         # read in dictionaries from json script
@@ -108,6 +115,11 @@ class GenericSSCModule(ABC):
             self.disp_models  = {}
             self.disp_results = {}
             self.disp_success = {}
+            
+            self.interpolants = {}
+            if hasattr(self, 'cp_interp'):
+                self.interpolants['cp_interp'] = self.cp_interp
+                self.interpolants['hp_interp'] = self.hp_interp
             
             # initialize dispatch wrap class
             self.dispatch_wrap = self.create_dispatch_wrapper( self.PySAM_dict )
@@ -250,7 +262,7 @@ class GenericSSCModule(ABC):
 
     @abstractmethod
     def create_Grid(self):
-        """ Method to create Grid object for the first time
+        """ Method to create Grid onuclear_mspt_indirect_tesbject for the first time
         
         This method creates a Grid object again using built-in PySAM functions.
         The Grid object is created similarly to the Plant object, from SSC inputs
@@ -784,8 +796,11 @@ class GenericSSCModule(ABC):
         
         self.DispatchParameterClass = GDP
         
-        dispatch_wrap = self.DispatchParameterClass( self.u, self.SSC_dict, PySAM_dict,
-                    self.pyomo_horizon, self.dispatch_time_step)
+        dispatch_wrap = self.DispatchParameterClass( unit_registry=self.u, 
+                    SSC_dict=self.SSC_dict, PySAM_dict=PySAM_dict,
+                    pyomo_horizon=self.pyomo_horizon, 
+                    dispatch_time_step=self.dispatch_time_step,
+                    interpolants=self.interpolants)
         
         return dispatch_wrap
 

@@ -29,7 +29,7 @@ print("PID = ", pid)
 # =============================================================================
 
 # possible different CSP design qdot 
-csp_qdot_ref = 500 # 500 # 400
+csp_qdot_ref = 750 # 500 # 400
 
 # array of successful P_cycle and tshours combinations
 # p_cycle_0     = np.array([ 700, 650, 600, 550,      450, 400, 350, 300, 250, 200, 150 ]) # Pref= 500, tshours=0
@@ -42,8 +42,8 @@ csp_qdot_ref = 500 # 500 # 400
 # p_cycle_14    = np.array([ 700, 650, 600, 550, 500,      400, 350, 300, 250, 200, 150 ]) # Pref= 450, tshours=14
 
 # setting up arrays to cycle through
-tshours    = np.array([ 0, 2, 4, 6, 8, 10, 12 ])
-# tshours    = np.array([ 2, 4, 6, 8, 10, 12, 14 ])
+# tshours    = np.array([ 0, 2, 4, 6, 8, 10, 12 ])
+tshours    = np.array([ 0, 2, 4, 6, 8, 10, 12, 14 ])
 # p_cycle    = np.array([ 850, 800, 750, 700, 650, 600, 550, 500, 450, 400, 350, 300, 250, 200, 150, 100 ]) 
 # p_cycle    = np.array([ 500, 450, 400, 350, 300, 250, 200, 150, 100 ]) 
 # p_cycle    = np.array([ 500, 450, 400, 350, 300, 250, 200 ]) 
@@ -110,7 +110,7 @@ op_modes_list = tmp_modes.operating_modes
 # =============================================================================
 sscH = 24  # 12 # 24
 pyoH = 48  # 24 # 48
-json = "model2_Hamilton_560_tariffx1" # model2_Hamilton_560_tariffx1 # model2_Hamilton_560_TwoPeaks_x1 # model2_CAISO_Hamilton
+json = "model2_Hamilton_560_TwinPeaks_x1" # model2_Hamilton_560_tariffx1 # model2_Hamilton_560_TwinPeaks_x1 # model2_CAISO_Hamilton
 dispatch = True # True # False
 run_loop = True
 
@@ -132,6 +132,7 @@ for i, th in enumerate(iterator1): #over tshours
         stdv_idx = (i,j,1)
 
         # print current position in loop
+        print(json)
         print("output tshours :   ", th)
         print("output Pref    :   ", pc)
         print("output Pref    :   ", csp_qdot_ref)
@@ -180,7 +181,7 @@ for i, th in enumerate(iterator1): #over tshours
         # =========================================
         # actually run this simulation
         # =========================================
-        
+
         else:
             
             # =========================================
@@ -235,9 +236,15 @@ for i, th in enumerate(iterator1): #over tshours
                 op_mode_array       = outputs.op_mode_1
                 op_mode_str_profile = [op_modes_list[ int(x) ] for x in op_mode_array]
                 
-                allOff_log[idx] = np.sum(['CR_OFF__PC_OFF__TES_OFF__NUC_ON' == x for x in op_mode_str_profile])
+                # catching any OFF modes that 
+                allOFF = np.array(['CR_OFF__PC_OFF__TES_OFF__NUC_ON' == x for x in op_mode_str_profile])
+                allOff_log[idx] = allOFF.sum()
                 
-                print('All OFF: {0}'.format(allOff_log[idx])  )
+                # finding the first instance of an OFF mode that we didn't catch
+                if allOFF.sum() > 0:
+                    iter_log[idx] = np.where( allOFF == True )[0][0]
+                
+                print('All OFF: {0} \n'.format(allOff_log[idx])  )
                 TES_charging    = np.array(["TES_CH" in x for x in op_mode_str_profile])
                 TES_discharging = np.array(["TES_DC" in x for x in op_mode_str_profile])
                 
@@ -256,7 +263,7 @@ for i, th in enumerate(iterator1): #over tshours
                 
                 revenue[idx] = np.sum(outputs.gen.to('kW').m * outputs.price )
                 
-                del outputs, op_mode_array, op_mode_str_profile
+                del outputs, op_mode_array, op_mode_str_profile, allOFF
             
             # =========================================
             # Simulation failed! Log results
