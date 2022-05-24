@@ -26,7 +26,7 @@ print("PID = ", pid)
 # =============================================================================
 
 # modifying inputs
-json = "model2_Hamilton_560_tariffx1"  # model2_Hamilton_560_tariffx1 # model2_Hamilton_560_TwoPeaks_x1 # model2_CAISO_Hamilton
+json = "model2_Hamilton_560_TwinPeaks_x1"  # model2_Hamilton_560_tariffx1 # model2_Hamilton_560_TwinPeaks_x1 # model2_CAISO_Hamilton
 dispatch = True
 run_loop = True
 sscH    = 24   # (hr)
