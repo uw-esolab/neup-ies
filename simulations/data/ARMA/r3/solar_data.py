@@ -7,7 +7,7 @@ import numpy as np
 import os
 
 # Load all weather files in the directory
-fnames = list(filter(lambda x: 'csv' in x, os.listdir(os.getcwd())))
+fnames = ['102574_35.93_-115.26_2004.csv']
 
 # Compile all years of data into a single dataframe
 alldfs = []
@@ -45,7 +45,7 @@ times = times.delete(-1)
 times = times[~((times.month == 2) & (times.day > 28))]
 
 # Calculate clear sky. Use Ineichen model with a low turbidity. Choose value to always exceed observed DNI. 1.5 works for this one.
-csky = tus.get_clearsky(times, model='ineichen', linke_turbidity=2.5).dni
+csky = tus.get_clearsky(times, model='ineichen', linke_turbidity=2.1).dni
 # Add the pvlib computed clear sky DNI to the dataframe in a new column
 df['pvlibcs'] = csky.values
 # df.plot(y=['pvlibcs','Clearsky DNI'])
@@ -64,13 +64,46 @@ time_data=delta.dt.total_seconds().abs() //60
 full_data = pd.concat([time_data, dnis], axis=1, ignore_index=True)
 
 # Write to a new .csv file
-full_data.to_csv(r'C:/Users/aidan/projects/neup-ies/simulations/data/ARMA/r3/solar_data_without_clearsky.csv', header=["Time", "DNI"], index = False)
+#full_data.to_csv(r'C:/Users/aidan/projects/neup-ies/simulations/data/ARMA/r3/solar_data_without_clearsky.csv', header=["Time", "DNI"], index = False)
 # Write solar data with new time points
 
 t = np.arange(0,len(dnis)/2,0.5)
 
-plt.plot(t[:8760*2],dnis[:8760*2], label="Synthetic DNI")
-#plt.plot(t[:8760*2],df[df.Year == year].DNI, 'r-', label="Actual DNI")
-plt.xlim(0, 500)
-plt.legend()
+
+
+plt.plot(t[:8760*2],solar_data[:8760*2], label="Original DNI - D(t)")
+plt.plot(t[:8760*2],dnis[:8760*2], 'r-', label="Departure from Clearsky DNI - E(t)")
+plt.plot(t[:8760*2],csky[:8760*2], 'g-', label="Clearsky DNI - C(t)")
+plt.xlim(0, 120)
+plt.ylim(-300, 1100)
+plt.ylabel('Signal / W/$m^2$')
+plt.xlabel('Time / hours')
+plt.title('De-trending of DNI signals using clearsky DNI')
+plt.legend(ncol=2, loc="lower left", fontsize=8)
 plt.show()
+
+plt.plot(t[:8760*2],dnis[:8760*2], 'r-', label="Departure from Clearsky DNI - E(t)")
+plt.xlim(0, 8760)
+plt.ylim(-200, 1200)
+plt.ylabel('Signal / W/$m^2$')
+plt.xlabel('Time / hours')
+plt.title('De-trended signal for an entire year')
+plt.legend(ncol=2, loc="upper left", fontsize=8)
+plt.show()
+
+i_list = []
+
+for i in range(10000):
+    if dnis[i] == 0:
+        i_list.append(i)
+
+dnis_mask = np.delete(dnis.to_numpy(),i_list)
+
+plt.plot(dnis_mask[:8760*2], 'r-', label="Departure from Clearsky DNI - Zero Filtered")
+plt.xlim(0, 200)
+plt.ylim(-300, 1100)
+plt.ylabel('Signal / W/$m^2$')
+plt.xlabel('Data Points')
+plt.legend(ncol=2, loc="lower left", fontsize=8)
+plt.show()
+

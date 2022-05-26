@@ -13,7 +13,7 @@ import os
 import pvlib
 
 # Load all weather files in the directory
-fnames = list(filter(lambda x: 'csv' in x, os.listdir(os.getcwd())))
+fnames = ['102574_35.93_-115.26_2004.csv']
 
 # Compile all years of data into a single dataframe
 alldfs = []
@@ -54,14 +54,37 @@ df['pvlibcs'] = csky.values
 # df.plot(y=['pvlibcs','Clearsky DNI'])
 
 
-#filename_orig = "C:/Users/aidan/projects/neup-ies/simulations/data/ARMA/r1/synData_50.csv"
-#filename_orig = "C:/Users/aidan/projects/neup-ies/simulations/data/ARMA/r1/solar_data_without_clearsky.csv"
+#filename_orig = "C:/Users/aidan/projects/neup-ies/simulations/data/ARMA/r3/synData_50.csv"
+filename_orig = "C:/Users/aidan/projects/neup-ies/simulations/data/ARMA/r3/solar_data_without_clearsky.csv"
 headers = ["Time", "DNI"]
 
 original_data = pd.read_csv(filename_orig ,names=headers)
 
 x = original_data["Time"]
 oy = original_data["DNI"]
+
+ox = np.array(x[1:])
+oxb = ox.astype(float)
+oya = np.array(oy[1:])
+oyb = oya.astype(float)
+
+plt.plot(oxb,oyb, color='r')
+#plt.xlim(0, 25000)
+plt.xticks(np.arange(0, 600000, 100000))
+plt.yticks(np.arange(0, 1100, 100))
+plt.title("DNI Noise Synthetic Signal * 8 (BOTH)")
+plt.xlabel("Time / minutes")
+plt.ylabel("DNI / W/m^2")
+plt.show()
+
+plt.plot(oxb,oyb,color='r')
+plt.xlim(0, 20160)
+plt.title("DNI Noise Synthetic Signal * 8 (BOTH)")
+plt.xlabel("Time / minutes")
+plt.ylabel("DNI / W/m^2")
+#plt.xticks(np.arange(0, 600000, 100000))
+#plt.yticks(np.arange(0, 1100, 100))
+plt.show()
 
 print(oy[1])
 print(csky.values[1])
@@ -84,22 +107,15 @@ ya = np.array(y)
 yb = ya.astype(float)
 
 plt.plot(xb,yb, color='r')
-#plt.xlim(0, 25000)
-plt.xticks(np.arange(0, 600000, 100000))
+plt.xlim(100000, 120000)
+#plt.xticks(np.arange(0, 600000, 100000))
 plt.yticks(np.arange(0, 1100, 100))
-plt.title("DNI over course of year for Las Vegas - real data")
+plt.title("DNI over course of year for Las Vegas - syn data (SV = 8)")
 plt.xlabel("Time / minutes")
 plt.ylabel("DNI / W/m^2")
 plt.show()
 
-plt.plot(xb,yb,color='r')
-plt.xlim(0, 20160)
-plt.title("DNI over course of first two weeks of a year for Las Vegas - real")
-plt.xlabel("Time / minutes")
-plt.ylabel("DNI / W/m^2")
-#plt.xticks(np.arange(0, 600000, 100000))
-#plt.yticks(np.arange(0, 1100, 100))
-plt.show()
+
 
 dni_without_zeros = np.ma.masked_equal(yb,0)
 

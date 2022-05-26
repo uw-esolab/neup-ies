@@ -51,7 +51,7 @@
         <limit>100</limit>
         <initialSeed>42</initialSeed>
       </samplerInit>
-      <constant name="scaling">9.0</constant>
+      <constant name="scaling">8</constant>
     </MonteCarlo>
   </Samplers>
 
