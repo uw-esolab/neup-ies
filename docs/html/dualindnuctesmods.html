@@ -1,0 +1,193 @@
+
+
+<!doctype html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Modifications within Model 1b and 2b &#8212; NE-2 Simulations  documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/bizstyle.css" />
+    
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/bizstyle.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Current Status of Models 1b and 2b" href="dualindnuctesstatus.html" />
+    <link rel="prev" title="Indirect Configuration Steam-to-Salt Heat Exchanger" href="steam2salthx.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <!--[if lt IE 9]>
+    <script src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="dualindnuctesstatus.html" title="Current Status of Models 1b and 2b"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="steam2salthx.html" title="Indirect Configuration Steam-to-Salt Heat Exchanger"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">NE-2 Simulations  documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Modifications within Model 1b and 2b</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="modifications-within-model-1b-and-2b">
+<span id="dualindnuctesmods"></span><h1>Modifications within Model 1b and 2b<a class="headerlink" href="#modifications-within-model-1b-and-2b" title="Permalink to this headline">¶</a></h1>
+<p>Outlined here are some major modifications of the Model 2a SSC code.</p>
+<section id="csp-solver-changes">
+<h2>csp_solver Changes<a class="headerlink" href="#csp-solver-changes" title="Permalink to this headline">¶</a></h2>
+<p>Major changes to <code class="docutils literal notranslate"><span class="pre">csp_solver</span></code> include:</p>
+<blockquote>
+<div><ul>
+<li><p>creating a new <code class="docutils literal notranslate"><span class="pre">csp_dual_indirect_solver</span></code> that is a child of <code class="docutils literal notranslate"><span class="pre">csp_dual_solver</span></code></p></li>
+<li><p>Added new input dispatch target: fraction of nuclear output going to TES</p></li>
+<li><p>New input parameters:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Steam-to-salt HX effectiveness</p></li>
+<li><p>Salt-to-steam HX effectiveness</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>Two HTF fluids:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>CSP and TES use salt as before</p></li>
+<li><p>PC and LFR use #4 - steam</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>Calculating design points using enthalpies rather than specific heat formula</p></li>
+</ul>
+</div></blockquote>
+</section>
+<section id="csp-solver-pc-rankine-indirect-224-changes">
+<h2>csp_solver_pc_Rankine_indirect_224 Changes<a class="headerlink" href="#csp-solver-pc-rankine-indirect-224-changes" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><ul class="simple">
+<li><p>Calculating design points using enthalpies rather than specific heat formula</p></li>
+<li><p>Using <code class="docutils literal notranslate"><span class="pre">water_props</span></code> class instead of <code class="docutils literal notranslate"><span class="pre">HTFProperties</span></code> to get steam properties</p></li>
+</ul>
+</div></blockquote>
+</section>
+<section id="csp-solver-nuclear-changes">
+<h2>csp_solver_nuclear Changes<a class="headerlink" href="#csp-solver-nuclear-changes" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><ul class="simple">
+<li><p>Calculating design points using enthalpies rather than specific heat formula</p></li>
+<li><p>Using <code class="docutils literal notranslate"><span class="pre">water_props</span></code> class instead of <code class="docutils literal notranslate"><span class="pre">HTFProperties</span></code> to get steam properties</p></li>
+</ul>
+</div></blockquote>
+</section>
+<section id="csp-solver-mono-eq-methods-changes">
+<h2>csp_solver_mono_eq_methods Changes<a class="headerlink" href="#csp-solver-mono-eq-methods-changes" title="Permalink to this headline">¶</a></h2>
+<p>Need to:</p>
+<blockquote>
+<div><ul>
+<li><p>Add 2 HX models within mass flow solvers to calculate:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>salt mass flow from LFR to hot tank</p></li>
+<li><p>steam mass flow through TES dispatch</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>Recombine steam mass flows through LFR and through TES before calling PC method</p>
+<blockquote>
+<div><a class="reference external image-reference" href="_static/modelB_mdotsolver.png"><img alt="_images/modelB_mdotsolver.png" src="_images/modelB_mdotsolver.png" /></a>
+</div></blockquote>
+</li>
+</ul>
+</div></blockquote>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Modifications within Model 1b and 2b</a><ul>
+<li><a class="reference internal" href="#csp-solver-changes">csp_solver Changes</a></li>
+<li><a class="reference internal" href="#csp-solver-pc-rankine-indirect-224-changes">csp_solver_pc_Rankine_indirect_224 Changes</a></li>
+<li><a class="reference internal" href="#csp-solver-nuclear-changes">csp_solver_nuclear Changes</a></li>
+<li><a class="reference internal" href="#csp-solver-mono-eq-methods-changes">csp_solver_mono_eq_methods Changes</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="steam2salthx.html"
+                        title="previous chapter">Indirect Configuration Steam-to-Salt Heat Exchanger</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="dualindnuctesstatus.html"
+                        title="next chapter">Current Status of Models 1b and 2b</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/dualindnuctesmods.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="dualindnuctesstatus.html" title="Current Status of Models 1b and 2b"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="steam2salthx.html" title="Indirect Configuration Steam-to-Salt Heat Exchanger"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">NE-2 Simulations  documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Modifications within Model 1b and 2b</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2021, Gabriel J. Soto, Una Baker, Grace Stanke, Ben Lindley, Mike Wagner.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.2.0.
+    </div>
+  </body>
+</html>

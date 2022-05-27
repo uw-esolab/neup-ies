@@ -1,0 +1,204 @@
+
+
+<!doctype html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Current Status of Model 2a &#8212; NE-2 Simulations  documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/bizstyle.css" />
+    
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/bizstyle.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="IndirectNuclearTES Overview" href="indirectnuctesoverview.html" />
+    <link rel="prev" title="Modifications within Model 2a" href="dualplanttesmods.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <!--[if lt IE 9]>
+    <script src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="indirectnuctesoverview.html" title="IndirectNuclearTES Overview"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="dualplanttesmods.html" title="Modifications within Model 2a"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">NE-2 Simulations  documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Current Status of Model 2a</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="current-status-of-model-2a">
+<span id="dualplanttesstatus"></span><h1>Current Status of Model 2a<a class="headerlink" href="#current-status-of-model-2a" title="Permalink to this headline">¶</a></h1>
+<p>Outlined here is the status of the Model 2a code framework.</p>
+<section id="status-of-model-components">
+<h2>Status of Model Components<a class="headerlink" href="#status-of-model-components" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p><strong>Dispatch Model</strong>: [<em>complete</em>] a Pyomo dispatch MILP has been created and runs correctly within the project. It sets up an MILP and solves it when called.</p></li>
+<li><p><strong>SSC Model</strong>: [<em>debugging</em>] new classes have been added to SSC suite and work correctly except for some plant size cases. The base infrastructure has been written and needs some debugging for those failing cases (shown below).</p></li>
+<li><p><strong>NE2 Model</strong>: [<em>complete</em>] a Python interface class has been created and runs correctly within the project. It creates dispatch model instances, solves them, converts results to dispatch targets, and calls on SSC to execute at every timestep of the time horizon.</p></li>
+</ul>
+</section>
+<section id="parameter-sweep-inconsistencies">
+<h2>Parameter Sweep Inconsistencies<a class="headerlink" href="#parameter-sweep-inconsistencies" title="Permalink to this headline">¶</a></h2>
+<p>When running simulations in the parameter space spanning PC sizes between [600 - 850 MWe] and TES sizes between [0 - 12 hours], not every simulation finishes successfully.
+The problems always arise in the SSC models.</p>
+<p>The reason why the runs do not finish successfully is that at some point, SSC chooses a mode where PC, TES, CSP, and LFR should all be set to the OFF position.
+We are not modeling LFR shutdown within SSC as the procedures are too complex; therefore this <code class="docutils literal notranslate"><span class="pre">OFF</span></code> mode for all plant components should not be happening.</p>
+<p>For these cases, the Pyomo dispatch targets are not telling the LFR to shut off. Therefore, some internal logic within SSC is causing it to diverge from the optimal solution for specific cases.</p>
+<section id="using-sam-tariff-rates">
+<h3>Using SAM Tariff Rates<a class="headerlink" href="#using-sam-tariff-rates" title="Permalink to this headline">¶</a></h3>
+<p>Below is a heatmap of the parameter sweep results over PC and TES sizes. These are conducted under SAM Tariff rates (no peak amplification).</p>
+<dl class="simple">
+<dt>Three values are represented per grid element:</dt><dd><ul class="simple">
+<li><p>an element color: shown by the colorbar, it represents how far along the year the simulation got before failing</p></li>
+<li><p>a number: represents the day of the year where the simulation failed</p></li>
+<li><dl class="simple">
+<dt>a number color: represents the cause of the simulation failure</dt><dd><ul>
+<li><p>White: simulation was successful</p></li>
+<li><p>Yellow: failure occurred in SSC</p></li>
+<li><p>Cyan: failure occurred in Pyomo</p></li>
+<li><p>Red: false positive (simulation completed, but on a second look it actually chose the all OFF mode yet did not raise an error)</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+<a class="reference external image-reference" href="_static/model2a_paramsweepresults_tariffx1.png"><img alt="_images/model2a_paramsweepresults_tariffx1.png" src="_images/model2a_paramsweepresults_tariffx1.png" /></a>
+<p>There are a lot of successful runs, but some failures occur as false positives due to some SSC internal logic error.</p>
+</section>
+<section id="using-twin-peak-tariff-rates">
+<h3>Using Twin Peak Tariff Rates<a class="headerlink" href="#using-twin-peak-tariff-rates" title="Permalink to this headline">¶</a></h3>
+<p>The same heatmap of parameter sweeps is shown but this time conducted under Twin Peak Tariff rates (new one I came up with where we have 2 daily peaks in the morning and afternoon).</p>
+<a class="reference external image-reference" href="_static/model2a_paramsweepresults_twinpeaksx1.png"><img alt="_images/model2a_paramsweepresults_twinpeaksx1.png" src="_images/model2a_paramsweepresults_twinpeaksx1.png" /></a>
+<p>Only the cases without any TES finish successfully for some reason. Every other case fails at the exact same point, so there is a common error source.</p>
+</section>
+<section id="using-caiso-tariff-rates">
+<h3>Using CAISO Tariff Rates<a class="headerlink" href="#using-caiso-tariff-rates" title="Permalink to this headline">¶</a></h3>
+<p>The same heatmap of parameter sweeps is shown but this time conducted under CAISO tariff rates.</p>
+<a class="reference external image-reference" href="_static/model2a_paramsweepresults_caiso.png"><img alt="_images/model2a_paramsweepresults_caiso.png" src="_images/model2a_paramsweepresults_caiso.png" /></a>
+<p>Only the cases without any TES finish successfully for some reason. A variety of failure points elsewhere, with some false positives when TES is large.</p>
+</section>
+</section>
+<section id="how-to-debug">
+<h2>How to Debug<a class="headerlink" href="#how-to-debug" title="Permalink to this headline">¶</a></h2>
+<p>An overview of relevant Model 2a scripts can be found <a class="reference internal" href="dualplanttesscripts.html#dualplanttesscripts"><span class="std std-ref">here</span></a>. The procedure I use for debugging is as follows:</p>
+<ol class="arabic">
+<li><p>Run the PySAM script found <a class="reference external" href="https://github.com/uw-esolab/neup-ies/blob/master/simulations/scripts/debugging__Model2_scripts/run_PySAM_case.py">here</a> for the failing combination of PC and TES sizes and the corresponding market scenario/JSON script.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Make sure the  <code class="docutils literal notranslate"><span class="pre">log_dispatch_targets</span></code> input is set to True, discussed <a class="reference internal" href="runningpysam.html#runningpysam"><span class="std std-ref">here</span></a>.</p></li>
+<li><p>Just to be safe, I often just set the <code class="docutils literal notranslate"><span class="pre">overwrite_dispatch_targets</span></code> inputs to True to ensure we use the same time series in Step 2.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>Run the PySSC script found <cite>here &lt;https://github.com/uw-esolab/neup-ies/blob/master/simulations/scripts/debugging__Model2_scripts/run_PySSCWrap_DispatchTargets.py&gt;</cite>. As long as you use the same JSON script and set the same PC and TES sizes from Step 1, it should find the corresponding dispatch targets file and load it into the SSC execution.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Here, I used mixed-mode debugging from Spyder (Python) to CodeLite (C++). A guide to how I do this is found <a class="reference external" href="https://github.com/NREL/ssc/wiki/Debug-SSC-with-PySSC-Linux-CodeLiteIDE">here</a>.</p></li>
+<li><p>A general guide to PySSC scripts is found <a class="reference internal" href="runningpyssc.html#runningpyssc"><span class="std std-ref">here</span></a>.</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ol>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Current Status of Model 2a</a><ul>
+<li><a class="reference internal" href="#status-of-model-components">Status of Model Components</a></li>
+<li><a class="reference internal" href="#parameter-sweep-inconsistencies">Parameter Sweep Inconsistencies</a><ul>
+<li><a class="reference internal" href="#using-sam-tariff-rates">Using SAM Tariff Rates</a></li>
+<li><a class="reference internal" href="#using-twin-peak-tariff-rates">Using Twin Peak Tariff Rates</a></li>
+<li><a class="reference internal" href="#using-caiso-tariff-rates">Using CAISO Tariff Rates</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#how-to-debug">How to Debug</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="dualplanttesmods.html"
+                        title="previous chapter">Modifications within Model 2a</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="indirectnuctesoverview.html"
+                        title="next chapter">IndirectNuclearTES Overview</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/dualplanttesstatus.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="indirectnuctesoverview.html" title="IndirectNuclearTES Overview"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="dualplanttesmods.html" title="Modifications within Model 2a"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">NE-2 Simulations  documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Current Status of Model 2a</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2021, Gabriel J. Soto, Una Baker, Grace Stanke, Ben Lindley, Mike Wagner.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.2.0.
+    </div>
+  </body>
+</html>

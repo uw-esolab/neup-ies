@@ -1,0 +1,178 @@
+
+
+<!doctype html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Modifications within Model 2a &#8212; NE-2 Simulations  documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/bizstyle.css" />
+    
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/bizstyle.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Current Status of Model 2a" href="dualplanttesstatus.html" />
+    <link rel="prev" title="Model 2a Mixing of LFR and CSP Outlet Streams" href="directTESoutletMixing.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <!--[if lt IE 9]>
+    <script src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="dualplanttesstatus.html" title="Current Status of Model 2a"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="directTESoutletMixing.html" title="Model 2a Mixing of LFR and CSP Outlet Streams"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">NE-2 Simulations  documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Modifications within Model 2a</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="modifications-within-model-2a">
+<span id="dualplanttesmods"></span><h1>Modifications within Model 2a<a class="headerlink" href="#modifications-within-model-2a" title="Permalink to this headline">¶</a></h1>
+<p>Outlined here are some major modifications of the Model 2a SSC code.</p>
+<section id="csp-solver-changes">
+<h2>csp_solver Changes<a class="headerlink" href="#csp-solver-changes" title="Permalink to this headline">¶</a></h2>
+<p>Major changes to <code class="docutils literal notranslate"><span class="pre">csp_solver</span></code> include:</p>
+<blockquote>
+<div><ul>
+<li><p>creating a new <code class="docutils literal notranslate"><span class="pre">csp_dual_solver</span></code> that is a child of <code class="docutils literal notranslate"><span class="pre">csp_solver</span></code></p></li>
+<li><p>In the original, the constructor takes in a single <code class="docutils literal notranslate"><span class="pre">collector_receiver</span></code> object (in Model 1a, we use a child class called <code class="docutils literal notranslate"><span class="pre">nuclear_plant</span></code>)</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Here, we have a new constructor that takes it a <code class="docutils literal notranslate"><span class="pre">collector_receiver</span></code> <strong>AND</strong> a <code class="docutils literal notranslate"><span class="pre">nuclear_plant</span></code> object</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>A “nuclear” version of a lot of CSP input parameters are created</p></li>
+<li><p>Added calls specifically to <code class="docutils literal notranslate"><span class="pre">nuclear_plant</span></code> estimation methods before operating mode selection</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Some if-else statements have been added to check if targets from Pyomo are reasonable</p></li>
+<li><p>Now accounting for mixing of LFR and CSP outlet streams to hot tank</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>Overloading the <code class="docutils literal notranslate"><span class="pre">find_operating_modes</span></code> method</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>have to add option to select new operating modes</p></li>
+<li><p>account for dual heat and mass flow from both CSP and LFR</p></li>
+<li><p>here is a gigantic diagram of the current state of operating mode selection:</p></li>
+</ul>
+<a class="reference external image-reference" href="_static/model2a_operatingmodeselect.png"><img alt="_images/model2a_operatingmodeselect.png" src="_images/model2a_operatingmodeselect.png" /></a>
+</div></blockquote>
+</li>
+<li><p>Logging outputs modified to account for added LFR stream</p></li>
+</ul>
+</div></blockquote>
+</section>
+<section id="new-operating-modes">
+<h2>New Operating Modes<a class="headerlink" href="#new-operating-modes" title="Permalink to this headline">¶</a></h2>
+<p>Below is a diagram of all new operating modes (dotted border) categorized by the corresponding CSP, PC, and TES modes that already exist.</p>
+<a class="reference external image-reference" href="_static/model2a_newopmodes.png"><img alt="_images/model2a_newopmodes.png" src="_images/model2a_newopmodes.png" /></a>
+</section>
+<section id="csp-solver-mono-eq-methods-changes">
+<h2>csp_solver_mono_eq_methods Changes<a class="headerlink" href="#csp-solver-mono-eq-methods-changes" title="Permalink to this headline">¶</a></h2>
+<p>Major changes to <code class="docutils literal notranslate"><span class="pre">csp_solver_mono_eq_methods</span></code> include:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>creating a new <code class="docutils literal notranslate"><span class="pre">csp_dual_solver_mono_eq_methods</span></code> that is a child of <code class="docutils literal notranslate"><span class="pre">csp_solver_mono_eq_methods</span></code></p></li>
+<li><p>Mass flow solver now accounts for flow mixing between LFR and CSP output before entering hot tank</p></li>
+</ul>
+<a class="reference external image-reference" href="_static/model2a_mdotsolver.png"><img alt="_images/model2a_mdotsolver.png" src="_images/model2a_mdotsolver.png" /></a>
+</div></blockquote>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Modifications within Model 2a</a><ul>
+<li><a class="reference internal" href="#csp-solver-changes">csp_solver Changes</a></li>
+<li><a class="reference internal" href="#new-operating-modes">New Operating Modes</a></li>
+<li><a class="reference internal" href="#csp-solver-mono-eq-methods-changes">csp_solver_mono_eq_methods Changes</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="directTESoutletMixing.html"
+                        title="previous chapter">Model 2a Mixing of LFR and CSP Outlet Streams</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="dualplanttesstatus.html"
+                        title="next chapter">Current Status of Model 2a</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/dualplanttesmods.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="dualplanttesstatus.html" title="Current Status of Model 2a"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="directTESoutletMixing.html" title="Model 2a Mixing of LFR and CSP Outlet Streams"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">NE-2 Simulations  documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Modifications within Model 2a</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2021, Gabriel J. Soto, Una Baker, Grace Stanke, Ben Lindley, Mike Wagner.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.2.0.
+    </div>
+  </body>
+</html>

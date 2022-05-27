@@ -1,0 +1,211 @@
+
+
+<!doctype html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Current Status of Models 1b and 2b &#8212; NE-2 Simulations  documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/bizstyle.css" />
+    
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/bizstyle.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="simulations package" href="simulations.html" />
+    <link rel="prev" title="Indirect Configuration Steam-to-Salt Heat Exchanger" href="steam2salthx.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <!--[if lt IE 9]>
+    <script src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="simulations.html" title="simulations package"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="steam2salthx.html" title="Indirect Configuration Steam-to-Salt Heat Exchanger"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">NE-2 Simulations  documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Current Status of Models 1b and 2b</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="current-status-of-models-1b-and-2b">
+<span id="dualindnuctesstatus"></span><h1>Current Status of Models 1b and 2b<a class="headerlink" href="#current-status-of-models-1b-and-2b" title="Permalink to this headline">¶</a></h1>
+<p>Outlined here is the status of the Model 1b and 2b code framework.</p>
+<section id="status-of-model-components">
+<h2>Status of Model Components<a class="headerlink" href="#status-of-model-components" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p><strong>Dispatch Model</strong>: [<em>complete</em>] a Pyomo dispatch MILP has been created and runs correctly within the project. It sets up an MILP and solves it when called.</p></li>
+<li><p><strong>SSC Model</strong>: [<em>in progress</em>] new classes have been added to SSC suite and work but calling through PySAM is currently not working (only through PySSC). <code class="docutils literal notranslate"><span class="pre">mdot_solver</span></code> also needs to be overloaded with correct stream calculations.</p></li>
+<li><p><strong>NE2 Model</strong>: [<em>complete</em>] a Python interface class has been created and runs correctly within the project. It creates dispatch model instances, solves them, converts results to dispatch targets, and calls on SSC to execute at every timestep of the time horizon.</p></li>
+</ul>
+</section>
+<section id="framework-within-ssc">
+<h2>Framework within SSC<a class="headerlink" href="#framework-within-ssc" title="Permalink to this headline">¶</a></h2>
+<ol class="arabic">
+<li><p><strong>Compute module (cmod)</strong>: <em>cmod_nuclear_mspt_indirect_tes</em></p>
+<blockquote>
+<div><ul class="simple">
+<li><p>This part works</p></li>
+<li><p>major modifications include new parameters and setting them correctly within member objects</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p><strong>csp_solver</strong>: <em>csp_dual_indirect_solver_core</em></p>
+<blockquote>
+<div><ul class="simple">
+<li><p>This part mostly works</p></li>
+<li><p>needs some debugging within the estimation of plant component modes and operating mode selection</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p><strong>csp_solver_mono_eq</strong>: <em>csp_dual_indirect_solver_mono_eq_methods</em></p>
+<blockquote>
+<div><ul class="simple">
+<li><p>This part is not finished</p></li>
+<li><p>Need to overload mass flow solver - calculate the correct streams and temperatures and set the proper inputs within the PC and TES object (mix the streams, do HX calculations, etc.)</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ol>
+<ol class="arabic" start="3">
+<li><p><strong>Plant Component solvers</strong>: within the compute module, an object instance of all plant components are initialized with corresponding SSC inputs. Then these objects are used as inputs for the <code class="docutils literal notranslate"><span class="pre">csp_solver</span></code>.</p>
+<blockquote>
+<div><ul class="simple">
+<li><dl class="simple">
+<dt>TES: <em>csp_solver_two_tank_tes</em></dt><dd><ul>
+<li><p>No changes</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>PC: <em>csp_solver_pc_Rankine_indirect_224</em></dt><dd><ul>
+<li><p>Some changes enacted, debugging</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>CSP: <em>csp_solver_mspt_collector_receiver</em></dt><dd><ul>
+<li><p>Receiver: <em>csp_solver_mspt_receiver_222</em></p></li>
+<li><dl class="simple">
+<dt>Heliostatfield: <em>csp_solver_pt_heliostatfield</em></dt><dd><ul>
+<li><p>No changes</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>LFR: <em>csp_solver_nuclear_plant</em></dt><dd><ul>
+<li><dl class="simple">
+<dt>Nuclear: <em>csp_solver_nuclear</em></dt><dd><ul>
+<li><p>Some changes enacted, debugging</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</div></blockquote>
+</li>
+</ol>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Current Status of Models 1b and 2b</a><ul>
+<li><a class="reference internal" href="#status-of-model-components">Status of Model Components</a></li>
+<li><a class="reference internal" href="#framework-within-ssc">Framework within SSC</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="steam2salthx.html"
+                        title="previous chapter">Indirect Configuration Steam-to-Salt Heat Exchanger</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="simulations.html"
+                        title="next chapter">simulations package</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/dualindnuctesstatus.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="simulations.html" title="simulations package"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="steam2salthx.html" title="Indirect Configuration Steam-to-Salt Heat Exchanger"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">NE-2 Simulations  documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Current Status of Models 1b and 2b</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2021, Gabriel J. Soto, Una Baker, Grace Stanke, Ben Lindley, Mike Wagner.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.2.0.
+    </div>
+  </body>
+</html>

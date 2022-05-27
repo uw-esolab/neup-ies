@@ -56,4 +56,3 @@ simulations.dispatch.SolarDispatch module
    :members:
    :undoc-members:
    :show-inheritance:
-

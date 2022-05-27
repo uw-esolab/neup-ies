@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>High Level Overview &#8212; NE-2 Simulations  documentation</title>
+    <title>Code Overview &#8212; NE-2 Simulations  documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/bizstyle.css" />
     
@@ -41,7 +41,7 @@
           <a href="runningpyssc.html" title="Running PySSC"
              accesskey="P">previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="index.html">NE-2 Simulations  documentation</a> &#187;</li>
-        <li class="nav-item nav-item-this"><a href="">High Level Overview</a></li> 
+        <li class="nav-item nav-item-this"><a href="">Code Overview</a></li> 
       </ul>
     </div>  
 
@@ -50,15 +50,15 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <section id="high-level-overview">
-<span id="highlevelcode"></span><h1>High Level Overview<a class="headerlink" href="#high-level-overview" title="Permalink to this headline">¶</a></h1>
+  <section id="code-overview">
+<span id="highlevelcode"></span><h1>Code Overview<a class="headerlink" href="#code-overview" title="Permalink to this headline">¶</a></h1>
 <p>State of affairs as of 17 May 2022.</p>
 <p>Current implementation does not include RAVEN functionality. RAVEN can be wrapped around this whole code.</p>
 <a class="reference external image-reference" href="_static/NE2_full_codeflow_asOfMay17.png"><img alt="_images/NE2_full_codeflow_asOfMay17.png" src="_images/NE2_full_codeflow_asOfMay17.png" /></a>
 <p>The different aspects of the codeflow are described as follows:</p>
 <ol class="arabic simple" start="0">
-<li><p><strong>JSON Scripts</strong>: these contain input information necessary to run SSC, including path links to data files used within either SSC or the NE2 modules. They also contain extraneous parameters used within the Pyomo optimization. More information can be found <a class="reference internal" href="jsonscripts.html#jsonscripts"><span class="std std-ref">here</span></a>.</p></li>
-<li><p><strong>Python Scripts</strong>: essentially a staging area for the simulations. In some sort of script, we initialize the necessary NE2 modules and link them to a JSON script. This can also happen within a terminal or within some RAVEN interface. General info about what goes in this staging process can be found <a class="reference internal" href="runningpysam.html#runningpysam"><span class="std std-ref">here</span></a>.</p></li>
+<li><p><strong>JSON Scripts</strong>: these contain input information necessary to run SSC, including path links to data files used within either SSC or the NE2 modules. They also contain extraneous parameters used within the Pyomo optimization. More information can be found in <a class="reference internal" href="jsonscripts.html#jsonscripts"><span class="std std-ref">General Project Structure - JSON Scripts</span></a>.</p></li>
+<li><p><strong>Python Scripts</strong>: essentially a staging area for the simulations. In some sort of script, we initialize the necessary NE2 modules and link them to a JSON script. This can also happen within a terminal or within some RAVEN interface. General info about what goes in this staging process can be found <a class="reference internal" href="runningpysam.html#runningpysam"><span class="std std-ref">Guides to Building/Running - Running PySAM</span></a>.</p></li>
 <li><p><strong>NE2 Modules</strong>: within these classes, we create PySAM modules that communicate with the desired SSC module. We also loop over the SSC time horizon (1 day) for a full year: during each day we stagger calls to the pyomo dispatch optimization and then to SSC. Here we log all simulation results.</p></li>
 <li><p><strong>Dispatch Parameter Wrap</strong>: here are methods that create and/or update a parameter dictionary with inputs to the dispatch optimization problem.</p></li>
 <li><p><strong>Dispatch Class</strong>: here are methods that actually create the Pyomo MILP concrete model (adds parameters, variables, constraints, and an objective function). Contains a method to solve the MILP model.</p></li>
@@ -66,7 +66,7 @@
 <li><p><strong>SSC</strong>: this is the SAM Simulation Core engineering model. Information on the engineering model is specific to the intended IES model.</p></li>
 <li><p><strong>PostProcessing</strong>: there are some classes in <a class="reference external" href="https://github.com/uw-esolab/neup-ies/tree/master/simulations/util">neup-ies/simulations/util</a> that are useful for plotting and displaying simulation outputs. This can also be replaced with some RAVEN functionality if desired.</p></li>
 </ol>
-<p>For a more detailed diagram of how to combine classes and modules from items <strong>2</strong>-<strong>6</strong>, see <a class="reference internal" href="modulecombinations.html#modulecombinations"><span class="std std-ref">here</span></a>.</p>
+<p>For a more detailed diagram of how to combine classes and modules from items <strong>2</strong>-<strong>6</strong>, see <a class="reference internal" href="modulecombinations.html#modulecombinations"><span class="std std-ref">General Project Structure - NE2, Dispatch, and SSC Module Combinations</span></a>.</p>
 </section>
 
 
@@ -119,7 +119,7 @@
           <a href="runningpyssc.html" title="Running PySSC"
              >previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="index.html">NE-2 Simulations  documentation</a> &#187;</li>
-        <li class="nav-item nav-item-this"><a href="">High Level Overview</a></li> 
+        <li class="nav-item nav-item-this"><a href="">Code Overview</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">

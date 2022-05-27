@@ -67,7 +67,7 @@
 <ul class="simple">
 <li><p><strong>RAVEN</strong> (Risk Analysis Virtual ENvironment) : package written by INL to perform parametric and probabilistic analysis of other complex codes. This is used to create synthetic time histories of available solar resource for the concentrated solar plant. <a class="reference external" href="https://github.com/idaholab/raven">Project Github</a></p></li>
 </ul>
-<p>Below is a diagram of the full code flow.</p>
+<p>Below is a diagram of the full code flow. For a more detailed discussion of the code architecture, see <a class="reference internal" href="highlevelcode.html#highlevelcode"><span class="std std-ref">General Project Structure - Code Overview</span></a>.</p>
 <a class="reference external image-reference" href="_static/NE2_full_codeflow.png"><img alt="_images/NE2_full_codeflow.png" src="_images/NE2_full_codeflow.png" /></a>
 <p><strong>Note</strong> that this only shows interfacing with <code class="docutils literal notranslate"><span class="pre">SSC</span></code> through <code class="docutils literal notranslate"><span class="pre">PySAM</span></code>. The <code class="docutils literal notranslate"><span class="pre">PySSC</span></code> interface would replace the middle “Python Module Class” block.
 The <code class="docutils literal notranslate"><span class="pre">PySSC</span></code> block would look more streamlined: it does not have a time loop, instead calling <code class="docutils literal notranslate"><span class="pre">SSC</span></code> directly. It does not have capabilities to call <code class="docutils literal notranslate"><span class="pre">pyomo</span></code> optimization.</p>
@@ -78,6 +78,10 @@ The <code class="docutils literal notranslate"><span class="pre">PySSC</span></c
 <p>Below are some guides to different aspects of the project.</p>
 <section id="guides-to-building-running">
 <h2>Guides to Building/Running<a class="headerlink" href="#guides-to-building-running" title="Permalink to this headline">¶</a></h2>
+<p>Here are guides to building the project from scratch.
+This involves building most of the SAM suite (SSC, WEX, LK, googletest, etc.).
+There are certain steps to build the SSC library in two modes: debug and export.
+Export mode is the one needed to run PySAM. Debug is used for debugging only.</p>
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="projectsetup.html">Project Set-Up</a><ul>
@@ -92,6 +96,12 @@ The <code class="docutils literal notranslate"><span class="pre">PySSC</span></c
 <li class="toctree-l2"><a class="reference internal" href="sscmod.html#creating-new-operating-mode">Creating new operating mode</a></li>
 </ul>
 </li>
+</ul>
+</div>
+<p>There are also quick guides on how to run PySAM or PySSC for any of the available models.
+PySAM is used to generate final outputs, PySSC is used for mixed-mode debugging the C++ code from Python.</p>
+<div class="toctree-wrapper compound">
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="runningpysam.html">Running PySAM</a></li>
 <li class="toctree-l1"><a class="reference internal" href="runningpyssc.html">Running PySSC</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="runningpyssc.html#mixed-mode-debugging">Mixed-Mode Debugging</a></li>
@@ -102,9 +112,12 @@ The <code class="docutils literal notranslate"><span class="pre">PySSC</span></c
 </section>
 <section id="general-project-structure">
 <h2>General Project Structure<a class="headerlink" href="#general-project-structure" title="Permalink to this headline">¶</a></h2>
+<p>Here are some guides and diagrams to help explain the complete code architecture.
+This includes explaining the important/modified parts of the SSC code.
+This also explains the Python interface (NE2 modules that create PySAM instances, dispatch classes that communicate with Pyomo).</p>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="highlevelcode.html">High Level Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="highlevelcode.html">Code Overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="jsonscripts.html">JSON Scripts</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="jsonscripts.html#pysam-inputs">PySAM_inputs</a></li>
 <li class="toctree-l2"><a class="reference internal" href="jsonscripts.html#pysam-outputs">PySAM_outputs</a></li>
@@ -119,6 +132,9 @@ The <code class="docutils literal notranslate"><span class="pre">PySSC</span></c
 <section id="guides-to-model-1a">
 <h2>Guides to Model 1a<a class="headerlink" href="#guides-to-model-1a" title="Permalink to this headline">¶</a></h2>
 <p>Model 1a is the direct TES charging configuration with only LFR heat supply.</p>
+<a class="reference external image-reference" href="_static/model1a_diagram.png"><img alt="_images/model1a_diagram.png" src="_images/model1a_diagram.png" style="width: 450px;" /></a>
+<p>Here are some guides for Model 1a, or NuclearTES. Included is an overview of the relevant classes used and the class hierarchy.
+There is also a guide to all relevant scripts used to run Model 1a, including data generation and data plotting scripts used for the Energies paper.</p>
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="nuctesoverview.html">NuclearTES Overview</a></li>
@@ -129,10 +145,15 @@ The <code class="docutils literal notranslate"><span class="pre">PySSC</span></c
 </li>
 </ul>
 </div>
+<p><strong>Relevant neup-ies branches</strong>: <a class="reference external" href="https://github.com/uw-esolab/neup-ies">master</a>, <a class="reference external" href="https://github.com/uw-esolab/neup-ies/tree/nuctes">nuctes</a> (now part of master), <a class="reference external" href="https://github.com/uw-esolab/neup-ies/releases/tag/energies-model1-paper-final">NE2 tag for energies paper</a></p>
+<p><strong>Relevant ssc branches</strong>: <a class="reference external" href="https://github.com/gjsoto/ssc/tree/model2_solvers">model2_solvers</a>, <a class="reference external" href="https://github.com/gjsoto/ssc/releases/tag/energies-model1-paper">SSC tag for energies paper</a> (use either to build SSC library)</p>
 </section>
 <section id="guides-to-model-2a">
 <h2>Guides to Model 2a<a class="headerlink" href="#guides-to-model-2a" title="Permalink to this headline">¶</a></h2>
 <p>Model 2a is the direct TES charging configuration with LFR and CSP heat supply.</p>
+<a class="reference external image-reference" href="_static/model2a_diagram.png"><img alt="_images/model2a_diagram.png" src="_images/model2a_diagram.png" style="width: 450px;" /></a>
+<p>Here are some guides for Model 2a, or DualPlantTES. Included is an overview of the relevant classes used and the class hierarchy.
+There is also a guide to all relevant scripts used to run Model 1a, including data generation and data plotting scripts.</p>
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="dualplanttesoverview.html">DualPlantTES Overview</a></li>
@@ -142,6 +163,11 @@ The <code class="docutils literal notranslate"><span class="pre">PySSC</span></c
 <li class="toctree-l2"><a class="reference internal" href="dualplanttesscripts.html#post-processing-plotting">Post Processing / Plotting</a></li>
 </ul>
 </li>
+</ul>
+</div>
+<p>Here is a documentation of the calculations done for the LFR and CSP outlet stream mixing before entering the hot tank of the TES. Included are some assumptions made for the calculations and formulas.</p>
+<div class="toctree-wrapper compound">
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="directTESoutletMixing.html">Model 2a Mixing of LFR and CSP Outlet Streams</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="directTESoutletMixing.html#outlet-temperature-differences">Outlet Temperature Differences</a></li>
 <li class="toctree-l2"><a class="reference internal" href="directTESoutletMixing.html#enthalpy-averaged-mixing">Enthalpy-Averaged Mixing</a></li>
@@ -153,33 +179,95 @@ The <code class="docutils literal notranslate"><span class="pre">PySSC</span></c
 </li>
 </ul>
 </div>
+<p>There is also a documentation of the current state of Model 2a within this project.</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="dualplanttesmods.html">Modifications within Model 2a</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="dualplanttesmods.html#csp-solver-changes">csp_solver Changes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dualplanttesmods.html#new-operating-modes">New Operating Modes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dualplanttesmods.html#csp-solver-mono-eq-methods-changes">csp_solver_mono_eq_methods Changes</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="dualplanttesstatus.html">Current Status of Model 2a</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="dualplanttesstatus.html#status-of-model-components">Status of Model Components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dualplanttesstatus.html#parameter-sweep-inconsistencies">Parameter Sweep Inconsistencies</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="dualplanttesstatus.html#using-sam-tariff-rates">Using SAM Tariff Rates</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dualplanttesstatus.html#using-twin-peak-tariff-rates">Using Twin Peak Tariff Rates</a></li>
+<li class="toctree-l3"><a class="reference internal" href="dualplanttesstatus.html#using-caiso-tariff-rates">Using CAISO Tariff Rates</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="dualplanttesstatus.html#how-to-debug">How to Debug</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<p><strong>Relevant neup-ies branches</strong>: <a class="reference external" href="https://github.com/uw-esolab/neup-ies">master</a>, <a class="reference external" href="https://github.com/uw-esolab/neup-ies/tree/soltes">soltes</a> (should be part of master soon)</p>
+<p><strong>Relevant ssc branches</strong>: <a class="reference external" href="https://github.com/gjsoto/ssc/tree/model2_solvers">model2_solvers</a> (use this to build SSC library)</p>
 </section>
 <section id="guides-to-model-1b-and-2b">
 <h2>Guides to Model 1b and 2b<a class="headerlink" href="#guides-to-model-1b-and-2b" title="Permalink to this headline">¶</a></h2>
 <p>Model 1b is the <strong>indirect</strong> TES charging configuration with only LFR heat supply.</p>
 <p>Model 2b is the <strong>indirect</strong> TES charging configuration with LFR and CSP heat supply.</p>
+<a class="reference external image-reference" href="_static/model1b2b_diagram.png"><img alt="_images/model1b2b_diagram.png" src="_images/model1b2b_diagram.png" style="width: 450px;" /></a>
+<p>Here are some guides for both indirect charging models: Model 1b (no CSP) and Model 2b or IndirectNuclearTES and DualIndirectTES, respectively. Included is an overview of the relevant classes used and the class hierarchy for both cases.</p>
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="indirectnuctesoverview.html">IndirectNuclearTES Overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dualindnuctesoverview.html">DualIndirectTES Overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="dualindnuctesscripts.html">DualIndirectTES Scripts</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="dualindnuctesscripts.html#debugging">Debugging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dualindnuctesscripts.html#debugging-scripts">Debugging Scripts</a></li>
 </ul>
 </li>
+</ul>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>There are distinct classes for each model within the NE2 and Dispatch classes.</p>
+<p>In SSC, both Model 1b and Model 2b use the same C++ classes and solvers. The main difference is that in the Model 1b JSON scripts, we set <code class="docutils literal notranslate"><span class="pre">q_dot_rec_des</span></code> to 0 to remove CSP.</p>
+</div>
+<p>Here are some guides to indirect TES charging model calculations and assumptions. The first guide is explaining how to calculate the new design point mass flows within SSC. The idea is we switch from using specific heat calculations to using enthalpy balance calculations to find heat and mass flows. The second guide is a guide on how to calculate unknown variables within the steam-to-salt heat exchanger</p>
+<div class="toctree-wrapper compound">
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="indirectTESdesignPointMassFlow.html">Design Point Mass Flow Calculations</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="indirectTESdesignPointMassFlow.html#calculations-in-the-direct-charging-case">Calculations in the Direct Charging Case</a></li>
 <li class="toctree-l2"><a class="reference internal" href="indirectTESdesignPointMassFlow.html#calculations-for-the-indirect-charging-case">Calculations for the Indirect Charging Case</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="steam2salthx.html">Indirect Configuration Steam-to-Salt Heat Exchanger</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="steam2salthx.html#hot-stream-steam">Hot Stream - Steam</a></li>
-<li class="toctree-l2"><a class="reference internal" href="steam2salthx.html#cold-stream-molten-salt">Cold Stream - Molten Salt</a></li>
+<li class="toctree-l2"><a class="reference internal" href="steam2salthx.html#hot-stream-steam">Hot Stream - <strong>Steam</strong></a></li>
+<li class="toctree-l2"><a class="reference internal" href="steam2salthx.html#cold-stream-molten-salt">Cold Stream - <strong>Molten Salt</strong></a></li>
 <li class="toctree-l2"><a class="reference internal" href="steam2salthx.html#heat-exchanger-effectiveness">Heat Exchanger Effectiveness</a></li>
-<li class="toctree-l2"><a class="reference internal" href="steam2salthx.html#cold-stream-mass-flow">Cold Stream Mass Flow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="steam2salthx.html#solving-for-unknown-variables">Solving for Unknown Variables</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="salt2steamhx.html">Indirect Configuration Salt-to-Steam Heat Exchanger</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="salt2steamhx.html#hot-stream-molten-salt">Hot Stream - <strong>Molten Salt</strong></a></li>
+<li class="toctree-l2"><a class="reference internal" href="salt2steamhx.html#cold-stream-steam">Cold Stream - <strong>Steam</strong></a></li>
+<li class="toctree-l2"><a class="reference internal" href="salt2steamhx.html#heat-exchanger-effectiveness">Heat Exchanger Effectiveness</a></li>
+<li class="toctree-l2"><a class="reference internal" href="salt2steamhx.html#solving-for-unknown-variables">Solving for Unknown Variables</a></li>
 </ul>
 </li>
 </ul>
 </div>
+<p>There is also a documentation of the current state of Model 1b and 2b within this project.</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="dualindnuctesmods.html">Modifications within Model 1b and 2b</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="dualindnuctesmods.html#csp-solver-changes">csp_solver Changes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dualindnuctesmods.html#csp-solver-pc-rankine-indirect-224-changes">csp_solver_pc_Rankine_indirect_224 Changes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dualindnuctesmods.html#csp-solver-nuclear-changes">csp_solver_nuclear Changes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dualindnuctesmods.html#csp-solver-mono-eq-methods-changes">csp_solver_mono_eq_methods Changes</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="dualindnuctesstatus.html">Current Status of Models 1b and 2b</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="dualindnuctesstatus.html#status-of-model-components">Status of Model Components</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dualindnuctesstatus.html#framework-within-ssc">Framework within SSC</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<p><strong>Relevant neup-ies branches</strong>: <a class="reference external" href="https://github.com/uw-esolab/neup-ies">master</a>, <a class="reference external" href="https://github.com/uw-esolab/neup-ies/tree/indtes">indtes</a> (should be part of master soon)</p>
+<p><strong>Relevant ssc branches</strong>: <a class="reference external" href="https://github.com/gjsoto/ssc/tree/model2b">model2b</a> (use this to build SSC library)</p>
 </section>
 <section id="ne2-classes-and-methods">
 <h2>NE2 Classes and Methods<a class="headerlink" href="#ne2-classes-and-methods" title="Permalink to this headline">¶</a></h2>
@@ -259,11 +347,17 @@ The <code class="docutils literal notranslate"><span class="pre">PySSC</span></c
 </ul>
 </li>
 <li><a class="reference internal" href="#project-guides">Project Guides</a><ul>
-<li><a class="reference internal" href="#guides-to-building-running">Guides to Building/Running</a></li>
+<li><a class="reference internal" href="#guides-to-building-running">Guides to Building/Running</a><ul>
+</ul>
+</li>
 <li><a class="reference internal" href="#general-project-structure">General Project Structure</a></li>
 <li><a class="reference internal" href="#guides-to-model-1a">Guides to Model 1a</a></li>
-<li><a class="reference internal" href="#guides-to-model-2a">Guides to Model 2a</a></li>
-<li><a class="reference internal" href="#guides-to-model-1b-and-2b">Guides to Model 1b and 2b</a></li>
+<li><a class="reference internal" href="#guides-to-model-2a">Guides to Model 2a</a><ul>
+</ul>
+</li>
+<li><a class="reference internal" href="#guides-to-model-1b-and-2b">Guides to Model 1b and 2b</a><ul>
+</ul>
+</li>
 <li><a class="reference internal" href="#ne2-classes-and-methods">NE2 Classes and Methods</a></li>
 </ul>
 </li>

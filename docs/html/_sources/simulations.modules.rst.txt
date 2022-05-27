@@ -56,4 +56,3 @@ simulations.modules.SolarTES module
    :members:
    :undoc-members:
    :show-inheritance:
-

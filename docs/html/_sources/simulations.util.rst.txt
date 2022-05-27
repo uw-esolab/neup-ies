@@ -72,4 +72,3 @@ simulations.util.SolarPlots module
    :members:
    :undoc-members:
    :show-inheritance:
-

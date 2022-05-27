@@ -1,0 +1,193 @@
+
+
+<!doctype html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Indirect Configuration Salt-to-Steam Heat Exchanger &#8212; NE-2 Simulations  documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/bizstyle.css" />
+    
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="_static/bizstyle.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Modifications within Model 1b and 2b" href="dualindnuctesmods.html" />
+    <link rel="prev" title="Indirect Configuration Steam-to-Salt Heat Exchanger" href="steam2salthx.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <!--[if lt IE 9]>
+    <script src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="dualindnuctesmods.html" title="Modifications within Model 1b and 2b"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="steam2salthx.html" title="Indirect Configuration Steam-to-Salt Heat Exchanger"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">NE-2 Simulations  documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Indirect Configuration Salt-to-Steam Heat Exchanger</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="indirect-configuration-salt-to-steam-heat-exchanger">
+<span id="salt2steamhx"></span><h1>Indirect Configuration Salt-to-Steam Heat Exchanger<a class="headerlink" href="#indirect-configuration-salt-to-steam-heat-exchanger" title="Permalink to this headline">¶</a></h1>
+<a class="reference external image-reference" href="_static/salt2steam_hx.png"><img alt="_images/salt2steam_hx.png" class="align-center" src="_images/salt2steam_hx.png" style="width: 300px;" /></a>
+<p>Heat exchanger diagram, based on <a class="reference external" href="https://doi.org/10.3390/su132212428">White et al. (2021)</a>. Heat lost to surroundings assumed to be 0.</p>
+<section id="hot-stream-molten-salt">
+<h2>Hot Stream - <strong>Molten Salt</strong><a class="headerlink" href="#hot-stream-molten-salt" title="Permalink to this headline">¶</a></h2>
+<p>Hot stream in this case is the molten salt taken from hot tank and sent to cold tank of thermal energy storage (TES) system.
+The heat exchanged between the two streams can be written in terms of the hot stream properties as:</p>
+<div class="math notranslate nohighlight" id="seq-1">
+<span id="equation-seq-1"></span><span class="eqno">(1)<a class="headerlink" href="#seq-1" title="Permalink to this equation">¶</a></span>\[\color{red}{\dot{Q}_{HX}} \color{black}{ = \dot{m}^H c_p^H ( T^H_{in} - T^H_{out} ). }\]</div>
+<p>Unknown properties are highlighted in red. The superscript <span class="math notranslate nohighlight">\({}^H\)</span> represents the hot stream into the HX which in this case is the <strong>salt</strong>. We assume that the salt inlet temperature, mass flow and outlet temperature are known (calculated within SSC):</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{align}
+     &amp;\dot{m}^H \\
+     &amp;c_p^H \\
+     &amp;T^H_{in} \\
+     &amp;T^H_{out}
+\end{align}\end{split}\]</div>
+<p>From <a class="reference internal" href="#seq-1">sEq. 1</a> we can find the total heat exchanged.</p>
+</section>
+<section id="cold-stream-steam">
+<h2>Cold Stream - <strong>Steam</strong><a class="headerlink" href="#cold-stream-steam" title="Permalink to this headline">¶</a></h2>
+<p>Cold stream in this case involves steam through the TES dispatch loop that will recombine downstream with the steam from the LFR loop.
+The heat exchanged between the two streams can be written in terms of the cold stream properties as:</p>
+<div class="math notranslate nohighlight" id="seq-2">
+<span id="equation-seq-2"></span><span class="eqno">(2)<a class="headerlink" href="#seq-2" title="Permalink to this equation">¶</a></span>\[\color{red}{\dot{Q}_{HX}} \color{black}{ = \dot{m}^C ( } \color{red}{h^C_{out}} \color{black}{ - h^C_{in}  ).}\]</div>
+<p>The superscript <span class="math notranslate nohighlight">\({}^C\)</span> represents the cold stream into the HX which in this case is the <strong>steam</strong>. We want to calculate the mass flow of the steam and outlet conditions.</p>
+<p>The known values here are:</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{align}
+     T^C_{in} &amp;= 340 {}^\circ \text{C}\\
+     P^C_{in} &amp;= 33 \text{MPa}
+\end{align}\end{split}\]</div>
+<p>The enthalpies in <a class="reference internal" href="#seq-2">sEq. 2</a> are therefore:</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{align}
+     h^C_{in} &amp;= f(T^C_{in}, P^C_{in}) \\
+     \color{red}{h^C_{out}} &amp;= f(\color{red}{T^C_{out}} \color{black}{ , P^C_{in}) }
+\end{align}\end{split}\]</div>
+</section>
+<section id="heat-exchanger-effectiveness">
+<h2>Heat Exchanger Effectiveness<a class="headerlink" href="#heat-exchanger-effectiveness" title="Permalink to this headline">¶</a></h2>
+<p>The effectiveness of the heat exchanger is written as</p>
+<div class="math notranslate nohighlight" id="seq-3">
+<span id="equation-seq-3"></span><span class="eqno">(3)<a class="headerlink" href="#seq-3" title="Permalink to this equation">¶</a></span>\[\color{black}{\epsilon = } \frac{\color{red}{\dot{Q}_{HX}}}{\color{red}{\dot{Q}_{max}}}\]</div>
+<p>where the maximum heat exchanged is defined under perfect heat exchange conditions.
+In this case, we use the minimum capacitance rate of the two fluids (assuming cold fluid has lower minimum capacitance rate). We also use the maximum difference in enthalpies:</p>
+<div class="math notranslate nohighlight" id="seq-4">
+<span id="equation-seq-4"></span><span class="eqno">(4)<a class="headerlink" href="#seq-4" title="Permalink to this equation">¶</a></span>\[\color{red}{\dot{Q}_{max}} \color{black}{ = \dot{m}^C ( h^C_{out,ideal} - h^C_{in}  ).}\]</div>
+<p>where</p>
+<div class="math notranslate nohighlight">
+\[h^C_{out,ideal} = f(T^H_{in}, P^C_{in})\]</div>
+<p>which implies that under these ideal conditions, the steam will exit the HX with the maximum temperature change. We then calculate the actual heat exchanged by combining <a class="reference internal" href="#seq-3">sEq. 3</a> and <a class="reference internal" href="#seq-4">sEq. 4</a> as</p>
+<div class="math notranslate nohighlight" id="seq-5">
+<span id="equation-seq-5"></span><span class="eqno">(5)<a class="headerlink" href="#seq-5" title="Permalink to this equation">¶</a></span>\[\color{red}{\dot{Q}_{HX}} \color{black}{ = \epsilon \dot{m}^C (h^C_{out,ideal} - h^C_{in}  ). }\]</div>
+</section>
+<section id="solving-for-unknown-variables">
+<h2>Solving for Unknown Variables<a class="headerlink" href="#solving-for-unknown-variables" title="Permalink to this headline">¶</a></h2>
+<p>The cold stream mass flow can be calculated by combining the <a class="reference internal" href="#seq-1">sEq. 1</a> and <a class="reference internal" href="#seq-5">sEq. 5</a> as:</p>
+<div class="math notranslate nohighlight">
+\[\color{red}{\dot{m}^C} \color{black}{ = \frac{ \dot{m}^H c^{\text{salt}}_P (  T^C_{in} - T^C_{out} )}{\epsilon \dot{m}^H (h^H_{out,ideal} -h^H_{in} )} }\]</div>
+<p>The outlet temperature of the steam within the HX can be backed out by solving for <span class="math notranslate nohighlight">\(\color{red}{\dot{Q}_{HX}}\)</span> in <a class="reference internal" href="#seq-1">sEq. 1</a> and substituting that into <a class="reference internal" href="#seq-2">sEq. 2</a> to find:</p>
+<div class="math notranslate nohighlight">
+\[\color{red}{h^C_{out}} \color{black}{ = h^C_{in} + \frac{\dot{Q}_{HX}}{\dot{m}^C } }\]</div>
+<p>from which we can back out the temperature by through the steam tables</p>
+<div class="math notranslate nohighlight">
+\[\color{red}{T^C_{out}} \color{black}{ = f^{-1}(h^C_{out}, P^C_{in} ) }\]</div>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Indirect Configuration Salt-to-Steam Heat Exchanger</a><ul>
+<li><a class="reference internal" href="#hot-stream-molten-salt">Hot Stream - <strong>Molten Salt</strong></a></li>
+<li><a class="reference internal" href="#cold-stream-steam">Cold Stream - <strong>Steam</strong></a></li>
+<li><a class="reference internal" href="#heat-exchanger-effectiveness">Heat Exchanger Effectiveness</a></li>
+<li><a class="reference internal" href="#solving-for-unknown-variables">Solving for Unknown Variables</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="steam2salthx.html"
+                        title="previous chapter">Indirect Configuration Steam-to-Salt Heat Exchanger</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="dualindnuctesmods.html"
+                        title="next chapter">Modifications within Model 1b and 2b</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/salt2steamhx.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="dualindnuctesmods.html" title="Modifications within Model 1b and 2b"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="steam2salthx.html" title="Indirect Configuration Steam-to-Salt Heat Exchanger"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">NE-2 Simulations  documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Indirect Configuration Salt-to-Steam Heat Exchanger</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2021, Gabriel J. Soto, Una Baker, Grace Stanke, Ben Lindley, Mike Wagner.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.2.0.
+    </div>
+  </body>
+</html>
