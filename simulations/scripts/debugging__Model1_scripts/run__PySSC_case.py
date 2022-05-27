@@ -25,14 +25,14 @@ print("PID = ", pid)
 # =============================================================================
 
 # initialize the PySSC Wrapper
-pw = PySSCWrapper(json_name='model1_wecdsr',is_debug=False)
+pw = PySSCWrapper(json_name='model1_Hamilton_560_tariffx2',is_debug=True)
 
 # update SSC dictionary parameters
-pw.sscdict['tshours']   = 2
-pw.sscdict['P_ref']     = 450
+pw.sscdict['tshours']   = 4
+pw.sscdict['P_ref']     = 1000
 
 # run SSC through PySSC
-pw.run_sim(run_dispatch_targets=False)
+pw.run_sim(run_dispatch_targets=True)
 
 # =============================================================================
 # Extract Data
