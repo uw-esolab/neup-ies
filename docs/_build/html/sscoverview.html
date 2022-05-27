@@ -1,0 +1,172 @@
+
+
+<!doctype html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SSC Overview &#8212; NE-2 Simulations  documentation</title>
+    <link rel="stylesheet" href="_static/bizstyle.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script src="_static/bizstyle.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="NuclearTES Overview" href="nuctesoverview.html" />
+    <link rel="prev" title="NE2, Dispatch, and SSC Module Combinations" href="modulecombinations.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <!--[if lt IE 9]>
+    <script src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="nuctesoverview.html" title="NuclearTES Overview"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="modulecombinations.html" title="NE2, Dispatch, and SSC Module Combinations"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">NE-2 Simulations  documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">SSC Overview</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="ssc-overview">
+<span id="sscoverview"></span><h1>SSC Overview<a class="headerlink" href="#ssc-overview" title="Permalink to this headline">¶</a></h1>
+<p>There are a lot of levels to SSC but the major ones we highlight are:</p>
+<ol class="arabic">
+<li><p><strong>Compute module (cmod)</strong>: these are the staging areas for gathering inputs, initializing different C++ classes (TES, PC, CSP, etc.)</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><em>cmod_tcsmolten_salt</em>: used for CSP + TES</p></li>
+<li><p><em>cmod_nuclear_tes</em>: used for <strong>Model 1a</strong> (LFR + TES)</p></li>
+<li><p><em>cmod_nuclear_mspt_tes</em>: used for <strong>Model 2a</strong> (LFR + CSP + TES direct)</p></li>
+<li><p><em>cmod_nuclear_mspt_indirect_tes</em>: used for <strong>Model 1b, 2b</strong> (LFR + CSP + TES indirect)</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p><strong>csp_solver</strong>: this sets up methods and member attribute objects used to carry out engineering model calculations</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><em>csp_solver_core</em></p></li>
+<li><p><em>csp_dual_solver_core</em></p></li>
+<li><p><em>csp_dual_indirect_solver_core</em></p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p><strong>csp_solver_mono_eq</strong>: here are extra methods used to solve mass flow, defocus, etc. at each timestep. Also calls individual plant component solvers.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><em>csp_solver_mono_eq_methods</em></p></li>
+<li><p><em>csp_dual_solver_mono_eq_methods</em></p></li>
+<li><p><em>csp_dual_indirect_solver_mono_eq_methods</em></p></li>
+</ul>
+</div></blockquote>
+</li>
+</ol>
+<ol class="arabic" start="3">
+<li><p><strong>Plant Component solvers</strong>: within the compute module, an object instance of all plant components are initialized with corresponding SSC inputs. Then these objects are used as inputs for the <code class="docutils literal notranslate"><span class="pre">csp_solver</span></code>.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>TES: <em>csp_solver_two_tank_tes</em></p></li>
+<li><p>PC: <em>csp_solver_pc_Rankine_indirect_224</em></p></li>
+<li><dl class="simple">
+<dt>CSP: <em>csp_solver_mspt_collector_receiver</em></dt><dd><ul>
+<li><p>Receiver: <em>csp_solver_mspt_receiver_222</em></p></li>
+<li><p>Heliostatfield: <em>csp_solver_pt_heliostatfield</em></p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>LFR: <em>csp_solver_nuclear_plant</em></dt><dd><ul>
+<li><p>Nuclear: <em>csp_solver_nuclear</em></p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The LFR is set to mimic the CSP. Within the <code class="docutils literal notranslate"><span class="pre">csp_solver</span></code> a member object is created for the <code class="docutils literal notranslate"><span class="pre">collector_receiver</span></code> which itself has two members: a receiver and a heliostatfield object.</p>
+<p>The LFR also has a two-tiered system: a <code class="docutils literal notranslate"><span class="pre">nuclear_plant</span></code> object which has a member <code class="docutils literal notranslate"><span class="pre">nuclear</span></code> object.</p>
+</div>
+</div></blockquote>
+</li>
+</ol>
+<p>For a more detailed view as to which csp solvers we use with each Model, see <a class="reference internal" href="modulecombinations.html#modulecombinations"><span class="std std-ref">here</span></a>.</p>
+</div>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="modulecombinations.html"
+                        title="previous chapter">NE2, Dispatch, and SSC Module Combinations</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="nuctesoverview.html"
+                        title="next chapter">NuclearTES Overview</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/sscoverview.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="nuctesoverview.html" title="NuclearTES Overview"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="modulecombinations.html" title="NE2, Dispatch, and SSC Module Combinations"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">NE-2 Simulations  documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">SSC Overview</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2021, Gabriel J. Soto, Una Baker, Grace Stanke, Ben Lindley, Mike Wagner.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.1.2.
+    </div>
+  </body>
+</html>

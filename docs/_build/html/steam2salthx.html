@@ -1,0 +1,179 @@
+
+
+<!doctype html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Indirect Configuration Steam-to-Salt Heat Exchanger &#8212; NE-2 Simulations  documentation</title>
+    <link rel="stylesheet" href="_static/bizstyle.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script src="_static/bizstyle.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="simulations package" href="simulations.html" />
+    <link rel="prev" title="Design Point Mass Flow Calculations" href="indirectTESdesignPointMassFlow.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <!--[if lt IE 9]>
+    <script src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="simulations.html" title="simulations package"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="indirectTESdesignPointMassFlow.html" title="Design Point Mass Flow Calculations"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">NE-2 Simulations  documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Indirect Configuration Steam-to-Salt Heat Exchanger</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="indirect-configuration-steam-to-salt-heat-exchanger">
+<h1>Indirect Configuration Steam-to-Salt Heat Exchanger<a class="headerlink" href="#indirect-configuration-steam-to-salt-heat-exchanger" title="Permalink to this headline">¶</a></h1>
+<a class="reference external image-reference" href="_static/steam2salt_hx.png"><img alt="_images/steam2salt_hx.png" src="_images/steam2salt_hx.png" /></a>
+<p>Heat exchanger diagram, based on <a class="reference external" href="https://doi.org/10.3390/su132212428">White et al. (2021)</a>. Heat lost to surroundings assumed to be 0.</p>
+<div class="section" id="hot-stream-steam">
+<h2>Hot Stream - Steam<a class="headerlink" href="#hot-stream-steam" title="Permalink to this headline">¶</a></h2>
+<p>Hot stream in this case is the fraction of steam coming from the LFR loop.
+The heat exchanged between the two streams can be written in terms of the hot stream properties as:</p>
+<div class="math notranslate nohighlight">
+\[\color{red}{\dot{Q}_{HX}} = \dot{m}^H ( h^H_{in} - \color{red}{h^H_{out}} ).\]</div>
+<p>For the steam, we have loop-up tables for enthalpy as a function of temperature and pressure.
+We assume that the steam inlet temperature, mass flow and pressure are known:</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{align}
+     \dot{m}^H &amp;= \text{calculated from } \texttt{nuclear_plant} \\
+     T^H_{in} &amp;= 570 {}^\circ \text{C} \\
+     P^H_{in} &amp;= 33 \text{MPa}
+\end{align}\end{split}\]</div>
+<p>Outlet temperature conditions for the steam are not known ahead of this calculation (unknown values are highlighted in red).</p>
+</div>
+<div class="section" id="cold-stream-molten-salt">
+<h2>Cold Stream - Molten Salt<a class="headerlink" href="#cold-stream-molten-salt" title="Permalink to this headline">¶</a></h2>
+<p>Cold stream in this case involves the molten salt taken from cold tank and sent to hot tank of thermal energy storage (TES) system.
+The heat exchanged between the two streams can be written in terms of the cold stream properties as:</p>
+<div class="math notranslate nohighlight">
+\[\color{red}{\dot{Q}_{HX}} = \color{red}{\dot{m}^C} ( h^C_{out} - h^C_{in} ).\]</div>
+<p>We want to calculate the mass flow of the salt.
+Based on the discussion in <a href="#id1"><span class="problematic" id="id2">`model2mixing`_</span></a> we can make an assumption that the change in enthalpy of the molten salt is proportional to the change in temperature</p>
+<div class="math notranslate nohighlight">
+\[\Delta h^C = c^{\text{salt}}_P ( T^C_{out} - T^C_{in})\]</div>
+<p>so we can then rewrite the heat exchanged as</p>
+<div class="math notranslate nohighlight">
+\[\color{red}{\dot{Q}_{HX}} = \color{red}{\dot{m}^C} c^{\text{salt}}_P (  T^C_{out} - T^C_{in} ).\]</div>
+<p>The known values here are:</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{align}
+     T^C_{in} &amp;= \text{calculated from } \texttt{tes_two_tank} \\
+     T^C_{out} &amp;= 560 {}^\circ \text{C} \\
+     c^{\text{salt}}_P &amp;= \text{calculated from } T^C_{in}
+\end{align}\end{split}\]</div>
+</div>
+<div class="section" id="heat-exchanger-effectiveness">
+<h2>Heat Exchanger Effectiveness<a class="headerlink" href="#heat-exchanger-effectiveness" title="Permalink to this headline">¶</a></h2>
+<p>The effectiveness of the heat exchanger is written as</p>
+<div class="math notranslate nohighlight">
+\[\epsilon = \frac{\color{red}{\dot{Q}_{HX}}}{\color{red}{\dot{Q}_{max}}}\]</div>
+<p>where the maximum heat exchanged is defined under perfect exchange conditions.
+In this case, we use the minimum capacitance rate of the two fluids (assuming hot fluid here). We also use the maximum difference in enthalpies:</p>
+<div class="math notranslate nohighlight">
+\[\color{red}{\dot{Q}_{max}} = \dot{m}^H (h^H_{in} - h^C_{in}  ).\]</div>
+<p>We then calculate the actual heat exchanged as</p>
+<div class="math notranslate nohighlight">
+\[\color{red}{\dot{Q}_{HX}} = \epsilon \dot{m}^H (h^H_{in} - h^C_{in}  )\]</div>
+</div>
+<div class="section" id="cold-stream-mass-flow">
+<h2>Cold Stream Mass Flow<a class="headerlink" href="#cold-stream-mass-flow" title="Permalink to this headline">¶</a></h2>
+<p>The cold stream mass flow can be calculated by combining the two final equations for heat exchanged:</p>
+<div class="math notranslate nohighlight">
+\[\color{red}{\dot{m}^C} = \frac{\epsilon \dot{m}^H (h^H_{in} - h^C_{in}  )}{c^{\text{salt}}_P (  T^C_{out} - T^C_{in} )}\]</div>
+</div>
+</div>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Indirect Configuration Steam-to-Salt Heat Exchanger</a><ul>
+<li><a class="reference internal" href="#hot-stream-steam">Hot Stream - Steam</a></li>
+<li><a class="reference internal" href="#cold-stream-molten-salt">Cold Stream - Molten Salt</a></li>
+<li><a class="reference internal" href="#heat-exchanger-effectiveness">Heat Exchanger Effectiveness</a></li>
+<li><a class="reference internal" href="#cold-stream-mass-flow">Cold Stream Mass Flow</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="indirectTESdesignPointMassFlow.html"
+                        title="previous chapter">Design Point Mass Flow Calculations</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="simulations.html"
+                        title="next chapter">simulations package</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/steam2salthx.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="simulations.html" title="simulations package"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="indirectTESdesignPointMassFlow.html" title="Design Point Mass Flow Calculations"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">NE-2 Simulations  documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Indirect Configuration Steam-to-Salt Heat Exchanger</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2021, Gabriel J. Soto, Una Baker, Grace Stanke, Ben Lindley, Mike Wagner.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.1.2.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,218 @@
+
+
+<!doctype html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DualPlantTES Scripts &#8212; NE-2 Simulations  documentation</title>
+    <link rel="stylesheet" href="_static/bizstyle.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script src="_static/bizstyle.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Model 2a Mixing of LFR and CSP Outlet Streams" href="directTESoutletMixing.html" />
+    <link rel="prev" title="DualPlantTES Overview" href="dualplanttesoverview.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <!--[if lt IE 9]>
+    <script src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="directTESoutletMixing.html" title="Model 2a Mixing of LFR and CSP Outlet Streams"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="dualplanttesoverview.html" title="DualPlantTES Overview"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">NE-2 Simulations  documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">DualPlantTES Scripts</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="dualplanttes-scripts">
+<span id="dualplanttesscripts"></span><h1>DualPlantTES Scripts<a class="headerlink" href="#dualplanttes-scripts" title="Permalink to this headline">¶</a></h1>
+<p>Here is a list of relevant scripts for Model 2a (LFR + CSP + TES).</p>
+<p>In <a class="reference external" href="https://github.com/uw-esolab/neup-ies/tree/master/simulations/scripts/debugging__Model2_scripts">neup-ies/simulations/scripts/debugging__Model2_scripts</a> you can find a multitude of scripts used to debug Model 2a. These scripts are not as polished as the ones for Model 1a.</p>
+<div class="section" id="debugging">
+<h2>Debugging<a class="headerlink" href="#debugging" title="Permalink to this headline">¶</a></h2>
+<ol class="arabic simple">
+<li><dl class="simple">
+<dt><a class="reference external" href="https://github.com/uw-esolab/neup-ies/blob/master/simulations/scripts/debugging__Model2_scripts/run_PySAM_case.py">run_PySAM_case.py</a></dt><dd><ul class="simple">
+<li><p>Used to run PySAM cases for specified PC size and TES size</p></li>
+<li><p>Isn’t used specifically for debugging, but saves Pyomo Dispatch targets that we can then use with PySSC to actually mixed-mode debug</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><a class="reference external" href="https://github.com/uw-esolab/neup-ies/blob/master/simulations/scripts/debugging__Model2_scripts/run_PySSCWrap_DispatchTargets.py">run_PySSCWrap_DispatchTargets.py</a></dt><dd><ul class="simple">
+<li><p>Actually used to enter debugging mode in CodeLite or other C++ IDE</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ol>
+</div>
+<div class="section" id="some-data-generation">
+<h2>Some Data Generation<a class="headerlink" href="#some-data-generation" title="Permalink to this headline">¶</a></h2>
+<ol class="arabic" start="3">
+<li><dl class="simple">
+<dt><a class="reference external" href="https://github.com/uw-esolab/neup-ies/blob/master/simulations/scripts/debugging__Model2_scripts/gen__PySAM_Pyomo_sweep_for_failures__model2.py">gen__PySAM_Pyomo_sweep_for_failures__model2.py</a></dt><dd><ul class="simple">
+<li><p>Supposed to be a parameter sweep where the static params are the user-defined table (UDT) and tariff price schedule (TPS)</p></li>
+<li><p>Variable parameters we sweep over are the PC size, TES size</p></li>
+<li><dl class="simple">
+<dt>User specifies:</dt><dd><ul>
+<li><p>JSON script</p></li>
+<li><p>tshours (as array)</p></li>
+<li><p>P_ref (as array)</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><a class="reference external" href="https://github.com/uw-esolab/neup-ies/blob/master/simulations/scripts/debugging__Model2_scripts/generate_two_peak_dispatch.py">generate_two_peak_dispatch.py</a></dt><dd><ul class="simple">
+<li><p>Creates new tariff rate schedule with two peaks (one in morning, one in late afternoon) as shown below</p></li>
+</ul>
+<a class="reference external image-reference" href="_static/dual_peak_tariffs.png"><img alt="_images/dual_peak_tariffs.png" src="_images/dual_peak_tariffs.png" /></a>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><a class="reference external" href="https://github.com/uw-esolab/neup-ies/blob/master/simulations/scripts/debugging__Model2_scripts/generate__load_profiles.py">generate__load_profiles.py</a></dt><dd><ul class="simple">
+<li><p>Generates a full year of simulation profiles for model2a</p></li>
+<li><dl class="simple">
+<dt>User specifies:</dt><dd><ul>
+<li><p>JSON script</p></li>
+<li><p>tshours (single value)</p></li>
+<li><p>P_ref (single value)</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</li>
+</ol>
+</div>
+<div class="section" id="post-processing-plotting">
+<h2>Post Processing / Plotting<a class="headerlink" href="#post-processing-plotting" title="Permalink to this headline">¶</a></h2>
+<ol class="arabic" start="6">
+<li><dl>
+<dt><a class="reference external" href="https://github.com/uw-esolab/neup-ies/blob/master/simulations/scripts/debugging__Model2_scripts/plot__load_profiles.py">plot__load_profiles.py</a></dt><dd><ul class="simple">
+<li><p>Creates the violin plots for Twin Peak Results</p></li>
+<li><p>Splits distributions between Winter vs Summer, Weekday vs Weekend</p></li>
+<li><p>Calls on a util class called <code class="docutils literal notranslate"><span class="pre">NuclearTESLoadProfiles</span></code> which hosts a lot of methods used to make the violin plots (some variations to deal with CSP profile)</p></li>
+<li><p>Example plot:</p></li>
+</ul>
+<a class="reference external image-reference" href="_static/model2a_loadprof.png"><img alt="_images/model2a_loadprof.png" src="_images/model2a_loadprof.png" /></a>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><a class="reference external" href="https://github.com/uw-esolab/neup-ies/blob/master/simulations/scripts/debugging__Model2_scripts/plot__PySAM_Pyomo_sweep_for_failures__model2.py">plot__PySAM_Pyomo_sweep_for_failures__model2.py</a></dt><dd><ul class="simple">
+<li><p>plotting results from parameter sweep files</p></li>
+<li><dl class="simple">
+<dt>Param sweep files are found in the <code class="docutils literal notranslate"><span class="pre">neup-ies/simulations/outputs</span></code> subdirectory</dt><dd><ul>
+<li><p>usually called something like “failureModes_PySAM__model2_Hamilton_560_tariffx1__2022_02__pyomo_1__horizon_24_48__TES_[2,14]__PC_[600,850]__CSP_400”</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</li>
+</ol>
+</div>
+</div>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">DualPlantTES Scripts</a><ul>
+<li><a class="reference internal" href="#debugging">Debugging</a></li>
+<li><a class="reference internal" href="#some-data-generation">Some Data Generation</a></li>
+<li><a class="reference internal" href="#post-processing-plotting">Post Processing / Plotting</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="dualplanttesoverview.html"
+                        title="previous chapter">DualPlantTES Overview</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="directTESoutletMixing.html"
+                        title="next chapter">Model 2a Mixing of LFR and CSP Outlet Streams</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/dualplanttesscripts.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="directTESoutletMixing.html" title="Model 2a Mixing of LFR and CSP Outlet Streams"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="dualplanttesoverview.html" title="DualPlantTES Overview"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">NE-2 Simulations  documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">DualPlantTES Scripts</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2021, Gabriel J. Soto, Una Baker, Grace Stanke, Ben Lindley, Mike Wagner.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.1.2.
+    </div>
+  </body>
+</html>
