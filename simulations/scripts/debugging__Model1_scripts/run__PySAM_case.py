@@ -32,13 +32,13 @@ dispatch = True
 run_loop = True
 sscH    = 24   # (hr)
 pyoH    = 48   # (hr)
-Pref    = 1000 # (MW)
+Pref    = 500 # (MW)
 tshours = 1    # (hr)
 
 # ========================
 
 # defining directories
-nuctes = NuclearTES.NuclearTES(json_name=json, is_dispatch=dispatch, log_dispatch_targets=False) 
+nuctes = NuclearTES.NuclearTES(json_name=json, is_dispatch=dispatch, log_dispatch_targets=True) 
 output_file = 'output.csv'
 
 # horizons

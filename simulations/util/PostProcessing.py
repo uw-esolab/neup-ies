@@ -95,7 +95,7 @@ class OutputExtraction(object):
         self.p_pb_design   = self.mod.SystemDesign.P_ref * u.MW              # power block design electrical power
         self.eta_design    = self.mod.SystemDesign.design_eff                # power block design efficiency
         self.q_pb_design  = (self.p_pb_design / self.eta_design).to('MW')    # power block design thermal rating
-        self.T_htf_hot    = (self.mod.SystemDesign.T_htf_hot_des*u.celsius).to('degK')   # heat transfer fluid Hot temp
+        # self.T_htf_hot    = (self.mod.SystemDesign.T_htf_hot_des*u.celsius).to('degK')   # heat transfer fluid Hot temp
         self.T_htf_cold   = (self.mod.SystemDesign.T_htf_cold_des*u.celsius).to('degK')  # heat transfer fluid Cold temp
         self.e_tes_design = (self.q_pb_design * self.mod.SystemDesign.tshours*u.hr).to('MWh')  # TES storage capacity (kWht)
 
