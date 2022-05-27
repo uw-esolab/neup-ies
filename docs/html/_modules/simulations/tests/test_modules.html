@@ -1,0 +1,513 @@
+
+
+<!doctype html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>simulations.tests.test_modules &#8212; NE-2 Simulations  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/bizstyle.css" />
+    
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/bizstyle.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <!--[if lt IE 9]>
+    <script src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">NE-2 Simulations  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">simulations.tests.test_modules</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for simulations.tests.test_modules</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python3</span>
+<span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Created on Thu Apr  1 14:36:02 2021</span>
+
+<span class="sd">@author: gabrielsoto</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">modules.NuclearTES</span> <span class="kn">import</span> <span class="n">NuclearTES</span>
+<span class="kn">import</span> <span class="nn">unittest</span><span class="o">,</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">math</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+
+<div class="viewcode-block" id="TestPySAMModules"><a class="viewcode-back" href="../../../simulations.tests.html#simulations.tests.test_modules.TestPySAMModules">[docs]</a><span class="k">class</span> <span class="nc">TestPySAMModules</span><span class="p">(</span><span class="n">unittest</span><span class="o">.</span><span class="n">TestCase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Unit tests for PySAM module setup</span>
+<span class="sd">    </span>
+<span class="sd">    This testing suite is meant to test the methods in parent class of all modules,</span>
+<span class="sd">    that being GenericSSCModule. Only non-abstract methods will be tested.</span>
+<span class="sd">    All child classes will share common methods and attributes which will be tested here. </span>
+<span class="sd">    Dispatch is NOT tested here.</span>
+<span class="sd">    </span>
+<span class="sd">    For each individual class, there will be bespoke test classes.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="TestPySAMModules.setUp"><a class="viewcode-back" href="../../../simulations.tests.html#simulations.tests.test_modules.TestPySAMModules.setUp">[docs]</a>    <span class="k">def</span> <span class="nf">setUp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Creating instances of modules upon start of each test</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="n">nuctes</span> <span class="o">=</span> <span class="n">NuclearTES</span><span class="p">(</span><span class="n">json_name</span><span class="o">=</span><span class="s1">&#39;tests/test_nuctes&#39;</span><span class="p">,</span><span class="n">is_dispatch</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        
+        <span class="c1">#saving list of modules</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mod_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">nuctes</span><span class="p">]</span></div>
+    
+    
+<div class="viewcode-block" id="TestPySAMModules.tearDown"><a class="viewcode-back" href="../../../simulations.tests.html#simulations.tests.test_modules.TestPySAMModules.tearDown">[docs]</a>    <span class="k">def</span> <span class="nf">tearDown</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Deleting instances of modules at end of each test</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c1"># deleting each module</span>
+        <span class="k">for</span> <span class="n">mod</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">mod_list</span><span class="p">:</span>
+            <span class="k">del</span> <span class="n">mod</span>
+        
+        <span class="c1"># deleting module list. this might be overkill?</span>
+        <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">mod_list</span></div>
+
+
+<div class="viewcode-block" id="TestPySAMModules.test__init__"><a class="viewcode-back" href="../../../simulations.tests.html#simulations.tests.test_modules.TestPySAMModules.test__init__">[docs]</a>    <span class="k">def</span> <span class="nf">test__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Testing the shared processes in __init__ of all modules</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c1"># defining necessary attributes to be declared in __init__</span>
+        <span class="n">attr_list</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;json_name&#39;</span> <span class="p">,</span> <span class="s1">&#39;plant_name&#39;</span><span class="p">,</span> <span class="s1">&#39;ssc_horizon&#39;</span><span class="p">,</span> <span class="s1">&#39;pyomo_horizon&#39;</span><span class="p">,</span> 
+                     <span class="s1">&#39;SSC_dict&#39;</span><span class="p">]</span>
+        
+        <span class="c1"># looping through all defined modules + attributes</span>
+        <span class="k">for</span> <span class="n">mod</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">mod_list</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">attr</span> <span class="ow">in</span> <span class="n">attr_list</span><span class="p">:</span>
+                
+                <span class="c1"># checking that all attributes exist in every module</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="nb">hasattr</span><span class="p">(</span><span class="n">mod</span><span class="p">,</span><span class="n">attr</span><span class="p">)</span> <span class="p">,</span> 
+                                <span class="s2">&quot;</span><span class="si">{0}</span><span class="s2"> does not have &#39;</span><span class="si">{1}</span><span class="s2">&#39; attribute&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">mod</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span><span class="n">attr</span><span class="p">))</span>
+            
+            <span class="c1"># checking that the self.store_csv_arrays( ) method was called correctly</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="nb">hasattr</span><span class="p">(</span><span class="n">mod</span><span class="p">,</span><span class="s2">&quot;solar_resource_file&quot;</span><span class="p">)</span> <span class="p">,</span>
+                            <span class="s2">&quot;Something went wrong when </span><span class="si">{0}</span><span class="s2"> called &#39;store_csv_arrays&#39; method&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">mod</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span> <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="TestPySAMModules.test_store_csv_arrays"><a class="viewcode-back" href="../../../simulations.tests.html#simulations.tests.test_modules.TestPySAMModules.test_store_csv_arrays">[docs]</a>    <span class="k">def</span> <span class="nf">test_store_csv_arrays</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Testing the storage of csv arrays in all modules</span>
+<span class="sd">        </span>
+<span class="sd">        NOTE: this assumes that the method was already called in __init__</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c1"># looping through all modules</span>
+        <span class="k">for</span> <span class="n">mod</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">mod_list</span><span class="p">:</span>
+            
+            <span class="c1"># checking that the solar_resource_file path attribute exists</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="nb">hasattr</span><span class="p">(</span><span class="n">mod</span><span class="p">,</span><span class="s2">&quot;solar_resource_file&quot;</span><span class="p">)</span> <span class="p">,</span>
+                            <span class="s2">&quot;Something went wrong when </span><span class="si">{0}</span><span class="s2"> called &#39;store_csv_arrays&#39; method&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">mod</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span> <span class="p">)</span>
+            
+            <span class="c1"># checking that the actual filepath exists in stated directory</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">mod</span><span class="o">.</span><span class="n">solar_resource_file</span><span class="p">)</span> <span class="p">,</span>
+                            <span class="s2">&quot;Solar Resource file path could not be found for </span><span class="si">{0}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">mod</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span> <span class="p">)</span></div>
+    
+
+<div class="viewcode-block" id="TestPySAMModules.test_create_Plant"><a class="viewcode-back" href="../../../simulations.tests.html#simulations.tests.test_modules.TestPySAMModules.test_create_Plant">[docs]</a>    <span class="k">def</span> <span class="nf">test_create_Plant</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Testing the create_Plant method</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c1"># looping through all modules</span>
+        <span class="k">for</span> <span class="n">mod</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">mod_list</span><span class="p">:</span>
+            
+            <span class="n">mod</span><span class="o">.</span><span class="n">create_Plant</span><span class="p">()</span>
+            <span class="c1"># checking that Plant object was created</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="nb">hasattr</span><span class="p">(</span><span class="n">mod</span><span class="p">,</span><span class="s1">&#39;Plant&#39;</span><span class="p">)</span> <span class="p">,</span>
+                            <span class="s2">&quot;Plant object not created for </span><span class="si">{0}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">mod</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span> <span class="p">)</span></div>
+   
+            
+<div class="viewcode-block" id="TestPySAMModules.test_create_Grid"><a class="viewcode-back" href="../../../simulations.tests.html#simulations.tests.test_modules.TestPySAMModules.test_create_Grid">[docs]</a>    <span class="k">def</span> <span class="nf">test_create_Grid</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Testing the create_Grid method</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c1"># looping through all modules</span>
+        <span class="k">for</span> <span class="n">mod</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">mod_list</span><span class="p">:</span>
+            
+            <span class="n">mod</span><span class="o">.</span><span class="n">create_Plant</span><span class="p">()</span>
+            <span class="n">mod</span><span class="o">.</span><span class="n">create_Grid</span><span class="p">()</span>
+            
+            <span class="c1"># checking that Grid object was created</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="nb">hasattr</span><span class="p">(</span><span class="n">mod</span><span class="p">,</span><span class="s1">&#39;Grid&#39;</span><span class="p">)</span> <span class="p">,</span>
+                            <span class="s2">&quot;Grid object not created for </span><span class="si">{0}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">mod</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span> <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="TestPySAMModules.test_create_SO"><a class="viewcode-back" href="../../../simulations.tests.html#simulations.tests.test_modules.TestPySAMModules.test_create_SO">[docs]</a>    <span class="k">def</span> <span class="nf">test_create_SO</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Testing the create_SO method</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c1"># looping through all modules</span>
+        <span class="k">for</span> <span class="n">mod</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">mod_list</span><span class="p">:</span>
+            
+            <span class="n">mod</span><span class="o">.</span><span class="n">create_Plant</span><span class="p">()</span>
+            <span class="n">mod</span><span class="o">.</span><span class="n">create_SO</span><span class="p">()</span>
+            
+            <span class="c1"># checking that SingleOwner object was created</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="nb">hasattr</span><span class="p">(</span><span class="n">mod</span><span class="p">,</span><span class="s1">&#39;SO&#39;</span><span class="p">)</span> <span class="p">,</span>
+                            <span class="s2">&quot;SO object not created for </span><span class="si">{0}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">mod</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span> <span class="p">)</span></div>
+            
+
+<div class="viewcode-block" id="TestPySAMModules.test_initialize_arrays"><a class="viewcode-back" href="../../../simulations.tests.html#simulations.tests.test_modules.TestPySAMModules.test_initialize_arrays">[docs]</a>    <span class="k">def</span> <span class="nf">test_initialize_arrays</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Testing the initialize_arrays method</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c1"># running in time segments versus running full year at once</span>
+        <span class="n">loop_modes</span> <span class="o">=</span> <span class="p">[</span><span class="kc">True</span><span class="p">,</span> <span class="kc">False</span><span class="p">]</span>
+
+        <span class="c1"># looping through all modules</span>
+        <span class="k">for</span> <span class="n">mod</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">mod_list</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">mode</span> <span class="ow">in</span> <span class="n">loop_modes</span><span class="p">:</span>
+                
+                <span class="c1"># =====================================================</span>
+                <span class="c1"># run the method for given looping mode</span>
+                <span class="n">mod</span><span class="o">.</span><span class="n">run_loop</span> <span class="o">=</span> <span class="n">mode</span>
+                <span class="n">mod</span><span class="o">.</span><span class="n">initialize_arrays</span><span class="p">()</span>
+    
+                <span class="c1"># assert that a Log dictionary was created</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">mod</span><span class="p">,</span> <span class="s1">&#39;Log_Arrays&#39;</span><span class="p">)</span> <span class="p">,</span> 
+                                <span class="s2">&quot;Log_Arrays dictionary not created in </span><span class="si">{0}</span><span class="s2"> module.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">mod</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span> <span class="p">)</span> <span class="p">)</span>
+    
+                <span class="c1"># check that individual log arrays were saved to the NE2 module</span>
+                <span class="n">keys</span> <span class="o">=</span> <span class="n">mod</span><span class="o">.</span><span class="n">Log_Arrays</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+                
+                <span class="c1"># if NOT running time segments, should only be saving the &#39;gen_long&#39; array</span>
+                <span class="n">condition</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">keys</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">mode</span> <span class="ow">is</span> <span class="kc">False</span> <span class="k">else</span> <span class="nb">len</span><span class="p">(</span><span class="n">keys</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span>
+                
+                <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span> <span class="n">condition</span> <span class="p">,</span> 
+                                <span class="s2">&quot;Improper amount of keys created in </span><span class="si">{0}</span><span class="s2"> module when run_loop is </span><span class="si">{1}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">mod</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span> <span class="p">,</span> <span class="n">mode</span> <span class="p">)</span> <span class="p">)</span>
+                
+                <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">mod</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span> <span class="p">,</span> 
+                                    <span class="s2">&quot;</span><span class="si">{0}</span><span class="s2"> Plant module doesn&#39;t have Output </span><span class="si">{1}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">mod</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span> <span class="p">,</span> <span class="n">k</span><span class="p">)</span> <span class="p">)</span>
+                
+                <span class="n">mod</span><span class="o">.</span><span class="n">reset_all</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="TestPySAMModules.test_reset_all"><a class="viewcode-back" href="../../../simulations.tests.html#simulations.tests.test_modules.TestPySAMModules.test_reset_all">[docs]</a>    <span class="k">def</span> <span class="nf">test_reset_all</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Testing the reset_all method</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="n">try_all_PySAM_mods</span> <span class="o">=</span> <span class="p">[</span><span class="kc">True</span><span class="p">,</span> <span class="kc">False</span><span class="p">]</span>
+        
+        <span class="c1"># looping through all modules</span>
+        <span class="k">for</span> <span class="n">mod</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">mod_list</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">try_all</span> <span class="ow">in</span> <span class="n">try_all_PySAM_mods</span><span class="p">:</span>
+                
+                <span class="c1"># create PySAM modules</span>
+                <span class="n">mod</span><span class="o">.</span><span class="n">create_Plant</span><span class="p">()</span>
+                
+                <span class="c1"># testing safe deletion, will it throw error if Grid/SO was never created?</span>
+                <span class="k">if</span> <span class="n">try_all</span><span class="p">:</span>
+                    <span class="n">mod</span><span class="o">.</span><span class="n">create_Grid</span><span class="p">()</span>
+                    <span class="n">mod</span><span class="o">.</span><span class="n">create_SO</span><span class="p">()</span>
+                
+                <span class="c1"># initialize arrays</span>
+                <span class="n">mod</span><span class="o">.</span><span class="n">run_loop</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="n">mod</span><span class="o">.</span><span class="n">initialize_arrays</span><span class="p">()</span>
+                <span class="n">keys</span> <span class="o">=</span> <span class="n">mod</span><span class="o">.</span><span class="n">Log_Arrays</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+                
+                <span class="c1"># run the method</span>
+                <span class="n">mod</span><span class="o">.</span><span class="n">reset_all</span><span class="p">()</span>
+                
+                <span class="c1"># check that method deleted PySAM modules</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">assertFalse</span><span class="p">(</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">mod</span><span class="p">,</span><span class="s2">&quot;Plant&quot;</span><span class="p">)</span> <span class="p">,</span>
+                                 <span class="s2">&quot;Plant not deleted in </span><span class="si">{0}</span><span class="s2"> module.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">mod</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span> <span class="p">)</span> <span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">assertFalse</span><span class="p">(</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">mod</span><span class="p">,</span><span class="s2">&quot;Grid&quot;</span><span class="p">)</span> <span class="p">,</span>
+                                 <span class="s2">&quot;Grid not deleted in </span><span class="si">{0}</span><span class="s2"> module. Grid was </span><span class="si">{1}</span><span class="s2"> beforehand&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">mod</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span> <span class="p">,</span>
+                                                <span class="s2">&quot;created&quot;</span> <span class="k">if</span> <span class="n">try_all</span> <span class="k">else</span> <span class="s2">&quot;NOT created&quot;</span><span class="p">)</span> <span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">assertFalse</span><span class="p">(</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">mod</span><span class="p">,</span><span class="s2">&quot;SO&quot;</span><span class="p">)</span> <span class="p">,</span>
+                                 <span class="s2">&quot;SO not deleted in </span><span class="si">{0}</span><span class="s2"> module. SO was </span><span class="si">{1}</span><span class="s2"> beforehand&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">mod</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span> <span class="p">,</span>
+                                                <span class="s2">&quot;created&quot;</span> <span class="k">if</span> <span class="n">try_all</span> <span class="k">else</span> <span class="s2">&quot;NOT created&quot;</span><span class="p">)</span> <span class="p">)</span>
+                
+                <span class="c1"># check that method deleted output and logging arrays</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">assertFalse</span><span class="p">(</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">mod</span><span class="p">,</span><span class="s2">&quot;Log_Arrays&quot;</span><span class="p">)</span> <span class="p">,</span>
+                                 <span class="s2">&quot;Log_Arrays not deleted in </span><span class="si">{0}</span><span class="s2"> module.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">mod</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span> <span class="p">)</span> <span class="p">)</span>
+                
+                <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">assertFalse</span><span class="p">(</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">mod</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span> <span class="p">,</span> 
+                                    <span class="s2">&quot;</span><span class="si">{0}</span><span class="s2"> Plant module still has Output </span><span class="si">{1}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">mod</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span> <span class="p">,</span> <span class="n">k</span><span class="p">)</span> <span class="p">)</span></div>
+            
+            
+<div class="viewcode-block" id="TestPySAMModules.test_log_SSC_arrays"><a class="viewcode-back" href="../../../simulations.tests.html#simulations.tests.test_modules.TestPySAMModules.test_log_SSC_arrays">[docs]</a>    <span class="k">def</span> <span class="nf">test_log_SSC_arrays</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Testing the log_SSC_arrays method</span>
+<span class="sd">        </span>
+<span class="sd">        Here we test both instances of the method call, during simulations and</span>
+<span class="sd">        during the last simulation segment. </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c1"># running in time segments versus running full year at once</span>
+        <span class="n">loop_modes</span> <span class="o">=</span> <span class="p">[</span><span class="kc">True</span><span class="p">,</span> <span class="kc">False</span><span class="p">]</span>
+        <span class="n">final_attrs</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;gen_log&#39;</span><span class="p">,</span> <span class="s1">&#39;capacity_factor&#39;</span><span class="p">,</span> <span class="s1">&#39;annual_energy&#39;</span><span class="p">]</span>
+        
+        <span class="c1"># looping through all modules</span>
+        <span class="k">for</span> <span class="n">mod</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">mod_list</span><span class="p">:</span>
+            
+            <span class="c1"># looping through all loop modes for log_final being true</span>
+            <span class="k">for</span> <span class="n">mode</span> <span class="ow">in</span> <span class="n">loop_modes</span><span class="p">:</span> 
+                
+                <span class="c1"># ================================================================</span>
+                <span class="c1"># test that method behaves correctly for given loop mode</span>
+                <span class="n">mod</span><span class="o">.</span><span class="n">run_loop</span> <span class="o">=</span> <span class="n">mode</span>
+        
+                <span class="c1">#--- create Plant object and execute it</span>
+                <span class="n">mod</span><span class="o">.</span><span class="n">create_Plant</span><span class="p">(</span> <span class="p">)</span>
+                <span class="n">mod</span><span class="o">.</span><span class="n">simulate_Plant</span><span class="p">(</span> <span class="p">)</span>
+                
+                <span class="c1"># log final results from looping simulations</span>
+                <span class="n">mod</span><span class="o">.</span><span class="n">log_SSC_arrays</span><span class="p">(</span><span class="n">log_final</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                
+                <span class="n">listoflists</span> <span class="o">=</span> <span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">mod</span><span class="o">.</span><span class="n">Log_Arrays</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="p">)</span> <span class="p">,</span> <span class="n">final_attrs</span> <span class="p">]</span> 
+                <span class="n">total_attrs</span> <span class="o">=</span> <span class="p">[</span><span class="n">item</span> <span class="k">for</span> <span class="n">sublist</span> <span class="ow">in</span> <span class="n">listoflists</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">sublist</span><span class="p">]</span> <span class="c1">#&#39;flatten&#39;-ing the list of lists</span>
+
+                <span class="c1"># check that PySAM_Outputs exists as a subclass of Plant</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">mod</span><span class="o">.</span><span class="n">Plant</span><span class="p">,</span> <span class="s1">&#39;PySAM_Outputs&#39;</span><span class="p">)</span> <span class="p">,</span> 
+                                    <span class="s2">&quot;</span><span class="si">{0}</span><span class="s2"> Plant module does not have PySAM_Outputs&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">mod</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span> <span class="p">)</span> <span class="p">)</span>
+                    
+                <span class="c1"># check attributes </span>
+                <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">total_attrs</span><span class="p">:</span>
+                    
+                    <span class="c1"># check that attributes exist</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">mod</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span> <span class="p">,</span> 
+                                    <span class="s2">&quot;</span><span class="si">{0}</span><span class="s2"> Plant module does not have output </span><span class="si">{1}</span><span class="s2"> when log_final is True&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">mod</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span> <span class="p">,</span> <span class="n">f</span><span class="p">)</span> <span class="p">)</span>
+                    
+                    <span class="c1"># check that attributes exist in PySAM_Outputs fake lambda subclass</span>
+                    <span class="k">if</span> <span class="n">f</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">final_attrs</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">mod</span><span class="o">.</span><span class="n">Plant</span><span class="o">.</span><span class="n">PySAM_Outputs</span><span class="p">,</span> <span class="n">mod</span><span class="o">.</span><span class="n">Log_Arrays</span><span class="p">[</span><span class="n">f</span><span class="p">])</span> <span class="p">,</span> 
+                                        <span class="s2">&quot;</span><span class="si">{0}</span><span class="s2"> PySAM_Outputs module does not have output </span><span class="si">{1}</span><span class="s2"> when log_final is True&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">mod</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span> <span class="p">,</span> <span class="n">f</span><span class="p">)</span> <span class="p">)</span>
+                    
+                    <span class="c1"># check that attribute is non-zero</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">mod</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">!=</span> <span class="mi">0</span> <span class="p">,</span>
+                                    <span class="s2">&quot;Output </span><span class="si">{0}</span><span class="s2"> sums up to 0 in module </span><span class="si">{1}</span><span class="s2"> when log_final is True&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">mod</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span> <span class="p">)</span> <span class="p">)</span>
+                
+                <span class="n">mod</span><span class="o">.</span><span class="n">reset_all</span><span class="p">()</span>
+            
+            <span class="c1"># ================================================================</span>
+            <span class="c1"># test that method behaves correctly for running loop</span>
+            
+            <span class="n">mod</span><span class="o">.</span><span class="n">run_loop</span> <span class="o">=</span> <span class="kc">True</span>
+            
+            <span class="c1">#--- create Plant object and execute it</span>
+            <span class="n">mod</span><span class="o">.</span><span class="n">create_Plant</span><span class="p">(</span> <span class="p">)</span>
+
+            <span class="c1"># start and end times for full simulation</span>
+            <span class="n">time_start</span> <span class="o">=</span> <span class="n">mod</span><span class="o">.</span><span class="n">SSC_dict</span><span class="p">[</span><span class="s1">&#39;time_start&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="n">mod</span><span class="o">.</span><span class="n">u</span><span class="o">.</span><span class="n">s</span>
+            <span class="n">time_next</span>  <span class="o">=</span> <span class="n">mod</span><span class="o">.</span><span class="n">ssc_horizon</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39;s&#39;</span><span class="p">)</span>
+            
+            <span class="c1"># setting up empty log array for log arrays</span>
+            <span class="n">mod</span><span class="o">.</span><span class="n">initialize_arrays</span><span class="p">()</span>
+            
+            <span class="c1"># first execution of Plant through SSC</span>
+            <span class="n">mod</span><span class="o">.</span><span class="n">run_Plant_through_SSC</span><span class="p">(</span> <span class="n">mod</span><span class="o">.</span><span class="n">Plant</span><span class="p">,</span> <span class="n">time_start</span> <span class="p">,</span> <span class="n">time_next</span> <span class="p">)</span>
+            <span class="n">mod</span><span class="o">.</span><span class="n">log_SSC_arrays</span><span class="p">()</span>
+            
+            <span class="c1"># logged arrays</span>
+            <span class="n">keys</span> <span class="o">=</span> <span class="n">mod</span><span class="o">.</span><span class="n">Log_Arrays</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+            
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+                <span class="c1"># check that attributes exist in **module**</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">mod</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span> <span class="p">,</span> 
+                                <span class="s2">&quot;</span><span class="si">{0}</span><span class="s2"> Plant module does not have output </span><span class="si">{1}</span><span class="s2"> when log_final is False&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">mod</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span> <span class="p">,</span> <span class="n">k</span><span class="p">)</span> <span class="p">)</span>
+                
+            <span class="n">mod</span><span class="o">.</span><span class="n">reset_all</span><span class="p">()</span></div>
+            
+            
+<div class="viewcode-block" id="TestPySAMModules.test_run_Plant_through_SSC"><a class="viewcode-back" href="../../../simulations.tests.html#simulations.tests.test_modules.TestPySAMModules.test_run_Plant_through_SSC">[docs]</a>    <span class="k">def</span> <span class="nf">test_run_Plant_through_SSC</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Testing the run_Plant_through_SSC method</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c1"># some key attributes to check for in outputs</span>
+        <span class="n">attrs</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;time_hr&#39;</span><span class="p">,</span> <span class="s1">&#39;gen&#39;</span><span class="p">,</span> <span class="s1">&#39;P_cycle&#39;</span><span class="p">,</span> <span class="s1">&#39;q_dot_nuc_inc&#39;</span> <span class="p">]</span>
+        
+        <span class="c1"># looping through all modules</span>
+        <span class="k">for</span> <span class="n">mod</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">mod_list</span><span class="p">:</span>
+            
+            <span class="c1"># create Plant</span>
+            <span class="n">mod</span><span class="o">.</span><span class="n">create_Plant</span><span class="p">(</span> <span class="p">)</span>
+
+            <span class="c1"># start and end times for full simulation</span>
+            <span class="n">time_start</span> <span class="o">=</span> <span class="n">mod</span><span class="o">.</span><span class="n">SSC_dict</span><span class="p">[</span><span class="s1">&#39;time_start&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="n">mod</span><span class="o">.</span><span class="n">u</span><span class="o">.</span><span class="n">s</span>
+            <span class="n">time_next</span>  <span class="o">=</span> <span class="n">mod</span><span class="o">.</span><span class="n">ssc_horizon</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39;s&#39;</span><span class="p">)</span>
+            
+            <span class="c1"># set up run loop</span>
+            <span class="n">mod</span><span class="o">.</span><span class="n">run_loop</span> <span class="o">=</span> <span class="kc">True</span>
+            
+            <span class="c1"># setting up empty log array for log arrays</span>
+            <span class="n">mod</span><span class="o">.</span><span class="n">initialize_arrays</span><span class="p">()</span>
+            
+            <span class="c1"># first execution of Plant through SSC</span>
+            <span class="n">mod</span><span class="o">.</span><span class="n">run_Plant_through_SSC</span><span class="p">(</span> <span class="n">mod</span><span class="o">.</span><span class="n">Plant</span><span class="p">,</span> <span class="n">time_start</span> <span class="p">,</span> <span class="n">time_next</span> <span class="p">)</span>
+            
+            <span class="c1"># check attributes </span>
+            <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">attrs</span><span class="p">:</span>
+                
+                <span class="c1"># check that attributes exist in module.Plant.Outputs after run</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">mod</span><span class="o">.</span><span class="n">Plant</span><span class="o">.</span><span class="n">Outputs</span><span class="p">,</span> <span class="n">a</span><span class="p">)</span> <span class="p">,</span> 
+                                <span class="s2">&quot;</span><span class="si">{0}</span><span class="s2"> Plant.Outputs does not have output </span><span class="si">{1}</span><span class="s2"> when log_final is True&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">mod</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span> <span class="p">,</span> <span class="n">a</span><span class="p">)</span> <span class="p">)</span>
+                    
+                <span class="c1"># check that attribute is non-zero</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">mod</span><span class="o">.</span><span class="n">Plant</span><span class="o">.</span><span class="n">Outputs</span><span class="p">,</span> <span class="n">a</span><span class="p">)</span> <span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span> <span class="p">,</span>
+                                <span class="s2">&quot;Output </span><span class="si">{0}</span><span class="s2"> sums up to 0 in module </span><span class="si">{1}</span><span class="s2"> when log_final is True&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">mod</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span> <span class="p">)</span> <span class="p">)</span></div>
+                
+                
+<div class="viewcode-block" id="TestPySAMModules.test_simulate_Plant"><a class="viewcode-back" href="../../../simulations.tests.html#simulations.tests.test_modules.TestPySAMModules.test_simulate_Plant">[docs]</a>    <span class="k">def</span> <span class="nf">test_simulate_Plant</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Testing the simulate_Plant method</span>
+<span class="sd">        </span>
+<span class="sd">        Here we test the basic functionality of simulate Plant</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># looping through all modules</span>
+        <span class="k">for</span> <span class="n">mod</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">mod_list</span><span class="p">:</span>
+            
+            <span class="c1"># =====================================================</span>
+            <span class="c1">#---first test what happens when not running in loop</span>
+            <span class="n">mod</span><span class="o">.</span><span class="n">create_Plant</span><span class="p">(</span> <span class="p">)</span>
+            <span class="n">mod</span><span class="o">.</span><span class="n">run_loop</span> <span class="o">=</span> <span class="kc">False</span>
+            
+            <span class="c1"># simulate Plant</span>
+            <span class="n">mod</span><span class="o">.</span><span class="n">simulate_Plant</span><span class="p">(</span> <span class="p">)</span>
+            
+            <span class="c1"># assert that sizing of time arrays are consistent</span>
+            <span class="n">t_ind</span>     <span class="o">=</span> <span class="n">mod</span><span class="o">.</span><span class="n">t_ind</span> <span class="o">*</span> <span class="n">mod</span><span class="o">.</span><span class="n">u</span><span class="o">.</span><span class="n">hr</span>
+            <span class="n">time_stop</span> <span class="o">=</span> <span class="n">mod</span><span class="o">.</span><span class="n">SSC_dict</span><span class="p">[</span><span class="s1">&#39;time_stop&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="n">mod</span><span class="o">.</span><span class="n">u</span><span class="o">.</span><span class="n">s</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span> <span class="n">t_ind</span> <span class="o">==</span> <span class="n">time_stop</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39;hr&#39;</span><span class="p">)</span> <span class="p">,</span> <span class="s2">&quot;Time index not set to time_stop when running full sim time.&quot;</span> <span class="p">)</span>
+            
+            <span class="c1"># reset submodules</span>
+            <span class="k">del</span> <span class="n">mod</span><span class="o">.</span><span class="n">Plant</span>
+            
+            <span class="c1"># =====================================================</span>
+            <span class="c1">#---next test what happens when running in loop</span>
+            <span class="n">mod</span><span class="o">.</span><span class="n">create_Plant</span><span class="p">(</span> <span class="p">)</span>
+            <span class="n">mod</span><span class="o">.</span><span class="n">run_loop</span> <span class="o">=</span> <span class="kc">True</span>
+            
+            <span class="c1"># simulate Plant</span>
+            <span class="n">mod</span><span class="o">.</span><span class="n">simulate_Plant</span><span class="p">(</span> <span class="p">)</span>
+            
+            <span class="c1"># assert that sizing of time arrays are consistent</span>
+            <span class="n">t_ind</span>     <span class="o">=</span> <span class="n">mod</span><span class="o">.</span><span class="n">t_ind</span> <span class="o">*</span> <span class="n">mod</span><span class="o">.</span><span class="n">u</span><span class="o">.</span><span class="n">hr</span>
+            <span class="n">time_stop</span> <span class="o">=</span> <span class="n">mod</span><span class="o">.</span><span class="n">ssc_horizon</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39;s&#39;</span><span class="p">)</span> 
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span> <span class="n">t_ind</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39;s&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="n">time_stop</span> <span class="p">,</span> <span class="s2">&quot;Time index not set to SSC Horizon time when running sim in loop.&quot;</span> <span class="p">)</span></div>
+        
+        
+<div class="viewcode-block" id="TestPySAMModules.test_run_sim"><a class="viewcode-back" href="../../../simulations.tests.html#simulations.tests.test_modules.TestPySAMModules.test_run_sim">[docs]</a>    <span class="k">def</span> <span class="nf">test_run_sim</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Testing run_sim for all modules</span>
+<span class="sd">        </span>
+<span class="sd">        NOTE: this doesn&#39;t test for accuracy of individual results, just that</span>
+<span class="sd">        the processes run in the correct order and output something.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c1"># list of important attributes for each submodule</span>
+        <span class="n">plant_output_attr</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;annual_energy&#39;</span><span class="p">,</span> <span class="s1">&#39;gen&#39;</span><span class="p">]</span>
+        <span class="n">grid_output_attr</span>  <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;annual_energy_pre_curtailment_ac&#39;</span><span class="p">,</span> <span class="s1">&#39;gen&#39;</span><span class="p">]</span>
+        <span class="n">so_output_attr</span>    <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;ppa&#39;</span><span class="p">,</span> <span class="s1">&#39;lppa_nom&#39;</span><span class="p">,</span> <span class="s1">&#39;lppa_real&#39;</span><span class="p">,</span> <span class="s1">&#39;project_return_aftertax_npv&#39;</span><span class="p">]</span>
+        
+        <span class="c1"># looping through all modules</span>
+        <span class="k">for</span> <span class="n">mod</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">mod_list</span><span class="p">:</span>
+            
+            <span class="c1"># ======================================</span>
+            <span class="c1">#---run full simulation for entire year</span>
+            <span class="n">mod</span><span class="o">.</span><span class="n">run_sim</span><span class="p">(</span><span class="n">run_loop</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            
+            <span class="c1"># check that Plant have written outputs</span>
+            <span class="k">for</span> <span class="n">p_attr</span> <span class="ow">in</span> <span class="n">plant_output_attr</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="nb">hasattr</span><span class="p">(</span><span class="n">mod</span><span class="o">.</span><span class="n">Plant</span><span class="o">.</span><span class="n">Outputs</span><span class="p">,</span> <span class="n">p_attr</span><span class="p">)</span> <span class="p">,</span>
+                                <span class="s2">&quot;</span><span class="si">{0}</span><span class="s2"> Plant doesn&#39;t have Output </span><span class="si">{1}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">mod</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span> <span class="p">,</span> <span class="n">p_attr</span><span class="p">)</span> <span class="p">)</span>
+            
+            <span class="c1"># check that Grid have written outputs</span>
+            <span class="k">for</span> <span class="n">g_attr</span> <span class="ow">in</span> <span class="n">grid_output_attr</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="nb">hasattr</span><span class="p">(</span><span class="n">mod</span><span class="o">.</span><span class="n">Grid</span><span class="o">.</span><span class="n">Outputs</span><span class="p">,</span> <span class="n">g_attr</span><span class="p">)</span> <span class="p">,</span>
+                                <span class="s2">&quot;</span><span class="si">{0}</span><span class="s2"> Grid doesn&#39;t have Output </span><span class="si">{1}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">mod</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span> <span class="p">,</span> <span class="n">g_attr</span><span class="p">)</span> <span class="p">)</span>
+            
+            <span class="c1"># check that SO have written outputs</span>
+            <span class="k">for</span> <span class="n">s_attr</span> <span class="ow">in</span> <span class="n">so_output_attr</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="nb">hasattr</span><span class="p">(</span><span class="n">mod</span><span class="o">.</span><span class="n">SO</span><span class="o">.</span><span class="n">Outputs</span><span class="p">,</span> <span class="n">s_attr</span><span class="p">)</span> <span class="p">,</span>
+                                <span class="s2">&quot;</span><span class="si">{0}</span><span class="s2"> SO doesn&#39;t have Output </span><span class="si">{1}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">mod</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span> <span class="p">,</span> <span class="n">s_attr</span><span class="p">)</span> <span class="p">)</span>
+            
+            <span class="c1"># ======================================</span>
+            <span class="c1">#---run looped-simulation </span>
+            <span class="c1"># store results from full simulation</span>
+            <span class="n">annual_energy</span>   <span class="o">=</span> <span class="n">mod</span><span class="o">.</span><span class="n">Grid</span><span class="o">.</span><span class="n">SystemOutput</span><span class="o">.</span><span class="n">annual_energy</span>
+            <span class="n">ppa</span>             <span class="o">=</span> <span class="n">mod</span><span class="o">.</span><span class="n">SO</span><span class="o">.</span><span class="n">Outputs</span><span class="o">.</span><span class="n">ppa</span>
+            
+            <span class="c1"># reset submodules</span>
+            <span class="n">mod</span><span class="o">.</span><span class="n">reset_all</span><span class="p">()</span>
+            
+            <span class="c1"># ======================================</span>
+            <span class="c1">#---run simulation in a loop</span>
+            <span class="n">mod</span><span class="o">.</span><span class="n">run_sim</span><span class="p">(</span><span class="n">run_loop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            
+            <span class="c1"># check that results are in the same ballpark</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span> <span class="n">math</span><span class="o">.</span><span class="n">isclose</span> <span class="p">(</span><span class="n">mod</span><span class="o">.</span><span class="n">Grid</span><span class="o">.</span><span class="n">SystemOutput</span><span class="o">.</span><span class="n">annual_energy</span><span class="p">,</span> <span class="n">annual_energy</span><span class="p">,</span> <span class="n">rel_tol</span><span class="o">=</span><span class="mf">1e-2</span><span class="p">)</span> <span class="p">,</span> 
+                             <span class="s2">&quot;Plant and Grid outputs are not within tolerance.&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span> <span class="n">math</span><span class="o">.</span><span class="n">isclose</span> <span class="p">(</span><span class="n">mod</span><span class="o">.</span><span class="n">SO</span><span class="o">.</span><span class="n">Outputs</span><span class="o">.</span><span class="n">ppa</span><span class="p">,</span> <span class="n">ppa</span>  <span class="p">,</span> <span class="n">rel_tol</span><span class="o">=</span><span class="mf">1e-2</span><span class="p">)</span> <span class="p">,</span> 
+                             <span class="s2">&quot;Grid and SingleOwner outputs are not within tolerance.&quot;</span><span class="p">)</span></div></div>
+    
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">unittest</span><span class="o">.</span><span class="n">main</span><span class="p">()</span>
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">NE-2 Simulations  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">simulations.tests.test_modules</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2021, Gabriel J. Soto, Una Baker, Grace Stanke, Ben Lindley, Mike Wagner.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.2.0.
+    </div>
+  </body>
+</html>

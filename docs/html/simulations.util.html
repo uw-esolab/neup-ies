@@ -1,0 +1,1789 @@
+
+
+<!doctype html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>simulations.util package &#8212; NE-2 Simulations  documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/bizstyle.css" />
+    
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/bizstyle.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="simulations.tests package" href="simulations.tests.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <!--[if lt IE 9]>
+    <script src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="simulations.tests.html" title="simulations.tests package"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">NE-2 Simulations  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="simulations.html" accesskey="U">simulations package</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">simulations.util package</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="module-simulations.util">
+<span id="simulations-util-package"></span><h1>simulations.util package<a class="headerlink" href="#module-simulations.util" title="Permalink to this headline">¶</a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="module-simulations.util.DualPlots">
+<span id="simulations-util-dualplots-module"></span><h2>simulations.util.DualPlots module<a class="headerlink" href="#module-simulations.util.DualPlots" title="Permalink to this headline">¶</a></h2>
+<p>Created on Thu Jan 13 14:46:10 2022</p>
+<p>&#64;author: gabrielsoto</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="simulations.util.DualPlots.DualDispatchPlots">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">simulations.util.DualPlots.</span></span><span class="sig-name descname"><span class="pre">DualDispatchPlots</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">module</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/DualPlots.html#DualDispatchPlots"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.DualPlots.DualDispatchPlots" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#simulations.util.DualPlots.DualPlots" title="simulations.util.DualPlots.DualPlots"><code class="xref py py-class docutils literal notranslate"><span class="pre">simulations.util.DualPlots.DualPlots</span></code></a></p>
+<p>The Plots class is a part of the PostProcessing family of classes. It can
+output results from Pyomo Dispatch models.</p>
+<p>Note that the DispatchPlots class must be initialized before using.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.util.DualPlots.DualDispatchPlots.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">module</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/DualPlots.html#DualDispatchPlots.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.DualPlots.DualDispatchPlots.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initializes the Plots module</p>
+<p>The instantiation of this class receives a full Dispatch object, the module
+being one of the Pyomo Dispatch model created in the /neup-ies/simulations/dispatch directory.
+It also contains various inputs relating to cosmetic parameters for
+matplotlib plots.</p>
+<dl class="simple">
+<dt>Inputs:</dt><dd><p>module (object)     : object representing Pyomo Dispatch Model with results
+fsl (str)           : fontsize for legend
+loc (str)           : location of legend
+legend_offset(bool) : are we plotting legends off-axis?
+lp (int)            : labelpad for axis labels
+lps (int)           : labelpad for axis labels - short version
+fs (int)            : fontsize for labels, titles, etc.
+lw (int)            : linewidth for plotting
+x_shrink (float)    : (legend_offset==True) amount to shrink axis to make room for legend</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.util.DualPlots.DualDispatchPlots.plot_pyomo_cycle_bin">
+<span class="sig-name descname"><span class="pre">plot_pyomo_cycle_bin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/DualPlots.html#DualDispatchPlots.plot_pyomo_cycle_bin"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.DualPlots.DualDispatchPlots.plot_pyomo_cycle_bin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to plot power cycle binary data from Pyomo Dispatch on single plot</p>
+<p>This method is used specifically to plot data from Dispatch simulation
+results pertaining to cycle binary values. Variables include whether
+power cycle is running (0 or 1), etc. Built-in options to plot legend
+off-axis.</p>
+<dl class="simple">
+<dt>Inputs:</dt><dd><p>ax (object)         : axis object to plot on
+plot_all_time(bool) : are we plotting all results or just a portion?
+title_label(str)    : title name for plot
+start_hr (int)      : (plot_all_time==False) hour used for starting index
+end_hr (int)        : (plot_all_time==False) hour used for ending index
+hide_x(bool)        : hiding the x-axis from this particular plot
+x_legend (float)    : (legend_offset==True) x-offset defining left-most side of legend
+y_legend_L (float)  : (legend_offset==True) y-offset of left y-axis plot
+y_legend_R (float)  : (legend_offset==True) y-offset of right y-axis plot</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.util.DualPlots.DualDispatchPlots.plot_pyomo_dual_bin">
+<span class="sig-name descname"><span class="pre">plot_pyomo_dual_bin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_all_time</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_hr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_hr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">48</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hide_x</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_legend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_legend_L</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_legend_R</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/DualPlots.html#DualDispatchPlots.plot_pyomo_dual_bin"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.DualPlots.DualDispatchPlots.plot_pyomo_dual_bin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to plot solar binary data from Pyomo Dispatch on single plot</p>
+<p>This method is used specifically to plot data from Dispatch simulation
+results pertaining to nuclear binary values. Variables include whether
+nuclear plant is running (0 or 1), etc. Built-in options to plot legend
+off-axis.</p>
+<dl class="simple">
+<dt>Inputs:</dt><dd><p>ax (object)         : axis object to plot on
+plot_all_time(bool) : are we plotting all results or just a portion?
+title_label(str)    : title name for plot
+start_hr (int)      : (plot_all_time==False) hour used for starting index
+end_hr (int)        : (plot_all_time==False) hour used for ending index
+hide_x(bool)        : hiding the x-axis from this particular plot
+x_legend (float)    : (legend_offset==True) x-offset defining left-most side of legend
+y_legend_L (float)  : (legend_offset==True) y-offset of left y-axis plot
+y_legend_R (float)  : (legend_offset==True) y-offset of right y-axis plot</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.util.DualPlots.DualDispatchPlots.plot_pyomo_energy">
+<span class="sig-name descname"><span class="pre">plot_pyomo_energy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/DualPlots.html#DualDispatchPlots.plot_pyomo_energy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.DualPlots.DualDispatchPlots.plot_pyomo_energy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to plot energy data from Pyomo Dispatch on single plot</p>
+<p>This method is used specifically to plot energy data from Dispatch simulation
+results. Built-in options to plot legend off-axis.</p>
+<dl class="simple">
+<dt>Inputs:</dt><dd><p>ax (object)         : axis object to plot on
+plot_all_time(bool) : are we plotting all results or just a portion?
+title_label(str)    : title name for plot
+start_hr (int)      : (plot_all_time==False) hour used for starting index
+end_hr (int)        : (plot_all_time==False) hour used for ending index
+hide_x(bool)        : hiding the x-axis from this particular plot
+x_legend (float)    : (legend_offset==True) x-offset defining left-most side of legend
+y_legend_L (float)  : (legend_offset==True) y-offset of left y-axis plot
+y_legend_R (float)  : (legend_offset==True) y-offset of right y-axis plot</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.util.DualPlots.DualDispatchPlots.plot_pyomo_power">
+<span class="sig-name descname"><span class="pre">plot_pyomo_power</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_all_time</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_hr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_hr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">48</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hide_x</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_legend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_legend_L</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_legend_R</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/DualPlots.html#DualDispatchPlots.plot_pyomo_power"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.DualPlots.DualDispatchPlots.plot_pyomo_power" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to plot power and pricing data from Pyomo Dispatch on single plot</p>
+<p>This method is used specifically to plot power data from Dispatch simulation
+results. Built-in options to plot legend off-axis.</p>
+<dl class="simple">
+<dt>Inputs:</dt><dd><p>ax (object)         : axis object to plot on
+plot_all_time(bool) : are we plotting all results or just a portion?
+title_label(str)    : title name for plot
+start_hr (int)      : (plot_all_time==False) hour used for starting index
+end_hr (int)        : (plot_all_time==False) hour used for ending index
+hide_x(bool)        : hiding the x-axis from this particular plot
+x_legend (float)    : (legend_offset==True) x-offset defining left-most side of legend
+y_legend_L (float)  : (legend_offset==True) y-offset of left y-axis plot
+y_legend_R (float)  : (legend_offset==True) y-offset of right y-axis plot</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.util.DualPlots.DualDispatchPlots.set_plotter">
+<span class="sig-name descname"><span class="pre">set_plotter</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/DualPlots.html#DualDispatchPlots.set_plotter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.DualPlots.DualDispatchPlots.set_plotter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Setting class for plotting</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="simulations.util.DualPlots.DualOutputExtraction">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">simulations.util.DualPlots.</span></span><span class="sig-name descname"><span class="pre">DualOutputExtraction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">module</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/DualPlots.html#DualOutputExtraction"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.DualPlots.DualOutputExtraction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">util.SolarPlots.SolarOutputExtraction</span></code></p>
+<p>The OutputExtraction class is a part of the PostProcessing family of classes.
+It extracts outputs from SSC or Dispatch models. Can be called from other
+plotting classes to extract outputs.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.util.DualPlots.DualOutputExtraction.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">module</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/DualPlots.html#DualOutputExtraction.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.DualPlots.DualOutputExtraction.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initializes the OutputExtraction module</p>
+<p>The instantiation of this class receives a full module object, the module
+being one of the NE2 modules in the /neup-ies/simulations/modules directory.
+or a Dispatch module.</p>
+<dl class="simple">
+<dt>Inputs:</dt><dd><p>module (object)     : object representing NE2 module class after simulations</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.util.DualPlots.DualOutputExtraction.set_pyomo_outputs">
+<span class="sig-name descname"><span class="pre">set_pyomo_outputs</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/DualPlots.html#DualOutputExtraction.set_pyomo_outputs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.DualPlots.DualOutputExtraction.set_pyomo_outputs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to define list of Pyomo output arrays</p>
+<p>This method extracts outputs from the Pyomo Dispatch model, converts them to numpy arrays
+and saves them to <cite>self</cite>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.util.DualPlots.DualOutputExtraction.set_ssc_outputs">
+<span class="sig-name descname"><span class="pre">set_ssc_outputs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mod_out</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/DualPlots.html#DualOutputExtraction.set_ssc_outputs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.DualPlots.DualOutputExtraction.set_ssc_outputs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to set SSC outputs from module</p>
+<p>The method extracts SSC outputs and save them to arrays. The input to this
+method is a subclass to an NE2 class holding all outputs to simulations.</p>
+<dl class="simple">
+<dt>Inputs:</dt><dd><p>mod_out (object)  : object representing Outputs subclass of NE2 module</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="simulations.util.DualPlots.DualPlots">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">simulations.util.DualPlots.</span></span><span class="sig-name descname"><span class="pre">DualPlots</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">module</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/DualPlots.html#DualPlots"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.DualPlots.DualPlots" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">util.SolarPlots.SolarPlots</span></code></p>
+<p>The Plots class is a part of the PostProcessing family of classes. It can
+output results from SSCmodels. This might be a
+Sisyphus-ian task as some of the parameters are very unique to whatever
+plot you are trying to make, but will do my best to provide basic structures
+and templates to work off of.</p>
+<p>Note that the Plots class must be initialized before using.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.util.DualPlots.DualPlots.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">module</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/DualPlots.html#DualPlots.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.DualPlots.DualPlots.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initializes the Plots module</p>
+<p>The instantiation of this class receives a full module object, the module
+being one of the NE2 modules in the /neup-ies/simulations/modules directory.
+It also contains various inputs relating to cosmetic parameters for
+matplotlib plots.</p>
+<dl class="simple">
+<dt>Inputs:</dt><dd><p>module (object)     : object representing NE2 module class after simulations
+fsl (str)           : fontsize for legend
+loc (str)           : location of legend
+legend_offset(bool) : are we plotting legends off-axis?
+lp (int)            : labelpad for axis labels
+lps (int)           : labelpad for axis labels - short version
+fs (int)            : fontsize for labels, titles, etc.
+lw (int)            : linewidth for plotting
+x_shrink (float)    : (legend_offset==True) amount to shrink axis to make room for legend</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.util.DualPlots.DualPlots.plot_SSC_op_modes">
+<span class="sig-name descname"><span class="pre">plot_SSC_op_modes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_all_time</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_hr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_hr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">48</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hide_x</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_legend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_legend_L</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_legend_R</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/DualPlots.html#DualPlots.plot_SSC_op_modes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.DualPlots.DualPlots.plot_SSC_op_modes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to plot operating modes history on single plot</p>
+<p>This method is used specifically to plot operating modes and relative
+pricing data from SSC simulation results. Built-in options to plot legend off-axis.</p>
+<dl class="simple">
+<dt>Inputs:</dt><dd><p>ax (object)         : axis object to plot on
+plot_all_time(bool) : are we plotting all results or just a portion?
+title_label(str)    : title name for plot
+start_hr (int)      : (plot_all_time==False) hour used for starting index
+end_hr (int)        : (plot_all_time==False) hour used for ending index
+hide_x(bool)        : hiding the x-axis from this particular plot
+x_legend (float)    : (legend_offset==True) x-offset defining left-most side of legend
+y_legend_L (float)  : (legend_offset==True) y-offset of left y-axis plot
+y_legend_R (float)  : (legend_offset==True) y-offset of right y-axis plot</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.util.DualPlots.DualPlots.plot_SSC_power_and_energy">
+<span class="sig-name descname"><span class="pre">plot_SSC_power_and_energy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_all_time</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_hr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_hr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">48</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hide_x</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_legend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_legend_L</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_legend_R</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/DualPlots.html#DualPlots.plot_SSC_power_and_energy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.DualPlots.DualPlots.plot_SSC_power_and_energy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to plot power and energy data on single plot</p>
+<p>This method is used specifically to plot power and energy data from SSC simulation
+results. Built-in options to plot legend off-axis.</p>
+<dl class="simple">
+<dt>Inputs:</dt><dd><p>ax (object)         : axis object to plot on
+plot_all_time(bool) : are we plotting all results or just a portion?
+title_label(str)    : title name for plot
+start_hr (int)      : (plot_all_time==False) hour used for starting index
+end_hr (int)        : (plot_all_time==False) hour used for ending index
+hide_x(bool)        : hiding the x-axis from this particular plot
+x_legend (float)    : (legend_offset==True) x-offset defining left-most side of legend
+y_legend_L (float)  : (legend_offset==True) y-offset of left y-axis plot
+y_legend_R (float)  : (legend_offset==True) y-offset of right y-axis plot</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.util.DualPlots.DualPlots.set_extractor">
+<span class="sig-name descname"><span class="pre">set_extractor</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/DualPlots.html#DualPlots.set_extractor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.DualPlots.DualPlots.set_extractor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Setting the output extraction class</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.util.DualPlots.DualPlots.set_operating_modes_list">
+<span class="sig-name descname"><span class="pre">set_operating_modes_list</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/DualPlots.html#DualPlots.set_operating_modes_list"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.DualPlots.DualPlots.set_operating_modes_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to define list of operating modes</p>
+<p>This method creates a list of operating modes pertaining to the specific SSC module we are
+using. This particular list was taken from /ssc/tcs/csp_solver_core.h, in the
+<cite>C_system_operating_modes</cite> class.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-simulations.util.FileMethods">
+<span id="simulations-util-filemethods-module"></span><h2>simulations.util.FileMethods module<a class="headerlink" href="#module-simulations.util.FileMethods" title="Permalink to this headline">¶</a></h2>
+<p>Created on Fri Apr  2 09:23:58 2021</p>
+<p>&#64;author: gabrielsoto</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="simulations.util.FileMethods.FileMethods">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">simulations.util.FileMethods.</span></span><span class="sig-name descname"><span class="pre">FileMethods</span></span><a class="reference internal" href="_modules/simulations/util/FileMethods.html#FileMethods"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.FileMethods.FileMethods" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>The FileMethods class is a util class used generally to read and write data
+from and to files. This can be csv, text, maybe LaTeX files in the future.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="simulations.util.FileMethods.FileMethods.data_dir">
+<span class="sig-name descname"><span class="pre">data_dir</span></span><em class="property"> <span class="pre">=</span> <span class="pre">'/home/gabrielsoto/Documents/NE2/neup-ies/simulations/data'</span></em><a class="headerlink" href="#simulations.util.FileMethods.FileMethods.data_dir" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="simulations.util.FileMethods.FileMethods.neup_dir">
+<span class="sig-name descname"><span class="pre">neup_dir</span></span><em class="property"> <span class="pre">=</span> <span class="pre">'/home/gabrielsoto/Documents/NE2/neup-ies'</span></em><a class="headerlink" href="#simulations.util.FileMethods.FileMethods.neup_dir" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="simulations.util.FileMethods.FileMethods.output_dir">
+<span class="sig-name descname"><span class="pre">output_dir</span></span><em class="property"> <span class="pre">=</span> <span class="pre">'/home/gabrielsoto/Documents/NE2/neup-ies/simulations/outputs'</span></em><a class="headerlink" href="#simulations.util.FileMethods.FileMethods.output_dir" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="simulations.util.FileMethods.FileMethods.parent_dir">
+<span class="sig-name descname"><span class="pre">parent_dir</span></span><em class="property"> <span class="pre">=</span> <span class="pre">'/home/gabrielsoto/Documents/NE2'</span></em><a class="headerlink" href="#simulations.util.FileMethods.FileMethods.parent_dir" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.util.FileMethods.FileMethods.read_csv_through_pandas">
+<span class="sig-name descname"><span class="pre">read_csv_through_pandas</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/FileMethods.html#FileMethods.read_csv_through_pandas"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.FileMethods.FileMethods.read_csv_through_pandas" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to read csv file and return data array</p>
+<dl class="simple">
+<dt>Inputs:</dt><dd><p>filepath (str) : full path to csv file</p>
+</dd>
+<dt>Outputs:</dt><dd><p>data_array (list) : data in either list (SSC_ARRAY) or nested list (SSC_MATRIX) form</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.util.FileMethods.FileMethods.read_json">
+<span class="sig-name descname"><span class="pre">read_json</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/FileMethods.html#FileMethods.read_json"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.FileMethods.FileMethods.read_json" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to read json file and return dictionaries</p>
+<dl class="simple">
+<dt>Inputs:</dt><dd><p>json_name (str) : name of json script found at ‘neup-ies/simulations/json’</p>
+</dd>
+<dt>Outputs:</dt><dd><p>pysam_dict (dict) : dictionary of PySAM inputs + file names
+ssc_dict (dict) : dictionary of SSC inputs needed to run modules
+out_dict (dict) : dictionary of PySAM output keywords for extraction</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.util.FileMethods.FileMethods.read_solar_resource_file">
+<span class="sig-name descname"><span class="pre">read_solar_resource_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">unit_registry</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/FileMethods.html#FileMethods.read_solar_resource_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.FileMethods.FileMethods.read_solar_resource_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to read csv file and return data array</p>
+<dl class="simple">
+<dt>Inputs:</dt><dd><p>filepath (str)               : full path to file
+unitRegistry (pint.registry) : unique unit Pint unit registry</p>
+</dd>
+<dt>Outputs:</dt><dd><p>t_dry (float Quant) : dry bulb temperature (in deg K)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.util.FileMethods.FileMethods.read_steam_table_file">
+<span class="sig-name descname"><span class="pre">read_steam_table_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">unit_registry</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/FileMethods.html#FileMethods.read_steam_table_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.FileMethods.FileMethods.read_steam_table_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to read csv file and return data array</p>
+<dl class="simple">
+<dt>Inputs:</dt><dd><p>filepath (str)               : full path to file
+unitRegistry (pint.registry) : unique unit Pint unit registry</p>
+</dd>
+<dt>Outputs:</dt><dd><p>T_K (float Quant) : steam temperature (in deg K)
+c_p (float Quant) : steam temperature (in kJ/kg*K)
+H_p (float Quant) : steam temperature (in kJ/kg)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="simulations.util.FileMethods.FileMethods.samsim_dir">
+<span class="sig-name descname"><span class="pre">samsim_dir</span></span><em class="property"> <span class="pre">=</span> <span class="pre">'/home/gabrielsoto/Documents/NE2/neup-ies/simulations'</span></em><a class="headerlink" href="#simulations.util.FileMethods.FileMethods.samsim_dir" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="simulations.util.FileMethods.FileMethods.util_dir">
+<span class="sig-name descname"><span class="pre">util_dir</span></span><em class="property"> <span class="pre">=</span> <span class="pre">'/home/gabrielsoto/Documents/NE2/neup-ies/simulations/util'</span></em><a class="headerlink" href="#simulations.util.FileMethods.FileMethods.util_dir" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.util.FileMethods.FileMethods.write_csv">
+<span class="sig-name descname"><span class="pre">write_csv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">columns</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/FileMethods.html#FileMethods.write_csv"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.FileMethods.FileMethods.write_csv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to write csv file</p>
+<dl class="simple">
+<dt>Inputs:</dt><dd><p>data_list (list of lists) : list of strings, each list having length n
+columns (list of str): list of column names with length n
+filename (str): name of file (without path)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-simulations.util.FileParser">
+<span id="simulations-util-fileparser-module"></span><h2>simulations.util.FileParser module<a class="headerlink" href="#module-simulations.util.FileParser" title="Permalink to this headline">¶</a></h2>
+<p>Created on Fri Apr 16 10:15:51 2021</p>
+<p>&#64;author: gabrielsoto</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="simulations.util.FileParser.FileParser">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">simulations.util.FileParser.</span></span><span class="sig-name descname"><span class="pre">FileParser</span></span><a class="reference internal" href="_modules/simulations/util/FileParser.html#FileParser"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.FileParser.FileParser" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>The FileParser class is a util class used generally to manipulate text data
+in files. Some main features is the ability to search existing Python class
+files for particular strings. Currently using regex to search for complex
+strings, don’t yell at me please.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="simulations.util.FileParser.FileParser.detail_latex_regex">
+<span class="sig-name descname"><span class="pre">detail_latex_regex</span></span><em class="property"> <span class="pre">=</span> <span class="pre">':\\s([\\w+\\s+\\d+\\{\\}\\[\\]\\^\\\\\\,\\$/-]+)'</span></em><a class="headerlink" href="#simulations.util.FileParser.FileParser.detail_latex_regex" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.util.FileParser.FileParser.find_first_string_instance">
+<span class="sig-name descname"><span class="pre">find_first_string_instance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">search_str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/FileParser.html#FileParser.find_first_string_instance"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.FileParser.FileParser.find_first_string_instance" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to parse through file and locate string</p>
+<p>This method parses through a given file found at the input filepath
+and searches for the first instance of a given string. It then returns
+the line number and the full line string where it was found. If not found
+it returns None for both outputs.</p>
+<dl class="simple">
+<dt>Inputs:</dt><dd><p>fpath (str)      : full path to relevant file
+search_str (str) : string to search</p>
+</dd>
+<dt>Outputs:</dt><dd><p>line_number (str)   : line number where search_str was found (None if not found)
+line_contents (str) : full line string where search_str was found (None if not found)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.util.FileParser.FileParser.get_dispatch_string_properties">
+<span class="sig-name descname"><span class="pre">get_dispatch_string_properties</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">return_case</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/FileParser.html#FileParser.get_dispatch_string_properties"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.FileParser.FileParser.get_dispatch_string_properties" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to return relevant dispatch string properties</p>
+<p>This method parses through a given file found at the input filepath
+and returns a dictionary with string values and line numbers for different
+parameter properties in the dispatcher. For now, it can sort through the
+Params and Variables of the Dispatch files. It returns latex+text names for all
+entries, latex strings containing parameter details, and section+subsection
+titles.</p>
+<p>NOTE: this method is tied to the very specific aesthetic format of the Dispatch
+files, should they change this method will no longer work.</p>
+<dl class="simple">
+<dt>Inputs:</dt><dd><p>dispatch_name (str)  : name of Dispatch class to document
+return_case (int)    : 0=return Param properties, 1=return Var properties</p>
+</dd>
+<dt>Outputs:</dt><dd><p>P (dict)   : dictionary with entries for line number and str contents</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.util.FileParser.FileParser.get_lines_between_strings">
+<span class="sig-name descname"><span class="pre">get_lines_between_strings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">str_start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">str_end</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/FileParser.html#FileParser.get_lines_between_strings"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.FileParser.FileParser.get_lines_between_strings" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to return all lines between two strings in a file</p>
+<p>This method parses through a given file found at the input filepath
+and returns a list of lines in between two book-end strings: str_start
+and str_end.</p>
+<dl class="simple">
+<dt>Inputs:</dt><dd><p>fpath (str)      : full path to relevant file
+str_start (str)  : first string to search
+str_end (str)    : last string to search</p>
+</dd>
+<dt>Outputs:</dt><dd><p>lines (list of str)   : list of lines between book-end strings</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.util.FileParser.FileParser.get_list_of_pyomo_data">
+<span class="sig-name descname"><span class="pre">get_list_of_pyomo_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params_list</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/FileParser.html#FileParser.get_list_of_pyomo_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.FileParser.FileParser.get_list_of_pyomo_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to return all parameter data from a Pyomo model</p>
+<p>This method parses through a given Pyomo model and returns a value for
+each parameter given in the params_list. Typically should parse through
+the DispatchModel first using self.get_dispatch_string_properties() to
+get params_list.</p>
+<dl class="simple">
+<dt>Inputs:</dt><dd><p>model (PyomoModel) : Pyomo model after execution
+params_list (str)  : list of strings representing parameter names</p>
+</dd>
+<dt>Outputs:</dt><dd><p>data_list (list of int or float)   : list of data values for each Pyomo parameter</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.util.FileParser.FileParser.get_single_pyomo_model_data">
+<span class="sig-name descname"><span class="pre">get_single_pyomo_model_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ind</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/FileParser.html#FileParser.get_single_pyomo_model_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.FileParser.FileParser.get_single_pyomo_model_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to return single parameter data from a Pyomo model</p>
+<p>This method parses through a given Pyomo model and returns a value for
+a parameter from params_list specified by the index ind.</p>
+<dl class="simple">
+<dt>Inputs:</dt><dd><p>model (PyomoModel) : Pyomo model after execution
+params_list (str)  : list of strings representing parameter names
+ind (int)          : index of params_list to return</p>
+</dd>
+<dt>Outputs:</dt><dd><p>modelData (int or float)   : value of requested Pyomo parameter</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="simulations.util.FileParser.FileParser.param_latex_regex">
+<span class="sig-name descname"><span class="pre">param_latex_regex</span></span><em class="property"> <span class="pre">=</span> <span class="pre">'\\s#([\\w+\\d+\\{\\}\\^\\\\\\,-]+):\\s'</span></em><a class="headerlink" href="#simulations.util.FileParser.FileParser.param_latex_regex" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="simulations.util.FileParser.FileParser.param_txt_regex">
+<span class="sig-name descname"><span class="pre">param_txt_regex</span></span><em class="property"> <span class="pre">=</span> <span class="pre">'self.model.(\\w+)\\s?='</span></em><a class="headerlink" href="#simulations.util.FileParser.FileParser.param_txt_regex" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="simulations.util.FileParser.FileParser.section_regex">
+<span class="sig-name descname"><span class="pre">section_regex</span></span><em class="property"> <span class="pre">=</span> <span class="pre">'###\\s([\\w+\\s+]+)\\s###'</span></em><a class="headerlink" href="#simulations.util.FileParser.FileParser.section_regex" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="simulations.util.FileParser.FileParser.subsection_regex">
+<span class="sig-name descname"><span class="pre">subsection_regex</span></span><em class="property"> <span class="pre">=</span> <span class="pre">'#-------\\s([\\w+\\s+]+)\\s---------'</span></em><a class="headerlink" href="#simulations.util.FileParser.FileParser.subsection_regex" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.util.FileParser.FileParser.write_pyomo_params_to_excel">
+<span class="sig-name descname"><span class="pre">write_pyomo_params_to_excel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dispatch_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xls_file_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/FileParser.html#FileParser.write_pyomo_params_to_excel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.FileParser.FileParser.write_pyomo_params_to_excel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to write all Pyomo parameters to an Excel sheet</p>
+<p>This method parses through a given Pyomo model and returns a value for
+each parameter given in the params_list. Then it saves the data to an
+Excel sheet called “Raw Data” in an xlsx file specified by the user input.
+Output file will be written in the simulations/outputs folder. Excel sheet
+will have three columns: Parameter name, its value, and a txt description.</p>
+<p>TODO: perhaps this method belongs in FileMethods?</p>
+<dl class="simple">
+<dt>Inputs:</dt><dd><p>model (PyomoModel)  : Pyomo model after execution
+dispatch_name (str) : name of Dispatch model in the simulations/dispatch folder
+xls_file_name (str) : name of desired output file (just filename, no directories)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.util.FileParser.FileParser.write_pyomo_params_to_table">
+<span class="sig-name descname"><span class="pre">write_pyomo_params_to_table</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dispatch_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">txt_file_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">param_or_var</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/FileParser.html#FileParser.write_pyomo_params_to_table"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.FileParser.FileParser.write_pyomo_params_to_table" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to write all Pyomo parameters to an text file with LaTeX</p>
+<p>This method parses through a given Pyomo model and returns parameter names
+and information. In a text file specified by the user, it writes LaTeX formatted
+sections and subsections of the parameter listings.</p>
+<dl class="simple">
+<dt>Inputs:</dt><dd><p>model (PyomoModel)  : Pyomo model after execution
+dispatch_name (str) : name of Dispatch model in the simulations/dispatch folder
+txt_file_name (str) : name of desired output file (just filename, no directories)
+param_or_var (int)  : select either Parameters or Variables to write</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.util.FileParser.FileParser.write_pyomo_params_to_text">
+<span class="sig-name descname"><span class="pre">write_pyomo_params_to_text</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dispatch_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">txt_file_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">param_or_var</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/FileParser.html#FileParser.write_pyomo_params_to_text"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.FileParser.FileParser.write_pyomo_params_to_text" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to write all Pyomo parameters to an text file with LaTeX</p>
+<p>This method parses through a given Pyomo model and returns parameter names
+and information. In a text file specified by the user, it writes LaTeX formatted
+sections and subsections of the parameter listings.</p>
+<dl class="simple">
+<dt>Inputs:</dt><dd><p>model (PyomoModel)  : Pyomo model after execution
+dispatch_name (str) : name of Dispatch model in the simulations/dispatch folder
+txt_file_name (str) : name of desired output file (just filename, no directories)
+param_or_var (int)  : select either Parameters or Variables to write</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-simulations.util.NuclearTESLoadProfiles">
+<span id="simulations-util-nucleartesloadprofiles-module"></span><h2>simulations.util.NuclearTESLoadProfiles module<a class="headerlink" href="#module-simulations.util.NuclearTESLoadProfiles" title="Permalink to this headline">¶</a></h2>
+<p>Created on Tue Mar  8 11:46:53 2022</p>
+<p>&#64;author: gabrielsoto</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="simulations.util.NuclearTESLoadProfiles.NuclearTESLoadProfiles">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">simulations.util.NuclearTESLoadProfiles.</span></span><span class="sig-name descname"><span class="pre">NuclearTESLoadProfiles</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filepath</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/NuclearTESLoadProfiles.html#NuclearTESLoadProfiles"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.NuclearTESLoadProfiles.NuclearTESLoadProfiles" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>The LoadProfileFigures class is SEPARATE from the PostProcessing family of classes.
+This might in the future best be a part of the PostProcessing family… but doing
+this semi-quickly for the Model 1 Energies paper.</p>
+<p>The class sets up all helper methods used to generate overlaid violin plots
+for load profiles of a given run. The given run is specified by:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Pref</p></li>
+<li><p>tshours</p></li>
+<li><p>tariff schedule</p></li>
+<li><p>time horizons (both for SSC and Pyomo)</p></li>
+</ul>
+</div></blockquote>
+<p>Data from these runs is assumed to be stored in a pickle file and contains
+data for a full year’s worth of simulation. I keep changing file names, so
+the filename is assumed to be an input (a separate script that creates this
+class will handle filename creation).</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.util.NuclearTESLoadProfiles.NuclearTESLoadProfiles.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filepath</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/NuclearTESLoadProfiles.html#NuclearTESLoadProfiles.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.NuclearTESLoadProfiles.NuclearTESLoadProfiles.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initializes the NuclearTESLoadProfiles module</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.util.NuclearTESLoadProfiles.NuclearTESLoadProfiles.create_tariff_overlay">
+<span class="sig-name descname"><span class="pre">create_tariff_overlay</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ax</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_winter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_weekday</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">s_color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'C0'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/NuclearTESLoadProfiles.html#NuclearTESLoadProfiles.create_tariff_overlay"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.NuclearTESLoadProfiles.NuclearTESLoadProfiles.create_tariff_overlay" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.util.NuclearTESLoadProfiles.NuclearTESLoadProfiles.create_violin_plot">
+<span class="sig-name descname"><span class="pre">create_violin_plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ax</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">full_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v_color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'C0'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hide_x</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/NuclearTESLoadProfiles.html#NuclearTESLoadProfiles.create_violin_plot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.NuclearTESLoadProfiles.NuclearTESLoadProfiles.create_violin_plot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a violin plot for each hour of the day</p>
+<p>Method repurposed from <a class="reference external" href="https://matplotlib.org/stable/gallery/statistics/customized_violin.html">https://matplotlib.org/stable/gallery/statistics/customized_violin.html</a>
+Creates a violin plot from a list of lists for each of those sub-lists.
+In our case, the sub-lists are values for a given hour of the day across
+the full year (e.g., hour 0 from January to December). Also plots
+medians as a white dot, 1st-3rd quartiles in a black rectangle, and the
+full distribution in color specified by input.</p>
+<dl class="simple">
+<dt>Inputs:</dt><dd><p>ax : Pyplot axis object
+data : list of lists
+v_color : string</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.util.NuclearTESLoadProfiles.NuclearTESLoadProfiles.extract_data">
+<span class="sig-name descname"><span class="pre">extract_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/NuclearTESLoadProfiles.html#NuclearTESLoadProfiles.extract_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.NuclearTESLoadProfiles.NuclearTESLoadProfiles.extract_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extracts raw data from Storage</p>
+<p>This method extracts full year’s worth of data from storage dictionary
+and saves it as a member attribute of current object.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.util.NuclearTESLoadProfiles.NuclearTESLoadProfiles.modify_violin_axes">
+<span class="sig-name descname"><span class="pre">modify_violin_axes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ax</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">full_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hide_x</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/NuclearTESLoadProfiles.html#NuclearTESLoadProfiles.modify_violin_axes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.NuclearTESLoadProfiles.NuclearTESLoadProfiles.modify_violin_axes" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.util.NuclearTESLoadProfiles.NuclearTESLoadProfiles.restructure_array_by_hour">
+<span class="sig-name descname"><span class="pre">restructure_array_by_hour</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/NuclearTESLoadProfiles.html#NuclearTESLoadProfiles.restructure_array_by_hour"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.NuclearTESLoadProfiles.NuclearTESLoadProfiles.restructure_array_by_hour" title="Permalink to this definition">¶</a></dt>
+<dd><p>Restructures data arrays by hour of day</p>
+<p>This method takes data (saved as member arrays of current object)
+and restructures it by hour of the day. That is, for each hour of the day,
+it populates a new array (24 x 365) with values for all, for example,
+midnights throughout the year.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.util.NuclearTESLoadProfiles.NuclearTESLoadProfiles.restructure_dict_by_season_and_weekday">
+<span class="sig-name descname"><span class="pre">restructure_dict_by_season_and_weekday</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/NuclearTESLoadProfiles.html#NuclearTESLoadProfiles.restructure_dict_by_season_and_weekday"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.NuclearTESLoadProfiles.NuclearTESLoadProfiles.restructure_dict_by_season_and_weekday" title="Permalink to this definition">¶</a></dt>
+<dd><p>Restructures existing data arrays into a data dictionary</p>
+<p>Data dictionary is split into Winter and Summer data. Those two
+are then split into WeekDay and WeekEnd data.</p>
+<dl class="simple">
+<dt>Inputs:</dt><dd><p><a href="#id1"><span class="problematic" id="id2">data_</span></a> : ndarry of size 24 x 365</p>
+</dd>
+<dt>Outputs:</dt><dd><p>data_arrays : dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.util.NuclearTESLoadProfiles.NuclearTESLoadProfiles.violin_adjacent_values">
+<span class="sig-name descname"><span class="pre">violin_adjacent_values</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vals</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">q1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">q3</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/NuclearTESLoadProfiles.html#NuclearTESLoadProfiles.violin_adjacent_values"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.NuclearTESLoadProfiles.NuclearTESLoadProfiles.violin_adjacent_values" title="Permalink to this definition">¶</a></dt>
+<dd><p>Helper method for violin plots to clip boundaries</p>
+<p>Method taken from <a class="reference external" href="https://matplotlib.org/stable/gallery/statistics/customized_violin.html">https://matplotlib.org/stable/gallery/statistics/customized_violin.html</a></p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-simulations.util.PostProcessing">
+<span id="simulations-util-postprocessing-module"></span><h2>simulations.util.PostProcessing module<a class="headerlink" href="#module-simulations.util.PostProcessing" title="Permalink to this headline">¶</a></h2>
+<p>Created on Tue Jun  1 13:11:44 2021</p>
+<p>&#64;author: gabrielsoto</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="simulations.util.PostProcessing.DispatchPlots">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">simulations.util.PostProcessing.</span></span><span class="sig-name descname"><span class="pre">DispatchPlots</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">module</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/PostProcessing.html#DispatchPlots"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.PostProcessing.DispatchPlots" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#simulations.util.PostProcessing.Plots" title="simulations.util.PostProcessing.Plots"><code class="xref py py-class docutils literal notranslate"><span class="pre">simulations.util.PostProcessing.Plots</span></code></a></p>
+<p>The Plots class is a part of the PostProcessing family of classes. It can
+output results from Pyomo Dispatch models.</p>
+<p>Note that the DispatchPlots class must be initialized before using.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.util.PostProcessing.DispatchPlots.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">module</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/PostProcessing.html#DispatchPlots.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.PostProcessing.DispatchPlots.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initializes the Plots module</p>
+<p>The instantiation of this class receives a full Dispatch object, the module
+being one of the Pyomo Dispatch model created in the /neup-ies/simulations/dispatch directory.
+It also contains various inputs relating to cosmetic parameters for
+matplotlib plots.</p>
+<dl class="simple">
+<dt>Inputs:</dt><dd><p>module (object)     : object representing Pyomo Dispatch Model with results
+fsl (str)           : fontsize for legend
+loc (str)           : location of legend
+legend_offset(bool) : are we plotting legends off-axis?
+lp (int)            : labelpad for axis labels
+lps (int)           : labelpad for axis labels - short version
+fs (int)            : fontsize for labels, titles, etc.
+lw (int)            : linewidth for plotting
+x_shrink (float)    : (legend_offset==True) amount to shrink axis to make room for legend</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.util.PostProcessing.DispatchPlots.plot_pyomo_cycle_bin">
+<span class="sig-name descname"><span class="pre">plot_pyomo_cycle_bin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_all_time</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_hr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_hr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">48</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hide_x</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_legend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_legend_L</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_legend_R</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/PostProcessing.html#DispatchPlots.plot_pyomo_cycle_bin"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.PostProcessing.DispatchPlots.plot_pyomo_cycle_bin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to plot power cycle binary data from Pyomo Dispatch on single plot</p>
+<p>This method is used specifically to plot data from Dispatch simulation
+results pertaining to cycle binary values. Variables include whether
+power cycle is running (0 or 1), etc. Built-in options to plot legend
+off-axis.</p>
+<dl class="simple">
+<dt>Inputs:</dt><dd><p>ax (object)         : axis object to plot on
+plot_all_time(bool) : are we plotting all results or just a portion?
+title_label(str)    : title name for plot
+start_hr (int)      : (plot_all_time==False) hour used for starting index
+end_hr (int)        : (plot_all_time==False) hour used for ending index
+hide_x(bool)        : hiding the x-axis from this particular plot
+x_legend (float)    : (legend_offset==True) x-offset defining left-most side of legend
+y_legend_L (float)  : (legend_offset==True) y-offset of left y-axis plot
+y_legend_R (float)  : (legend_offset==True) y-offset of right y-axis plot</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.util.PostProcessing.DispatchPlots.plot_pyomo_energy">
+<span class="sig-name descname"><span class="pre">plot_pyomo_energy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_all_time</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_hr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_hr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">48</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hide_x</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_legend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_legend_L</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_legend_R</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/PostProcessing.html#DispatchPlots.plot_pyomo_energy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.PostProcessing.DispatchPlots.plot_pyomo_energy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to plot energy data from Pyomo Dispatch on single plot</p>
+<p>This method is used specifically to plot energy data from Dispatch simulation
+results. Built-in options to plot legend off-axis.</p>
+<dl class="simple">
+<dt>Inputs:</dt><dd><p>ax (object)         : axis object to plot on
+plot_all_time(bool) : are we plotting all results or just a portion?
+title_label(str)    : title name for plot
+start_hr (int)      : (plot_all_time==False) hour used for starting index
+end_hr (int)        : (plot_all_time==False) hour used for ending index
+hide_x(bool)        : hiding the x-axis from this particular plot
+x_legend (float)    : (legend_offset==True) x-offset defining left-most side of legend
+y_legend_L (float)  : (legend_offset==True) y-offset of left y-axis plot
+y_legend_R (float)  : (legend_offset==True) y-offset of right y-axis plot</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.util.PostProcessing.DispatchPlots.plot_pyomo_nuclear_bin">
+<span class="sig-name descname"><span class="pre">plot_pyomo_nuclear_bin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_all_time</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_hr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_hr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">48</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hide_x</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_legend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_legend_L</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_legend_R</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/PostProcessing.html#DispatchPlots.plot_pyomo_nuclear_bin"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.PostProcessing.DispatchPlots.plot_pyomo_nuclear_bin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to plot nuclear binary data from Pyomo Dispatch on single plot</p>
+<p>This method is used specifically to plot data from Dispatch simulation
+results pertaining to nuclear binary values. Variables include whether
+nuclear plant is running (0 or 1), etc. Built-in options to plot legend
+off-axis.</p>
+<dl class="simple">
+<dt>Inputs:</dt><dd><p>ax (object)         : axis object to plot on
+plot_all_time(bool) : are we plotting all results or just a portion?
+title_label(str)    : title name for plot
+start_hr (int)      : (plot_all_time==False) hour used for starting index
+end_hr (int)        : (plot_all_time==False) hour used for ending index
+hide_x(bool)        : hiding the x-axis from this particular plot
+x_legend (float)    : (legend_offset==True) x-offset defining left-most side of legend
+y_legend_L (float)  : (legend_offset==True) y-offset of left y-axis plot
+y_legend_R (float)  : (legend_offset==True) y-offset of right y-axis plot</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.util.PostProcessing.DispatchPlots.plot_pyomo_power">
+<span class="sig-name descname"><span class="pre">plot_pyomo_power</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_all_time</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_hr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_hr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">48</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hide_x</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_legend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_legend_L</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_legend_R</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/PostProcessing.html#DispatchPlots.plot_pyomo_power"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.PostProcessing.DispatchPlots.plot_pyomo_power" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to plot power and pricing data from Pyomo Dispatch on single plot</p>
+<p>This method is used specifically to plot power data from Dispatch simulation
+results. Built-in options to plot legend off-axis.</p>
+<dl class="simple">
+<dt>Inputs:</dt><dd><p>ax (object)         : axis object to plot on
+plot_all_time(bool) : are we plotting all results or just a portion?
+title_label(str)    : title name for plot
+start_hr (int)      : (plot_all_time==False) hour used for starting index
+end_hr (int)        : (plot_all_time==False) hour used for ending index
+hide_x(bool)        : hiding the x-axis from this particular plot
+x_legend (float)    : (legend_offset==True) x-offset defining left-most side of legend
+y_legend_L (float)  : (legend_offset==True) y-offset of left y-axis plot
+y_legend_R (float)  : (legend_offset==True) y-offset of right y-axis plot</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.util.PostProcessing.DispatchPlots.plot_pyomo_power_ramps">
+<span class="sig-name descname"><span class="pre">plot_pyomo_power_ramps</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_all_time</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_hr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_hr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">48</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hide_x</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_legend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_legend_L</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_legend_R</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/PostProcessing.html#DispatchPlots.plot_pyomo_power_ramps"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.PostProcessing.DispatchPlots.plot_pyomo_power_ramps" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to plot power ramping data from Pyomo Dispatch on single plot</p>
+<p>This method is used specifically to plot energy data from Dispatch simulation
+results. Built-in options to plot legend off-axis.</p>
+<dl class="simple">
+<dt>Inputs:</dt><dd><p>ax (object)         : axis object to plot on
+plot_all_time(bool) : are we plotting all results or just a portion?
+title_label(str)    : title name for plot
+start_hr (int)      : (plot_all_time==False) hour used for starting index
+end_hr (int)        : (plot_all_time==False) hour used for ending index
+hide_x(bool)        : hiding the x-axis from this particular plot
+x_legend (float)    : (legend_offset==True) x-offset defining left-most side of legend
+y_legend_L (float)  : (legend_offset==True) y-offset of left y-axis plot
+y_legend_R (float)  : (legend_offset==True) y-offset of right y-axis plot</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.util.PostProcessing.DispatchPlots.set_plotter">
+<span class="sig-name descname"><span class="pre">set_plotter</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/PostProcessing.html#DispatchPlots.set_plotter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.PostProcessing.DispatchPlots.set_plotter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Setting class for plotting</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="simulations.util.PostProcessing.OutputExtraction">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">simulations.util.PostProcessing.</span></span><span class="sig-name descname"><span class="pre">OutputExtraction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">module</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/PostProcessing.html#OutputExtraction"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.PostProcessing.OutputExtraction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>The OutputExtraction class is a part of the PostProcessing family of classes.
+It extracts outputs from SSC or Dispatch models. Can be called from other
+plotting classes to extract outputs.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.util.PostProcessing.OutputExtraction.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">module</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/PostProcessing.html#OutputExtraction.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.PostProcessing.OutputExtraction.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initializes the OutputExtraction module</p>
+<p>The instantiation of this class receives a full module object, the module
+being one of the NE2 modules in the /neup-ies/simulations/modules directory.
+or a Dispatch module.</p>
+<dl class="simple">
+<dt>Inputs:</dt><dd><p>module (object)     : object representing NE2 module class after simulations</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.util.PostProcessing.OutputExtraction.set_pyomo_outputs">
+<span class="sig-name descname"><span class="pre">set_pyomo_outputs</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/PostProcessing.html#OutputExtraction.set_pyomo_outputs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.PostProcessing.OutputExtraction.set_pyomo_outputs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to define list of Pyomo output arrays</p>
+<p>This method extracts outputs from the Pyomo Dispatch model, converts them to numpy arrays
+and saves them to <cite>self</cite>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.util.PostProcessing.OutputExtraction.set_ssc_outputs">
+<span class="sig-name descname"><span class="pre">set_ssc_outputs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mod_out</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/PostProcessing.html#OutputExtraction.set_ssc_outputs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.PostProcessing.OutputExtraction.set_ssc_outputs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to set SSC outputs from module</p>
+<p>The method extracts SSC outputs and save them to arrays. The input to this
+method is a subclass to an NE2 class holding all outputs to simulations.</p>
+<dl class="simple">
+<dt>Inputs:</dt><dd><p>mod_out (object)  : object representing Outputs subclass of NE2 module</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="simulations.util.PostProcessing.Plots">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">simulations.util.PostProcessing.</span></span><span class="sig-name descname"><span class="pre">Plots</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">module</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fsl</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'x-small'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'best'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">legend_offset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">16</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">12</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">12</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lw</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_shrink</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.85</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_legend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">12</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fE_min</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-</span> <span class="pre">0.05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fE_max</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.7</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/PostProcessing.html#Plots"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.PostProcessing.Plots" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>The Plots class is a part of the PostProcessing family of classes. It can
+plot outputs from SSC model runs. This might be a
+Sisyphus-ian task as some of the parameters are very unique to whatever
+plot you are trying to make, but will do my best to provide basic structures
+and templates to work off of.</p>
+<p>Note that the Plots class must be initialized before using.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.util.PostProcessing.Plots.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">module</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fsl</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'x-small'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'best'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">legend_offset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">16</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">12</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">12</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lw</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_shrink</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.85</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_legend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">12</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fE_min</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-</span> <span class="pre">0.05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fE_max</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.7</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/PostProcessing.html#Plots.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.PostProcessing.Plots.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initializes the Plots module</p>
+<p>The instantiation of this class receives a full module object, the module
+being one of the NE2 modules in the /neup-ies/simulations/modules directory.
+It also contains various inputs relating to cosmetic parameters for
+matplotlib plots.</p>
+<dl class="simple">
+<dt>Inputs:</dt><dd><p>module (object)     : object representing NE2 module class after simulations
+fsl (str)           : fontsize for legend
+loc (str)           : location of legend
+legend_offset(bool) : are we plotting legends off-axis?
+lp (int)            : labelpad for axis labels
+lps (int)           : labelpad for axis labels - short version
+fs (int)            : fontsize for labels, titles, etc.
+lw (int)            : linewidth for plotting
+x_shrink (float)    : (legend_offset==True) amount to shrink axis to make room for legend
+fE_min (float)      : minimum fraction of TES energy for ylim
+fE_max (float)      : maximum fraction of TES energy for ylim</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.util.PostProcessing.Plots.bar_plot_on_axis">
+<span class="sig-name descname"><span class="pre">bar_plot_on_axis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ax</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/PostProcessing.html#Plots.bar_plot_on_axis"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.PostProcessing.Plots.bar_plot_on_axis" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to plot data on given axis as bar plot</p>
+<p>The method receives as input an Axis or AxesSubplot object to plot on.
+It then plots the given x and y arrays as a line plot with given label
+and color. Results plotted as a bar plot.</p>
+<dl class="simple">
+<dt>Inputs:</dt><dd><p>ax (object)        : axis object to plot on
+x_array (ndarray)  : array of values to plot on x-axis
+y_array (ndarray)  : array of values to plot on y-axis
+dx (float)         : width of bars
+label (str)        : label name for specific line
+alpha (float)      : transparency of bar plot (1 is fully opaque)
+color(str)         : name of color to use for plot</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.util.PostProcessing.Plots.get_array">
+<span class="sig-name descname"><span class="pre">get_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">array_str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">slicer</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/PostProcessing.html#Plots.get_array"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.PostProcessing.Plots.get_array" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to slice through arrays</p>
+<p>The method uses a list of array strings and the default getter method
+from Python to extract attributes from the instantiated NE2 module.
+It can also return just magnitudes and slice the output array.</p>
+<dl class="simple">
+<dt>Inputs:</dt><dd><p>array_str (str)  : string name for output array in NE2 module
+slicer (slice)   : slice corresponding to desired simulation times</p>
+</dd>
+<dt>Outputs:</dt><dd><p>array (ndarray)  : sliced array of data</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.util.PostProcessing.Plots.get_slice">
+<span class="sig-name descname"><span class="pre">get_slice</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start_ind</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_ind</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/PostProcessing.html#Plots.get_slice"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.PostProcessing.Plots.get_slice" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to create slice object</p>
+<p>The method creates a slice object for desired simulation times from
+full data. This slice object is used elsewhere to slice through data arrays.</p>
+<dl class="simple">
+<dt>Inputs:</dt><dd><p>start_ind (int)  : starting index for simulation times
+end_ind (int)    : ending index for simulation times</p>
+</dd>
+<dt>Outputs:</dt><dd><p>slicer (slice)   : slice corresponding to desired simulation times</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.util.PostProcessing.Plots.plot_SSC_generic">
+<span class="sig-name descname"><span class="pre">plot_SSC_generic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ax</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">array_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_label</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lw_list</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_all_time</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_hr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_hr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">48</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_bar_graph</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_extra</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hide_x</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">days_on_x</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">left_axis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/PostProcessing.html#Plots.plot_SSC_generic"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.PostProcessing.Plots.plot_SSC_generic" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to plot generic SSC data</p>
+<p>This method is used to plot any type of SSC data. It lives a level above the
+line/bar plotting methods, the ones that are “_on_axis”. This would be the
+middle level, at an even higher level would be specific methods to specify
+a list of arrays to plot. The method just redirects to either the line or
+bar plot and sets up a loop for all arrays to be plotted.</p>
+<dl class="simple">
+<dt>Inputs:</dt><dd><p>ax (object)         : axis object to plot on
+array_list (list)   : list of array string names to plot
+label_list (list)   : list of label string names for each array
+y_label (str)       : label name for y-axis
+lw_list (list)      : list of linewidths for each array
+title_label(str)    : title name for plot
+plot_all_time(bool) : are we plotting all results or just a portion?
+start_hr (int)      : (plot_all_time==False) hour used for starting index
+end_hr (int)        : (plot_all_time==False) hour used for ending index
+is_bar_graph(bool)  : are we plotting a bar graph instead of line graph?
+return_extra(bool)  : returning extra outputs
+hide_x(bool)        : hiding the x-axis from this particular plot
+left_axis (bool)    : are we plotting on the left y-axis, not a twin axis?</p>
+</dd>
+<dt>Outputs:</dt><dd><p>ax (object)         : axis object to plot on
+d_slice (int)       : (return_extra==True) slicer used for arrays
+t_plot (int)        : (return_extra==True) array of times used as x-axis</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.util.PostProcessing.Plots.plot_SSC_massflow">
+<span class="sig-name descname"><span class="pre">plot_SSC_massflow</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_all_time</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_hr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_hr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">48</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hide_x</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_legend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_legend_L</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_legend_R</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">days_on_x</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/PostProcessing.html#Plots.plot_SSC_massflow"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.PostProcessing.Plots.plot_SSC_massflow" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to plot mass flow and defocus data on single plot</p>
+<p>This method is used specifically to plot mass flow and defocus data from SSC simulation
+results. Built-in options to plot legend off-axis.</p>
+<dl class="simple">
+<dt>Inputs:</dt><dd><p>ax (object)         : axis object to plot on
+plot_all_time(bool) : are we plotting all results or just a portion?
+title_label(str)    : title name for plot
+start_hr (int)      : (plot_all_time==False) hour used for starting index
+end_hr (int)        : (plot_all_time==False) hour used for ending index
+hide_x(bool)        : hiding the x-axis from this particular plot
+x_legend (float)    : (legend_offset==True) x-offset defining left-most side of legend
+y_legend_L (float)  : (legend_offset==True) y-offset of left y-axis plot
+y_legend_R (float)  : (legend_offset==True) y-offset of right y-axis plot</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.util.PostProcessing.Plots.plot_SSC_op_modes">
+<span class="sig-name descname"><span class="pre">plot_SSC_op_modes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_all_time</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_hr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_hr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">48</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hide_x</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_legend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_legend_L</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_legend_R</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">days_on_x</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/PostProcessing.html#Plots.plot_SSC_op_modes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.PostProcessing.Plots.plot_SSC_op_modes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to plot operating modes history on single plot</p>
+<p>This method is used specifically to plot operating modes and relative
+pricing data from SSC simulation results. Built-in options to plot legend off-axis.</p>
+<dl class="simple">
+<dt>Inputs:</dt><dd><p>ax (object)         : axis object to plot on
+plot_all_time(bool) : are we plotting all results or just a portion?
+title_label(str)    : title name for plot
+start_hr (int)      : (plot_all_time==False) hour used for starting index
+end_hr (int)        : (plot_all_time==False) hour used for ending index
+hide_x(bool)        : hiding the x-axis from this particular plot
+x_legend (float)    : (legend_offset==True) x-offset defining left-most side of legend
+y_legend_L (float)  : (legend_offset==True) y-offset of left y-axis plot
+y_legend_R (float)  : (legend_offset==True) y-offset of right y-axis plot</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.util.PostProcessing.Plots.plot_SSC_power_and_energy">
+<span class="sig-name descname"><span class="pre">plot_SSC_power_and_energy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_all_time</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_hr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_hr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">48</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hide_x</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_legend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_legend_L</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_legend_R</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">days_on_x</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">left_axis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/PostProcessing.html#Plots.plot_SSC_power_and_energy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.PostProcessing.Plots.plot_SSC_power_and_energy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to plot power and energy data on single plot</p>
+<p>This method is used specifically to plot power and energy data from SSC simulation
+results. Built-in options to plot legend off-axis.</p>
+<dl class="simple">
+<dt>Inputs:</dt><dd><p>ax (object)         : axis object to plot on
+plot_all_time(bool) : are we plotting all results or just a portion?
+title_label(str)    : title name for plot
+start_hr (int)      : (plot_all_time==False) hour used for starting index
+end_hr (int)        : (plot_all_time==False) hour used for ending index
+hide_x(bool)        : hiding the x-axis from this particular plot
+x_legend (float)    : (legend_offset==True) x-offset defining left-most side of legend
+y_legend_L (float)  : (legend_offset==True) y-offset of left y-axis plot
+y_legend_R (float)  : (legend_offset==True) y-offset of right y-axis plot</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.util.PostProcessing.Plots.plot_SSC_temperatures">
+<span class="sig-name descname"><span class="pre">plot_SSC_temperatures</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_all_time</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_hr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_hr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">48</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hide_x</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_legend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_legend_L</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_legend_R</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/PostProcessing.html#Plots.plot_SSC_temperatures"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.PostProcessing.Plots.plot_SSC_temperatures" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to plot temperature data on single plot</p>
+<p>This method is used specifically to plot temperature data from SSC simulation
+results. Built-in options to plot legend off-axis.</p>
+<dl class="simple">
+<dt>Inputs:</dt><dd><p>ax (object)         : axis object to plot on
+plot_all_time(bool) : are we plotting all results or just a portion?
+title_label(str)    : title name for plot
+start_hr (int)      : (plot_all_time==False) hour used for starting index
+end_hr (int)        : (plot_all_time==False) hour used for ending index
+hide_x(bool)        : hiding the x-axis from this particular plot
+x_legend (float)    : (legend_offset==True) x-offset defining left-most side of legend
+y_legend_L (float)  : (legend_offset==True) y-offset of left y-axis plot
+y_legend_R (float)  : (legend_offset==True) y-offset of right y-axis plot</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.util.PostProcessing.Plots.plot_on_axis">
+<span class="sig-name descname"><span class="pre">plot_on_axis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ax</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_array</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lw</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/PostProcessing.html#Plots.plot_on_axis"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.PostProcessing.Plots.plot_on_axis" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to plot data on given axis as line plot</p>
+<p>The method receives as input an Axis or AxesSubplot object to plot on.
+It then plots the given x and y arrays as a line plot with given label
+and color. Results plotted as line plot.</p>
+<dl class="simple">
+<dt>Inputs:</dt><dd><p>ax (object)        : axis object to plot on
+x_array (ndarray)  : array of values to plot on x-axis
+y_array (ndarray)  : array of values to plot on y-axis
+label (str)        : label name for specific line
+lw (float)         : linewidth for plot
+color(str)         : name of color to use for plot</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.util.PostProcessing.Plots.set_extractor">
+<span class="sig-name descname"><span class="pre">set_extractor</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/PostProcessing.html#Plots.set_extractor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.PostProcessing.Plots.set_extractor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Setting the output extraction class</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.util.PostProcessing.Plots.set_operating_modes_list">
+<span class="sig-name descname"><span class="pre">set_operating_modes_list</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/PostProcessing.html#Plots.set_operating_modes_list"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.PostProcessing.Plots.set_operating_modes_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to define list of operating modes</p>
+<p>This method creates a list of operating modes pertaining to the specific SSC module we are
+using. This particular list was taken from /ssc/tcs/csp_solver_core.h, in the
+<cite>C_system_operating_modes</cite> class.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-simulations.util.PySSCWrapper">
+<span id="simulations-util-pysscwrapper-module"></span><h2>simulations.util.PySSCWrapper module<a class="headerlink" href="#module-simulations.util.PySSCWrapper" title="Permalink to this headline">¶</a></h2>
+<p>Created on Fri May 21 16:00:31 2021</p>
+<p>&#64;author: gabrielsoto</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="simulations.util.PySSCWrapper.PySSCWrapper">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">simulations.util.PySSCWrapper.</span></span><span class="sig-name descname"><span class="pre">PySSCWrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">json_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'model1'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_debug</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/PySSCWrapper.html#PySSCWrapper"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.PySSCWrapper.PySSCWrapper" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>The PySSCWrapper class is a util class used to run PySSC from a given JSON
+script (similar to what we’re doing in the PySAM NE2 modules). The main
+use-case for this method is mixed-mode debugging:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li><p>choose an existing script from the /scripts directory that calls this method</p></li>
+<li><p>run the script</p></li>
+<li><p>PySSCWrapper class is initialized</p></li>
+<li><p>PySSCWrapper creates PySSC data structures and modules</p></li>
+<li><p>PySSC calls SSC</p></li>
+<li><p>We can debug SSC if we’re running it through CodeLite or Eclipse</p></li>
+</ol>
+</div></blockquote>
+<p>For more information: <a class="reference external" href="https://github.com/uw-esolab/docs/blob/main/sam/debugSSCwithPySSC_Linux_CodeLiteIDE.md">https://github.com/uw-esolab/docs/blob/main/sam/debugSSCwithPySSC_Linux_CodeLiteIDE.md</a></p>
+<p>To ensure the debug version of SSC, look into the <a class="reference external" href="https://github.com/uw-esolab/neup-ies/build_debug_SAM">https://github.com/uw-esolab/neup-ies/build_debug_SAM</a> bash script</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.util.PySSCWrapper.PySSCWrapper.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">json_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'model1'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_debug</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/PySSCWrapper.html#PySSCWrapper.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.PySSCWrapper.PySSCWrapper.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initializes the PySSCWrapper module</p>
+<p>This method initialized the PySSCWrapper module. If we intend to run
+in debug mode, the flag used as input ensures we point to the correct
+version of the SSC library (libSSCd.so file which is the Debug version
+rather than the Release version). The method also finds and extracts
+information from the specified JSON script.</p>
+<dl class="simple">
+<dt>Inputs:</dt><dd><p>json_name (str)  : name of JSON script with input data for module
+is_debug (bool)  : flag to determine if running in debug mode</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.util.PySSCWrapper.PySSCWrapper.create_API">
+<span class="sig-name descname"><span class="pre">create_API</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/PySSCWrapper.html#PySSCWrapper.create_API"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.PySSCWrapper.PySSCWrapper.create_API" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to create and save a unique SSC API to self</p>
+<p>This method also ensures we use the correct SSC library file, whether
+we need the Debug or Release version (both could be in play in different
+locations).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.util.PySSCWrapper.PySSCWrapper.generate_hash">
+<span class="sig-name descname"><span class="pre">generate_hash</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/PySSCWrapper.html#PySSCWrapper.generate_hash"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.PySSCWrapper.PySSCWrapper.generate_hash" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to create unique hash for given JSON inputs</p>
+<p>This method creates a unique, permanent hash for a given JSON script.
+That is, it gathers all of the JSON inputs (including SSC and PySAM inputs)
+from the designated script and converts both their keynames and values
+to strings. It collects all of these into a single string variable and
+then creates a new hexadecimal string or “hash” for that giant string.
+This serves as a unique identifier or “fingerprint” for all the values
+in the JSON script. This is then used later on as the file name containing
+outputs from this particular run. Any small changes to the JSON script
+will result in a drastically different hash, and therefore a new output file.
+If a simulation has already been run with the given JSON script, it can
+just pull results from the already created hash file instead of needlessly
+repeating the simulation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><p>if True, a hash file currently exists with all given JSON inputs
+filepath (str):</p>
+<blockquote>
+<div><p>absolute filepath to the hash file in outputs directory</p>
+</div></blockquote>
+</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>hash_exists (bool)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.util.PySSCWrapper.PySSCWrapper.get_array">
+<span class="sig-name descname"><span class="pre">get_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">out_str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/PySSCWrapper.html#PySSCWrapper.get_array"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.PySSCWrapper.PySSCWrapper.get_array" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to extract data from SSC results</p>
+<p>This method gets SSC outputs and converts it to arrays.</p>
+<dl class="simple">
+<dt>Inputs:</dt><dd><p>out_str (str)       : string name of the desired output</p>
+</dd>
+<dt>Outputs:</dt><dd><p>out_array (ndarray) : SSC result in array form</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.util.PySSCWrapper.PySSCWrapper.init_fin_module">
+<span class="sig-name descname"><span class="pre">init_fin_module</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/PySSCWrapper.html#PySSCWrapper.init_fin_module"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.PySSCWrapper.PySSCWrapper.init_fin_module" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to initialize the Financial module within PySSC</p>
+<p>This method creates the Financial module using SSC data from the
+SSC_dict within the specified JSON script.</p>
+<dl class="simple">
+<dt>Outputs:</dt><dd><p>fin_module (int)       : some sort of data structure for the Financial mod (idk, PySSC stuff)
+fin_module_name (str)  : name of Financial module, or the cmod SSC file</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.util.PySSCWrapper.PySSCWrapper.init_grid_module">
+<span class="sig-name descname"><span class="pre">init_grid_module</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/PySSCWrapper.html#PySSCWrapper.init_grid_module"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.PySSCWrapper.PySSCWrapper.init_grid_module" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to initialize the Grid module within PySSC</p>
+<p>This method creates the Grid module using SSC data from csv files
+as well as from the SSC_dict within the specified JSON script.</p>
+<dl class="simple">
+<dt>Outputs:</dt><dd><p>grid_module (int)       : some sort of data structure for the Grid mod (idk, PySSC stuff)
+grid_module_name (str)  : name of Grid module, or the cmod SSC file</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.util.PySSCWrapper.PySSCWrapper.init_plant_module">
+<span class="sig-name descname"><span class="pre">init_plant_module</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/PySSCWrapper.html#PySSCWrapper.init_plant_module"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.PySSCWrapper.PySSCWrapper.init_plant_module" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to initialize the Plant module within PySSC</p>
+<p>This method creates the Plant module using SSC data from csv files
+as well as from the SSC_dict within the specified JSON script.</p>
+<dl class="simple">
+<dt>Outputs:</dt><dd><p>plant_module (int)       : some sort of data structure for the Plant (idk, PySSC stuff)
+plant_module_name (str)  : name of Plant module, or the cmod SSC file</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.util.PySSCWrapper.PySSCWrapper.run_module">
+<span class="sig-name descname"><span class="pre">run_module</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">module</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/PySSCWrapper.html#PySSCWrapper.run_module"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.PySSCWrapper.PySSCWrapper.run_module" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method used to run a given SSC module through PySSC</p>
+<p>Method adapted from LORE team (particularly the loop). It runs the given
+module (Plant, Grid, Financial) by calling SSC through the SSC API.</p>
+<dl class="simple">
+<dt>Inputs:</dt><dd><p>module (int)       : some sort of data structure for the Plant (idk, PySSC stuff)
+module_name (str)  : name of Plant module, or the cmod SSC file</p>
+</dd>
+<dt>Outputs:</dt><dd><p>module (int)       : updated module with SSC results</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.util.PySSCWrapper.PySSCWrapper.run_sim">
+<span class="sig-name descname"><span class="pre">run_sim</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">run_dispatch_targets</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/PySSCWrapper.html#PySSCWrapper.run_sim"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.PySSCWrapper.PySSCWrapper.run_sim" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to run full SSC simulation through PySSC</p>
+<p>This method creates an SSC API, saves input data from the specified
+JSON script to it and runs a full SSC simulation through PySSC. Much
+like PySAM, it creates a Plant, Grid, and Financial module and runs
+each in order.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.util.PySSCWrapper.PySSCWrapper.set_ssc_data_from_dict">
+<span class="sig-name descname"><span class="pre">set_ssc_data_from_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start_ind</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/PySSCWrapper.html#PySSCWrapper.set_ssc_data_from_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.PySSCWrapper.PySSCWrapper.set_ssc_data_from_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method used to extract SSC data from a dictionary in a JSON script</p>
+<p>Method adapted from LORE team (particularly the loop). It checks the
+data type each entry of the JSON script SSC dictionary and uses the
+appropriate SSC API method to store the data.</p>
+<dl class="simple">
+<dt>Inputs:</dt><dd><p>start_ind (int)  : index of computer module (0: plant, 1: grid, 2: financial)</p>
+</dd>
+<dt>Outputs:</dt><dd><p>ssc_module (int)       : some sort of data structure for the Plant (idk, PySSC stuff)
+ssc_module_name (str)  : name of Plant module, or the cmod SSC file</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-simulations.util.SSCHelperMethods">
+<span id="simulations-util-sschelpermethods-module"></span><h2>simulations.util.SSCHelperMethods module<a class="headerlink" href="#module-simulations.util.SSCHelperMethods" title="Permalink to this headline">¶</a></h2>
+<p>Created on Fri May  7 10:50:27 2021</p>
+<p>&#64;author: gabrielsoto</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="simulations.util.SSCHelperMethods.SSCHelperMethods">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">simulations.util.SSCHelperMethods.</span></span><span class="sig-name descname"><span class="pre">SSCHelperMethods</span></span><a class="reference internal" href="_modules/simulations/util/SSCHelperMethods.html#SSCHelperMethods"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.SSCHelperMethods.SSCHelperMethods" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>The SSCHelperMethods class is a util class for any auxilliary methods that
+help us link up better with SSC or create better inputs for SSC. Typically
+for methods that can be used across all modules and dispatchers, so better
+to keep in one designated area.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.util.SSCHelperMethods.SSCHelperMethods.convert_to_pyomo_unit">
+<span class="sig-name descname"><span class="pre">convert_to_pyomo_unit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">param_str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/SSCHelperMethods.html#SSCHelperMethods.convert_to_pyomo_unit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.SSCHelperMethods.SSCHelperMethods.convert_to_pyomo_unit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to evaluate a Pyomo unit from a given Pint unit</p>
+<p>This method was created because Pyomo Environment units and the Pint
+UnitRegistry use units in different ways and syntax. Pint seemed to have
+more functionality and use so I defaulted to using those in the generation
+and checking of Pyomo Parameters. Essentially what happens:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li><p>The entire <cite>params</cite> dictionary is taken as input as well as a single</p></li>
+</ol>
+<blockquote>
+<div><p>string for a specific parameter.</p>
+</div></blockquote>
+<ol class="arabic simple" start="2">
+<li><p>A string representation of the unit(s) are created from the input</p></li>
+</ol>
+<blockquote>
+<div><p>e.g. u.m/u.s -&gt; ‘meter / second’</p>
+</div></blockquote>
+<ol class="arabic simple" start="3">
+<li><p>The algorithm below checks for any weirdness -e.g. are there multiple</p></li>
+</ol>
+<blockquote>
+<div><p>units, are they being multiplied/divided? etc.</p>
+</div></blockquote>
+<ol class="arabic simple" start="4">
+<li><p>The algorithm then converts the string representation of the Pint unit</p></li>
+</ol>
+<blockquote>
+<div><p>into the syntax for a Pyomo Environment unit.</p>
+</div></blockquote>
+<ol class="arabic simple" start="5">
+<li><p>If all goes well, it will return the evaluation of the Pyomo unit string,</p></li>
+</ol>
+<blockquote>
+<div><p>so on the Return end of the function call it will return a Pyomo unit.</p>
+</div></blockquote>
+</div></blockquote>
+<dl>
+<dt>Inputs:</dt><dd><p>params (dict)    : dictionary of all Pyomo parameters to be used in optimization
+param_str (str)  : single string to be extracted from params dictionary</p>
+</dd>
+<dt>Outputs:</dt><dd><dl>
+<dt>cmd (evaluated string)<span class="classifier">evaluation of a string called <cite>unit_cmd</cite> representing</span></dt><dd><p>Pyomo unit syntax. If failed, return None.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.util.SSCHelperMethods.SSCHelperMethods.define_unit_registry">
+<span class="sig-name descname"><span class="pre">define_unit_registry</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/SSCHelperMethods.html#SSCHelperMethods.define_unit_registry"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.SSCHelperMethods.SSCHelperMethods.define_unit_registry" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to define unique unit registry from Pint</p>
+<p>This method creates a unique unit registry from the Pint Python package.
+This unit registry object is passed through classes to ensure that all
+use the same units.</p>
+<dl class="simple">
+<dt>Outputs:</dt><dd><p>u_pint (obj) : pint UnitRegistry object</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.util.SSCHelperMethods.SSCHelperMethods.estimate_receiver_pumping_parasitic">
+<span class="sig-name descname"><span class="pre">estimate_receiver_pumping_parasitic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Tavg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dm_rec_design</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">SSC_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nonheated_length</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/SSCHelperMethods.html#SSCHelperMethods.estimate_receiver_pumping_parasitic"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.SSCHelperMethods.SSCHelperMethods.estimate_receiver_pumping_parasitic" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to calculate pumping parasitic of receiver (written by LORE team)</p>
+<dl class="simple">
+<dt>Inputs:</dt><dd><p>u (unitRegistry)            : Pint unit registry
+Tavg (float Quant)          : average temperature of plant, K
+dm_rec_design (float Quant) : power block thermal power input rating, units of MW
+SSC_dict (dict)             : dictionary of SSC inputs
+nonheated_length (float)    : non-heated length of total receiver height</p>
+</dd>
+<dt>Outputs:</dt><dd><p>etap (float) : slope of linearized eta_p
+b (float)    : intercept of linearized eta_p</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.util.SSCHelperMethods.SSCHelperMethods.get_ambient_T_corrections_from_udpc_inputs">
+<span class="sig-name descname"><span class="pre">get_ambient_T_corrections_from_udpc_inputs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Tamb</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ud_array</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/SSCHelperMethods.html#SSCHelperMethods.get_ambient_T_corrections_from_udpc_inputs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.SSCHelperMethods.SSCHelperMethods.get_ambient_T_corrections_from_udpc_inputs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to calculate specific heat of some heat transfer fluid (written by LORE team)</p>
+<dl class="simple">
+<dt>Inputs:</dt><dd><p>u (unitRegistry)         : Pint unit registry
+Tamb (float)             : ambient temperature, not units (intended to be C)
+ud_array (list of lists) : table of user defined data as nested lists</p>
+</dd>
+<dt>Outputs:</dt><dd><p>etamult (float) : multiplication correction factor for eta
+wmult (float)   : multiplication correction factor for w</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.util.SSCHelperMethods.SSCHelperMethods.get_cp_htf">
+<span class="sig-name descname"><span class="pre">get_cp_htf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">T</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rec_htf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/SSCHelperMethods.html#SSCHelperMethods.get_cp_htf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.SSCHelperMethods.SSCHelperMethods.get_cp_htf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to calculate specific heat of some heat transfer fluid (written by LORE team)</p>
+<dl class="simple">
+<dt>Inputs:</dt><dd><p>u (unitRegistry) : Pint unit registry
+T (float Quant)  : Temperature at which to find specific heat of HTF, in units of Kelvin
+rec_htf (int)    : integer value representing HTF in SSC table</p>
+</dd>
+<dt>Outputs:</dt><dd><p>cp (float Quant) : specific heat value in J/g/K</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.util.SSCHelperMethods.SSCHelperMethods.get_linearized_ud_params">
+<span class="sig-name descname"><span class="pre">get_linearized_ud_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">q_pb_design</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">SSC_dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/SSCHelperMethods.html#SSCHelperMethods.get_linearized_ud_params"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.SSCHelperMethods.SSCHelperMethods.get_linearized_ud_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to calculate linearized user defined params (written by LORE team)</p>
+<dl class="simple">
+<dt>Inputs:</dt><dd><p>ud_array (list of lists)  : table of user defined data as nested lists
+q_pb_design (float Quant) : power block thermal power input rating, units of MW
+SSC_dict (dict)           : dictionary of SSC inputs</p>
+</dd>
+<dt>Outputs:</dt><dd><p>etap (float) : slope of linearized eta_p
+b (float)    : intercept of linearized eta_p</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.util.SSCHelperMethods.SSCHelperMethods.get_pc_persist_and_off_logs">
+<span class="sig-name descname"><span class="pre">get_pc_persist_and_off_logs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">plant</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">npts</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/SSCHelperMethods.html#SSCHelperMethods.get_pc_persist_and_off_logs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.SSCHelperMethods.SSCHelperMethods.get_pc_persist_and_off_logs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to log the amount of time Power Cycle has been ON and OFF</p>
+<p>This method uses SSC output data from the previous run to log how long
+the Power Cycle has been both ON and OFF. One of the two outputs will be
+populated in this method, and there are a bunch of logic statements to
+correctly log the respective length of time. Method adapted from LORE Team.</p>
+<p>TODO: can we just input another dictionary instead of passing the full Plant?</p>
+<dl class="simple">
+<dt>Inputs:</dt><dd><p>param_dict (dict)    : dictionary of Pyomo dispatch parameters
+plant (obj)          : the full PySAM Plant object.
+npts (int)           : length of the SSC horizon</p>
+</dd>
+<dt>Outputs:</dt><dd><p>disp_pc_persist0 (int) : length of time PC has been ON in the past segment
+disp_pc_off0 (int)     : length of time PC has been OFF in the past segment</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.util.SSCHelperMethods.SSCHelperMethods.get_rho_htf">
+<span class="sig-name descname"><span class="pre">get_rho_htf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">T</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rec_htf</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/SSCHelperMethods.html#SSCHelperMethods.get_rho_htf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.SSCHelperMethods.SSCHelperMethods.get_rho_htf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to calculate density of some heat transfer fluid</p>
+<p>This method calculates density at average temperature for a heat transfer
+fluid. In our case, we use molten salt. This method is copied from SSC,
+specifically the htf_props cpp method.</p>
+<dl class="simple">
+<dt>Inputs:</dt><dd><p>u (unitRegistry) : Pint unit registry
+T (float Quant)  : Temperature at which to find specific heat of HTF, in units of Kelvin
+rec_htf (int)    : integer value representing HTF in SSC table</p>
+</dd>
+<dt>Outputs:</dt><dd><p>rho (float Quant) : fluid density value in kg/m^3</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.util.SSCHelperMethods.SSCHelperMethods.get_visc_htf">
+<span class="sig-name descname"><span class="pre">get_visc_htf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">T</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rec_htf</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/SSCHelperMethods.html#SSCHelperMethods.get_visc_htf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.SSCHelperMethods.SSCHelperMethods.get_visc_htf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to calculate viscosity of some heat transfer fluid (written by LORE team)</p>
+<dl class="simple">
+<dt>Inputs:</dt><dd><p>u (unitRegistry) : Pint unit registry
+T (float Quant)  : Temperature at which to find specific heat of HTF, in units of Kelvin
+rec_htf (int)    : integer value representing HTF in SSC table</p>
+</dd>
+<dt>Outputs:</dt><dd><p>visc (float Quant) : viscosity value in Ns/m^2</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.util.SSCHelperMethods.SSCHelperMethods.interpret_user_defined_cycle_data">
+<span class="sig-name descname"><span class="pre">interpret_user_defined_cycle_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/SSCHelperMethods.html#SSCHelperMethods.interpret_user_defined_cycle_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.SSCHelperMethods.SSCHelperMethods.interpret_user_defined_cycle_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to return user defined cycle data (written by LORE team)</p>
+<dl class="simple">
+<dt>Inputs:</dt><dd><p>ud_array (list of list) : table of user defined data as nested lists</p>
+</dd>
+<dt>Outputs:</dt><dd><p>output_dict (dict) : dictionary of useful values from table</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.util.SSCHelperMethods.SSCHelperMethods.linearize_indirectTES_eff">
+<span class="sig-name descname"><span class="pre">linearize_indirectTES_eff</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/SSCHelperMethods.html#SSCHelperMethods.linearize_indirectTES_eff"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.SSCHelperMethods.SSCHelperMethods.linearize_indirectTES_eff" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-simulations.util.SolarPlots">
+<span id="simulations-util-solarplots-module"></span><h2>simulations.util.SolarPlots module<a class="headerlink" href="#module-simulations.util.SolarPlots" title="Permalink to this headline">¶</a></h2>
+<p>Created on Fri Jul 16 16:15:50 2021</p>
+<p>&#64;author: gabrielsoto</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="simulations.util.SolarPlots.SolarDispatchPlots">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">simulations.util.SolarPlots.</span></span><span class="sig-name descname"><span class="pre">SolarDispatchPlots</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">module</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/SolarPlots.html#SolarDispatchPlots"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.SolarPlots.SolarDispatchPlots" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#simulations.util.SolarPlots.SolarPlots" title="simulations.util.SolarPlots.SolarPlots"><code class="xref py py-class docutils literal notranslate"><span class="pre">simulations.util.SolarPlots.SolarPlots</span></code></a></p>
+<p>The Plots class is a part of the PostProcessing family of classes. It can
+output results from Pyomo Dispatch models.</p>
+<p>Note that the DispatchPlots class must be initialized before using.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.util.SolarPlots.SolarDispatchPlots.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">module</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/SolarPlots.html#SolarDispatchPlots.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.SolarPlots.SolarDispatchPlots.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initializes the Plots module</p>
+<p>The instantiation of this class receives a full Dispatch object, the module
+being one of the Pyomo Dispatch model created in the /neup-ies/simulations/dispatch directory.
+It also contains various inputs relating to cosmetic parameters for
+matplotlib plots.</p>
+<dl class="simple">
+<dt>Inputs:</dt><dd><p>module (object)     : object representing Pyomo Dispatch Model with results
+fsl (str)           : fontsize for legend
+loc (str)           : location of legend
+legend_offset(bool) : are we plotting legends off-axis?
+lp (int)            : labelpad for axis labels
+lps (int)           : labelpad for axis labels - short version
+fs (int)            : fontsize for labels, titles, etc.
+lw (int)            : linewidth for plotting
+x_shrink (float)    : (legend_offset==True) amount to shrink axis to make room for legend</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.util.SolarPlots.SolarDispatchPlots.plot_pyomo_energy">
+<span class="sig-name descname"><span class="pre">plot_pyomo_energy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_all_time</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_hr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_hr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">48</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hide_x</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_legend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_legend_L</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_legend_R</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/SolarPlots.html#SolarDispatchPlots.plot_pyomo_energy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.SolarPlots.SolarDispatchPlots.plot_pyomo_energy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to plot energy data from Pyomo Dispatch on single plot</p>
+<p>This method is used specifically to plot energy data from Dispatch simulation
+results. Built-in options to plot legend off-axis.</p>
+<dl class="simple">
+<dt>Inputs:</dt><dd><p>ax (object)         : axis object to plot on
+plot_all_time(bool) : are we plotting all results or just a portion?
+title_label(str)    : title name for plot
+start_hr (int)      : (plot_all_time==False) hour used for starting index
+end_hr (int)        : (plot_all_time==False) hour used for ending index
+hide_x(bool)        : hiding the x-axis from this particular plot
+x_legend (float)    : (legend_offset==True) x-offset defining left-most side of legend
+y_legend_L (float)  : (legend_offset==True) y-offset of left y-axis plot
+y_legend_R (float)  : (legend_offset==True) y-offset of right y-axis plot</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.util.SolarPlots.SolarDispatchPlots.plot_pyomo_power">
+<span class="sig-name descname"><span class="pre">plot_pyomo_power</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_all_time</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_hr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_hr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">48</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hide_x</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_legend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_legend_L</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_legend_R</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/SolarPlots.html#SolarDispatchPlots.plot_pyomo_power"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.SolarPlots.SolarDispatchPlots.plot_pyomo_power" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to plot power and pricing data from Pyomo Dispatch on single plot</p>
+<p>This method is used specifically to plot power data from Dispatch simulation
+results. Built-in options to plot legend off-axis.</p>
+<dl class="simple">
+<dt>Inputs:</dt><dd><p>ax (object)         : axis object to plot on
+plot_all_time(bool) : are we plotting all results or just a portion?
+title_label(str)    : title name for plot
+start_hr (int)      : (plot_all_time==False) hour used for starting index
+end_hr (int)        : (plot_all_time==False) hour used for ending index
+hide_x(bool)        : hiding the x-axis from this particular plot
+x_legend (float)    : (legend_offset==True) x-offset defining left-most side of legend
+y_legend_L (float)  : (legend_offset==True) y-offset of left y-axis plot
+y_legend_R (float)  : (legend_offset==True) y-offset of right y-axis plot</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.util.SolarPlots.SolarDispatchPlots.plot_pyomo_solar_bin">
+<span class="sig-name descname"><span class="pre">plot_pyomo_solar_bin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_all_time</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_hr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_hr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">48</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hide_x</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_legend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_legend_L</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_legend_R</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/SolarPlots.html#SolarDispatchPlots.plot_pyomo_solar_bin"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.SolarPlots.SolarDispatchPlots.plot_pyomo_solar_bin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to plot solar binary data from Pyomo Dispatch on single plot</p>
+<p>This method is used specifically to plot data from Dispatch simulation
+results pertaining to nuclear binary values. Variables include whether
+nuclear plant is running (0 or 1), etc. Built-in options to plot legend
+off-axis.</p>
+<dl class="simple">
+<dt>Inputs:</dt><dd><p>ax (object)         : axis object to plot on
+plot_all_time(bool) : are we plotting all results or just a portion?
+title_label(str)    : title name for plot
+start_hr (int)      : (plot_all_time==False) hour used for starting index
+end_hr (int)        : (plot_all_time==False) hour used for ending index
+hide_x(bool)        : hiding the x-axis from this particular plot
+x_legend (float)    : (legend_offset==True) x-offset defining left-most side of legend
+y_legend_L (float)  : (legend_offset==True) y-offset of left y-axis plot
+y_legend_R (float)  : (legend_offset==True) y-offset of right y-axis plot</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.util.SolarPlots.SolarDispatchPlots.set_plotter">
+<span class="sig-name descname"><span class="pre">set_plotter</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/SolarPlots.html#SolarDispatchPlots.set_plotter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.SolarPlots.SolarDispatchPlots.set_plotter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Setting class for plotting</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="simulations.util.SolarPlots.SolarOutputExtraction">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">simulations.util.SolarPlots.</span></span><span class="sig-name descname"><span class="pre">SolarOutputExtraction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">module</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/SolarPlots.html#SolarOutputExtraction"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.SolarPlots.SolarOutputExtraction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">util.PostProcessing.OutputExtraction</span></code></p>
+<p>The OutputExtraction class is a part of the PostProcessing family of classes.
+It extracts outputs from SSC or Dispatch models. Can be called from other
+plotting classes to extract outputs.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.util.SolarPlots.SolarOutputExtraction.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">module</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/SolarPlots.html#SolarOutputExtraction.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.SolarPlots.SolarOutputExtraction.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initializes the OutputExtraction module</p>
+<p>The instantiation of this class receives a full module object, the module
+being one of the NE2 modules in the /neup-ies/simulations/modules directory.
+or a Dispatch module.</p>
+<dl class="simple">
+<dt>Inputs:</dt><dd><p>module (object)     : object representing NE2 module class after simulations</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.util.SolarPlots.SolarOutputExtraction.set_pyomo_outputs">
+<span class="sig-name descname"><span class="pre">set_pyomo_outputs</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/SolarPlots.html#SolarOutputExtraction.set_pyomo_outputs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.SolarPlots.SolarOutputExtraction.set_pyomo_outputs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to define list of Pyomo output arrays</p>
+<p>This method extracts outputs from the Pyomo Dispatch model, converts them to numpy arrays
+and saves them to <cite>self</cite>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.util.SolarPlots.SolarOutputExtraction.set_ssc_outputs">
+<span class="sig-name descname"><span class="pre">set_ssc_outputs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mod_out</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/SolarPlots.html#SolarOutputExtraction.set_ssc_outputs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.SolarPlots.SolarOutputExtraction.set_ssc_outputs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to set SSC outputs from module</p>
+<p>The method extracts SSC outputs and save them to arrays. The input to this
+method is a subclass to an NE2 class holding all outputs to simulations.</p>
+<dl class="simple">
+<dt>Inputs:</dt><dd><p>mod_out (object)  : object representing Outputs subclass of NE2 module</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="simulations.util.SolarPlots.SolarPlots">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">simulations.util.SolarPlots.</span></span><span class="sig-name descname"><span class="pre">SolarPlots</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">module</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/SolarPlots.html#SolarPlots"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.SolarPlots.SolarPlots" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">util.PostProcessing.Plots</span></code></p>
+<p>The Plots class is a part of the PostProcessing family of classes. It can
+output results from SSCmodels. This might be a
+Sisyphus-ian task as some of the parameters are very unique to whatever
+plot you are trying to make, but will do my best to provide basic structures
+and templates to work off of.</p>
+<p>Note that the Plots class must be initialized before using.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.util.SolarPlots.SolarPlots.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">module</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/SolarPlots.html#SolarPlots.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.SolarPlots.SolarPlots.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initializes the Plots module</p>
+<p>The instantiation of this class receives a full module object, the module
+being one of the NE2 modules in the /neup-ies/simulations/modules directory.
+It also contains various inputs relating to cosmetic parameters for
+matplotlib plots.</p>
+<dl class="simple">
+<dt>Inputs:</dt><dd><p>module (object)     : object representing NE2 module class after simulations
+fsl (str)           : fontsize for legend
+loc (str)           : location of legend
+legend_offset(bool) : are we plotting legends off-axis?
+lp (int)            : labelpad for axis labels
+lps (int)           : labelpad for axis labels - short version
+fs (int)            : fontsize for labels, titles, etc.
+lw (int)            : linewidth for plotting
+x_shrink (float)    : (legend_offset==True) amount to shrink axis to make room for legend</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.util.SolarPlots.SolarPlots.plot_SSC_power_and_energy">
+<span class="sig-name descname"><span class="pre">plot_SSC_power_and_energy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">title_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_all_time</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_hr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_hr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">48</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hide_x</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_legend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_legend_L</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_legend_R</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/SolarPlots.html#SolarPlots.plot_SSC_power_and_energy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.SolarPlots.SolarPlots.plot_SSC_power_and_energy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to plot power and energy data on single plot</p>
+<p>This method is used specifically to plot power and energy data from SSC simulation
+results. Built-in options to plot legend off-axis.</p>
+<dl class="simple">
+<dt>Inputs:</dt><dd><p>ax (object)         : axis object to plot on
+plot_all_time(bool) : are we plotting all results or just a portion?
+title_label(str)    : title name for plot
+start_hr (int)      : (plot_all_time==False) hour used for starting index
+end_hr (int)        : (plot_all_time==False) hour used for ending index
+hide_x(bool)        : hiding the x-axis from this particular plot
+x_legend (float)    : (legend_offset==True) x-offset defining left-most side of legend
+y_legend_L (float)  : (legend_offset==True) y-offset of left y-axis plot
+y_legend_R (float)  : (legend_offset==True) y-offset of right y-axis plot</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.util.SolarPlots.SolarPlots.set_extractor">
+<span class="sig-name descname"><span class="pre">set_extractor</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/SolarPlots.html#SolarPlots.set_extractor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.SolarPlots.SolarPlots.set_extractor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Setting the output extraction class</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.util.SolarPlots.SolarPlots.set_operating_modes_list">
+<span class="sig-name descname"><span class="pre">set_operating_modes_list</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/util/SolarPlots.html#SolarPlots.set_operating_modes_list"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.util.SolarPlots.SolarPlots.set_operating_modes_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to define list of operating modes</p>
+<p>This method creates a list of operating modes pertaining to the specific SSC module we are
+using. This particular list was taken from /ssc/tcs/csp_solver_core.h, in the
+<cite>C_system_operating_modes</cite> class.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">simulations.util package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-simulations.util.DualPlots">simulations.util.DualPlots module</a></li>
+<li><a class="reference internal" href="#module-simulations.util.FileMethods">simulations.util.FileMethods module</a></li>
+<li><a class="reference internal" href="#module-simulations.util.FileParser">simulations.util.FileParser module</a></li>
+<li><a class="reference internal" href="#module-simulations.util.NuclearTESLoadProfiles">simulations.util.NuclearTESLoadProfiles module</a></li>
+<li><a class="reference internal" href="#module-simulations.util.PostProcessing">simulations.util.PostProcessing module</a></li>
+<li><a class="reference internal" href="#module-simulations.util.PySSCWrapper">simulations.util.PySSCWrapper module</a></li>
+<li><a class="reference internal" href="#module-simulations.util.SSCHelperMethods">simulations.util.SSCHelperMethods module</a></li>
+<li><a class="reference internal" href="#module-simulations.util.SolarPlots">simulations.util.SolarPlots module</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="simulations.tests.html"
+                        title="previous chapter">simulations.tests package</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/simulations.util.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="simulations.tests.html" title="simulations.tests package"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">NE-2 Simulations  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="simulations.html" >simulations package</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">simulations.util package</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2021, Gabriel J. Soto, Una Baker, Grace Stanke, Ben Lindley, Mike Wagner.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.2.0.
+    </div>
+  </body>
+</html>

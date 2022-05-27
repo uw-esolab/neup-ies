@@ -1,0 +1,244 @@
+
+
+<!doctype html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Running PySAM &#8212; NE-2 Simulations  documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/bizstyle.css" />
+    
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/bizstyle.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Running PySSC" href="runningpyssc.html" />
+    <link rel="prev" title="SSC Modifications" href="sscmod.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <!--[if lt IE 9]>
+    <script src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="runningpyssc.html" title="Running PySSC"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="sscmod.html" title="SSC Modifications"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">NE-2 Simulations  documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Running PySAM</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="running-pysam">
+<span id="runningpysam"></span><h1>Running PySAM<a class="headerlink" href="#running-pysam" title="Permalink to this headline">¶</a></h1>
+<p>There are two ways to run simulations within this project: using PySAM (<strong>recommended</strong>) and using <a class="reference internal" href="runningpyssc.html#runningpyssc"><span class="std std-ref">PySSC</span></a> (<strong>ideally for debugging</strong>).</p>
+<p>The main way to run a full simulation in SSC <strong>with dispatch optimization</strong> is to use the NE2 modules.
+These are found in this repository under <a class="reference external" href="https://github.com/uw-esolab/neup-ies/tree/master/simulations/modules">neup-ies/simulations/modules</a>.</p>
+<p>A number of example scripts for running a simulation can be found under <a class="reference external" href="https://github.com/uw-esolab/neup-ies/tree/master/simulations/scripts">neup-ies/simulations/scripts</a>. There should be a guide on module-specific scripts within this documentation.</p>
+<p>Here is a general outline of how to run a simulation.</p>
+<ol class="arabic" start="0">
+<li><p><strong>Build SSC</strong> in <em>export</em> mode. Instructions found <a class="reference internal" href="projectsetup.html#projectsetup"><span class="std std-ref">here</span></a>:.</p></li>
+<li><p><strong>PYTHONPATH</strong>: Make sure the <code class="docutils literal notranslate"><span class="pre">neup-ies/simulations/</span></code> directory is in your Python path, either in your terminal or whatever IDE you are using. This is slightly automated in current scripts by calling:</p>
+<blockquote>
+<div><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>import sys
+sys.path.append<span class="o">(</span><span class="s1">&#39;..&#39;</span><span class="o">)</span>
+</pre></div>
+</div>
+</div></blockquote>
+</li>
+<li><p><strong>Select an NE2 module</strong> you want to run. For example, if you want to run an LFR + TES model (<strong>Model 1a</strong>) you would select the <code class="docutils literal notranslate"><span class="pre">NuclearTES</span></code> module. Import the module at the top of your script:</p>
+<blockquote>
+<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">modules.NuclearTES</span> <span class="k">as</span> <span class="nn">NuclearTES</span>
+</pre></div>
+</div>
+</div></blockquote>
+</li>
+<li><p><strong>Initialize</strong> an object instance of the module class as follows:</p>
+<blockquote>
+<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">nuctes</span> <span class="o">=</span> <span class="n">NuclearTES</span><span class="o">.</span><span class="n">NuclearTES</span><span class="p">()</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>Note that there are several input parameters you can specify, though each module has default values preset.</p>
+<blockquote>
+<div><ul>
+<li><p>plant_name (str) – name of SSC module to run</p></li>
+<li><p>json_name (str) – name of JSON script with input data for module (just the name, don’t specify directory)</p>
+<blockquote>
+<div><div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>JSON scripts can be found <a class="reference external" href="https://github.com/uw-esolab/neup-ies/tree/master/simulations/json">neup-ies/simulations/json</a>.
+For more information on the structure of the JSON scripts, see <a class="reference internal" href="jsonscripts.html#jsonscripts"><span class="std std-ref">this guide</span></a>:.</p>
+</div>
+</div></blockquote>
+</li>
+<li><p>is_dispatch (bool) – boolean, if True runs Pyomo dispatch optimization</p></li>
+<li><p>dispatch_time_step (int) – time step for dispatch (hours)</p></li>
+<li><p>log_dispatch_targets (bool) – boolean, if True logs dispatch targets calculated by Pyomo at each segment</p>
+<blockquote>
+<div><div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">log_dispatch_targets</span></code> input, if set to True, saves all dispatch target time series that are sent to SSC from the Pyomo optimization model.
+These time series are saved to unique files ending in <cite>.dispatchtargets</cite> whose filenames are hash strings created from all JSON script parameter inputs.
+These files are found in <a class="reference external" href="https://github.com/uw-esolab/neup-ies/tree/master/simulations/outputs">neup-ies/simulations/outputs</a>.</p>
+</div>
+</div></blockquote>
+</li>
+<li><p>exec_debug (bool) – boolean, allows execution in “debug” mode that times out exec call</p></li>
+<li><p>exec_timeout (float) – amount of time in seconds to timeout an exec call</p>
+<blockquote>
+<div><div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><code class="docutils literal notranslate"><span class="pre">exec_debug</span></code> and <code class="docutils literal notranslate"><span class="pre">exec_timeout</span></code> were intended to help debug sessions were calls to the root SSC program would get stuck.
+These inputs have limited success in helping debug those sessions…</p>
+</div>
+</div></blockquote>
+</li>
+</ul>
+</div></blockquote>
+</li>
+<li><p><strong>Optional Changes for Sweeps</strong>: After Step 3, the JSON script parameters should be loaded into the object. If you want to make any alterations (say you are running a loop or parameter sweep), there are some extra lines you should run before runnning the simulation to update all stored dictionaries.</p>
+<blockquote>
+<div><ul>
+<li><p>If the change is to a <code class="docutils literal notranslate"><span class="pre">PySAM_dict</span></code> parameter (say, the <code class="docutils literal notranslate"><span class="pre">ssc_horizon</span></code> or <code class="docutils literal notranslate"><span class="pre">pyomo_horizon</span></code> time):</p>
+<blockquote>
+<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># horizons</span>
+<span class="n">nuctes</span><span class="o">.</span><span class="n">PySAM_dict</span><span class="p">[</span><span class="s1">&#39;ssc_horizon&#39;</span><span class="p">]</span>   <span class="o">=</span> <span class="n">sscH</span>
+<span class="n">nuctes</span><span class="o">.</span><span class="n">ssc_horizon</span>   <span class="o">=</span> <span class="n">sscH</span> <span class="o">*</span> <span class="n">nuctes</span><span class="o">.</span><span class="n">u</span><span class="o">.</span><span class="n">hr</span>
+<span class="n">nuctes</span><span class="o">.</span><span class="n">PySAM_dict</span><span class="p">[</span><span class="s1">&#39;pyomo_horizon&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pyoH</span>
+<span class="n">nuctes</span><span class="o">.</span><span class="n">pyomo_horizon</span> <span class="o">=</span> <span class="n">pyoH</span> <span class="o">*</span> <span class="n">nuctes</span><span class="o">.</span><span class="n">u</span><span class="o">.</span><span class="n">hr</span>
+
+<span class="c1"># saving/updating PYSAM dict to nuctes</span>
+<span class="n">nuctes</span><span class="o">.</span><span class="n">dispatch_wrap</span> <span class="o">=</span> <span class="n">nuctes</span><span class="o">.</span><span class="n">create_dispatch_wrapper</span><span class="p">(</span> <span class="n">nuctes</span><span class="o">.</span><span class="n">PySAM_dict</span> <span class="p">)</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>The last line will re-create a new instance of a the Dispatch Wrapper class that communicates with the Pyomo model.</p>
+</li>
+<li><p>If the change is to an <code class="docutils literal notranslate"><span class="pre">SSC_dict</span></code> parameter (say, the design point <cite>P_ref</cite> or <cite>tshours</cite>):</p>
+<blockquote>
+<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">nuctes</span><span class="o">.</span><span class="n">SSC_dict</span><span class="p">[</span><span class="s1">&#39;P_ref&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Pref</span>
+<span class="n">nuctes</span><span class="o">.</span><span class="n">SSC_dict</span><span class="p">[</span><span class="s1">&#39;tshours&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tshours</span>
+<span class="n">nuctes</span><span class="o">.</span><span class="n">dispatch_wrap</span><span class="o">.</span><span class="n">set_design</span><span class="p">()</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>The last line updates the existing Dispatch Wrapper class (which is a member of the module class) with the new design point.</p>
+</li>
+</ul>
+</div></blockquote>
+</li>
+<li><p><strong>Run Simulation</strong>:</p>
+<blockquote>
+<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">nuctes</span><span class="o">.</span><span class="n">run_sim</span><span class="p">(</span>  <span class="p">)</span>
+</pre></div>
+</div>
+<p>Here are some of the input parameters to this method:</p>
+<ul>
+<li><p>run_loop (bool) – if true, runs simulation in segments. else, runs simulation all at once</p>
+<blockquote>
+<div><div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If running with dispatch optimization set to True, make sure <code class="docutils literal notranslate"><span class="pre">run_loop</span></code> is set to True.</p>
+</div>
+</div></blockquote>
+</li>
+<li><p>export (bool) – if true, exports results to an Excel sheet</p></li>
+<li><p>filename (str) – name for Excel sheet saved to the /outputs directory</p></li>
+<li><p>overwrite_dispatch_targets (bool) – if true, overwrites the current stored dispatch target file</p>
+<blockquote>
+<div><div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Normally, if <code class="docutils literal notranslate"><span class="pre">log_dispatch_targets</span></code> is set to True in the init of the object, the object checks to see if a dispatch targets file
+exists for the unique hash signature created out of the JSON script input parameters.</p>
+<p>If the file exists, it doesn’t save the current simulations’s results to that file.</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">overwrite_dispatch_targets</span></code> is set to True here, it overrides the previous functionality and overwrites the existing file.</p>
+</div>
+</div></blockquote>
+</li>
+</ul>
+</div></blockquote>
+</li>
+</ol>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="sscmod.html"
+                        title="previous chapter">SSC Modifications</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="runningpyssc.html"
+                        title="next chapter">Running PySSC</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/runningpysam.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="runningpyssc.html" title="Running PySSC"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="sscmod.html" title="SSC Modifications"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">NE-2 Simulations  documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Running PySAM</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2021, Gabriel J. Soto, Una Baker, Grace Stanke, Ben Lindley, Mike Wagner.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.2.0.
+    </div>
+  </body>
+</html>

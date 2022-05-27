@@ -1,0 +1,326 @@
+
+
+<!doctype html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>simulations.tests package &#8212; NE-2 Simulations  documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/bizstyle.css" />
+    
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/bizstyle.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="simulations.util package" href="simulations.util.html" />
+    <link rel="prev" title="simulations.outputs package" href="simulations.outputs.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <!--[if lt IE 9]>
+    <script src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="simulations.util.html" title="simulations.util package"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="simulations.outputs.html" title="simulations.outputs package"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">NE-2 Simulations  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="simulations.html" accesskey="U">simulations package</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">simulations.tests package</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="module-simulations.tests">
+<span id="simulations-tests-package"></span><h1>simulations.tests package<a class="headerlink" href="#module-simulations.tests" title="Permalink to this headline">¶</a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="module-simulations.tests.test_modules">
+<span id="simulations-tests-test-modules-module"></span><h2>simulations.tests.test_modules module<a class="headerlink" href="#module-simulations.tests.test_modules" title="Permalink to this headline">¶</a></h2>
+<p>Created on Thu Apr  1 14:36:02 2021</p>
+<p>&#64;author: gabrielsoto</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="simulations.tests.test_modules.TestPySAMModules">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">simulations.tests.test_modules.</span></span><span class="sig-name descname"><span class="pre">TestPySAMModules</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">methodName</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'runTest'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/tests/test_modules.html#TestPySAMModules"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.tests.test_modules.TestPySAMModules" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">unittest.case.TestCase</span></code></p>
+<p>Unit tests for PySAM module setup</p>
+<p>This testing suite is meant to test the methods in parent class of all modules,
+that being GenericSSCModule. Only non-abstract methods will be tested.
+All child classes will share common methods and attributes which will be tested here.
+Dispatch is NOT tested here.</p>
+<p>For each individual class, there will be bespoke test classes.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.tests.test_modules.TestPySAMModules.setUp">
+<span class="sig-name descname"><span class="pre">setUp</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/tests/test_modules.html#TestPySAMModules.setUp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.tests.test_modules.TestPySAMModules.setUp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creating instances of modules upon start of each test</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.tests.test_modules.TestPySAMModules.tearDown">
+<span class="sig-name descname"><span class="pre">tearDown</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/tests/test_modules.html#TestPySAMModules.tearDown"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.tests.test_modules.TestPySAMModules.tearDown" title="Permalink to this definition">¶</a></dt>
+<dd><p>Deleting instances of modules at end of each test</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.tests.test_modules.TestPySAMModules.test__init__">
+<span class="sig-name descname"><span class="pre">test__init__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/tests/test_modules.html#TestPySAMModules.test__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.tests.test_modules.TestPySAMModules.test__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Testing the shared processes in __init__ of all modules</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.tests.test_modules.TestPySAMModules.test_create_Grid">
+<span class="sig-name descname"><span class="pre">test_create_Grid</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/tests/test_modules.html#TestPySAMModules.test_create_Grid"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.tests.test_modules.TestPySAMModules.test_create_Grid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Testing the create_Grid method</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.tests.test_modules.TestPySAMModules.test_create_Plant">
+<span class="sig-name descname"><span class="pre">test_create_Plant</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/tests/test_modules.html#TestPySAMModules.test_create_Plant"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.tests.test_modules.TestPySAMModules.test_create_Plant" title="Permalink to this definition">¶</a></dt>
+<dd><p>Testing the create_Plant method</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.tests.test_modules.TestPySAMModules.test_create_SO">
+<span class="sig-name descname"><span class="pre">test_create_SO</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/tests/test_modules.html#TestPySAMModules.test_create_SO"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.tests.test_modules.TestPySAMModules.test_create_SO" title="Permalink to this definition">¶</a></dt>
+<dd><p>Testing the create_SO method</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.tests.test_modules.TestPySAMModules.test_initialize_arrays">
+<span class="sig-name descname"><span class="pre">test_initialize_arrays</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/tests/test_modules.html#TestPySAMModules.test_initialize_arrays"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.tests.test_modules.TestPySAMModules.test_initialize_arrays" title="Permalink to this definition">¶</a></dt>
+<dd><p>Testing the initialize_arrays method</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.tests.test_modules.TestPySAMModules.test_log_SSC_arrays">
+<span class="sig-name descname"><span class="pre">test_log_SSC_arrays</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/tests/test_modules.html#TestPySAMModules.test_log_SSC_arrays"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.tests.test_modules.TestPySAMModules.test_log_SSC_arrays" title="Permalink to this definition">¶</a></dt>
+<dd><p>Testing the log_SSC_arrays method</p>
+<p>Here we test both instances of the method call, during simulations and
+during the last simulation segment.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.tests.test_modules.TestPySAMModules.test_reset_all">
+<span class="sig-name descname"><span class="pre">test_reset_all</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/tests/test_modules.html#TestPySAMModules.test_reset_all"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.tests.test_modules.TestPySAMModules.test_reset_all" title="Permalink to this definition">¶</a></dt>
+<dd><p>Testing the reset_all method</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.tests.test_modules.TestPySAMModules.test_run_Plant_through_SSC">
+<span class="sig-name descname"><span class="pre">test_run_Plant_through_SSC</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/tests/test_modules.html#TestPySAMModules.test_run_Plant_through_SSC"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.tests.test_modules.TestPySAMModules.test_run_Plant_through_SSC" title="Permalink to this definition">¶</a></dt>
+<dd><p>Testing the run_Plant_through_SSC method</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.tests.test_modules.TestPySAMModules.test_run_sim">
+<span class="sig-name descname"><span class="pre">test_run_sim</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/tests/test_modules.html#TestPySAMModules.test_run_sim"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.tests.test_modules.TestPySAMModules.test_run_sim" title="Permalink to this definition">¶</a></dt>
+<dd><p>Testing run_sim for all modules</p>
+<p>NOTE: this doesn’t test for accuracy of individual results, just that
+the processes run in the correct order and output something.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.tests.test_modules.TestPySAMModules.test_simulate_Plant">
+<span class="sig-name descname"><span class="pre">test_simulate_Plant</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/tests/test_modules.html#TestPySAMModules.test_simulate_Plant"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.tests.test_modules.TestPySAMModules.test_simulate_Plant" title="Permalink to this definition">¶</a></dt>
+<dd><p>Testing the simulate_Plant method</p>
+<p>Here we test the basic functionality of simulate Plant</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.tests.test_modules.TestPySAMModules.test_store_csv_arrays">
+<span class="sig-name descname"><span class="pre">test_store_csv_arrays</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/tests/test_modules.html#TestPySAMModules.test_store_csv_arrays"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.tests.test_modules.TestPySAMModules.test_store_csv_arrays" title="Permalink to this definition">¶</a></dt>
+<dd><p>Testing the storage of csv arrays in all modules</p>
+<p>NOTE: this assumes that the method was already called in __init__</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-simulations.tests.test_nuctes">
+<span id="simulations-tests-test-nuctes-module"></span><h2>simulations.tests.test_nuctes module<a class="headerlink" href="#module-simulations.tests.test_nuctes" title="Permalink to this headline">¶</a></h2>
+<p>Created on Thu Apr  1 14:36:02 2021</p>
+<p>&#64;author: gabrielsoto</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="simulations.tests.test_nuctes.TestNuclearTES">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">simulations.tests.test_nuctes.</span></span><span class="sig-name descname"><span class="pre">TestNuclearTES</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">methodName</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'runTest'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/tests/test_nuctes.html#TestNuclearTES"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.tests.test_nuctes.TestNuclearTES" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">unittest.case.TestCase</span></code></p>
+<p>Unit tests for Nuclear TES module</p>
+<p>This testing suite is meant to test the nuclear TES module meant to
+represent Model 1 of the NE-2 project. This models an LFR plant supplying
+power to a power block with thermal energy storage (TES) in the form
+of molten salt tanks.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.tests.test_nuctes.TestNuclearTES.setUp">
+<span class="sig-name descname"><span class="pre">setUp</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/tests/test_nuctes.html#TestNuclearTES.setUp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.tests.test_nuctes.TestNuclearTES.setUp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creating instance of NuclearTES upon start of each test</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.tests.test_nuctes.TestNuclearTES.tearDown">
+<span class="sig-name descname"><span class="pre">tearDown</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/tests/test_nuctes.html#TestNuclearTES.tearDown"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.tests.test_nuctes.TestNuclearTES.tearDown" title="Permalink to this definition">¶</a></dt>
+<dd><p>Deleting instance oself.nuctesf NuclearTES at end of each test</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.tests.test_nuctes.TestNuclearTES.test_create_dispatch_params">
+<span class="sig-name descname"><span class="pre">test_create_dispatch_params</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/tests/test_nuctes.html#TestNuclearTES.test_create_dispatch_params"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.tests.test_nuctes.TestNuclearTES.test_create_dispatch_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Testing the creation of a parameter dictionary for NuclearDispatch</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.tests.test_nuctes.TestNuclearTES.test_store_csv_arrays">
+<span class="sig-name descname"><span class="pre">test_store_csv_arrays</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/tests/test_nuctes.html#TestNuclearTES.test_store_csv_arrays"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.tests.test_nuctes.TestNuclearTES.test_store_csv_arrays" title="Permalink to this definition">¶</a></dt>
+<dd><p>Testing the storage of csv arrays in NuclearTES</p>
+<p>NOTE: this assumes that the method was already called in __init__</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-simulations.tests.test_nuctes_scenarios">
+<span id="simulations-tests-test-nuctes-scenarios-module"></span><h2>simulations.tests.test_nuctes_scenarios module<a class="headerlink" href="#module-simulations.tests.test_nuctes_scenarios" title="Permalink to this headline">¶</a></h2>
+<p>Created on Mon Mar 21 14:39:17 2022</p>
+<p>&#64;author: gabrielsoto</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="simulations.tests.test_nuctes_scenarios.TestNuclearTESScenarios">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">simulations.tests.test_nuctes_scenarios.</span></span><span class="sig-name descname"><span class="pre">TestNuclearTESScenarios</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">methodName</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'runTest'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/tests/test_nuctes_scenarios.html#TestNuclearTESScenarios"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.tests.test_nuctes_scenarios.TestNuclearTESScenarios" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">unittest.case.TestCase</span></code></p>
+<p>Unit tests for Nuclear TES module</p>
+<p>This testing suite is meant to test the nuclear TES module meant to
+represent Model 1 of the NE-2 project. This models an LFR plant supplying
+power to a power block with thermal energy storage (TES) in the form
+of molten salt tanks.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.tests.test_nuctes_scenarios.TestNuclearTESScenarios.setUp">
+<span class="sig-name descname"><span class="pre">setUp</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/tests/test_nuctes_scenarios.html#TestNuclearTESScenarios.setUp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.tests.test_nuctes_scenarios.TestNuclearTESScenarios.setUp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creating instance of NuclearTES upon start of each test</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.tests.test_nuctes_scenarios.TestNuclearTESScenarios.tearDown">
+<span class="sig-name descname"><span class="pre">tearDown</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/tests/test_nuctes_scenarios.html#TestNuclearTESScenarios.tearDown"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.tests.test_nuctes_scenarios.TestNuclearTESScenarios.tearDown" title="Permalink to this definition">¶</a></dt>
+<dd><p>Deleting instance oself.nuctesf NuclearTES at end of each test</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.tests.test_nuctes_scenarios.TestNuclearTESScenarios.test_dispatch_revenue">
+<span class="sig-name descname"><span class="pre">test_dispatch_revenue</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/tests/test_nuctes_scenarios.html#TestNuclearTESScenarios.test_dispatch_revenue"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.tests.test_nuctes_scenarios.TestNuclearTESScenarios.test_dispatch_revenue" title="Permalink to this definition">¶</a></dt>
+<dd><p>Testing that dispatch increases revenue and operations</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-simulations.tests.test_util">
+<span id="simulations-tests-test-util-module"></span><h2>simulations.tests.test_util module<a class="headerlink" href="#module-simulations.tests.test_util" title="Permalink to this headline">¶</a></h2>
+<p>Created on Fri Apr  2 14:19:23 2021</p>
+<p>&#64;author: gabrielsoto</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="simulations.tests.test_util.TestUtils">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">simulations.tests.test_util.</span></span><span class="sig-name descname"><span class="pre">TestUtils</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">methodName</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'runTest'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/tests/test_util.html#TestUtils"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.tests.test_util.TestUtils" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">unittest.case.TestCase</span></code></p>
+<p>Unit tests for PySAM utils</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.tests.test_util.TestUtils.test_csvread">
+<span class="sig-name descname"><span class="pre">test_csvread</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/tests/test_util.html#TestUtils.test_csvread"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.tests.test_util.TestUtils.test_csvread" title="Permalink to this definition">¶</a></dt>
+<dd><p>Testing csv file reading through pandas and subsequent conversion to arrays</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">simulations.tests package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-simulations.tests.test_modules">simulations.tests.test_modules module</a></li>
+<li><a class="reference internal" href="#module-simulations.tests.test_nuctes">simulations.tests.test_nuctes module</a></li>
+<li><a class="reference internal" href="#module-simulations.tests.test_nuctes_scenarios">simulations.tests.test_nuctes_scenarios module</a></li>
+<li><a class="reference internal" href="#module-simulations.tests.test_util">simulations.tests.test_util module</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="simulations.outputs.html"
+                        title="previous chapter">simulations.outputs package</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="simulations.util.html"
+                        title="next chapter">simulations.util package</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/simulations.tests.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="simulations.util.html" title="simulations.util package"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="simulations.outputs.html" title="simulations.outputs package"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">NE-2 Simulations  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="simulations.html" >simulations package</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">simulations.tests package</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2021, Gabriel J. Soto, Una Baker, Grace Stanke, Ben Lindley, Mike Wagner.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.2.0.
+    </div>
+  </body>
+</html>

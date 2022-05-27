@@ -1,0 +1,946 @@
+
+
+<!doctype html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>simulations.util.SSCHelperMethods &#8212; NE-2 Simulations  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/bizstyle.css" />
+    
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/bizstyle.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <!--[if lt IE 9]>
+    <script src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">NE-2 Simulations  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">simulations.util.SSCHelperMethods</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for simulations.util.SSCHelperMethods</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python3</span>
+<span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Created on Fri May  7 10:50:27 2021</span>
+
+<span class="sd">@author: gabrielsoto</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pint</span>
+<span class="kn">from</span> <span class="nn">numba</span> <span class="kn">import</span> <span class="n">jit</span>
+<span class="kn">from</span> <span class="nn">pyomo.environ</span> <span class="kn">import</span> <span class="n">units</span>
+<span class="kn">from</span> <span class="nn">util.FileMethods</span> <span class="kn">import</span> <span class="n">FileMethods</span>
+<span class="kn">from</span> <span class="nn">scipy.optimize</span> <span class="kn">import</span> <span class="n">curve_fit</span><span class="p">,</span><span class="n">fsolve</span>
+
+<span class="kn">from</span> <span class="nn">iapws</span> <span class="kn">import</span> <span class="n">IAPWS97</span>
+
+<div class="viewcode-block" id="SSCHelperMethods"><a class="viewcode-back" href="../../../simulations.util.html#simulations.util.SSCHelperMethods.SSCHelperMethods">[docs]</a><span class="k">class</span> <span class="nc">SSCHelperMethods</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The SSCHelperMethods class is a util class for any auxilliary methods that </span>
+<span class="sd">    help us link up better with SSC or create better inputs for SSC. Typically</span>
+<span class="sd">    for methods that can be used across all modules and dispatchers, so better</span>
+<span class="sd">    to keep in one designated area. </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+<div class="viewcode-block" id="SSCHelperMethods.define_unit_registry"><a class="viewcode-back" href="../../../simulations.util.html#simulations.util.SSCHelperMethods.SSCHelperMethods.define_unit_registry">[docs]</a>    <span class="k">def</span> <span class="nf">define_unit_registry</span><span class="p">():</span>
+        <span class="sd">&quot;&quot;&quot; Method to define unique unit registry from Pint</span>
+<span class="sd">        </span>
+<span class="sd">        This method creates a unique unit registry from the Pint Python package.</span>
+<span class="sd">        This unit registry object is passed through classes to ensure that all</span>
+<span class="sd">        use the same units.</span>
+<span class="sd">        </span>
+<span class="sd">        Outputs:</span>
+<span class="sd">            u_pint (obj) : pint UnitRegistry object</span>
+<span class="sd">            </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># create unique unit registry</span>
+        <span class="n">u_pint</span> <span class="o">=</span> <span class="n">pint</span><span class="o">.</span><span class="n">UnitRegistry</span><span class="p">(</span><span class="n">autoconvert_offset_to_baseunit</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span>
+        
+        <span class="c1"># define currency units</span>
+        <span class="n">u_pint</span><span class="o">.</span><span class="n">define</span><span class="p">(</span><span class="s1">&#39;USD = [currency]&#39;</span><span class="p">)</span>
+        <span class="n">u_pint</span><span class="o">.</span><span class="n">define</span><span class="p">(</span><span class="s1">&#39;cents = 0.01 USD&#39;</span><span class="p">)</span>
+        
+        <span class="c1"># defining aliases</span>
+        <span class="n">u_pint</span><span class="o">.</span><span class="n">define</span><span class="p">(</span><span class="s1">&#39;@alias USD = dollar&#39;</span><span class="p">)</span>
+        <span class="n">u_pint</span><span class="o">.</span><span class="n">define</span><span class="p">(</span><span class="s1">&#39;@alias cents = cent&#39;</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="n">u_pint</span></div>
+    
+
+<div class="viewcode-block" id="SSCHelperMethods.convert_to_pyomo_unit"><a class="viewcode-back" href="../../../simulations.util.html#simulations.util.SSCHelperMethods.SSCHelperMethods.convert_to_pyomo_unit">[docs]</a>    <span class="k">def</span> <span class="nf">convert_to_pyomo_unit</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">param_str</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Method to evaluate a Pyomo unit from a given Pint unit</span>
+<span class="sd">        </span>
+<span class="sd">        This method was created because Pyomo Environment units and the Pint </span>
+<span class="sd">        UnitRegistry use units in different ways and syntax. Pint seemed to have</span>
+<span class="sd">        more functionality and use so I defaulted to using those in the generation</span>
+<span class="sd">        and checking of Pyomo Parameters. Essentially what happens:</span>
+<span class="sd">            (1) The entire `params` dictionary is taken as input as well as a single</span>
+<span class="sd">               string for a specific parameter. </span>
+<span class="sd">            (2) A string representation of the unit(s) are created from the input</span>
+<span class="sd">               e.g. u.m/u.s -&gt; &#39;meter / second&#39;</span>
+<span class="sd">            (3) The algorithm below checks for any weirdness -e.g. are there multiple</span>
+<span class="sd">               units, are they being multiplied/divided? etc.</span>
+<span class="sd">            (4) The algorithm then converts the string representation of the Pint unit</span>
+<span class="sd">               into the syntax for a Pyomo Environment unit.</span>
+<span class="sd">            (5) If all goes well, it will return the evaluation of the Pyomo unit string,</span>
+<span class="sd">               so on the Return end of the function call it will return a Pyomo unit. </span>
+<span class="sd">        </span>
+<span class="sd">        Inputs:</span>
+<span class="sd">            params (dict)    : dictionary of all Pyomo parameters to be used in optimization</span>
+<span class="sd">            param_str (str)  : single string to be extracted from params dictionary</span>
+<span class="sd">        Outputs:</span>
+<span class="sd">            cmd (evaluated string)  : evaluation of a string called `unit_cmd` representing</span>
+<span class="sd">                                      Pyomo unit syntax. If failed, return None.</span>
+<span class="sd">            </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="n">u_pyomo</span> <span class="o">=</span> <span class="n">units</span> <span class="c1"># this line is necessary to carry out final evaluation</span>
+        <span class="n">Quant</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="n">param_str</span><span class="p">]</span> <span class="c1"># pint Quantity taken from params dictionary</span>
+    
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">Quant</span><span class="p">,</span><span class="s1">&#39;u&#39;</span><span class="p">):</span>
+            <span class="n">Unit</span>  <span class="o">=</span> <span class="n">Quant</span><span class="o">.</span><span class="n">u</span>                     <span class="c1"># Unit object of the previous pint Quantity</span>
+            <span class="n">unit_str</span>   <span class="o">=</span> <span class="n">Unit</span><span class="o">.</span><span class="n">format_babel</span><span class="p">()</span>    <span class="c1"># retrieving string representation of unit</span>
+            <span class="n">unit_cmd_start</span> <span class="o">=</span> <span class="s1">&#39;u_pyomo.&#39;</span>         <span class="c1"># start of command, calling pyomo unit package</span>
+    
+            <span class="c1"># empty list of unit strings</span>
+            <span class="n">clean_str_mult</span> <span class="o">=</span> <span class="p">[]</span>           <span class="c1"># clean strings for multiplied units</span>
+            <span class="n">clean_str_div</span>  <span class="o">=</span> <span class="p">[]</span>           <span class="c1"># clean strings for divided units</span>
+            <span class="n">str_contains_multipl</span>  <span class="o">=</span> <span class="kc">False</span> <span class="c1"># flag for finding multiplication</span>
+            <span class="n">str_contains_division</span> <span class="o">=</span> <span class="kc">False</span> <span class="c1"># flag for finding division during the multiplicative search</span>
+            <span class="n">unit_str_division</span> <span class="o">=</span> <span class="p">[]</span>        <span class="c1"># empty, used to log division terms in multiplicative search</span>
+    
+            <span class="c1"># are any units multiplied? all multiplicative terms are automatically moved to the first terms</span>
+            <span class="k">if</span> <span class="n">unit_str</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;*&#39;</span><span class="p">)</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                
+                <span class="c1"># flag that multiplication exists</span>
+                <span class="n">str_contains_multipl</span> <span class="o">=</span> <span class="kc">True</span>
+                
+                <span class="c1"># split unit str between multiplications</span>
+                <span class="n">unit_strs_mult</span> <span class="o">=</span> <span class="n">unit_str</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;*&#39;</span><span class="p">)</span>
+                
+                <span class="c1"># cycle through string split by &#39;*&#39;</span>
+                <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">unit_strs_mult</span><span class="p">)):</span>
+                    <span class="c1"># for each split, making sure we don&#39;t grab blank spaces</span>
+                    <span class="n">clean_strs_mult</span> <span class="o">=</span> <span class="n">unit_strs_mult</span><span class="p">[</span><span class="n">m</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)</span>
+                    <span class="c1"># indeces of parts of string without blank spaces</span>
+                    <span class="n">clean_inds_mult</span>  <span class="o">=</span> <span class="p">[</span><span class="nb">bool</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">clean_strs_mult</span><span class="p">[</span><span class="n">x</span><span class="p">])</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">clean_strs_mult</span><span class="p">))]</span>
+                    <span class="c1"># log necessary unit strings</span>
+                    <span class="n">clean_str_mult</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">np</span><span class="o">.</span><span class="n">extract</span><span class="p">(</span><span class="n">clean_inds_mult</span><span class="p">,</span> <span class="n">clean_strs_mult</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="p">)</span>
+                    
+                    <span class="c1"># checking if any of the strings contain division symbols</span>
+                    <span class="k">if</span> <span class="n">unit_strs_mult</span><span class="p">[</span><span class="n">m</span><span class="p">]</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                        <span class="n">str_contains_division</span> <span class="o">=</span> <span class="kc">True</span>            <span class="c1"># flag for finding division during the multiplicative search</span>
+                        <span class="n">unit_str_division</span> <span class="o">=</span> <span class="n">unit_strs_mult</span><span class="p">[</span><span class="n">m</span><span class="p">]</span>   <span class="c1"># log division terms in multiplicative searchs</span>
+    
+            <span class="c1"># are any units divided? all divided terms are automatically moved to the last terms</span>
+            <span class="k">if</span> <span class="n">unit_str</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                
+                <span class="c1"># use the previously found string with division in it, else just use the input</span>
+                <span class="n">unit_str_div</span> <span class="o">=</span> <span class="n">unit_str_division</span> <span class="k">if</span> <span class="n">str_contains_division</span> <span class="k">else</span> <span class="n">unit_str</span>
+                
+                <span class="c1"># flag that division exists</span>
+                <span class="n">str_contains_division</span> <span class="o">=</span> <span class="kc">True</span> 
+                    
+                <span class="c1"># split unit str between multiplications</span>
+                <span class="n">unit_strs_div</span> <span class="o">=</span> <span class="n">unit_str_div</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)</span>
+                
+                <span class="c1"># cycle through string split by &#39;/&#39;</span>
+                <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">unit_strs_div</span><span class="p">)):</span>
+                    <span class="c1"># for each split, making sure we don&#39;t grab blank spaces</span>
+                    <span class="n">clean_strs_div</span> <span class="o">=</span> <span class="n">unit_strs_div</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)</span>
+                    <span class="c1"># indeces of parts of string without blank spaces</span>
+                    <span class="n">clean_inds_div</span>  <span class="o">=</span> <span class="p">[</span><span class="nb">bool</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">clean_strs_div</span><span class="p">[</span><span class="n">x</span><span class="p">])</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">clean_strs_div</span><span class="p">))]</span>
+                    <span class="c1"># grab extracted clean string</span>
+                    <span class="n">possible_str</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">extract</span><span class="p">(</span><span class="n">clean_inds_div</span><span class="p">,</span><span class="n">clean_strs_div</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                    <span class="c1"># log necessary unit strings</span>
+                    <span class="k">if</span> <span class="n">possible_str</span> <span class="ow">in</span> <span class="n">clean_str_mult</span><span class="p">:</span>
+                        <span class="c1"># duplicative term</span>
+                        <span class="k">pass</span> 
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="c1"># log term</span>
+                        <span class="n">clean_str_div</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">possible_str</span> <span class="p">)</span> 
+        
+            <span class="c1"># collecting all units</span>
+            <span class="n">unit_cmd</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+            <span class="c1"># multiplication</span>
+            <span class="k">if</span> <span class="n">str_contains_multipl</span><span class="p">:</span>
+                <span class="n">unit_cmd</span>  <span class="o">+=</span>  <span class="n">unit_cmd_start</span> <span class="o">+</span> <span class="p">(</span><span class="s1">&#39;*&#39;</span><span class="o">+</span><span class="n">unit_cmd_start</span><span class="p">)</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">clean_str_mult</span><span class="p">)</span>
+            <span class="c1"># division</span>
+            <span class="k">if</span> <span class="n">str_contains_division</span><span class="p">:</span>
+                <span class="n">unit_cmd_div_start</span> <span class="o">=</span> <span class="s1">&#39;/&#39;</span> <span class="k">if</span> <span class="n">str_contains_multipl</span> <span class="k">else</span> <span class="s1">&#39;&#39;</span>
+                <span class="n">unit_cmd</span> <span class="o">+=</span> <span class="n">unit_cmd_div_start</span><span class="o">+</span><span class="n">unit_cmd_start</span> <span class="o">+</span> <span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="o">+</span><span class="n">unit_cmd_start</span><span class="p">)</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">clean_str_div</span><span class="p">)</span>
+            <span class="c1"># neither</span>
+            <span class="k">if</span> <span class="n">str_contains_division</span> <span class="ow">is</span> <span class="kc">False</span> <span class="ow">and</span> <span class="n">str_contains_multipl</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+                <span class="n">unit_cmd</span> <span class="o">+=</span> <span class="n">unit_cmd_start</span> <span class="o">+</span> <span class="n">unit_str</span>
+            <span class="k">return</span> <span class="nb">eval</span><span class="p">(</span><span class="n">unit_cmd</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span></div>
+        
+    
+<div class="viewcode-block" id="SSCHelperMethods.interpret_user_defined_cycle_data"><a class="viewcode-back" href="../../../simulations.util.html#simulations.util.SSCHelperMethods.SSCHelperMethods.interpret_user_defined_cycle_data">[docs]</a>    <span class="k">def</span> <span class="nf">interpret_user_defined_cycle_data</span><span class="p">(</span><span class="n">ud_array</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Method to return user defined cycle data (written by LORE team)</span>
+<span class="sd">        </span>
+<span class="sd">        Inputs:</span>
+<span class="sd">            ud_array (list of list) : table of user defined data as nested lists</span>
+<span class="sd">        Outputs:</span>
+<span class="sd">            output_dict (dict) : dictionary of useful values from table</span>
+<span class="sd">            </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">ud_array</span><span class="p">)</span>
+            
+        <span class="n">i0</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">nT</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">i0</span><span class="p">::,</span><span class="mi">0</span><span class="p">])</span><span class="o">&lt;</span><span class="mi">0</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span> 
+        <span class="n">Tpts</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">i0</span><span class="p">:</span><span class="n">i0</span><span class="o">+</span><span class="n">nT</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">mlevels</span> <span class="o">=</span> <span class="p">[</span><span class="n">data</span><span class="p">[</span><span class="n">j</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="p">[</span><span class="n">i0</span><span class="p">,</span><span class="n">i0</span><span class="o">+</span><span class="n">nT</span><span class="p">,</span><span class="n">i0</span><span class="o">+</span><span class="mi">2</span><span class="o">*</span><span class="n">nT</span><span class="p">]]</span>
+        
+        <span class="n">i0</span> <span class="o">=</span> <span class="mi">3</span><span class="o">*</span><span class="n">nT</span>
+        <span class="n">nm</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">i0</span><span class="p">::,</span><span class="mi">1</span><span class="p">])</span><span class="o">&lt;</span><span class="mi">0</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span> 
+        <span class="n">mpts</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">i0</span><span class="p">:</span><span class="n">i0</span><span class="o">+</span><span class="n">nm</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">Tamblevels</span> <span class="o">=</span> <span class="p">[</span><span class="n">data</span><span class="p">[</span><span class="n">j</span><span class="p">,</span><span class="mi">2</span><span class="p">]</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="p">[</span><span class="n">i0</span><span class="p">,</span><span class="n">i0</span><span class="o">+</span><span class="n">nm</span><span class="p">,</span><span class="n">i0</span><span class="o">+</span><span class="mi">2</span><span class="o">*</span><span class="n">nm</span><span class="p">]]</span>
+        
+        <span class="n">i0</span> <span class="o">=</span> <span class="mi">3</span><span class="o">*</span><span class="n">nT</span> <span class="o">+</span> <span class="mi">3</span><span class="o">*</span><span class="n">nm</span>
+        <span class="n">nTamb</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">i0</span><span class="p">::,</span><span class="mi">2</span><span class="p">])</span><span class="o">&lt;</span><span class="mi">0</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span> 
+        <span class="n">Tambpts</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="n">i0</span><span class="p">:</span><span class="n">i0</span><span class="o">+</span><span class="n">nTamb</span><span class="p">,</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">Tlevels</span> <span class="o">=</span> <span class="p">[</span><span class="n">data</span><span class="p">[</span><span class="n">j</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="p">[</span><span class="n">i0</span><span class="p">,</span><span class="n">i0</span><span class="o">+</span><span class="n">nm</span><span class="p">,</span><span class="n">i0</span><span class="o">+</span><span class="mi">2</span><span class="o">*</span><span class="n">nm</span><span class="p">]]</span>
+        
+        <span class="n">output_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;nT&#39;</span><span class="p">:</span><span class="n">nT</span><span class="p">,</span> <span class="s1">&#39;Tpts&#39;</span><span class="p">:</span><span class="n">Tpts</span><span class="p">,</span> <span class="s1">&#39;Tlevels&#39;</span><span class="p">:</span><span class="n">Tlevels</span><span class="p">,</span> 
+                       <span class="s1">&#39;nm&#39;</span><span class="p">:</span><span class="n">nm</span><span class="p">,</span> <span class="s1">&#39;mpts&#39;</span><span class="p">:</span><span class="n">mpts</span><span class="p">,</span> <span class="s1">&#39;mlevels&#39;</span><span class="p">:</span><span class="n">mlevels</span><span class="p">,</span> 
+                       <span class="s1">&#39;nTamb&#39;</span><span class="p">:</span><span class="n">nTamb</span><span class="p">,</span> <span class="s1">&#39;Tambpts&#39;</span><span class="p">:</span><span class="n">Tambpts</span><span class="p">,</span> <span class="s1">&#39;Tamblevels&#39;</span><span class="p">:</span><span class="n">Tamblevels</span><span class="p">}</span>
+        
+        <span class="k">return</span> <span class="n">output_dict</span></div>
+
+    
+<div class="viewcode-block" id="SSCHelperMethods.get_cp_htf"><a class="viewcode-back" href="../../../simulations.util.html#simulations.util.SSCHelperMethods.SSCHelperMethods.get_cp_htf">[docs]</a>    <span class="k">def</span> <span class="nf">get_cp_htf</span><span class="p">(</span> <span class="n">u</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">rec_htf</span><span class="p">,</span> <span class="n">interp</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Method to calculate specific heat of some heat transfer fluid (written by LORE team)</span>
+<span class="sd">        </span>
+<span class="sd">        Inputs:</span>
+<span class="sd">            u (unitRegistry) : Pint unit registry</span>
+<span class="sd">            T (float Quant)  : Temperature at which to find specific heat of HTF, in units of Kelvin</span>
+<span class="sd">            rec_htf (int)    : integer value representing HTF in SSC table</span>
+<span class="sd">        Outputs:</span>
+<span class="sd">            cp (float Quant) : specific heat value in J/g/K</span>
+<span class="sd">            </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="n">T</span> <span class="o">=</span> <span class="n">T</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39;kelvin&#39;</span><span class="p">)</span>
+        
+        <span class="c1"># HTF: 17 = Salt (60% NaNO3, 40% KNO3)</span>
+        <span class="k">if</span> <span class="n">rec_htf</span> <span class="o">==</span> <span class="mi">17</span><span class="p">:</span>
+            <span class="n">a</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.0e-10</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">J</span><span class="o">/</span><span class="n">u</span><span class="o">.</span><span class="n">g</span><span class="o">/</span><span class="n">u</span><span class="o">.</span><span class="n">kelvin</span><span class="o">**</span><span class="mi">4</span>
+            <span class="n">b</span> <span class="o">=</span>  <span class="mf">2.0e-7</span>  <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">J</span><span class="o">/</span><span class="n">u</span><span class="o">.</span><span class="n">g</span><span class="o">/</span><span class="n">u</span><span class="o">.</span><span class="n">kelvin</span><span class="o">**</span><span class="mi">3</span>
+            <span class="n">c</span> <span class="o">=</span>  <span class="mf">5.0e-6</span>  <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">J</span><span class="o">/</span><span class="n">u</span><span class="o">.</span><span class="n">g</span><span class="o">/</span><span class="n">u</span><span class="o">.</span><span class="n">kelvin</span><span class="o">**</span><span class="mi">2</span>
+            <span class="n">d</span> <span class="o">=</span>  <span class="mf">1.4387</span>  <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">J</span><span class="o">/</span><span class="n">u</span><span class="o">.</span><span class="n">g</span><span class="o">/</span><span class="n">u</span><span class="o">.</span><span class="n">kelvin</span>
+            
+            <span class="n">cp</span> <span class="o">=</span> <span class="p">(</span><span class="n">a</span><span class="o">*</span><span class="n">T</span><span class="o">**</span><span class="mi">3</span> <span class="o">+</span> <span class="n">b</span><span class="o">*</span><span class="n">T</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">c</span><span class="o">*</span><span class="n">T</span> <span class="o">+</span> <span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39;J/g/kelvin&#39;</span><span class="p">)</span>
+        <span class="c1"># HTF: 4  = Steam (Supercritical Steam)</span>
+        <span class="k">elif</span> <span class="n">rec_htf</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
+            <span class="c1"># steam data retrieved @ 33MPa from:</span>
+            <span class="c1"># https://webbook.nist.gov/chemistry/fluid/</span>
+            <span class="n">cp</span> <span class="o">=</span> <span class="n">interp</span><span class="p">(</span><span class="n">T</span><span class="o">.</span><span class="n">m</span><span class="p">)</span>
+            <span class="n">cp</span> <span class="o">=</span> <span class="n">cp</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">J</span> <span class="o">/</span> <span class="n">u</span><span class="o">.</span><span class="n">g</span> <span class="o">/</span> <span class="n">u</span><span class="o">.</span><span class="n">kelvin</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span> <span class="p">(</span><span class="s1">&#39;HTF </span><span class="si">%d</span><span class="s1"> not recognized&#39;</span><span class="o">%</span><span class="n">rec_htf</span><span class="p">)</span>
+            <span class="k">return</span> <span class="mf">0.0</span>
+        
+        <span class="k">return</span> <span class="n">cp</span> </div>
+
+    
+<div class="viewcode-block" id="SSCHelperMethods.get_rho_htf"><a class="viewcode-back" href="../../../simulations.util.html#simulations.util.SSCHelperMethods.SSCHelperMethods.get_rho_htf">[docs]</a>    <span class="k">def</span> <span class="nf">get_rho_htf</span><span class="p">(</span> <span class="n">u</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">rec_htf</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Method to calculate density of some heat transfer fluid </span>
+<span class="sd">        </span>
+<span class="sd">        This method calculates density at average temperature for a heat transfer</span>
+<span class="sd">        fluid. In our case, we use molten salt. This method is copied from SSC,</span>
+<span class="sd">        specifically the htf_props cpp method. </span>
+<span class="sd">        </span>
+<span class="sd">        Inputs:</span>
+<span class="sd">            u (unitRegistry) : Pint unit registry</span>
+<span class="sd">            T (float Quant)  : Temperature at which to find specific heat of HTF, in units of Kelvin</span>
+<span class="sd">            rec_htf (int)    : integer value representing HTF in SSC table</span>
+<span class="sd">        Outputs:</span>
+<span class="sd">            rho (float Quant) : fluid density value in kg/m^3</span>
+<span class="sd">            </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c1"># HTF: 17 = Salt (60% NaNO3, 40% KNO3)</span>
+        <span class="k">if</span> <span class="n">rec_htf</span> <span class="o">!=</span> <span class="mi">17</span><span class="p">:</span>
+            <span class="nb">print</span> <span class="p">(</span><span class="s1">&#39;HTF </span><span class="si">%d</span><span class="s1"> not recognized&#39;</span><span class="o">%</span><span class="n">rec_htf</span><span class="p">)</span>
+            <span class="k">return</span> <span class="mf">0.0</span>
+        
+        <span class="n">T</span> <span class="o">=</span> <span class="n">T</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39;kelvin&#39;</span><span class="p">)</span>
+
+        <span class="n">a</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.0e-07</span>     <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">kg</span><span class="o">/</span><span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="o">**</span><span class="mi">3</span><span class="o">/</span><span class="n">u</span><span class="o">.</span><span class="n">kelvin</span><span class="o">**</span><span class="mi">3</span>
+        <span class="n">b</span> <span class="o">=</span>  <span class="mf">0.0002</span>      <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">kg</span><span class="o">/</span><span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="o">**</span><span class="mi">3</span><span class="o">/</span><span class="n">u</span><span class="o">.</span><span class="n">kelvin</span><span class="o">**</span><span class="mi">2</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="o">-</span><span class="mf">0.7875</span>      <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">kg</span><span class="o">/</span><span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="o">**</span><span class="mi">3</span><span class="o">/</span><span class="n">u</span><span class="o">.</span><span class="n">kelvin</span>
+        <span class="n">d</span> <span class="o">=</span>  <span class="mf">2299.4</span>      <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">kg</span><span class="o">/</span><span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="o">**</span><span class="mi">3</span>
+        <span class="n">max_rho</span> <span class="o">=</span> <span class="mf">1000.0</span> <span class="o">*</span><span class="n">u</span><span class="o">.</span><span class="n">kg</span><span class="o">/</span><span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="o">**</span><span class="mi">3</span>
+        
+        <span class="n">rho</span> <span class="o">=</span> <span class="p">(</span><span class="n">a</span><span class="o">*</span><span class="n">T</span><span class="o">**</span><span class="mi">3</span> <span class="o">+</span> <span class="n">b</span><span class="o">*</span><span class="n">T</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">c</span><span class="o">*</span><span class="n">T</span> <span class="o">+</span> <span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39;kg/m^3&#39;</span><span class="p">)</span>
+        <span class="n">rho</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">rho</span><span class="p">,</span> <span class="n">max_rho</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="n">rho</span> </div>
+
+    
+<div class="viewcode-block" id="SSCHelperMethods.get_visc_htf"><a class="viewcode-back" href="../../../simulations.util.html#simulations.util.SSCHelperMethods.SSCHelperMethods.get_visc_htf">[docs]</a>    <span class="k">def</span> <span class="nf">get_visc_htf</span><span class="p">(</span> <span class="n">u</span><span class="p">,</span> <span class="n">T</span><span class="p">,</span> <span class="n">rec_htf</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Method to calculate viscosity of some heat transfer fluid (written by LORE team)</span>
+<span class="sd">        </span>
+<span class="sd">        Inputs:</span>
+<span class="sd">            u (unitRegistry) : Pint unit registry</span>
+<span class="sd">            T (float Quant)  : Temperature at which to find specific heat of HTF, in units of Kelvin</span>
+<span class="sd">            rec_htf (int)    : integer value representing HTF in SSC table</span>
+<span class="sd">        Outputs:</span>
+<span class="sd">            visc (float Quant) : viscosity value in Ns/m^2</span>
+<span class="sd">            </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c1"># HTF: 17 = Salt (60% NaNO3, 40% KNO3)</span>
+        <span class="k">if</span> <span class="n">rec_htf</span> <span class="o">!=</span> <span class="mi">17</span><span class="p">:</span>
+            <span class="nb">print</span> <span class="p">(</span><span class="s1">&#39;HTF </span><span class="si">%d</span><span class="s1"> not recognized&#39;</span><span class="o">%</span><span class="n">rec_htf</span><span class="p">)</span>
+            <span class="k">return</span> <span class="mf">0.0</span>
+        
+        <span class="n">T</span> <span class="o">=</span> <span class="n">T</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39;celsius&#39;</span><span class="p">)</span>
+
+        <span class="n">a</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.473302e-10</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">N</span><span class="o">*</span><span class="n">u</span><span class="o">.</span><span class="n">s</span><span class="o">/</span><span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="n">u</span><span class="o">.</span><span class="n">delta_degC</span><span class="o">**</span><span class="mi">3</span>
+        <span class="n">b</span> <span class="o">=</span>  <span class="mf">2.279989e-7</span>  <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">N</span><span class="o">*</span><span class="n">u</span><span class="o">.</span><span class="n">s</span><span class="o">/</span><span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="n">u</span><span class="o">.</span><span class="n">delta_degC</span><span class="o">**</span><span class="mi">2</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.199514e-4</span>  <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">N</span><span class="o">*</span><span class="n">u</span><span class="o">.</span><span class="n">s</span><span class="o">/</span><span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="n">u</span><span class="o">.</span><span class="n">delta_degC</span>
+        <span class="n">d</span> <span class="o">=</span>  <span class="mf">0.02270616</span>   <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">N</span><span class="o">*</span><span class="n">u</span><span class="o">.</span><span class="n">s</span><span class="o">/</span><span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="o">**</span><span class="mi">2</span>
+        <span class="n">max_visc</span> <span class="o">=</span> <span class="mf">1e-4</span>   <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">N</span><span class="o">*</span><span class="n">u</span><span class="o">.</span><span class="n">s</span><span class="o">/</span><span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="o">**</span><span class="mi">2</span>
+        
+        <span class="n">visc</span> <span class="o">=</span> <span class="p">(</span><span class="n">a</span><span class="o">*</span><span class="n">T</span><span class="o">**</span><span class="mi">3</span> <span class="o">+</span> <span class="n">b</span><span class="o">*</span><span class="n">T</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">c</span><span class="o">*</span><span class="n">T</span> <span class="o">+</span> <span class="n">d</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39;N*s/m^2&#39;</span><span class="p">)</span>
+        <span class="n">visc</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">visc</span><span class="p">,</span> <span class="n">max_visc</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="n">visc</span> </div>
+    
+    
+<div class="viewcode-block" id="SSCHelperMethods.get_ambient_T_corrections_from_udpc_inputs"><a class="viewcode-back" href="../../../simulations.util.html#simulations.util.SSCHelperMethods.SSCHelperMethods.get_ambient_T_corrections_from_udpc_inputs">[docs]</a>    <span class="k">def</span> <span class="nf">get_ambient_T_corrections_from_udpc_inputs</span><span class="p">(</span> <span class="n">u</span><span class="p">,</span> <span class="n">Tamb</span><span class="p">,</span> <span class="n">ud_array</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Method to calculate specific heat of some heat transfer fluid (written by LORE team)</span>
+<span class="sd">        </span>
+<span class="sd">        Inputs:</span>
+<span class="sd">            u (unitRegistry)         : Pint unit registry</span>
+<span class="sd">            Tamb (float)             : ambient temperature, not units (intended to be C)</span>
+<span class="sd">            ud_array (list of lists) : table of user defined data as nested lists</span>
+<span class="sd">        Outputs:</span>
+<span class="sd">            etamult (float) : multiplication correction factor for eta</span>
+<span class="sd">            wmult (float)   : multiplication correction factor for w</span>
+<span class="sd">            </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># grabbing a dictionary of useful user-defined data for power cycle</span>
+        <span class="n">ud_dict</span> <span class="o">=</span> <span class="n">SSCHelperMethods</span><span class="o">.</span><span class="n">interpret_user_defined_cycle_data</span><span class="p">(</span> <span class="n">ud_array</span> <span class="p">)</span>
+        
+        <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">Tamb</span><span class="p">)</span>  <span class="c1"># Tamb = set of ambient temperature points for each dispatch time step</span>
+        
+        <span class="n">Tambpts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">ud_dict</span><span class="p">[</span><span class="s1">&#39;Tambpts&#39;</span><span class="p">])</span><span class="o">*</span><span class="n">u</span><span class="o">.</span><span class="n">degC</span>
+        <span class="n">i0</span> <span class="o">=</span> <span class="mi">3</span><span class="o">*</span><span class="n">ud_dict</span><span class="p">[</span><span class="s1">&#39;nT&#39;</span><span class="p">]</span><span class="o">+</span><span class="mi">3</span><span class="o">*</span><span class="n">ud_dict</span><span class="p">[</span><span class="s1">&#39;nm&#39;</span><span class="p">]</span><span class="o">+</span><span class="n">ud_dict</span><span class="p">[</span><span class="s1">&#39;nTamb&#39;</span><span class="p">]</span>  <span class="c1"># first index in udpc data corresponding to performance at design point HTF T, and design point mass flow</span>
+        <span class="n">npts</span> <span class="o">=</span> <span class="n">ud_dict</span><span class="p">[</span><span class="s1">&#39;nTamb&#39;</span><span class="p">]</span>
+        <span class="n">etapts</span> <span class="o">=</span> <span class="p">[</span> <span class="n">ud_array</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="mi">3</span><span class="p">]</span><span class="o">/</span><span class="n">ud_array</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="mi">4</span><span class="p">]</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">i0</span><span class="p">,</span> <span class="n">i0</span><span class="o">+</span><span class="n">npts</span><span class="p">)]</span>
+        <span class="n">wpts</span> <span class="o">=</span> <span class="p">[</span> <span class="n">ud_array</span><span class="p">[</span><span class="n">j</span><span class="p">][</span><span class="mi">5</span><span class="p">]</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">i0</span><span class="p">,</span> <span class="n">i0</span><span class="o">+</span><span class="n">npts</span><span class="p">)]</span>
+        
+        <span class="n">etamult</span>  <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+        <span class="n">wmult</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> 
+        <span class="n">Tstep</span> <span class="o">=</span> <span class="n">Tambpts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">Tambpts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+            <span class="n">i</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">min</span><span class="p">(</span> <span class="nb">int</span><span class="p">((</span><span class="n">Tamb</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">-</span> <span class="n">Tambpts</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">/</span> <span class="n">Tstep</span><span class="p">),</span> <span class="n">npts</span><span class="o">-</span><span class="mi">2</span><span class="p">)</span> <span class="p">)</span>
+            <span class="n">r</span> <span class="o">=</span> <span class="p">(</span><span class="n">Tamb</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">-</span> <span class="n">Tambpts</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="o">/</span> <span class="n">Tstep</span>
+            <span class="n">etamult</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">etapts</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">etapts</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">etapts</span><span class="p">[</span><span class="n">i</span><span class="p">])</span><span class="o">*</span><span class="n">r</span>
+            <span class="n">wmult</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">wpts</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">wpts</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">wpts</span><span class="p">[</span><span class="n">i</span><span class="p">])</span><span class="o">*</span><span class="n">r</span>
+
+        <span class="k">return</span> <span class="n">etamult</span><span class="p">,</span> <span class="n">wmult</span></div>
+
+
+<div class="viewcode-block" id="SSCHelperMethods.get_linearized_ud_params"><a class="viewcode-back" href="../../../simulations.util.html#simulations.util.SSCHelperMethods.SSCHelperMethods.get_linearized_ud_params">[docs]</a>    <span class="k">def</span> <span class="nf">get_linearized_ud_params</span><span class="p">(</span> <span class="n">ud_array</span><span class="p">,</span> <span class="n">q_pb_design</span><span class="p">,</span> <span class="n">SSC_dict</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Method to calculate linearized user defined params (written by LORE team)</span>
+<span class="sd">        </span>
+<span class="sd">        Inputs:</span>
+<span class="sd">            ud_array (list of lists)  : table of user defined data as nested lists</span>
+<span class="sd">            q_pb_design (float Quant) : power block thermal power input rating, units of MW</span>
+<span class="sd">            SSC_dict (dict)           : dictionary of SSC inputs</span>
+<span class="sd">        Outputs:</span>
+<span class="sd">            etap (float) : slope of linearized eta_p</span>
+<span class="sd">            b (float)    : intercept of linearized eta_p</span>
+<span class="sd">            </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># grabbing a dictionary of useful user-defined data for power cycle</span>
+        <span class="n">ud_dict</span> <span class="o">=</span> <span class="n">SSCHelperMethods</span><span class="o">.</span><span class="n">interpret_user_defined_cycle_data</span><span class="p">(</span> <span class="n">ud_array</span> <span class="p">)</span>
+        
+        <span class="c1"># getting relevant eta points</span>
+        <span class="n">eta_adj_pts</span> <span class="o">=</span> <span class="p">[</span><span class="n">ud_array</span><span class="p">[</span><span class="n">p</span><span class="p">][</span><span class="mi">3</span><span class="p">]</span><span class="o">/</span><span class="n">ud_array</span><span class="p">[</span><span class="n">p</span><span class="p">][</span><span class="mi">4</span><span class="p">]</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ud_array</span><span class="p">))</span> <span class="p">]</span>
+        
+        <span class="n">xpts</span> <span class="o">=</span> <span class="n">ud_dict</span><span class="p">[</span><span class="s1">&#39;mpts&#39;</span><span class="p">]</span>
+        <span class="n">step</span> <span class="o">=</span> <span class="n">xpts</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">xpts</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        
+        <span class="c1"># Interpolate for cycle performance at specified min/max load points</span>
+        <span class="n">fpts</span> <span class="o">=</span> <span class="p">[</span><span class="n">SSC_dict</span><span class="p">[</span><span class="s1">&#39;cycle_cutoff_frac&#39;</span><span class="p">],</span> <span class="n">SSC_dict</span><span class="p">[</span><span class="s1">&#39;cycle_max_frac&#39;</span><span class="p">]]</span>
+        <span class="n">q</span><span class="p">,</span> <span class="n">eta</span> <span class="o">=</span> <span class="p">[</span> <span class="p">[]</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">)]</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">):</span>
+            <span class="n">p</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">min</span><span class="p">(</span><span class="nb">int</span><span class="p">((</span><span class="n">fpts</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">-</span> <span class="n">xpts</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">/</span> <span class="n">step</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">xpts</span><span class="p">)</span><span class="o">-</span><span class="mi">2</span><span class="p">)</span> <span class="p">)</span>  <span class="c1"># Find first point in user-defined array of load fractions for interpolation</span>
+            <span class="n">i</span> <span class="o">=</span> <span class="mi">3</span><span class="o">*</span><span class="n">ud_dict</span><span class="p">[</span><span class="s1">&#39;nT&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">ud_dict</span><span class="p">[</span><span class="s1">&#39;nm&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">p</span>    <span class="c1"># Index of point in full list of udpc points (at design point ambient T)</span>
+            <span class="n">eta_adj</span> <span class="o">=</span> <span class="n">eta_adj_pts</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">eta_adj_pts</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">eta_adj_pts</span><span class="p">[</span><span class="n">i</span><span class="p">])</span><span class="o">/</span><span class="n">step</span> <span class="o">*</span> <span class="p">(</span><span class="n">fpts</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">-</span> <span class="n">xpts</span><span class="p">[</span><span class="n">p</span><span class="p">])</span>
+            <span class="n">eta</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">eta_adj</span> <span class="o">*</span> <span class="n">SSC_dict</span><span class="p">[</span><span class="s1">&#39;design_eff&#39;</span><span class="p">])</span>
+            <span class="n">q</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fpts</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">*</span><span class="n">q_pb_design</span><span class="p">)</span>
+        
+        <span class="c1"># calculating eta_P as linear slope using max and min power/thermal output/input</span>
+        <span class="n">etap</span> <span class="o">=</span> <span class="p">(</span><span class="n">q</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="n">eta</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">q</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">eta</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">/</span><span class="p">(</span><span class="n">q</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">q</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        
+        <span class="c1"># intercept of linearized eta_P</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="n">q</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="p">(</span><span class="n">eta</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">etap</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="n">etap</span><span class="p">,</span> <span class="n">b</span></div>
+
+
+<div class="viewcode-block" id="SSCHelperMethods.estimate_receiver_pumping_parasitic"><a class="viewcode-back" href="../../../simulations.util.html#simulations.util.SSCHelperMethods.SSCHelperMethods.estimate_receiver_pumping_parasitic">[docs]</a>    <span class="k">def</span> <span class="nf">estimate_receiver_pumping_parasitic</span><span class="p">(</span> <span class="n">u</span><span class="p">,</span> <span class="n">Tavg</span><span class="p">,</span> <span class="n">dm_rec_design</span><span class="p">,</span> <span class="n">SSC_dict</span><span class="p">,</span> <span class="n">nonheated_length</span> <span class="o">=</span> <span class="mf">0.2</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Method to calculate pumping parasitic of receiver (written by LORE team)</span>
+<span class="sd">        </span>
+<span class="sd">        Inputs:</span>
+<span class="sd">            u (unitRegistry)            : Pint unit registry</span>
+<span class="sd">            Tavg (float Quant)          : average temperature of plant, K</span>
+<span class="sd">            dm_rec_design (float Quant) : power block thermal power input rating, units of MW</span>
+<span class="sd">            SSC_dict (dict)             : dictionary of SSC inputs</span>
+<span class="sd">            nonheated_length (float)    : non-heated length of total receiver height</span>
+<span class="sd">        Outputs:</span>
+<span class="sd">            etap (float) : slope of linearized eta_p</span>
+<span class="sd">            b (float)    : intercept of linearized eta_p</span>
+<span class="sd">            </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="k">if</span> <span class="n">dm_rec_design</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">0</span><span class="o">*</span><span class="n">u</span><span class="o">.</span><span class="n">MW</span>
+        
+        <span class="c1"># flow parameters</span>
+        <span class="n">rho</span>  <span class="o">=</span> <span class="n">SSCHelperMethods</span><span class="o">.</span><span class="n">get_rho_htf</span><span class="p">(</span>  <span class="n">u</span><span class="p">,</span> <span class="n">Tavg</span><span class="p">,</span> <span class="n">SSC_dict</span><span class="p">[</span><span class="s1">&#39;rec_htf&#39;</span><span class="p">]</span> <span class="p">)</span>
+        <span class="n">visc</span> <span class="o">=</span> <span class="n">SSCHelperMethods</span><span class="o">.</span><span class="n">get_visc_htf</span><span class="p">(</span> <span class="n">u</span><span class="p">,</span> <span class="n">Tavg</span><span class="p">,</span> <span class="n">SSC_dict</span><span class="p">[</span><span class="s1">&#39;rec_htf&#39;</span><span class="p">]</span> <span class="p">)</span>
+
+        <span class="c1"># some design parameters</span>
+        <span class="n">D_rec</span>    <span class="o">=</span> <span class="n">SSC_dict</span><span class="p">[</span><span class="s1">&#39;D_rec&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span>
+        <span class="n">N_panels</span> <span class="o">=</span> <span class="n">SSC_dict</span><span class="p">[</span><span class="s1">&#39;N_panels&#39;</span><span class="p">]</span>
+        <span class="n">d_tube_out</span> <span class="o">=</span> <span class="n">SSC_dict</span><span class="p">[</span><span class="s1">&#39;d_tube_out&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">mm</span>
+        <span class="n">th_tube</span>    <span class="o">=</span> <span class="n">SSC_dict</span><span class="p">[</span><span class="s1">&#39;th_tube&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">mm</span>
+        <span class="n">rec_height</span> <span class="o">=</span> <span class="n">SSC_dict</span><span class="p">[</span><span class="s1">&#39;rec_height&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span>
+        <span class="n">h_tower</span>    <span class="o">=</span> <span class="n">SSC_dict</span><span class="p">[</span><span class="s1">&#39;h_tower&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span>
+        <span class="n">eta_pump</span>   <span class="o">=</span> <span class="n">SSC_dict</span><span class="p">[</span><span class="s1">&#39;eta_pump&#39;</span><span class="p">]</span> 
+        <span class="n">g0</span> <span class="o">=</span> <span class="mf">9.8</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">m</span> <span class="o">/</span> <span class="n">u</span><span class="o">.</span><span class="n">s</span><span class="o">**</span><span class="mi">2</span>
+        
+        <span class="c1"># number of flow paths</span>
+        <span class="n">npath</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">nperpath</span> <span class="o">=</span> <span class="n">SSC_dict</span><span class="p">[</span><span class="s1">&#39;N_panels&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">SSC_dict</span><span class="p">[</span><span class="s1">&#39;Flow_type&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">SSC_dict</span><span class="p">[</span><span class="s1">&#39;Flow_type&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">npath</span> <span class="o">=</span> <span class="mi">2</span>
+            <span class="n">nperpath</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">SSC_dict</span><span class="p">[</span><span class="s1">&#39;N_panels&#39;</span><span class="p">]</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">SSC_dict</span><span class="p">[</span><span class="s1">&#39;Flow_type&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">9</span><span class="p">:</span>
+            <span class="n">npath</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">SSC_dict</span><span class="p">[</span><span class="s1">&#39;N_panels&#39;</span><span class="p">]</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
+            <span class="n">nperpath</span> <span class="o">=</span> <span class="mi">2</span>
+        
+        <span class="c1"># ============================</span>
+        <span class="c1"># fluid mechanics of the pump</span>
+        
+        <span class="c1"># tube dimensions</span>
+        <span class="n">ntube</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">D_rec</span> <span class="o">/</span> <span class="n">N_panels</span> <span class="o">/</span> <span class="n">d_tube_out</span><span class="p">)</span>  <span class="c1"># Number of tubes per panel</span>
+        <span class="n">m_per_tube</span> <span class="o">=</span> <span class="n">dm_rec_design</span> <span class="o">/</span> <span class="n">npath</span> <span class="o">/</span> <span class="n">ntube</span>  <span class="c1"># kg/s per tube</span>
+        <span class="n">tube_id</span> <span class="o">=</span> <span class="n">d_tube_out</span> <span class="o">-</span> <span class="mi">2</span><span class="o">*</span><span class="n">th_tube</span>            <span class="c1"># Tube ID in m</span>
+        <span class="n">Ac</span> <span class="o">=</span> <span class="p">(</span> <span class="mf">0.25</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="p">(</span><span class="n">tube_id</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39;mm^2&#39;</span><span class="p">)</span>
+        
+        <span class="c1"># flow velocities and fluid mechanics</span>
+        <span class="n">vel</span> <span class="o">=</span> <span class="p">(</span><span class="n">m_per_tube</span> <span class="o">/</span> <span class="n">rho</span> <span class="o">/</span> <span class="n">Ac</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39;mm/s&#39;</span><span class="p">)</span>  <span class="c1"># HTF velocity</span>
+        <span class="n">Re</span> <span class="o">=</span> <span class="p">(</span><span class="n">rho</span> <span class="o">*</span> <span class="n">vel</span> <span class="o">*</span> <span class="n">tube_id</span> <span class="o">/</span> <span class="n">visc</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>  <span class="c1"># Reynolds number</span>
+        <span class="n">EoverD</span> <span class="o">=</span> <span class="p">(</span><span class="mf">4.6e-5</span><span class="o">*</span><span class="n">u</span><span class="o">.</span><span class="n">m</span><span class="p">)</span> <span class="o">/</span> <span class="n">tube_id</span>     <span class="c1"># roughness factor (E/D)</span>
+        
+        <span class="c1"># friction factor</span>
+        <span class="n">ff</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mf">1.737</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mf">0.269</span><span class="o">*</span><span class="n">EoverD</span> <span class="o">-</span> <span class="mf">2.185</span><span class="o">/</span><span class="n">Re</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mf">0.269</span><span class="o">*</span><span class="n">EoverD</span><span class="o">+</span><span class="mf">14.5</span><span class="o">/</span><span class="n">Re</span><span class="p">)))</span><span class="o">**-</span><span class="mi">2</span>
+        <span class="n">fd</span> <span class="o">=</span> <span class="mi">4</span><span class="o">*</span><span class="n">ff</span> 
+        
+        <span class="c1"># total height and frictional pressure drop</span>
+        <span class="n">Htot</span> <span class="o">=</span> <span class="n">rec_height</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">nonheated_length</span><span class="p">)</span>
+        <span class="n">dp</span> <span class="o">=</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">fd</span><span class="o">*</span><span class="n">rho</span><span class="o">*</span><span class="p">(</span><span class="n">vel</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">Htot</span><span class="o">/</span><span class="n">tube_id</span> <span class="o">+</span> <span class="mi">4</span><span class="o">*</span><span class="mi">30</span> <span class="o">+</span> <span class="mi">2</span><span class="o">*</span><span class="mi">16</span><span class="p">)</span> <span class="o">*</span> <span class="n">nperpath</span>  <span class="c1"># Frictional pressure drop (Pa) (straight tube, 90deg bends, 45def bends)</span>
+        <span class="n">dp</span> <span class="o">=</span> <span class="n">dp</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39;N/m^2&#39;</span><span class="p">)</span>
+        
+        <span class="c1"># gravitational pressure drop</span>
+        <span class="n">dp</span> <span class="o">+=</span> <span class="n">rho</span> <span class="o">*</span> <span class="n">g0</span> <span class="o">*</span> <span class="n">h_tower</span>  <span class="c1"># Add pressure drop from pumping up the tower</span>
+        <span class="k">if</span> <span class="n">nperpath</span><span class="o">%</span><span class="mi">2</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>   
+            <span class="n">dp</span> <span class="o">+=</span> <span class="n">rho</span> <span class="o">*</span> <span class="n">g0</span> <span class="o">*</span> <span class="n">Htot</span>  
+        
+        <span class="c1"># pumpimg parasitic</span>
+        <span class="n">wdot</span> <span class="o">=</span> <span class="n">dp</span> <span class="o">*</span> <span class="n">dm_rec_design</span> <span class="o">/</span> <span class="n">rho</span> <span class="o">/</span> <span class="n">eta_pump</span>   <span class="c1"># Pumping parasitic at design point reciever mass flow rate (MWe)</span>
+        <span class="n">wdot</span> <span class="o">=</span> <span class="n">wdot</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39;MW&#39;</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="n">wdot</span></div>
+    
+
+<div class="viewcode-block" id="SSCHelperMethods.get_pc_persist_and_off_logs"><a class="viewcode-back" href="../../../simulations.util.html#simulations.util.SSCHelperMethods.SSCHelperMethods.get_pc_persist_and_off_logs">[docs]</a>    <span class="k">def</span> <span class="nf">get_pc_persist_and_off_logs</span><span class="p">(</span> <span class="n">param_dict</span><span class="p">,</span> <span class="n">plant</span><span class="p">,</span> <span class="n">npts</span> <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Method to log the amount of time Power Cycle has been ON and OFF</span>
+<span class="sd">        </span>
+<span class="sd">        This method uses SSC output data from the previous run to log how long</span>
+<span class="sd">        the Power Cycle has been both ON and OFF. One of the two outputs will be</span>
+<span class="sd">        populated in this method, and there are a bunch of logic statements to</span>
+<span class="sd">        correctly log the respective length of time. Method adapted from LORE Team. </span>
+<span class="sd">        </span>
+<span class="sd">        TODO: can we just input another dictionary instead of passing the full Plant?</span>
+<span class="sd">        </span>
+<span class="sd">        Inputs:</span>
+<span class="sd">            param_dict (dict)    : dictionary of Pyomo dispatch parameters</span>
+<span class="sd">            plant (obj)          : the full PySAM Plant object. </span>
+<span class="sd">            npts (int)           : length of the SSC horizon</span>
+<span class="sd">        Outputs:</span>
+<span class="sd">            disp_pc_persist0 (int) : length of time PC has been ON in the past segment</span>
+<span class="sd">            disp_pc_off0 (int)     : length of time PC has been OFF in the past segment</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c1"># cycle state before start of most recent set of simulation calls</span>
+        <span class="n">previous_pc_state</span> <span class="o">=</span> <span class="n">plant</span><span class="o">.</span><span class="n">SystemControl</span><span class="o">.</span><span class="n">pc_op_mode_initial</span>
+        <span class="c1"># cycle state after most recent set of simulation calls</span>
+        <span class="n">tmp_final_op_mode</span> <span class="o">=</span> <span class="n">plant</span><span class="o">.</span><span class="n">Outputs</span><span class="o">.</span><span class="n">pc_op_mode_final</span>
+        <span class="n">current_pc_state</span>  <span class="o">=</span> <span class="n">tmp_final_op_mode</span> <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">tmp_final_op_mode</span><span class="p">)</span> <span class="o">==</span> <span class="nb">float</span> \
+                                <span class="k">else</span> <span class="n">tmp_final_op_mode</span><span class="p">[</span><span class="n">npts</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="c1"># times when cycle is not generating power</span>
+        <span class="n">tslice</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="n">npts</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">is_pc_not_on</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span> <span class="n">plant</span><span class="o">.</span><span class="n">Outputs</span><span class="o">.</span><span class="n">P_cycle</span><span class="p">[</span><span class="n">tslice</span><span class="p">]</span> <span class="p">)</span> <span class="o">&lt;=</span> <span class="mf">1.e-3</span>
+        
+        <span class="c1">###=== Persist Log ===### </span>
+        <span class="c1"># if PC is ON</span>
+        <span class="k">if</span> <span class="n">current_pc_state</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="c1"># array of times (PC was generating power == True)</span>
+            <span class="n">is_pc_current</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span> <span class="n">plant</span><span class="o">.</span><span class="n">Outputs</span><span class="o">.</span><span class="n">P_cycle</span><span class="p">[</span><span class="n">tslice</span><span class="p">]</span> <span class="p">)</span> <span class="o">&gt;</span> <span class="mf">1.e-3</span> 
+            
+        <span class="c1"># if PC is STANDBY</span>
+        <span class="k">elif</span> <span class="n">current_pc_state</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="c1"># array of times (PC was generating power == False) + (PC getting input energy == True) + (PC using startup power == False)</span>
+            <span class="n">is_pc_current</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_and</span><span class="p">(</span> \
+                                <span class="n">np</span><span class="o">.</span><span class="n">logical_and</span><span class="p">(</span> \
+                                    <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span> <span class="n">plant</span><span class="o">.</span><span class="n">Outputs</span><span class="o">.</span><span class="n">P_cycle</span><span class="p">[</span><span class="n">tslice</span><span class="p">]</span> <span class="p">)</span> <span class="o">&lt;=</span> <span class="mf">1.e-3</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span> <span class="n">plant</span><span class="o">.</span><span class="n">Outputs</span><span class="o">.</span><span class="n">q_pb</span><span class="p">[</span><span class="n">tslice</span><span class="p">]</span> <span class="p">)</span> <span class="o">&gt;=</span> <span class="mf">1.e-3</span> <span class="p">),</span> \
+                                    <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span> <span class="n">plant</span><span class="o">.</span><span class="n">Outputs</span><span class="o">.</span><span class="n">q_dot_pc_startup</span><span class="p">[</span><span class="n">tslice</span><span class="p">]</span> <span class="p">)</span> <span class="o">&lt;=</span> <span class="mf">1.e-3</span> <span class="p">)</span>
+        
+        <span class="c1"># if PC is STARTUP</span>
+        <span class="k">elif</span> <span class="n">current_pc_state</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># array of times (PC using startup power == True)</span>
+            <span class="n">is_pc_current</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span> <span class="n">plant</span><span class="o">.</span><span class="n">Outputs</span><span class="o">.</span><span class="n">q_dot_pc_startup</span><span class="p">[</span><span class="n">tslice</span><span class="p">]</span> <span class="p">)</span> <span class="o">&gt;</span> <span class="mf">1.e-3</span>
+        
+        <span class="c1"># if PC is OFF</span>
+        <span class="k">elif</span> <span class="n">current_pc_state</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="c1"># array of times (PC getting input energy + PC using startup power == False)</span>
+            <span class="n">is_pc_current</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span> <span class="n">plant</span><span class="o">.</span><span class="n">Outputs</span><span class="o">.</span><span class="n">q_dot_pc_startup</span><span class="p">[</span><span class="n">tslice</span><span class="p">]</span> <span class="p">)</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span> <span class="n">plant</span><span class="o">.</span><span class="n">Outputs</span><span class="o">.</span><span class="n">q_pb</span><span class="p">[</span><span class="n">tslice</span><span class="p">]</span> <span class="p">)</span> <span class="p">)</span> <span class="o">&lt;=</span> <span class="mf">1.e-3</span>
+        
+        <span class="c1">###=== Indexing ===###</span>
+        <span class="n">ssc_time_step</span> <span class="o">=</span> <span class="mi">1</span>   <span class="c1"># 1 hour per time step</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="n">npts</span>            <span class="c1"># length of ssc horizon</span>
+        
+        <span class="c1">###=== OFF Log ===###</span>
+        <span class="c1"># if PC is ON</span>
+        <span class="k">if</span> <span class="n">current_pc_state</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span> 
+            <span class="c1"># returning 0 for OFF log</span>
+            <span class="n">disp_pc_off0</span> <span class="o">=</span> <span class="mf">0.0</span>
+        
+        <span class="c1"># if PC is OFF for full simulated horizon</span>
+        <span class="k">elif</span> <span class="n">is_pc_not_on</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">==</span> <span class="n">n</span><span class="p">:</span>  
+            <span class="c1"># add all OFF positions in this current horizon to existing OFF log</span>
+            <span class="n">disp_pc_off0</span> <span class="o">=</span> <span class="n">param_dict</span><span class="p">[</span><span class="s1">&#39;Yd0&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39;hr&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">m</span> <span class="o">+</span> <span class="n">n</span><span class="o">*</span><span class="n">ssc_time_step</span>  
+        
+        <span class="c1"># if PC is OFF for some portion of current horizon</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># find indeces of changed OFF state</span>
+            <span class="n">i</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">is_pc_not_on</span><span class="p">))</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="c1"># use index to find length of times PC was oFF</span>
+            <span class="n">disp_pc_off0</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="o">-</span><span class="n">i</span><span class="p">)</span><span class="o">*</span><span class="n">ssc_time_step</span>         
+        
+        <span class="c1">###=== Final Indexing and Logging ===###</span>
+        <span class="c1"># Plant has not changed state over this simulation window:</span>
+        <span class="k">if</span> <span class="n">n</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">is_pc_current</span><span class="p">))</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>  
+            <span class="c1"># adding to existing persist array from Dispatch Params dictionary if state continued</span>
+            <span class="n">disp_pc_persist0</span> <span class="o">=</span> <span class="n">n</span><span class="o">*</span><span class="n">ssc_time_step</span> <span class="k">if</span> <span class="n">previous_pc_state</span> <span class="o">!=</span> <span class="n">current_pc_state</span> <span class="k">else</span> <span class="n">param_dict</span><span class="p">[</span><span class="s1">&#39;Yu0&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39;hr&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">m</span> <span class="o">+</span> <span class="n">n</span><span class="o">*</span><span class="n">ssc_time_step</span>
+        <span class="c1"># Plant *has* changed state over this simulation window:</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># find indeces of changed state</span>
+            <span class="n">i</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">is_pc_current</span><span class="p">))</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="c1"># use index to find length of times PC was ON</span>
+            <span class="n">disp_pc_persist0</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="o">-</span><span class="n">i</span><span class="p">)</span><span class="o">*</span><span class="n">ssc_time_step</span>
+        
+        <span class="k">return</span> <span class="n">disp_pc_persist0</span><span class="p">,</span> <span class="n">disp_pc_off0</span></div>
+
+
+<div class="viewcode-block" id="SSCHelperMethods.linearize_indirectTES_eff"><a class="viewcode-back" href="../../../simulations.util.html#simulations.util.SSCHelperMethods.SSCHelperMethods.linearize_indirectTES_eff">[docs]</a>    <span class="k">def</span> <span class="nf">linearize_indirectTES_eff</span><span class="p">(</span><span class="n">propn_LFR_flow</span> <span class="o">=</span> <span class="mf">0.8</span><span class="p">):</span>
+        <span class="n">raw_data</span> <span class="o">=</span> \
+        <span class="sd">&quot;&quot;&quot;TF Temp	HTF mdot	Ambient T	Wdot cycle	Heat In</span>
+<span class="sd">        500	0.300	30	0.237641861	0.31466289</span>
+<span class="sd">        504.2	0.300	30	0.242543393	0.318919287</span>
+<span class="sd">        508.4	0.300	30	0.247479625	0.323186151</span>
+<span class="sd">        512.6	0.300	30	0.252450559	0.327456504</span>
+<span class="sd">        516.8	0.300	30	0.257447519	0.331737323</span>
+<span class="sd">        521.1	0.300	30	0.262470504	0.336021631</span>
+<span class="sd">        525.3	0.300	30	0.267528191	0.340312917</span>
+<span class="sd">        529.5	0.300	30	0.272611903	0.34461118</span>
+<span class="sd">        533.7	0.300	30	0.277721641	0.348916421</span>
+<span class="sd">        537.9	0.300	30	0.28286608	0.35322864</span>
+<span class="sd">        542.1	0.300	30	0.288036545	0.357544348</span>
+<span class="sd">        546.3	0.300	30	0.293241711	0.361867033</span>
+<span class="sd">        550.5	0.300	30	0.298464228	0.366196696</span>
+<span class="sd">        554.7	0.300	30	0.303712771	0.370533337</span>
+<span class="sd">        558.9	0.300	30	0.308996014	0.374873467</span>
+<span class="sd">        563.2	0.300	30	0.314305284	0.379220574</span>
+<span class="sd">        567.4	0.300	30	0.319631904	0.38357117</span>
+<span class="sd">        571.6	0.300	30	0.3250019	0.387932233</span>
+<span class="sd">        575.8	0.300	30	0.330389247	0.392293296</span>
+<span class="sd">        580	0.300	30	0.335811295	0.396664825</span>
+<span class="sd">        500	1.000	30	0.766426017	0.810896011</span>
+<span class="sd">        504.2	1.000	30	0.782518656	0.824028044</span>
+<span class="sd">        508.4	1.000	30	0.798672022	0.837187987</span>
+<span class="sd">        512.6	1.000	30	0.81489479	0.850382818</span>
+<span class="sd">        516.8	1.000	30	0.83118696	0.863602072</span>
+<span class="sd">        521.1	1.000	30	0.847548532	0.876849236</span>
+<span class="sd">        525.3	1.000	30	0.863962156	0.890120822</span>
+<span class="sd">        529.5	1.000	30	0.880427832	0.903420319</span>
+<span class="sd">        533.7	1.000	30	0.896954234	0.916744238</span>
+<span class="sd">        537.9	1.000	30	0.913524013	0.930092579</span>
+<span class="sd">        542.1	1.000	30	0.930137169	0.943461853</span>
+<span class="sd">        546.3	1.000	30	0.946802376	0.956855549</span>
+<span class="sd">        550.5	1.000	30	0.963493608	0.970266689</span>
+<span class="sd">        554.7	1.000	30	0.980228218	0.98370574</span>
+<span class="sd">        558.9	1.000	30	0.996980177	0.997158747</span>
+<span class="sd">        563.2	1.000	30	1.013766838	1.010632686</span>
+<span class="sd">        567.4	1.000	30	1.030562174	1.02412407</span>
+<span class="sd">        571.6	1.000	30	1.047383536	1.037636387</span>
+<span class="sd">        575.8	1.000	30	1.064213574	1.051162659</span>
+<span class="sd">        580	1.000	30	1.081052286	1.064706376</span>
+<span class="sd">        500	1.200	30	0.889051057	0.924098734</span>
+<span class="sd">        504.2	1.200	30	0.907668201	0.939515964</span>
+<span class="sd">        508.4	1.200	30	0.926337397	0.954957615</span>
+<span class="sd">        512.6	1.200	30	0.94504997	0.970434154</span>
+<span class="sd">        516.8	1.200	30	0.963788568	0.985938605</span>
+<span class="sd">        521.1	1.200	30	0.982561867	1.001477943</span>
+<span class="sd">        525.3	1.200	30	1.001361192	1.017034727</span>
+<span class="sd">        529.5	1.200	30	1.020169193	1.032622909</span>
+<span class="sd">        533.7	1.200	30	1.038985868	1.048232025</span>
+<span class="sd">        537.9	1.200	30	1.057802544	1.063865563</span>
+<span class="sd">        542.1	1.200	30	1.076593194	1.079513056</span>
+<span class="sd">        546.3	1.200	30	1.095375169	1.095184971</span>
+<span class="sd">        550.5	1.200	30	1.114122442	1.110867353</span>
+<span class="sd">        554.7	1.200	30	1.132835014	1.126570668</span>
+<span class="sd">        558.9	1.200	30	1.15148686	1.14228096</span>
+<span class="sd">        563.2	1.200	30	1.170077978	1.158008697</span>
+<span class="sd">        567.4	1.200	30	1.188591019	1.173739923</span>
+<span class="sd">        571.6	1.200	30	1.207025983	1.189481615</span>
+<span class="sd">        575.8	1.200	30	1.225348168	1.205223307</span>
+<span class="sd">        580	1.200	30	1.243566249	1.220971977</span>
+<span class="sd">        560	0.300	0	0.338665461	0.375968966</span>
+<span class="sd">        560	0.347	0	0.396304002	0.425821147</span>
+<span class="sd">        560	0.395	0	0.452910184	0.474173122</span>
+<span class="sd">        560	0.442	0	0.508414606	0.521171423</span>
+<span class="sd">        560	0.490	0	0.562947396	0.567074225</span>
+<span class="sd">        560	0.537	0	0.616161545	0.611700108</span>
+<span class="sd">        560	0.584	0	0.668221882	0.655261892</span>
+<span class="sd">        560	0.632	0	0.719102381	0.697829354</span>
+<span class="sd">        560	0.679	0	0.768976549	0.739580424</span>
+<span class="sd">        560	0.726	0	0.817532074	0.780323217</span>
+<span class="sd">        560	0.774	0	0.864916436	0.820221708</span>
+<span class="sd">        560	0.821	0	0.910426939	0.859314275</span>
+<span class="sd">        560	0.868	0	0.9546188	0.89774396</span>
+<span class="sd">        560	0.916	0	0.997622148	0.935311899</span>
+<span class="sd">        560	0.963	0	1.039532411	0.97214718</span>
+<span class="sd">        560	1.010	0	1.080297537	1.008274224</span>
+<span class="sd">        560	1.058	0	1.119978254	1.043808163</span>
+<span class="sd">        560	1.105	0	1.158279602	1.078543156</span>
+<span class="sd">        560	1.153	0	1.195236281	1.112590845</span>
+<span class="sd">        560	1.200	0	1.230761541	1.14595472</span>
+<span class="sd">        560	0.300	30	0.310323332	0.375958499</span>
+<span class="sd">        560	0.347	30	0.363129742	0.425817658</span>
+<span class="sd">        560	0.395	30	0.415155378	0.474176611</span>
+<span class="sd">        560	0.442	30	0.466356863	0.521185378</span>
+<span class="sd">        560	0.490	30	0.51685565	0.567095158</span>
+<span class="sd">        560	0.537	30	0.566348105	0.611728019</span>
+<span class="sd">        560	0.584	30	0.614947006	0.655303758</span>
+<span class="sd">        560	0.632	30	0.66266103	0.697885175</span>
+<span class="sd">        560	0.679	30	0.709602953	0.73965369</span>
+<span class="sd">        560	0.726	30	0.755469142	0.780410438</span>
+<span class="sd">        560	0.774	30	0.800398402	0.820326374</span>
+<span class="sd">        560	0.821	30	0.844347355	0.859436385</span>
+<span class="sd">        560	0.868	30	0.887420105	0.897883514</span>
+<span class="sd">        560	0.916	30	0.929330368	0.935465408</span>
+<span class="sd">        560	0.963	30	0.970156221	0.972318133</span>
+<span class="sd">        560	1.010	30	1.009854288	1.008462622</span>
+<span class="sd">        560	1.058	30	1.048476621	1.044010516</span>
+<span class="sd">        560	1.105	30	1.085728261	1.078762953</span>
+<span class="sd">        560	1.153	30	1.121643907	1.112831576</span>
+<span class="sd">        560	1.200	30	1.156145484	1.146212895</span>
+<span class="sd">        560	0.300	55	0.233850765	0.375951522</span>
+<span class="sd">        560	0.347	55	0.276411674	0.42581068</span>
+<span class="sd">        560	0.395	55	0.318894505	0.474169633</span>
+<span class="sd">        560	0.442	55	0.361195156	0.52118189</span>
+<span class="sd">        560	0.490	55	0.403330976	0.567095158</span>
+<span class="sd">        560	0.537	55	0.444989656	0.611734997</span>
+<span class="sd">        560	0.584	55	0.486205897	0.655317714</span>
+<span class="sd">        560	0.632	55	0.526944997	0.697909597</span>
+<span class="sd">        560	0.679	55	0.567250334	0.739688579</span>
+<span class="sd">        560	0.726	55	0.606826947	0.78046626</span>
+<span class="sd">        560	0.774	55	0.64576159	0.820403128</span>
+<span class="sd">        560	0.821	55	0.683993536	0.859534072</span>
+<span class="sd">        560	0.868	55	0.721748341	0.898009113</span>
+<span class="sd">        560	0.916	55	0.758652969	0.935618918</span>
+<span class="sd">        560	0.963	55	0.794672719	0.972499554</span>
+<span class="sd">        560	1.010	55	0.829738188	1.008671953</span>
+<span class="sd">        560	1.058	55	0.863858053	1.044254736</span>
+<span class="sd">        560	1.105	55	0.896763378	1.079035084</span>
+<span class="sd">        560	1.153	55	0.928471515	1.113135106</span>
+<span class="sd">        560	1.200	55	0.958869686	1.146551313</span>
+<span class="sd">        500	1.000	0	0.830649092	0.810742502</span>
+<span class="sd">        500	1.000	2.895	0.830649092	0.810742502</span>
+<span class="sd">        500	1.000	5.789	0.830649092	0.810742502</span>
+<span class="sd">        500	1.000	8.684	0.830649092	0.810742502</span>
+<span class="sd">        500	1.000	11.58	0.830067849	0.810745991</span>
+<span class="sd">        500	1.000	14.47	0.827508642	0.810759946</span>
+<span class="sd">        500	1.000	17.37	0.822468306	0.810780879</span>
+<span class="sd">        500	1.000	20.26	0.814435	0.810805301</span>
+<span class="sd">        500	1.000	23.16	0.803200516	0.810833212</span>
+<span class="sd">        500	1.000	26.05	0.789146568	0.810857634</span>
+<span class="sd">        500	1.000	28.95	0.77277632	0.810885545</span>
+<span class="sd">        500	1.000	31.84	0.7549226	0.810913456</span>
+<span class="sd">        500	1.000	34.74	0.736123275	0.810934389</span>
+<span class="sd">        500	1.000	37.63	0.717089717	0.810955322</span>
+<span class="sd">        500	1.000	40.53	0.698108211	0.810976255</span>
+<span class="sd">        500	1.000	43.42	0.67959517	0.81099021</span>
+<span class="sd">        500	1.000	46.32	0.661628672	0.811000677</span>
+<span class="sd">        500	1.000	49.21	0.644434273	0.811004166</span>
+<span class="sd">        500	1.000	52.11	0.627942571	0.811004166</span>
+<span class="sd">        500	1.000	55	0.612283696	0.810993699</span>
+<span class="sd">        560	1.000	0	1.071379353	1.000344067</span>
+<span class="sd">        560	1.000	2.895	1.071379353	1.000344067</span>
+<span class="sd">        560	1.000	5.789	1.071379353	1.000344067</span>
+<span class="sd">        560	1.000	8.684	1.071379353	1.000344067</span>
+<span class="sd">        560	1.000	11.58	1.070589902	1.000347556</span>
+<span class="sd">        560	1.000	14.47	1.067874541	1.000365</span>
+<span class="sd">        560	1.000	17.37	1.062539245	1.000385933</span>
+<span class="sd">        560	1.000	20.26	1.053968072	1.000413844</span>
+<span class="sd">        560	1.000	23.16	1.041831359	1.000445244</span>
+<span class="sd">        560	1.000	26.05	1.026432743	1.000480132</span>
+<span class="sd">        560	1.000	28.95	1.008275388	1.000515021</span>
+<span class="sd">        560	1.000	31.84	0.988226823	1.00054642</span>
+<span class="sd">        560	1.000	34.74	0.966902992	1.000581309</span>
+<span class="sd">        560	1.000	37.63	0.945084671	1.000612709</span>
+<span class="sd">        560	1.000	40.53	0.92313622	1.000640619</span>
+<span class="sd">        560	1.000	43.42	0.901578157	1.00066853</span>
+<span class="sd">        560	1.000	46.32	0.880514584	1.000692952</span>
+<span class="sd">        560	1.000	49.21	0.860240462	1.000710396</span>
+<span class="sd">        560	1.000	52.11	0.840703738	1.000724352</span>
+<span class="sd">        560	1.000	55	0.822069244	1.000731329</span>
+<span class="sd">        580	1.000	0	1.153239266	1.064511</span>
+<span class="sd">        580	1.000	2.895	1.153239266	1.064511</span>
+<span class="sd">        580	1.000	5.789	1.153239266	1.064511</span>
+<span class="sd">        580	1.000	8.684	1.153239266	1.064511</span>
+<span class="sd">        580	1.000	11.58	1.152406439	1.064517978</span>
+<span class="sd">        580	1.000	14.47	1.149621675	1.064531933</span>
+<span class="sd">        580	1.000	17.37	1.144173601	1.064556355</span>
+<span class="sd">        580	1.000	20.26	1.135402896	1.064587755</span>
+<span class="sd">        580	1.000	23.16	1.122953874	1.064619155</span>
+<span class="sd">        580	1.000	26.05	1.107112818	1.064657532</span>
+<span class="sd">        580	1.000	28.95	1.088391571	1.06469242</span>
+<span class="sd">        580	1.000	31.84	1.067648983	1.064730798</span>
+<span class="sd">        580	1.000	34.74	1.045527027	1.064765686</span>
+<span class="sd">        580	1.000	37.63	1.022841178	1.064800575</span>
+<span class="sd">        580	1.000	40.53	0.999964473	1.064835463</span>
+<span class="sd">        580	1.000	43.42	0.977443454	1.064866863</span>
+<span class="sd">        580	1.000	46.32	0.9553909	1.064894774</span>
+<span class="sd">        580	1.000	49.21	0.934119121	1.064915707</span>
+<span class="sd">        580	1.000	52.11	0.913602091	1.06493664</span>
+<span class="sd">        580	1.000	55	0.89400464	1.064947107&quot;&quot;&quot;</span>
+        
+        <span class="c1">#This function is used to parse the above table</span>
+        <span class="k">def</span> <span class="nf">get_x_and_PQ</span><span class="p">(</span><span class="n">raw_data</span><span class="p">):</span>
+            <span class="n">lines</span> <span class="o">=</span> <span class="n">raw_data</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">:]</span>
+            
+            <span class="n">y1</span><span class="o">=</span><span class="p">[]</span> <span class="c1">#W</span>
+            <span class="n">y2</span><span class="o">=</span><span class="p">[]</span> <span class="c1">#Q</span>
+            <span class="n">x</span><span class="o">=</span><span class="p">[[],[],[]]</span> <span class="c1">#Tf,mdot,Tamb</span>
+            
+            <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">:</span>
+                <span class="n">items</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+                <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">):</span>
+                    <span class="n">x</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">items</span><span class="p">[</span><span class="n">j</span><span class="p">]))</span>
+                <span class="n">y1</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">items</span><span class="p">[</span><span class="mi">3</span><span class="p">]))</span>
+                <span class="n">y2</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">items</span><span class="p">[</span><span class="mi">4</span><span class="p">]))</span>
+            <span class="k">return</span> <span class="n">x</span><span class="p">,</span><span class="n">y1</span><span class="p">,</span><span class="n">y2</span>
+        
+        <span class="c1">#parse the Hamilton data</span>
+        <span class="n">x</span><span class="p">,</span><span class="n">raw_P</span><span class="p">,</span><span class="n">raw_Q</span><span class="o">=</span> <span class="n">get_x_and_PQ</span><span class="p">(</span><span class="n">raw_data</span><span class="p">)</span>
+        
+        <span class="c1">#Turn Hamilton Data into Numpy arrays          </span>
+        <span class="n">x</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">raw_P</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">raw_P</span><span class="p">)</span>
+        <span class="n">raw_Q</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">raw_Q</span><span class="p">)</span>
+        
+        <span class="c1">#Add 73K to the hot temperature to match the Westinghouse design point of 633C</span>
+        <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+=</span><span class="mi">73</span> 
+        
+        <span class="k">def</span> <span class="nf">fn</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">,</span><span class="n">c</span><span class="p">,</span><span class="n">d</span><span class="p">,</span>
+               <span class="n">e</span><span class="p">,</span>
+               <span class="n">f</span><span class="p">,</span>
+               <span class="n">g</span><span class="p">,</span>
+               <span class="n">h</span><span class="p">,</span>
+               <span class="n">i</span><span class="p">,</span>
+               <span class="n">j</span>
+               <span class="p">):</span>
+            
+            <span class="n">result</span><span class="o">=</span>  <span class="n">a</span><span class="o">+</span><span class="n">b</span><span class="o">*</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="n">c</span><span class="o">*</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="n">d</span><span class="o">*</span><span class="n">x</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+            <span class="n">result</span><span class="o">+=</span> <span class="n">e</span><span class="o">*</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">result</span><span class="o">+=</span> <span class="n">f</span><span class="o">*</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="n">x</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+            <span class="n">result</span><span class="o">+=</span> <span class="n">g</span><span class="o">*</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">x</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+            <span class="n">result</span><span class="o">+=</span> <span class="n">h</span><span class="o">*</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span>
+            <span class="n">result</span><span class="o">+=</span> <span class="n">i</span><span class="o">*</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span>
+            <span class="n">result</span><span class="o">+=</span><span class="n">j</span><span class="o">*</span><span class="n">x</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span>
+            <span class="k">return</span> <span class="n">result</span>
+        
+        <span class="k">def</span> <span class="nf">find_popt</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">fn</span><span class="p">):</span>
+            <span class="n">popt</span><span class="p">,</span><span class="n">pcov</span><span class="o">=</span><span class="n">curve_fit</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">)</span>
+            <span class="n">predict</span><span class="o">=</span><span class="n">fn</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="o">*</span><span class="n">popt</span><span class="p">)</span>
+            <span class="n">residual</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">((</span><span class="n">y</span><span class="o">-</span><span class="n">predict</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+            <span class="c1"># print(residual)</span>
+            <span class="k">return</span> <span class="n">predict</span><span class="p">,</span><span class="n">popt</span>
+        
+        <span class="n">predict_P</span><span class="p">,</span><span class="n">popt_P</span> <span class="o">=</span> <span class="n">find_popt</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">raw_P</span><span class="p">,</span><span class="n">fn</span><span class="p">)</span>
+        <span class="n">predict_Q</span><span class="p">,</span><span class="n">popt_Q</span> <span class="o">=</span> <span class="n">find_popt</span><span class="p">(</span><span class="n">x</span><span class="p">,</span><span class="n">raw_Q</span><span class="p">,</span><span class="n">fn</span><span class="p">)</span>
+        
+        <span class="n">P</span><span class="o">=</span><span class="p">[]</span>
+        <span class="n">Q</span><span class="o">=</span><span class="p">[]</span>
+        <span class="k">for</span> <span class="n">j</span><span class="p">,</span><span class="n">T_CSP</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">([</span><span class="mi">550</span><span class="p">,</span><span class="mi">633</span><span class="p">]):</span> 
+        
+            <span class="c1">#Proportion of turbine rating delivered by LFR only at full power . Can change   </span>
+            <span class="n">T_amb</span> <span class="o">=</span> <span class="mf">32.44</span> <span class="c1">#C Ambient</span>
+            <span class="n">wec_P</span> <span class="o">=</span> <span class="mf">465.0</span> <span class="c1">#MW LFR electrical power</span>
+            <span class="n">design_P</span> <span class="o">=</span> <span class="n">wec_P</span><span class="o">/</span><span class="n">propn_LFR_flow</span> <span class="c1">#MW </span>
+            <span class="n">T_LFR</span> <span class="o">=</span> <span class="mi">633</span> <span class="c1">#C source: Westinghouse PEPSE</span>
+            <span class="n">pressure</span> <span class="o">=</span> <span class="mi">33</span> <span class="c1">#MPa source: westinghouse</span>
+            
+            <span class="n">mdot_lfr_only</span> <span class="o">=</span> <span class="n">wec_P</span><span class="o">/</span><span class="n">design_P</span> <span class="c1">#mdot at which Salt2Steam kicks in</span>
+            
+            <span class="c1">#Steam properties</span>
+            <span class="n">lfr_steam</span> <span class="o">=</span> <span class="n">IAPWS97</span><span class="p">(</span><span class="n">T</span><span class="o">=</span><span class="n">T_LFR</span><span class="o">+</span><span class="mf">273.15</span><span class="p">,</span><span class="n">P</span><span class="o">=</span><span class="n">pressure</span><span class="p">)</span>
+            <span class="n">csp_steam</span> <span class="o">=</span> <span class="n">IAPWS97</span><span class="p">(</span><span class="n">T</span><span class="o">=</span><span class="n">T_CSP</span><span class="o">+</span><span class="mf">273.15</span><span class="p">,</span><span class="n">P</span><span class="o">=</span><span class="n">pressure</span><span class="p">)</span>
+            
+            <span class="n">y</span><span class="o">=</span><span class="p">[[],[],[]]</span> <span class="c1">#Tf,mdot,T_amb</span>
+            
+            <span class="c1">#Vary mdot to get different P and Q</span>
+            <span class="n">mdots</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.01</span><span class="p">]</span><span class="o">+</span><span class="p">[</span><span class="mf">0.1</span><span class="o">*</span><span class="n">j</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">20</span><span class="p">)]</span>
+            <span class="k">for</span> <span class="n">mdot</span> <span class="ow">in</span> <span class="n">mdots</span><span class="p">:</span>
+                <span class="c1">#calculate the temperature of the hot stream</span>
+                <span class="n">y</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mdot</span><span class="p">)</span>
+                <span class="n">y</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">T_amb</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">mdot</span><span class="o">&lt;=</span><span class="n">mdot_lfr_only</span><span class="p">:</span>
+                    <span class="n">y</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">T_LFR</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="c1">#Mass-flow weighted enthalpy to turbine - then get temperature</span>
+                    <span class="n">h</span> <span class="o">=</span> <span class="p">(</span><span class="n">lfr_steam</span><span class="o">.</span><span class="n">h</span><span class="o">*</span><span class="n">mdot_lfr_only</span><span class="o">+</span><span class="n">csp_steam</span><span class="o">.</span><span class="n">h</span><span class="o">*</span><span class="p">(</span><span class="n">mdot</span><span class="o">-</span><span class="n">mdot_lfr_only</span><span class="p">))</span><span class="o">/</span><span class="n">mdot</span>
+                    <span class="n">T_mix</span> <span class="o">=</span> <span class="n">IAPWS97</span><span class="p">(</span><span class="n">h</span><span class="o">=</span><span class="n">h</span><span class="p">,</span><span class="n">P</span><span class="o">=</span><span class="n">pressure</span><span class="p">)</span><span class="o">.</span><span class="n">T</span><span class="o">-</span><span class="mf">273.15</span>
+                    <span class="n">y</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">T_mix</span><span class="p">)</span>
+            
+        
+            <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+            <span class="n">SAM_gen1</span> <span class="o">=</span> <span class="n">fn</span><span class="p">(</span><span class="n">y</span><span class="p">,</span><span class="o">*</span><span class="n">popt_P</span><span class="p">)</span>
+            <span class="n">SAM_gen2</span> <span class="o">=</span> <span class="n">fn</span><span class="p">(</span><span class="n">y</span><span class="p">,</span><span class="o">*</span><span class="n">popt_Q</span><span class="p">)</span>
+            <span class="n">Q</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">SAM_gen2</span><span class="p">)</span>
+            <span class="n">P</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">SAM_gen1</span><span class="p">)</span>
+        
+        <span class="n">Q</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">Q</span><span class="p">)</span>
+        <span class="n">P</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">P</span><span class="p">)</span> 
+        
+        <span class="k">def</span> <span class="nf">plot_P_and_Q</span><span class="p">(</span><span class="n">P</span><span class="p">,</span><span class="n">Q</span><span class="p">):</span>
+
+            <span class="c1">#Plot a straight line for each case going through mdot=100%</span>
+            <span class="n">m</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">divide</span><span class="p">(</span><span class="n">P</span><span class="p">[:,</span><span class="mi">11</span><span class="p">]</span><span class="o">-</span><span class="n">P</span><span class="p">[:,</span><span class="mi">9</span><span class="p">],</span><span class="n">Q</span><span class="p">[:,</span><span class="mi">11</span><span class="p">]</span><span class="o">-</span><span class="n">Q</span><span class="p">[:,</span><span class="mi">9</span><span class="p">])</span>
+            <span class="n">c</span> <span class="o">=</span> <span class="n">P</span><span class="p">[:,</span><span class="mi">10</span><span class="p">]</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">multiply</span><span class="p">(</span><span class="n">m</span><span class="p">,</span><span class="n">Q</span><span class="p">[:,</span><span class="mi">10</span><span class="p">])</span>
+        
+            <span class="k">return</span> <span class="n">m</span><span class="p">,</span><span class="n">c</span>
+        
+        <span class="n">m</span><span class="p">,</span><span class="n">c</span><span class="o">=</span><span class="n">plot_P_and_Q</span><span class="p">(</span><span class="n">P</span><span class="p">,</span><span class="n">Q</span><span class="p">)</span>
+        
+        <span class="n">Q2</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">Q</span><span class="p">)</span>
+        <span class="n">lfr_steam</span> <span class="o">=</span> <span class="n">IAPWS97</span><span class="p">(</span><span class="n">T</span><span class="o">=</span><span class="mi">633</span><span class="o">+</span><span class="mf">273.15</span><span class="p">,</span><span class="n">P</span><span class="o">=</span><span class="n">pressure</span><span class="p">)</span>
+        <span class="n">lfr_steam_s</span> <span class="o">=</span> <span class="n">lfr_steam</span><span class="o">.</span><span class="n">s</span>
+        
+        <span class="k">def</span> <span class="nf">turbine_outlet</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
+            <span class="c1">#find pressure ratio that gives turbine isentropic efficiency of 90% and outlet T=570C</span>
+            <span class="n">p</span><span class="o">=</span><span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">s2s_steam</span><span class="o">=</span><span class="n">IAPWS97</span><span class="p">(</span><span class="n">T</span><span class="o">=</span><span class="mi">570</span><span class="o">+</span><span class="mf">273.15</span><span class="p">,</span><span class="n">P</span><span class="o">=</span><span class="n">p</span><span class="p">)</span>
+            <span class="n">delta_h_s</span><span class="o">=</span><span class="p">(</span><span class="n">lfr_steam</span><span class="o">.</span><span class="n">h</span><span class="o">-</span><span class="n">s2s_steam</span><span class="o">.</span><span class="n">h</span><span class="p">)</span><span class="o">/</span><span class="mf">0.9</span>
+            <span class="n">s2s_steam_s</span><span class="o">=</span><span class="n">IAPWS97</span><span class="p">(</span><span class="n">h</span><span class="o">=</span><span class="n">lfr_steam</span><span class="o">.</span><span class="n">h</span><span class="o">-</span><span class="n">delta_h_s</span><span class="p">,</span><span class="n">P</span><span class="o">=</span><span class="n">p</span><span class="p">)</span><span class="o">.</span><span class="n">s</span>
+            <span class="k">return</span> <span class="n">s2s_steam_s</span><span class="o">-</span><span class="n">lfr_steam_s</span>
+        
+        <span class="n">p</span><span class="o">=</span><span class="n">fsolve</span><span class="p">(</span><span class="n">turbine_outlet</span><span class="p">,[</span><span class="mi">24</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span>
+        
+        <span class="n">s2s_steam</span> <span class="o">=</span> <span class="n">IAPWS97</span><span class="p">(</span><span class="n">T</span><span class="o">=</span><span class="mi">570</span><span class="o">+</span><span class="mf">273.15</span><span class="p">,</span><span class="n">P</span><span class="o">=</span><span class="n">p</span><span class="p">)</span> <span class="c1">#enthalpy of steam going to salt2steam</span>
+        <span class="n">cond_steam</span> <span class="o">=</span> <span class="n">IAPWS97</span><span class="p">(</span><span class="n">T</span><span class="o">=</span><span class="mi">306</span><span class="p">,</span><span class="n">P</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span> <span class="c1">#enthalpy of steam at turbine exhaust</span>
+        
+        <span class="n">extra_enthalpy</span> <span class="o">=</span> <span class="p">(</span><span class="n">lfr_steam</span><span class="o">.</span><span class="n">h</span><span class="o">-</span><span class="n">s2s_steam</span><span class="o">.</span><span class="n">h</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">lfr_steam</span><span class="o">.</span><span class="n">h</span><span class="o">-</span><span class="n">cond_steam</span><span class="o">.</span><span class="n">h</span><span class="p">)</span> <span class="c1">#the enthalpy that was extracted upstream of steam2salt relative to design point enthalpy</span>
+        
+        <span class="c1">#Now add this to Q2</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="mi">10</span><span class="o">*</span><span class="n">propn_LFR_flow</span><span class="p">)):</span>
+            <span class="n">Q2</span><span class="p">[:,</span><span class="n">j</span><span class="p">]</span><span class="o">+=</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="n">j</span><span class="p">])</span><span class="o">*</span><span class="n">extra_enthalpy</span> <span class="c1">#mass flow weighting (1-x[1][j] is the mass flow through the steam2salt HX)</span>
+        <span class="c1"># print(lfr_steam.h,s2s_steam.h,cond_steam.h,extra_enthalpy)</span>
+        
+        <span class="n">P2</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">P</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="mi">10</span><span class="o">*</span><span class="n">propn_LFR_flow</span><span class="p">)):</span>
+            <span class="n">P2</span><span class="p">[:,</span><span class="n">j</span><span class="p">]</span><span class="o">+=</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">y</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="n">j</span><span class="p">])</span><span class="o">*</span><span class="n">extra_enthalpy</span>
+        
+        <span class="n">m2</span><span class="p">,</span><span class="n">c2</span><span class="o">=</span><span class="n">plot_P_and_Q</span><span class="p">(</span><span class="n">P2</span><span class="p">,</span><span class="n">Q2</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="n">m2</span><span class="p">,</span><span class="n">c2</span></div></div>
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">NE-2 Simulations  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">simulations.util.SSCHelperMethods</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2021, Gabriel J. Soto, Una Baker, Grace Stanke, Ben Lindley, Mike Wagner.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.2.0.
+    </div>
+  </body>
+</html>

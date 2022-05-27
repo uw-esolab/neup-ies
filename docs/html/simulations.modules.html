@@ -1,0 +1,1445 @@
+
+
+<!doctype html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>simulations.modules package &#8212; NE-2 Simulations  documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/bizstyle.css" />
+    
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/bizstyle.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="simulations.outputs package" href="simulations.outputs.html" />
+    <link rel="prev" title="simulations.dispatch package" href="simulations.dispatch.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <!--[if lt IE 9]>
+    <script src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="simulations.outputs.html" title="simulations.outputs package"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="simulations.dispatch.html" title="simulations.dispatch package"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">NE-2 Simulations  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="simulations.html" accesskey="U">simulations package</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">simulations.modules package</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="module-simulations.modules">
+<span id="simulations-modules-package"></span><h1>simulations.modules package<a class="headerlink" href="#module-simulations.modules" title="Permalink to this headline">¶</a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</section>
+<section id="module-simulations.modules.DualIndirectTES">
+<span id="simulations-modules-dualindirecttes-module"></span><h2>simulations.modules.DualIndirectTES module<a class="headerlink" href="#module-simulations.modules.DualIndirectTES" title="Permalink to this headline">¶</a></h2>
+<p>Created on Fri Apr 15 16:28:05 2022</p>
+<p>&#64;author: gabrielsoto</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="simulations.modules.DualIndirectTES.DualIndirectTES">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">simulations.modules.DualIndirectTES.</span></span><span class="sig-name descname"><span class="pre">DualIndirectTES</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">plant_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'nuclear_mspt_indirect_tes'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">json_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'model2'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dual</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">direct</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/modules/DualIndirectTES.html#DualIndirectTES"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.modules.DualIndirectTES.DualIndirectTES" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">modules.SolarTES.SolarTES</span></code></p>
+<p>The DualPlantTES class intializes, updates, and runs SSC simulations through PySAM,
+specifically for the SSC nuclear_mspt_tes module.</p>
+<p>This is meant to simulate the intermediate cycle where the Nuclear and Solar
+plants are both directly connected to the storage tank - power cycle loop.
+That is, the Nuclear and Solar Power Tower heat parallel mass flows
+of molten salt via respective heat exchangers. Each molten salt mass flow
+then routes directly to the hot storage tank where it can be dispatched
+out to the power cycle.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.modules.DualIndirectTES.DualIndirectTES.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">plant_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'nuclear_mspt_indirect_tes'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">json_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'model2'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dual</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">direct</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/modules/DualIndirectTES.html#DualIndirectTES.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.modules.DualIndirectTES.DualIndirectTES.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initializes the DualPlantTES module</p>
+<dl class="simple">
+<dt>Inputs:</dt><dd><p>plant_name (str)         : name of SSC module to run
+json_name (str)          : name of JSON script with input data for module
+is_dispatch (bool)       : boolean, if True runs Pyomo dispatch optimization</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.modules.DualIndirectTES.DualIndirectTES.create_dispatch_params">
+<span class="sig-name descname"><span class="pre">create_dispatch_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Plant</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/modules/DualIndirectTES.html#DualIndirectTES.create_dispatch_params"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.modules.DualIndirectTES.DualIndirectTES.create_dispatch_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Populating a dictionary with dispatch parameters before optimization</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>self.is_dispatch == True
+(Called within simulation)</p>
+</div>
+<p>This method is creates the Dispatch Parameter dictionary that will be
+populated with static inputs from SSC_dict as well as initial conditions
+for Dispatch optimization. The initial conditions are continuously updated
+if simulation is segmented.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>Plant</strong> (<em>obj</em>) – original PySAM Plant module</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>wrapper object for the class that creates dispatch parameters</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dispatch_wrap (obj)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.modules.DualIndirectTES.DualIndirectTES.create_dispatch_wrapper">
+<span class="sig-name descname"><span class="pre">create_dispatch_wrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">PySAM_dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/modules/DualIndirectTES.html#DualIndirectTES.create_dispatch_wrapper"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.modules.DualIndirectTES.DualIndirectTES.create_dispatch_wrapper" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creating a wrapper object for calling a class that creates dispatch parameters</p>
+<p>** self.is_dispatch == True
+(Called in __init__ of NE2 module)</p>
+<p>This method creates an object whose class ultimately calculates and creates
+parameters for Dispatch optimization. The reason this class exists separately
+is that it gets overlaoded based on the PySAM module we are running. Depending on
+the PySAM module, this method calls on a different Dispatch Parameter class that
+is specific to the module.</p>
+<dl class="simple">
+<dt>Inputs:</dt><dd><p>PySAM_dict (dict)   : dictionary of PySAM inputs from a script in /json directory</p>
+</dd>
+<dt>Outputs:</dt><dd><p>dispatch_wrap (obj) : wrapper object for the class that creates dispatch parameters</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.modules.DualIndirectTES.DualIndirectTES.initialize_arrays">
+<span class="sig-name descname"><span class="pre">initialize_arrays</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/modules/DualIndirectTES.html#DualIndirectTES.initialize_arrays"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.modules.DualIndirectTES.DualIndirectTES.initialize_arrays" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initializing empty arrays to log SSC outputs after segment simulations</p>
+<p>This method creates empty arrays where SSC outputs will be written to.
+Also creates a list of str names for logged simulation outputs.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.modules.DualIndirectTES.DualIndirectTES.update_Plant_after_Pyomo">
+<span class="sig-name descname"><span class="pre">update_Plant_after_Pyomo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Plant</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pre_dispatch_run</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/modules/DualIndirectTES.html#DualIndirectTES.update_Plant_after_Pyomo"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.modules.DualIndirectTES.DualIndirectTES.update_Plant_after_Pyomo" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update SSC Plant inputs with Pyomo optimization outputs from current segment simulation</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>self.run_loop    == True (can be called outside loop)
+self.is_dispatch == True</p>
+</div>
+<p>This method uses the optimization results from Pyomo and ensures that
+the next SSC segment uses them throughout the corresponding SSC Horizon.
+SSC normally takes single values for initial conditions (for the first hour
+of the SSC Horizon), but it can also take in an array of values for each
+step in the SSC Horizon. These are called “dispatch_targets”. Steps are:
+(1) extract solutions from Pyomo over the Pyomo Horizon,
+(2) keep the solutions for the shorter SSC Horizon and
+(3) save these “dispatch target” inputs to the Plant object for the
+next SSC simulation segment.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Plant</strong> (<em>obj</em>) – original PySAM Plant module to be updated</p></li>
+<li><p><strong>pre_dispatch_run</strong> (<em>bool</em>) – are we updating the Plant for a pre- or post- dispatch run.
+Recall that we only log post-dispatch Plant runs</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>updated PySAM Plant module</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>Plant (obj)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.modules.DualIndirectTES.DualIndirectTES.update_Plant_after_SSC">
+<span class="sig-name descname"><span class="pre">update_Plant_after_SSC</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/modules/DualIndirectTES.html#DualIndirectTES.update_Plant_after_SSC"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.modules.DualIndirectTES.DualIndirectTES.update_Plant_after_SSC" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update SSC Plant inputs with SSC outputs from previous segment simulation</p>
+<p>** self.run_loop == True</p>
+<p>This method uses the SSC end results from the previous simulation segment
+and sets them as the initial conditions for the next SSC segment. As a
+small note: some outputs are arrays that span the full year, however the
+only relevant parts are the first indeces corresponding to the SSC Horizon.
+All other values are typically 0.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.modules.DualIndirectTES.DualIndirectTES.update_Pyomo_after_SSC">
+<span class="sig-name descname"><span class="pre">update_Pyomo_after_SSC</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Plant</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/modules/DualIndirectTES.html#DualIndirectTES.update_Pyomo_after_SSC"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.modules.DualIndirectTES.DualIndirectTES.update_Pyomo_after_SSC" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update Pyomo inputs with SSC outputs from previous segment simulation</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>self.run_loop    == True
+self.is_dispatch == True</p>
+</div>
+<p>This method uses the SSC end results from the previous simulation segment
+and uses them to update the existing Dispatch parameter dictionary that
+is ultimately sent to Pyomo. Essentially just updates the initial conditions
+of the Dispatch parameter dictionary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Plant</strong> (<em>obj</em>) – original PySAM Plant module</p></li>
+<li><p><strong>params</strong> (<em>dict</em>) – dictionary of Pyomo dispatch parameters</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>updated dictionary of Pyomo dispatch parameters</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>params (dict)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-simulations.modules.DualPlantTES">
+<span id="simulations-modules-dualplanttes-module"></span><h2>simulations.modules.DualPlantTES module<a class="headerlink" href="#module-simulations.modules.DualPlantTES" title="Permalink to this headline">¶</a></h2>
+<p>Created on Tue Nov  2 14:03:51 2021</p>
+<p>&#64;author: gabrielsoto</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="simulations.modules.DualPlantTES.DualPlantTES">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">simulations.modules.DualPlantTES.</span></span><span class="sig-name descname"><span class="pre">DualPlantTES</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">plant_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'nuclear_mspt_tes'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">json_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'model2'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dual</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/modules/DualPlantTES.html#DualPlantTES"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.modules.DualPlantTES.DualPlantTES" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">modules.SolarTES.SolarTES</span></code></p>
+<p>The DualPlantTES class intializes, updates, and runs SSC simulations through PySAM,
+specifically for the SSC nuclear_mspt_tes module.</p>
+<p>This is meant to simulate the intermediate cycle where the Nuclear and Solar
+plants are both directly connected to the storage tank - power cycle loop.
+That is, the Nuclear and Solar Power Tower heat parallel mass flows
+of molten salt via respective heat exchangers. Each molten salt mass flow
+then routes directly to the hot storage tank where it can be dispatched
+out to the power cycle.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.modules.DualPlantTES.DualPlantTES.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">plant_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'nuclear_mspt_tes'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">json_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'model2'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dual</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/modules/DualPlantTES.html#DualPlantTES.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.modules.DualPlantTES.DualPlantTES.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initializes the DualPlantTES module</p>
+<dl class="simple">
+<dt>Inputs:</dt><dd><p>plant_name (str)         : name of SSC module to run
+json_name (str)          : name of JSON script with input data for module
+is_dispatch (bool)       : boolean, if True runs Pyomo dispatch optimization</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.modules.DualPlantTES.DualPlantTES.create_dispatch_params">
+<span class="sig-name descname"><span class="pre">create_dispatch_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Plant</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/modules/DualPlantTES.html#DualPlantTES.create_dispatch_params"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.modules.DualPlantTES.DualPlantTES.create_dispatch_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Populating a dictionary with dispatch parameters before optimization</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>self.is_dispatch == True
+(Called within simulation)</p>
+</div>
+<p>This method is creates the Dispatch Parameter dictionary that will be
+populated with static inputs from SSC_dict as well as initial conditions
+for Dispatch optimization. The initial conditions are continuously updated
+if simulation is segmented.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>Plant</strong> (<em>obj</em>) – original PySAM Plant module</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>wrapper object for the class that creates dispatch parameters</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dispatch_wrap (obj)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.modules.DualPlantTES.DualPlantTES.create_dispatch_wrapper">
+<span class="sig-name descname"><span class="pre">create_dispatch_wrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">PySAM_dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/modules/DualPlantTES.html#DualPlantTES.create_dispatch_wrapper"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.modules.DualPlantTES.DualPlantTES.create_dispatch_wrapper" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creating a wrapper object for calling a class that creates dispatch parameters</p>
+<p>** self.is_dispatch == True
+(Called in __init__ of NE2 module)</p>
+<p>This method creates an object whose class ultimately calculates and creates
+parameters for Dispatch optimization. The reason this class exists separately
+is that it gets overlaoded based on the PySAM module we are running. Depending on
+the PySAM module, this method calls on a different Dispatch Parameter class that
+is specific to the module.</p>
+<dl class="simple">
+<dt>Inputs:</dt><dd><p>PySAM_dict (dict)   : dictionary of PySAM inputs from a script in /json directory</p>
+</dd>
+<dt>Outputs:</dt><dd><p>dispatch_wrap (obj) : wrapper object for the class that creates dispatch parameters</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.modules.DualPlantTES.DualPlantTES.initialize_arrays">
+<span class="sig-name descname"><span class="pre">initialize_arrays</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/modules/DualPlantTES.html#DualPlantTES.initialize_arrays"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.modules.DualPlantTES.DualPlantTES.initialize_arrays" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initializing empty arrays to log SSC outputs after segment simulations</p>
+<p>This method creates empty arrays where SSC outputs will be written to.
+Also creates a list of str names for logged simulation outputs.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.modules.DualPlantTES.DualPlantTES.update_Plant_after_SSC">
+<span class="sig-name descname"><span class="pre">update_Plant_after_SSC</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/modules/DualPlantTES.html#DualPlantTES.update_Plant_after_SSC"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.modules.DualPlantTES.DualPlantTES.update_Plant_after_SSC" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update SSC Plant inputs with SSC outputs from previous segment simulation</p>
+<p>** self.run_loop == True</p>
+<p>This method uses the SSC end results from the previous simulation segment
+and sets them as the initial conditions for the next SSC segment. As a
+small note: some outputs are arrays that span the full year, however the
+only relevant parts are the first indeces corresponding to the SSC Horizon.
+All other values are typically 0.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.modules.DualPlantTES.DualPlantTES.update_Pyomo_after_SSC">
+<span class="sig-name descname"><span class="pre">update_Pyomo_after_SSC</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Plant</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/modules/DualPlantTES.html#DualPlantTES.update_Pyomo_after_SSC"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.modules.DualPlantTES.DualPlantTES.update_Pyomo_after_SSC" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update Pyomo inputs with SSC outputs from previous segment simulation</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>self.run_loop    == True
+self.is_dispatch == True</p>
+</div>
+<p>This method uses the SSC end results from the previous simulation segment
+and uses them to update the existing Dispatch parameter dictionary that
+is ultimately sent to Pyomo. Essentially just updates the initial conditions
+of the Dispatch parameter dictionary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Plant</strong> (<em>obj</em>) – original PySAM Plant module</p></li>
+<li><p><strong>params</strong> (<em>dict</em>) – dictionary of Pyomo dispatch parameters</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>updated dictionary of Pyomo dispatch parameters</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>params (dict)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-simulations.modules.GenericSSCModule">
+<span id="simulations-modules-genericsscmodule-module"></span><h2>simulations.modules.GenericSSCModule module<a class="headerlink" href="#module-simulations.modules.GenericSSCModule" title="Permalink to this headline">¶</a></h2>
+<p>Created on Thu Apr  8 13:40:22 2021</p>
+<p>&#64;author: gabrielsoto</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="simulations.modules.GenericSSCModule.GenericSSCModule">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">simulations.modules.GenericSSCModule.</span></span><span class="sig-name descname"><span class="pre">GenericSSCModule</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">plant_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'abstract'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">json_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'abstract'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dual</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">direct</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_dispatch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dispatch_time_step</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_dispatch_targets</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exec_debug</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exec_timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10.0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/modules/GenericSSCModule.html#GenericSSCModule"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.modules.GenericSSCModule.GenericSSCModule" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></p>
+<p>The GenericSSCModule class works as a way to intialize, update, and
+run SSC simulations through PySAM.</p>
+<p>This class is not meant to be run, but instead work as a parent class
+for all other models including NuclearTES, a future CSP class, etc.</p>
+<p>NOTE: I over-use the word “module” because everything is apparently a module.
+There are three hierarchies of modules at play here:
+- SSC modules   : these are the cmod_&lt;name&gt;.cpp files from the SSC repository written in C++
+- PySAM modules : these are PySAM wrappers for the SSC modules (also Grid, Financial modules, etc.)
+- NE2 modules   : these are Python classes that create PySAM modules (e.g., <em>THIS</em> class)</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.modules.GenericSSCModule.GenericSSCModule.__init__">
+<em class="property"><span class="pre">abstract</span> </em><span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">plant_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'abstract'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">json_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'abstract'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dual</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">direct</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_dispatch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dispatch_time_step</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_dispatch_targets</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exec_debug</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exec_timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10.0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/modules/GenericSSCModule.html#GenericSSCModule.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.modules.GenericSSCModule.GenericSSCModule.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initializes the GenericSSCModules</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>plant_name</strong> (<em>str</em>) – name of SSC module to run</p></li>
+<li><p><strong>json_name</strong> (<em>str</em>) – name of JSON script with input data for module</p></li>
+<li><p><strong>is_dispatch</strong> (<em>bool</em>) – boolean, if True runs Pyomo dispatch optimization</p></li>
+<li><p><strong>dispatch_time_step</strong> (<em>int</em>) – time step for dispatch (hours)</p></li>
+<li><p><strong>log_dispatch_targets</strong> (<em>bool</em>) – boolean, if True logs dispatch targets calculated by Pyomo at each segment</p></li>
+<li><p><strong>exec_debug</strong> (<em>bool</em>) – boolean, allows execution in “debug” mode that times out exec call</p></li>
+<li><p><strong>exec_timeout</strong> (<em>float</em>) – amount of time in seconds to timeout an exec call</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.modules.GenericSSCModule.GenericSSCModule.advance_time_segment">
+<span class="sig-name descname"><span class="pre">advance_time_segment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prev_time_start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prev_time_next</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/modules/GenericSSCModule.html#GenericSSCModule.advance_time_segment"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.modules.GenericSSCModule.GenericSSCModule.advance_time_segment" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to advance time segment to the next horizon</p>
+<p>This method updates the current time segment bookends and slices to
+reflect the next time segment horizon.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>prev_time_start</strong> (<em>float Quant</em>) – starting time of previous time segment</p></li>
+<li><p><strong>prev_time_next</strong> (<em>float Quant</em>) – ending time of previous time segment</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>starting time of current SSC horizon
+time_sscH (float Quant):</p>
+<blockquote>
+<div><p>ending time of current SSC horizon</p>
+</div></blockquote>
+<dl class="simple">
+<dt>time_pyoH (float Quant):</dt><dd><p>ending time of current SSC horizon</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>time_start (float Quant)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.modules.GenericSSCModule.GenericSSCModule.create_Grid">
+<em class="property"><span class="pre">abstract</span> </em><span class="sig-name descname"><span class="pre">create_Grid</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/modules/GenericSSCModule.html#GenericSSCModule.create_Grid"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.modules.GenericSSCModule.GenericSSCModule.create_Grid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to create Grid onuclear_mspt_indirect_tesbject for the first time</p>
+<p>This method creates a Grid object again using built-in PySAM functions.
+The Grid object is created similarly to the Plant object, from SSC inputs
+listed in the SSC_dict. The Grid object, however, is first created
+from the existing Plant object and then the grid-specific input data
+is added to create a wrapper for the SSC Grid module.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.modules.GenericSSCModule.GenericSSCModule.create_Plant">
+<em class="property"><span class="pre">abstract</span> </em><span class="sig-name descname"><span class="pre">create_Plant</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/modules/GenericSSCModule.html#GenericSSCModule.create_Plant"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.modules.GenericSSCModule.GenericSSCModule.create_Plant" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to create Plant object for the first time</p>
+<p>This method creates a Plant object using built-in PySAM functionalities
+(including some former PySSC structures). Essentially, it creates some
+sort of data structure (pointer?) from SSC inputs found in the SSC_dict
+and the specified SSC module. That data structure is then used to create
+a PySAM module for the specified SSC Plant module (TCSMolten_Salt, etc.).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.modules.GenericSSCModule.GenericSSCModule.create_SO">
+<span class="sig-name descname"><span class="pre">create_SO</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/modules/GenericSSCModule.html#GenericSSCModule.create_SO"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.modules.GenericSSCModule.GenericSSCModule.create_SO" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to create SingleOwner object for the first time</p>
+<p>This method creates a Financial object–in this case, the “SingleOwner”
+SSC financial module– using PySAM like before. Similarly to the Grid
+object, the SingleOwner object is created first from the existing
+Plant object and then SingleOwner-specific input data is added to create
+a wrapper for the SSC SingleOwner module.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.modules.GenericSSCModule.GenericSSCModule.create_dispatch_params">
+<em class="property"><span class="pre">abstract</span> </em><span class="sig-name descname"><span class="pre">create_dispatch_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Plant</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/modules/GenericSSCModule.html#GenericSSCModule.create_dispatch_params"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.modules.GenericSSCModule.GenericSSCModule.create_dispatch_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Populating a dictionary with dispatch parameters before optimization</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>self.is_dispatch == True
+(Called within simulation)</p>
+</div>
+<p>This method is creates the Dispatch Parameter dictionary that will be
+populated with static inputs from SSC_dict as well as initial conditions
+for Dispatch optimization. The initial conditions are continuously updated
+if simulation is segmented.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>Plant</strong> (<em>obj</em>) – original PySAM Plant module</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>wrapper object for the class that creates dispatch parameters</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dispatch_wrap (obj)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.modules.GenericSSCModule.GenericSSCModule.create_dispatch_wrapper">
+<em class="property"><span class="pre">abstract</span> </em><span class="sig-name descname"><span class="pre">create_dispatch_wrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">PySAM_dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/modules/GenericSSCModule.html#GenericSSCModule.create_dispatch_wrapper"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.modules.GenericSSCModule.GenericSSCModule.create_dispatch_wrapper" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creating a wrapper object for calling a class that creates dispatch parameters</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>self.is_dispatch == True
+(Called in __init__ of NE2 module)</p>
+</div>
+<p>This method creates an object whose class ultimately calculates and creates
+parameters for Dispatch optimization. The reason this class exists separately
+is that it gets overlaoded based on the PySAM module we are running. Depending on
+the PySAM module, this method calls on a different Dispatch Parameter class that
+is specific to the module.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>PySAM_dict</strong> (<em>dict</em>) – dictionary of PySAM inputs from a script in /json directory</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>wrapper object for the class that creates dispatch parameters</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dispatch_wrap (obj)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.modules.GenericSSCModule.GenericSSCModule.duplicate_Plant">
+<em class="property"><span class="pre">abstract</span> </em><span class="sig-name descname"><span class="pre">duplicate_Plant</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Plant</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/modules/GenericSSCModule.html#GenericSSCModule.duplicate_Plant"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.modules.GenericSSCModule.GenericSSCModule.duplicate_Plant" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to create Plant object as a duplicate of existing Plant</p>
+<p>This method creates a Plant object from an existing Plant. The new
+Plant object will have a copy of the original Plant’s subclasses
+EXCEPT the Output subclass. The two plant’s outputs will NOT be linked.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Currently verified in simulations/scripts/sanity_check_scripts</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>Plant</strong> (<em>obj</em>) – original PySAM Plant module to be copied</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>duplicate PySAM Plant module, unlinked from original</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>newPlant (obj)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.modules.GenericSSCModule.GenericSSCModule.export_results">
+<span class="sig-name descname"><span class="pre">export_results</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/modules/GenericSSCModule.html#GenericSSCModule.export_results"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.modules.GenericSSCModule.GenericSSCModule.export_results" title="Permalink to this definition">¶</a></dt>
+<dd><p>Exports final SSC outputs to a specified Excel file</p>
+<p>This method creates an .xlsx file with SSC output data from the full simulation.
+Outputs are specified by keywords in the JSON script supplied by the user.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>filename</strong> (<em>str</em>) – name of xlsx file to save results to within /output directory</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.modules.GenericSSCModule.GenericSSCModule.generate_hash">
+<em class="property"><span class="pre">abstract</span> </em><span class="sig-name descname"><span class="pre">generate_hash</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/modules/GenericSSCModule.html#GenericSSCModule.generate_hash"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.modules.GenericSSCModule.GenericSSCModule.generate_hash" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to create unique hash for given JSON inputs</p>
+<p>This method creates a unique, permanent hash for a given JSON script.
+That is, it gathers all of the JSON inputs (including SSC and PySAM inputs)
+from the designated script and converts both their keynames and values
+to strings. It collects all of these into a single string variable and
+then creates a new hexadecimal string or “hash” for that giant string.
+This serves as a unique identifier or “fingerprint” for all the values
+in the JSON script. This is then used later on as the file name containing
+outputs from this particular run. Any small changes to the JSON script
+will result in a drastically different hash, and therefore a new output file.
+If a simulation has already been run with the given JSON script, it can
+just pull results from the already created hash file instead of needlessly
+repeating the simulation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><p>if True, a hash file currently exists with all given JSON inputs
+filepath (str):</p>
+<blockquote>
+<div><p>absolute filepath to the hash file in outputs directory</p>
+</div></blockquote>
+</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>hash_exists (bool)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.modules.GenericSSCModule.GenericSSCModule.initialize_arrays">
+<em class="property"><span class="pre">abstract</span> </em><span class="sig-name descname"><span class="pre">initialize_arrays</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/modules/GenericSSCModule.html#GenericSSCModule.initialize_arrays"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.modules.GenericSSCModule.GenericSSCModule.initialize_arrays" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initializing empty arrays to log SSC outputs after segment simulations</p>
+<p>This method creates empty arrays where SSC outputs will be written to.
+Also creates a list of str names for logged simulation outputs.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.modules.GenericSSCModule.GenericSSCModule.initialize_time_elements">
+<span class="sig-name descname"><span class="pre">initialize_time_elements</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/modules/GenericSSCModule.html#GenericSSCModule.initialize_time_elements"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.modules.GenericSSCModule.GenericSSCModule.initialize_time_elements" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to initialize time elements</p>
+<p>This method initiliazes start and end times for full simulation and
+conducts logic for end of next time segment (could be SSC horizon, or
+could be end time).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><p>starting time of current SSC horizon
+time_sscH (float Quant):</p>
+<blockquote>
+<div><p>ending time of current SSC horizon</p>
+</div></blockquote>
+</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>time_start (float Quant)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.modules.GenericSSCModule.GenericSSCModule.initialize_time_slices">
+<span class="sig-name descname"><span class="pre">initialize_time_slices</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time_start</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/modules/GenericSSCModule.html#GenericSSCModule.initialize_time_slices"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.modules.GenericSSCModule.GenericSSCModule.initialize_time_slices" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to advance time segment to the next horizon</p>
+<p>This method updates the current time segment bookends and slices to
+reflect the next time segment horizon.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>time_start</strong> (<em>float Quant</em>) – starting time of current SSC horizon</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.modules.GenericSSCModule.GenericSSCModule.log_SSC_arrays">
+<span class="sig-name descname"><span class="pre">log_SSC_arrays</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">log_final</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/modules/GenericSSCModule.html#GenericSSCModule.log_SSC_arrays"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.modules.GenericSSCModule.GenericSSCModule.log_SSC_arrays" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creating a wrapper object for calling a class that creates dispatch parameters</p>
+<p>This method logs SSC outputs if we choose to run a segmented simulation in a loop.
+Normally (if log_final == False) it saves outputs to arrays that are members of the
+GenericSSCModule class; these are previously initialized to 0. (If log_final == True)
+the method gets all the previously logged and filled arrays from the segmented simulation
+and saves it to the Plant object which is a member class of GenericSSCModule. The Plant
+member class gets a “dummy” subclass made from an empty lambda function but works as a
+class with attributes saved to it.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>log_final</strong> (<em>bool</em>) – if true, save full outputs to Plant. else, log to member arrays of Plant</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.modules.GenericSSCModule.GenericSSCModule.reset_all">
+<span class="sig-name descname"><span class="pre">reset_all</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/modules/GenericSSCModule.html#GenericSSCModule.reset_all"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.modules.GenericSSCModule.GenericSSCModule.reset_all" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reset SSC submodules</p>
+<p>This method resets all PySAM wrappers, deleting them from this NE2 class.
+Primarily done for unit testing, but could also have use if running
+simulations in parallel.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.modules.GenericSSCModule.GenericSSCModule.run_Plant_through_SSC">
+<span class="sig-name descname"><span class="pre">run_Plant_through_SSC</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Plant</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_hr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_hr</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/modules/GenericSSCModule.html#GenericSSCModule.run_Plant_through_SSC"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.modules.GenericSSCModule.GenericSSCModule.run_Plant_through_SSC" title="Permalink to this definition">¶</a></dt>
+<dd><p>Simulation of Plant through SSC for given times</p>
+<p>This method strictly executes the Plant object in SSC through the PySAM
+wrapper. It updates the start and end times of the simulation in case
+we are running a subsequent segment of the simulation but also handles
+full, un-segmented simulations. If running in segments, it stores outputs
+to member attributes of this NE2 module.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Plant</strong> (<em>obj</em>) – original PySAM Plant module to be executed</p></li>
+<li><p><strong>start_hr</strong> (<em>float Quant</em>) – starting time for next simulation (hours)</p></li>
+<li><p><strong>end_hr</strong> (<em>float Quant</em>) – ending time for next simulation (hours)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>True if SSC execution is successful
+Plant (obj):</p>
+<blockquote>
+<div><p>original PySAM Plant module after execution</p>
+</div></blockquote>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>exec_success (bool)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.modules.GenericSSCModule.GenericSSCModule.run_pyomo">
+<em class="property"><span class="pre">abstract</span> </em><span class="sig-name descname"><span class="pre">run_pyomo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/modules/GenericSSCModule.html#GenericSSCModule.run_pyomo"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.modules.GenericSSCModule.GenericSSCModule.run_pyomo" title="Permalink to this definition">¶</a></dt>
+<dd><p>Running Pyomo dispatch optimization</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>self.is_dispatch == True</p>
+</div>
+<p>This method strictly runs the Pyomo optimization before execution of an
+SSC segment. It creates a new Dispatch model for the segment, solves it,
+then returns results. Results are stored in a dictionary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>params</strong> (<em>dict</em>) – dictionary of Pyomo dispatch parameters</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.modules.GenericSSCModule.GenericSSCModule.run_sim">
+<span class="sig-name descname"><span class="pre">run_sim</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">run_loop</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">export</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'temp.csv'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overwrite_dispatch_targets</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/modules/GenericSSCModule.html#GenericSSCModule.run_sim"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.modules.GenericSSCModule.GenericSSCModule.run_sim" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to run single simulation for Generic System</p>
+<p>This method handles the creating and execution of Plant, Grid, and Financial objects to
+run through SSC. The Plant has an optional boolean input to allow the running of a full
+simulation in a segmented loop.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>run_loop</strong> (<em>bool</em>) – if true, runs simulation in segments. else, runs simulation all at once</p></li>
+<li><p><strong>export</strong> (<em>bool</em>) – if true, exports results to an Excel sheet</p></li>
+<li><p><strong>filename</strong> (<em>str</em>) – name for Excel sheet saved to the /outputs directory</p></li>
+<li><p><strong>overwrite_dispatch_targets</strong> (<em>bool</em>) – if true, overwrites the current stored dispatch target file</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.modules.GenericSSCModule.GenericSSCModule.simulate_Plant">
+<span class="sig-name descname"><span class="pre">simulate_Plant</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/modules/GenericSSCModule.html#GenericSSCModule.simulate_Plant"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.modules.GenericSSCModule.GenericSSCModule.simulate_Plant" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to run full simulation of Plant</p>
+<p>This method is a sub-section of the run_sim() method in that it handles the
+execution of <em>JUST</em> the Plant object simulation. However, this constitutes most
+of the SSC computational cost. Namely, this method carries out the setup steps
+and calls a method to execute the Plant in SSC through the PySAM wrapper.</p>
+<dl class="simple">
+<dt>Major features:</dt><dd><ol class="arabic simple">
+<li><dl class="simple">
+<dt>“run_loop” (bool) - We can choose to run the simulation all at once,</dt><dd><p>or run it in segments defined by our “SSC Horizon” defined in the
+JSON script.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>“is_dispatch” (bool) - We can also choose to run Dispatch optimization</dt><dd><p>through a Python package called Pyomo, then use those results to
+update our SSC inputs.</p>
+</dd>
+</dl>
+</li>
+</ol>
+</dd>
+</dl>
+<p>The Pyomo optimization is generally conducted over a “Pyomo Horizon” longer than
+the SSC Horizon, but results are only kept for that SSC Horizon to use in the next
+simulation segment.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.modules.GenericSSCModule.GenericSSCModule.store_csv_arrays">
+<em class="property"><span class="pre">abstract</span> </em><span class="sig-name descname"><span class="pre">store_csv_arrays</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/modules/GenericSSCModule.html#GenericSSCModule.store_csv_arrays"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.modules.GenericSSCModule.GenericSSCModule.store_csv_arrays" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to get data from specified csv files and store in class</p>
+<p>This method uses the designated PySAM inputs from a JSON script to extract
+csv arrays for use in SSC. The PySAM inputs used here are relative filepaths
+to find the respective csv files. We then either save the filepath as a variable
+or extract the data from the named csv file and save it to as a member attribute
+of this NE2 module class.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>input_dict</strong> (<em>dict</em>) – dictionary with csc relative filepaths</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.modules.GenericSSCModule.GenericSSCModule.update_Plant_after_Pyomo">
+<em class="property"><span class="pre">abstract</span> </em><span class="sig-name descname"><span class="pre">update_Plant_after_Pyomo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Plant</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pre_dispatch_run</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/modules/GenericSSCModule.html#GenericSSCModule.update_Plant_after_Pyomo"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.modules.GenericSSCModule.GenericSSCModule.update_Plant_after_Pyomo" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update SSC Plant inputs with Pyomo optimization outputs from current segment simulation</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>self.run_loop    == True (can be called outside loop)
+self.is_dispatch == True</p>
+</div>
+<p>This method uses the optimization results from Pyomo and ensures that
+the next SSC segment uses them throughout the corresponding SSC Horizon.
+SSC normally takes single values for initial conditions (for the first hour
+of the SSC Horizon), but it can also take in an array of values for each
+step in the SSC Horizon. These are called “dispatch_targets”. Steps are:
+(1) extract solutions from Pyomo over the Pyomo Horizon,
+(2) keep the solutions for the shorter SSC Horizon and
+(3) save these “dispatch target” inputs to the Plant object for the
+next SSC simulation segment.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Plant</strong> (<em>obj</em>) – original PySAM Plant module to be updated</p></li>
+<li><p><strong>pre_dispatch_run</strong> (<em>bool</em>) – are we updating the Plant for a pre- or post- dispatch run.
+Recall that we only log post-dispatch Plant runs</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>updated PySAM Plant module</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>Plant (obj)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.modules.GenericSSCModule.GenericSSCModule.update_Plant_after_SSC">
+<span class="sig-name descname"><span class="pre">update_Plant_after_SSC</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/modules/GenericSSCModule.html#GenericSSCModule.update_Plant_after_SSC"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.modules.GenericSSCModule.GenericSSCModule.update_Plant_after_SSC" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update SSC Plant inputs with SSC outputs from previous segment simulation</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>self.run_loop == True</p>
+</div>
+<p>This method uses the SSC end results from the previous simulation segment
+and sets them as the initial conditions for the next SSC segment. As a
+small note: some outputs are arrays that span the full year, however the
+only relevant parts are the first indeces corresponding to the SSC Horizon.
+All other values are typically 0.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.modules.GenericSSCModule.GenericSSCModule.update_Pyomo_after_SSC">
+<em class="property"><span class="pre">abstract</span> </em><span class="sig-name descname"><span class="pre">update_Pyomo_after_SSC</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Plant</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/modules/GenericSSCModule.html#GenericSSCModule.update_Pyomo_after_SSC"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.modules.GenericSSCModule.GenericSSCModule.update_Pyomo_after_SSC" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update Pyomo inputs with SSC outputs from previous segment simulation</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>self.run_loop    == True
+self.is_dispatch == True</p>
+</div>
+<p>This method uses the SSC end results from the previous simulation segment
+and uses them to update the existing Dispatch parameter dictionary that
+is ultimately sent to Pyomo. Essentially just updates the initial conditions
+of the Dispatch parameter dictionary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Plant</strong> (<em>obj</em>) – original PySAM Plant module</p></li>
+<li><p><strong>params</strong> (<em>dict</em>) – dictionary of Pyomo dispatch parameters</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>updated dictionary of Pyomo dispatch parameters</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>params (dict)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-simulations.modules.IndirectNuclearTES">
+<span id="simulations-modules-indirectnucleartes-module"></span><h2>simulations.modules.IndirectNuclearTES module<a class="headerlink" href="#module-simulations.modules.IndirectNuclearTES" title="Permalink to this headline">¶</a></h2>
+<p>Created on Fri Apr  8 16:58:30 2022</p>
+<p>&#64;author: gabrielsoto</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="simulations.modules.IndirectNuclearTES.IndirectNuclearTES">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">simulations.modules.IndirectNuclearTES.</span></span><span class="sig-name descname"><span class="pre">IndirectNuclearTES</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">plant_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'nuclear_mspt_indirect_tes'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">json_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'model1'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/modules/IndirectNuclearTES.html#IndirectNuclearTES"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.modules.IndirectNuclearTES.IndirectNuclearTES" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">modules.NuclearTES.NuclearTES</span></code></p>
+<p>The IndirectNuclearTES class intializes, updates, and runs SSC simulations through PySAM,
+specifically for the SSC tcsmolten_salt module.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.modules.IndirectNuclearTES.IndirectNuclearTES.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">plant_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'nuclear_mspt_indirect_tes'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">json_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'model1'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/modules/IndirectNuclearTES.html#IndirectNuclearTES.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.modules.IndirectNuclearTES.IndirectNuclearTES.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initializes the SolarTES module</p>
+<dl class="simple">
+<dt>Inputs:</dt><dd><p>plant_name (str)         : name of SSC module to run
+json_name (str)          : name of JSON script with input data for module
+is_dispatch (bool)       : boolean, if True runs Pyomo dispatch optimization</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.modules.IndirectNuclearTES.IndirectNuclearTES.create_dispatch_params">
+<span class="sig-name descname"><span class="pre">create_dispatch_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Plant</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/modules/IndirectNuclearTES.html#IndirectNuclearTES.create_dispatch_params"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.modules.IndirectNuclearTES.IndirectNuclearTES.create_dispatch_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Populating a dictionary with dispatch parameters before optimization</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>self.is_dispatch == True
+(Called within simulation)</p>
+</div>
+<p>This method is creates the Dispatch Parameter dictionary that will be
+populated with static inputs from SSC_dict as well as initial conditions
+for Dispatch optimization. The initial conditions are continuously updated
+if simulation is segmented.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>Plant</strong> (<em>obj</em>) – original PySAM Plant module</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>wrapper object for the class that creates dispatch parameters</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dispatch_wrap (obj)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.modules.IndirectNuclearTES.IndirectNuclearTES.create_dispatch_wrapper">
+<span class="sig-name descname"><span class="pre">create_dispatch_wrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">PySAM_dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/modules/IndirectNuclearTES.html#IndirectNuclearTES.create_dispatch_wrapper"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.modules.IndirectNuclearTES.IndirectNuclearTES.create_dispatch_wrapper" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creating a wrapper object for calling a class that creates dispatch parameters</p>
+<p>** self.is_dispatch == True
+(Called in __init__ of NE2 module)</p>
+<p>This method creates an object whose class ultimately calculates and creates
+parameters for Dispatch optimization. The reason this class exists separately
+is that it gets overlaoded based on the PySAM module we are running. Depending on
+the PySAM module, this method calls on a different Dispatch Parameter class that
+is specific to the module.</p>
+<dl class="simple">
+<dt>Inputs:</dt><dd><p>PySAM_dict (dict)   : dictionary of PySAM inputs from a script in /json directory</p>
+</dd>
+<dt>Outputs:</dt><dd><p>dispatch_wrap (obj) : wrapper object for the class that creates dispatch parameters</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.modules.IndirectNuclearTES.IndirectNuclearTES.initialize_arrays">
+<span class="sig-name descname"><span class="pre">initialize_arrays</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/modules/IndirectNuclearTES.html#IndirectNuclearTES.initialize_arrays"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.modules.IndirectNuclearTES.IndirectNuclearTES.initialize_arrays" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initializing empty arrays to log SSC outputs after segment simulations</p>
+<p>This method creates empty arrays where SSC outputs will be written to.
+Also creates a list of str names for logged simulation outputs.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.modules.IndirectNuclearTES.IndirectNuclearTES.update_Plant_after_Pyomo">
+<span class="sig-name descname"><span class="pre">update_Plant_after_Pyomo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Plant</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pre_dispatch_run</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/modules/IndirectNuclearTES.html#IndirectNuclearTES.update_Plant_after_Pyomo"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.modules.IndirectNuclearTES.IndirectNuclearTES.update_Plant_after_Pyomo" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update SSC Plant inputs with Pyomo optimization outputs from current segment simulation</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>self.run_loop    == True (can be called outside loop)
+self.is_dispatch == True</p>
+</div>
+<p>This method uses the optimization results from Pyomo and ensures that
+the next SSC segment uses them throughout the corresponding SSC Horizon.
+SSC normally takes single values for initial conditions (for the first hour
+of the SSC Horizon), but it can also take in an array of values for each
+step in the SSC Horizon. These are called “dispatch_targets”. Steps are:
+(1) extract solutions from Pyomo over the Pyomo Horizon,
+(2) keep the solutions for the shorter SSC Horizon and
+(3) save these “dispatch target” inputs to the Plant object for the
+next SSC simulation segment.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Plant</strong> (<em>obj</em>) – original PySAM Plant module to be updated</p></li>
+<li><p><strong>pre_dispatch_run</strong> (<em>bool</em>) – are we updating the Plant for a pre- or post- dispatch run.
+Recall that we only log post-dispatch Plant runs</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>updated PySAM Plant module</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>Plant (obj)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-simulations.modules.NuclearTES">
+<span id="simulations-modules-nucleartes-module"></span><h2>simulations.modules.NuclearTES module<a class="headerlink" href="#module-simulations.modules.NuclearTES" title="Permalink to this headline">¶</a></h2>
+<p>Created on Thu Apr  8 13:44:30 2021</p>
+<p>&#64;author: gabrielsoto</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="simulations.modules.NuclearTES.NuclearTES">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">simulations.modules.NuclearTES.</span></span><span class="sig-name descname"><span class="pre">NuclearTES</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">plant_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'nuclear_tes'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">json_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'model1'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/modules/NuclearTES.html#NuclearTES"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.modules.NuclearTES.NuclearTES" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">modules.GenericSSCModule.GenericSSCModule</span></code></p>
+<p>The NuclearTES class intializes, updates, and runs SSC simulations through PySAM,
+specifically for the SSC NuclearTES module.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.modules.NuclearTES.NuclearTES.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">plant_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'nuclear_tes'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">json_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'model1'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/modules/NuclearTES.html#NuclearTES.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.modules.NuclearTES.NuclearTES.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initializes the NuclearTES module</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>plant_name</strong> (<em>str</em>) – name of SSC module to run</p></li>
+<li><p><strong>json_name</strong> (<em>str</em>) – name of JSON script with input data for module</p></li>
+<li><p><strong>is_dispatch</strong> (<em>bool</em>) – boolean, if True runs Pyomo dispatch optimization</p></li>
+<li><p><strong>log_dispatch_targets</strong> (<em>bool</em>) – boolean, if True logs dispatch targets calculated by Pyomo at each segment</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.modules.NuclearTES.NuclearTES.create_Grid">
+<span class="sig-name descname"><span class="pre">create_Grid</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/modules/NuclearTES.html#NuclearTES.create_Grid"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.modules.NuclearTES.NuclearTES.create_Grid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to create Grid object for the first time</p>
+<p>This method creates a Grid object again using built-in PySAM functions.
+The Grid object is created similarly to the Plant object, from SSC inputs
+listed in the SSC_dict. The Grid object, however, is first created
+from the existing Plant object and then the grid-specific input data
+is added to create a wrapper for the SSC Grid module.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.modules.NuclearTES.NuclearTES.create_Plant">
+<span class="sig-name descname"><span class="pre">create_Plant</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/modules/NuclearTES.html#NuclearTES.create_Plant"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.modules.NuclearTES.NuclearTES.create_Plant" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to create Plant object for the first time</p>
+<p>This method creates a Plant object using built-in PySAM functionalities
+(including some former PySSC structures). Essentially, it creates some
+sort of data structure (pointer?) from SSC inputs found in the SSC_dict
+and the specified SSC module. That data structure is then used to create
+a PySAM module for the specified SSC Plant module (TCSMolten_Salt, etc.).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.modules.NuclearTES.NuclearTES.create_dispatch_params">
+<span class="sig-name descname"><span class="pre">create_dispatch_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Plant</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/modules/NuclearTES.html#NuclearTES.create_dispatch_params"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.modules.NuclearTES.NuclearTES.create_dispatch_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Populating a dictionary with dispatch parameters before optimization</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>self.is_dispatch == True
+(Called within simulation)</p>
+</div>
+<p>This method is creates the Dispatch Parameter dictionary that will be
+populated with static inputs from SSC_dict as well as initial conditions
+for Dispatch optimization. The initial conditions are continuously updated
+if simulation is segmented.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>Plant</strong> (<em>obj</em>) – original PySAM Plant module</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>wrapper object for the class that creates dispatch parameters</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dispatch_wrap (obj)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.modules.NuclearTES.NuclearTES.create_dispatch_wrapper">
+<span class="sig-name descname"><span class="pre">create_dispatch_wrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">PySAM_dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/modules/NuclearTES.html#NuclearTES.create_dispatch_wrapper"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.modules.NuclearTES.NuclearTES.create_dispatch_wrapper" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creating a wrapper object for calling a class that creates dispatch parameters</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>self.is_dispatch == True
+(Called in __init__ of NE2 module)</p>
+</div>
+<p>This method creates an object whose class ultimately calculates and creates
+parameters for Dispatch optimization. The reason this class exists separately
+is that it gets overlaoded based on the PySAM module we are running. Depending on
+the PySAM module, this method calls on a different Dispatch Parameter class that
+is specific to the module.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>PySAM_dict</strong> (<em>dict</em>) – dictionary of PySAM inputs from a script in /json directory</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>wrapper object for the class that creates dispatch parameters</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dispatch_wrap (obj)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.modules.NuclearTES.NuclearTES.duplicate_Plant">
+<span class="sig-name descname"><span class="pre">duplicate_Plant</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Plant</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/modules/NuclearTES.html#NuclearTES.duplicate_Plant"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.modules.NuclearTES.NuclearTES.duplicate_Plant" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to create Plant object as a duplicate of existing Plant</p>
+<p>This method creates a Plant object from an existing Plant. The new
+Plant object will have a copy of the original Plant’s subclasses
+EXCEPT the Output subclass. The two plant’s outputs will NOT be linked.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Verified in simulations/scripts/sanity_check_scripts</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>Plant</strong> (<em>obj</em>) – original PySAM Plant module to be copied</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>duplicate PySAM Plant module, unlinked from original</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>newPlant (obj)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.modules.NuclearTES.NuclearTES.generate_hash">
+<span class="sig-name descname"><span class="pre">generate_hash</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/modules/NuclearTES.html#NuclearTES.generate_hash"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.modules.NuclearTES.NuclearTES.generate_hash" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to create unique hash for given JSON inputs</p>
+<p>This method creates a unique, permanent hash for a given JSON script.
+That is, it gathers all of the JSON inputs (including SSC and PySAM inputs)
+from the designated script and converts both their keynames and values
+to strings. It collects all of these into a single string variable and
+then creates a new hexadecimal string or “hash” for that giant string.
+This serves as a unique identifier or “fingerprint” for all the values
+in the JSON script. This is then used later on as the file name containing
+outputs from this particular run. Any small changes to the JSON script
+will result in a drastically different hash, and therefore a new output file.
+If a simulation has already been run with the given JSON script, it can
+just pull results from the already created hash file instead of needlessly
+repeating the simulation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><p>if True, a hash file currently exists with all given JSON inputs
+filepath (str):</p>
+<blockquote>
+<div><p>absolute filepath to the hash file in outputs directory</p>
+</div></blockquote>
+</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>hash_exists (bool)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.modules.NuclearTES.NuclearTES.initialize_arrays">
+<span class="sig-name descname"><span class="pre">initialize_arrays</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/modules/NuclearTES.html#NuclearTES.initialize_arrays"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.modules.NuclearTES.NuclearTES.initialize_arrays" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initializing empty arrays to log SSC outputs after segment simulations</p>
+<p>This method creates empty arrays where SSC outputs will be written to.
+Also creates a list of str names for logged simulation outputs.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.modules.NuclearTES.NuclearTES.run_pyomo">
+<span class="sig-name descname"><span class="pre">run_pyomo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/modules/NuclearTES.html#NuclearTES.run_pyomo"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.modules.NuclearTES.NuclearTES.run_pyomo" title="Permalink to this definition">¶</a></dt>
+<dd><p>Running Pyomo dispatch optimization</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>self.is_dispatch == True</p>
+</div>
+<p>This method strictly runs the Pyomo optimization before execution of an
+SSC segment. It creates a new Dispatch model for the segment, solves it,
+then returns results. Results are stored in a dictionary. Help with failure
+modes was found through here: <a class="reference external" href="https://www.pyomo.org/blog/2015/1/8/accessing-solver">https://www.pyomo.org/blog/2015/1/8/accessing-solver</a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>params</strong> (<em>dict</em>) – dictionary of Pyomo dispatch parameters</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>if dispatch model was solved successfully, returns True</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dispatch_success (bool)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.modules.NuclearTES.NuclearTES.store_csv_arrays">
+<span class="sig-name descname"><span class="pre">store_csv_arrays</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/modules/NuclearTES.html#NuclearTES.store_csv_arrays"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.modules.NuclearTES.NuclearTES.store_csv_arrays" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to get data from specified csv files and store in class</p>
+<p>This method uses the designated PySAM inputs from a JSON script to extract
+csv arrays for use in SSC. The PySAM inputs used here are relative filepaths
+to find the respective csv files. We then either save the filepath as a variable
+or extract the data from the named csv file and save it to as a member attribute
+of this NE2 module class.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>input_dict</strong> (<em>dict</em>) – dictionary with csv relative filepaths</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.modules.NuclearTES.NuclearTES.update_Plant_after_Pyomo">
+<span class="sig-name descname"><span class="pre">update_Plant_after_Pyomo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Plant</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pre_dispatch_run</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/modules/NuclearTES.html#NuclearTES.update_Plant_after_Pyomo"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.modules.NuclearTES.NuclearTES.update_Plant_after_Pyomo" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update SSC Plant inputs with Pyomo optimization outputs from current segment simulation</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>self.run_loop    == True (can be called outside loop)
+self.is_dispatch == True</p>
+</div>
+<p>This method uses the optimization results from Pyomo and ensures that
+the next SSC segment uses them throughout the corresponding SSC Horizon.
+SSC normally takes single values for initial conditions (for the first hour
+of the SSC Horizon), but it can also take in an array of values for each
+step in the SSC Horizon. These are called “dispatch_targets”. Steps are:
+(1) extract solutions from Pyomo over the Pyomo Horizon,
+(2) keep the solutions for the shorter SSC Horizon and
+(3) save these “dispatch target” inputs to the Plant object for the
+next SSC simulation segment.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Plant</strong> (<em>obj</em>) – original PySAM Plant module to be updated</p></li>
+<li><p><strong>pre_dispatch_run</strong> (<em>bool</em>) – are we updating the Plant for a pre- or post- dispatch run.
+Recall that we only log post-dispatch Plant runs</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>updated PySAM Plant module</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>Plant (obj)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.modules.NuclearTES.NuclearTES.update_Pyomo_after_SSC">
+<span class="sig-name descname"><span class="pre">update_Pyomo_after_SSC</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Plant</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/modules/NuclearTES.html#NuclearTES.update_Pyomo_after_SSC"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.modules.NuclearTES.NuclearTES.update_Pyomo_after_SSC" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update Pyomo inputs with SSC outputs from previous segment simulation</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>self.run_loop    == True
+self.is_dispatch == True</p>
+</div>
+<p>This method uses the SSC end results from the previous simulation segment
+and uses them to update the existing Dispatch parameter dictionary that
+is ultimately sent to Pyomo. Essentially just updates the initial conditions
+of the Dispatch parameter dictionary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Plant</strong> (<em>obj</em>) – original PySAM Plant module</p></li>
+<li><p><strong>params</strong> (<em>dict</em>) – dictionary of Pyomo dispatch parameters</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>updated dictionary of Pyomo dispatch parameters</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>params (dict)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-simulations.modules.SolarTES">
+<span id="simulations-modules-solartes-module"></span><h2>simulations.modules.SolarTES module<a class="headerlink" href="#module-simulations.modules.SolarTES" title="Permalink to this headline">¶</a></h2>
+<p>Created on Fri Jul 16 13:49:24 2021</p>
+<p>&#64;author: gabrielsoto</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="simulations.modules.SolarTES.SolarTES">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">simulations.modules.SolarTES.</span></span><span class="sig-name descname"><span class="pre">SolarTES</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">plant_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'tcsmolten_salt'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">json_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'model_solarTES'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/modules/SolarTES.html#SolarTES"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.modules.SolarTES.SolarTES" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">modules.IndirectNuclearTES.IndirectNuclearTES</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">modules.NuclearTES.NuclearTES</span></code></p>
+<p>The SolarTES class intializes, updates, and runs SSC simulations through PySAM,
+specifically for the SSC tcsmolten_salt module.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.modules.SolarTES.SolarTES.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">plant_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'tcsmolten_salt'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">json_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'model_solarTES'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/modules/SolarTES.html#SolarTES.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.modules.SolarTES.SolarTES.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initializes the SolarTES module</p>
+<dl class="simple">
+<dt>Inputs:</dt><dd><p>plant_name (str)         : name of SSC module to run
+json_name (str)          : name of JSON script with input data for module
+is_dispatch (bool)       : boolean, if True runs Pyomo dispatch optimization</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.modules.SolarTES.SolarTES.create_dispatch_params">
+<span class="sig-name descname"><span class="pre">create_dispatch_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Plant</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/modules/SolarTES.html#SolarTES.create_dispatch_params"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.modules.SolarTES.SolarTES.create_dispatch_params" title="Permalink to this definition">¶</a></dt>
+<dd><p>Populating a dictionary with dispatch parameters before optimization</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>self.is_dispatch == True
+(Called within simulation)</p>
+</div>
+<p>This method is creates the Dispatch Parameter dictionary that will be
+populated with static inputs from SSC_dict as well as initial conditions
+for Dispatch optimization. The initial conditions are continuously updated
+if simulation is segmented.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>Plant</strong> (<em>obj</em>) – original PySAM Plant module</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>wrapper object for the class that creates dispatch parameters</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dispatch_wrap (obj)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.modules.SolarTES.SolarTES.create_dispatch_wrapper">
+<span class="sig-name descname"><span class="pre">create_dispatch_wrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">PySAM_dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/modules/SolarTES.html#SolarTES.create_dispatch_wrapper"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.modules.SolarTES.SolarTES.create_dispatch_wrapper" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creating a wrapper object for calling a class that creates dispatch parameters</p>
+<p>** self.is_dispatch == True
+(Called in __init__ of NE2 module)</p>
+<p>This method creates an object whose class ultimately calculates and creates
+parameters for Dispatch optimization. The reason this class exists separately
+is that it gets overlaoded based on the PySAM module we are running. Depending on
+the PySAM module, this method calls on a different Dispatch Parameter class that
+is specific to the module.</p>
+<dl class="simple">
+<dt>Inputs:</dt><dd><p>PySAM_dict (dict)   : dictionary of PySAM inputs from a script in /json directory</p>
+</dd>
+<dt>Outputs:</dt><dd><p>dispatch_wrap (obj) : wrapper object for the class that creates dispatch parameters</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.modules.SolarTES.SolarTES.initialize_arrays">
+<span class="sig-name descname"><span class="pre">initialize_arrays</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/modules/SolarTES.html#SolarTES.initialize_arrays"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.modules.SolarTES.SolarTES.initialize_arrays" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initializing empty arrays to log SSC outputs after segment simulations</p>
+<p>This method creates empty arrays where SSC outputs will be written to.
+Also creates a list of str names for logged simulation outputs.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.modules.SolarTES.SolarTES.update_Plant_after_Pyomo">
+<span class="sig-name descname"><span class="pre">update_Plant_after_Pyomo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Plant</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pre_dispatch_run</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/modules/SolarTES.html#SolarTES.update_Plant_after_Pyomo"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.modules.SolarTES.SolarTES.update_Plant_after_Pyomo" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update SSC Plant inputs with Pyomo optimization outputs from current segment simulation</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>self.run_loop    == True (can be called outside loop)
+self.is_dispatch == True</p>
+</div>
+<p>This method uses the optimization results from Pyomo and ensures that
+the next SSC segment uses them throughout the corresponding SSC Horizon.
+SSC normally takes single values for initial conditions (for the first hour
+of the SSC Horizon), but it can also take in an array of values for each
+step in the SSC Horizon. These are called “dispatch_targets”. Steps are:
+(1) extract solutions from Pyomo over the Pyomo Horizon,
+(2) keep the solutions for the shorter SSC Horizon and
+(3) save these “dispatch target” inputs to the Plant object for the
+next SSC simulation segment.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Plant</strong> (<em>obj</em>) – original PySAM Plant module to be updated</p></li>
+<li><p><strong>pre_dispatch_run</strong> (<em>bool</em>) – are we updating the Plant for a pre- or post- dispatch run.
+Recall that we only log post-dispatch Plant runs</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>updated PySAM Plant module</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>Plant (obj)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.modules.SolarTES.SolarTES.update_Plant_after_SSC">
+<span class="sig-name descname"><span class="pre">update_Plant_after_SSC</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/modules/SolarTES.html#SolarTES.update_Plant_after_SSC"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.modules.SolarTES.SolarTES.update_Plant_after_SSC" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update SSC Plant inputs with SSC outputs from previous segment simulation</p>
+<p>** self.run_loop == True</p>
+<p>This method uses the SSC end results from the previous simulation segment
+and sets them as the initial conditions for the next SSC segment. As a
+small note: some outputs are arrays that span the full year, however the
+only relevant parts are the first indeces corresponding to the SSC Horizon.
+All other values are typically 0.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="simulations.modules.SolarTES.SolarTES.update_Pyomo_after_SSC">
+<span class="sig-name descname"><span class="pre">update_Pyomo_after_SSC</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Plant</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simulations/modules/SolarTES.html#SolarTES.update_Pyomo_after_SSC"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simulations.modules.SolarTES.SolarTES.update_Pyomo_after_SSC" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update Pyomo inputs with SSC outputs from previous segment simulation</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>self.run_loop    == True
+self.is_dispatch == True</p>
+</div>
+<p>This method uses the SSC end results from the previous simulation segment
+and uses them to update the existing Dispatch parameter dictionary that
+is ultimately sent to Pyomo. Essentially just updates the initial conditions
+of the Dispatch parameter dictionary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Plant</strong> (<em>obj</em>) – original PySAM Plant module</p></li>
+<li><p><strong>params</strong> (<em>dict</em>) – dictionary of Pyomo dispatch parameters</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>updated dictionary of Pyomo dispatch parameters</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>params (dict)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">simulations.modules package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-simulations.modules.DualIndirectTES">simulations.modules.DualIndirectTES module</a></li>
+<li><a class="reference internal" href="#module-simulations.modules.DualPlantTES">simulations.modules.DualPlantTES module</a></li>
+<li><a class="reference internal" href="#module-simulations.modules.GenericSSCModule">simulations.modules.GenericSSCModule module</a></li>
+<li><a class="reference internal" href="#module-simulations.modules.IndirectNuclearTES">simulations.modules.IndirectNuclearTES module</a></li>
+<li><a class="reference internal" href="#module-simulations.modules.NuclearTES">simulations.modules.NuclearTES module</a></li>
+<li><a class="reference internal" href="#module-simulations.modules.SolarTES">simulations.modules.SolarTES module</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="simulations.dispatch.html"
+                        title="previous chapter">simulations.dispatch package</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="simulations.outputs.html"
+                        title="next chapter">simulations.outputs package</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/simulations.modules.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="simulations.outputs.html" title="simulations.outputs package"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="simulations.dispatch.html" title="simulations.dispatch package"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">NE-2 Simulations  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="simulations.html" >simulations package</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">simulations.modules package</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2021, Gabriel J. Soto, Una Baker, Grace Stanke, Ben Lindley, Mike Wagner.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.2.0.
+    </div>
+  </body>
+</html>

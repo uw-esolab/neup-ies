@@ -1,0 +1,243 @@
+
+
+<!doctype html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>simulations.tests.test_nuctes &#8212; NE-2 Simulations  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/bizstyle.css" />
+    
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/bizstyle.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <!--[if lt IE 9]>
+    <script src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">NE-2 Simulations  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">simulations.tests.test_nuctes</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for simulations.tests.test_nuctes</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python3</span>
+<span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Created on Thu Apr  1 14:36:02 2021</span>
+
+<span class="sd">@author: gabrielsoto</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">modules.NuclearTES</span> <span class="kn">import</span> <span class="n">NuclearTES</span>
+<span class="kn">from</span> <span class="nn">dispatch.NuclearDispatch</span> <span class="kn">import</span> <span class="n">NuclearDispatch</span>
+<span class="kn">import</span> <span class="nn">unittest</span>
+
+
+<div class="viewcode-block" id="TestNuclearTES"><a class="viewcode-back" href="../../../simulations.tests.html#simulations.tests.test_nuctes.TestNuclearTES">[docs]</a><span class="k">class</span> <span class="nc">TestNuclearTES</span><span class="p">(</span><span class="n">unittest</span><span class="o">.</span><span class="n">TestCase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Unit tests for Nuclear TES module</span>
+<span class="sd">    </span>
+<span class="sd">    This testing suite is meant to test the nuclear TES module meant to</span>
+<span class="sd">    represent Model 1 of the NE-2 project. This models an LFR plant supplying </span>
+<span class="sd">    power to a power block with thermal energy storage (TES) in the form </span>
+<span class="sd">    of molten salt tanks. </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="TestNuclearTES.setUp"><a class="viewcode-back" href="../../../simulations.tests.html#simulations.tests.test_nuctes.TestNuclearTES.setUp">[docs]</a>    <span class="k">def</span> <span class="nf">setUp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Creating instance of NuclearTES upon start of each test</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c1"># creating instance of module</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nuctes</span> <span class="o">=</span> <span class="n">NuclearTES</span><span class="p">(</span><span class="n">json_name</span><span class="o">=</span><span class="s1">&#39;tests/test_nuctes&#39;</span><span class="p">,</span> <span class="n">is_dispatch</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nuctes_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nuctes</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span></div>
+        
+    
+<div class="viewcode-block" id="TestNuclearTES.tearDown"><a class="viewcode-back" href="../../../simulations.tests.html#simulations.tests.test_nuctes.TestNuclearTES.tearDown">[docs]</a>    <span class="k">def</span> <span class="nf">tearDown</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Deleting instance oself.nuctesf NuclearTES at end of each test</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c1"># deleting each module</span>
+        <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">nuctes</span>
+        <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">nuctes_name</span></div>
+    
+
+<div class="viewcode-block" id="TestNuclearTES.test_store_csv_arrays"><a class="viewcode-back" href="../../../simulations.tests.html#simulations.tests.test_nuctes.TestNuclearTES.test_store_csv_arrays">[docs]</a>    <span class="k">def</span> <span class="nf">test_store_csv_arrays</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Testing the storage of csv arrays in NuclearTES</span>
+<span class="sd">        </span>
+<span class="sd">        NOTE: this assumes that the method was already called in __init__</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c1"># in __init__ we call self.store_csv_arrays which is overloaded in NucTes</span>
+        <span class="c1">#    double checking that the NuclearTES-specific attributes are generated</span>
+        <span class="n">attr_list</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;df_array&#39;</span> <span class="p">,</span> <span class="s1">&#39;ud_array&#39;</span><span class="p">,</span> <span class="s1">&#39;wl_array&#39;</span><span class="p">,</span> <span class="s1">&#39;hp_array&#39;</span><span class="p">,</span> 
+                     <span class="s1">&#39;gc_array&#39;</span> <span class="p">,</span> <span class="s1">&#39;em_array&#39;</span><span class="p">,</span> <span class="s1">&#39;fm_array&#39;</span> <span class="p">]</span>
+    
+        
+        <span class="c1"># looping through all defined attributes</span>
+        <span class="k">for</span> <span class="n">attr</span> <span class="ow">in</span> <span class="n">attr_list</span><span class="p">:</span>
+            <span class="c1">#TODO: check that the filepaths exist from PySAM_dict?</span>
+            
+            <span class="c1"># checking that the attribute exists</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nuctes</span><span class="p">,</span><span class="n">attr</span><span class="p">)</span> <span class="p">,</span>
+                            <span class="s2">&quot;Something went wrong when </span><span class="si">{0}</span><span class="s2"> called &#39;store_csv_arrays method, </span><span class="si">{1}</span><span class="s2"> does not exist&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nuctes_name</span><span class="p">,</span> <span class="n">attr</span><span class="p">)</span> <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="TestNuclearTES.test_create_dispatch_params"><a class="viewcode-back" href="../../../simulations.tests.html#simulations.tests.test_nuctes.TestNuclearTES.test_create_dispatch_params">[docs]</a>    <span class="k">def</span> <span class="nf">test_create_dispatch_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Testing the creation of a parameter dictionary for NuclearDispatch</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="n">attr_list</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Ec&#39;</span><span class="p">,</span>        <span class="c1"># from GeneralDispatch.set_power_cycle_parameters()</span>
+                     <span class="s1">&#39;P&#39;</span><span class="p">,</span>         <span class="c1"># from GeneralDispatch.set_time_indexed_parameters()</span>
+                     <span class="s1">&#39;Cpc&#39;</span><span class="p">,</span>       <span class="c1"># from GeneralDispatch.set_fixed_cost_parameters()</span>
+                     <span class="s1">&#39;Cnuc&#39;</span><span class="p">,</span>      <span class="c1"># from NuclearDispatch.set_fixed_cost_parameters()</span>
+                     <span class="s1">&#39;En&#39;</span><span class="p">,</span>        <span class="c1"># from NuclearDispatch.set_nuclear_parameters()</span>
+                     <span class="s1">&#39;Qin_nuc&#39;</span><span class="p">,</span>   <span class="c1"># from NuclearDispatch.set_time_series_nuclear_parameters()</span>
+                     <span class="s1">&#39;y0&#39;</span><span class="p">,</span>        <span class="c1"># from GeneralDispatch.set_initial_state()</span>
+                     <span class="s1">&#39;yn0&#39;</span> <span class="p">]</span>      <span class="c1"># from NuclearDispatch.set_initial_state()</span>
+    
+        <span class="n">final_attr</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;nuc_op_mode_final&#39;</span><span class="p">,</span>                 
+                      <span class="s1">&#39;hot_tank_htf_percent_final&#39;</span><span class="p">,</span>      
+                      <span class="s1">&#39;pc_startup_energy_remain_final&#39;</span> <span class="p">]</span> 
+                 
+        
+        <span class="n">mod</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nuctes</span>
+        
+        <span class="c1"># ==============================================================</span>
+        <span class="c1"># creating a duplicate Plant (with setup steps for time elements)</span>
+        
+        <span class="c1"># initialize times</span>
+        <span class="n">mod</span><span class="o">.</span><span class="n">run_loop</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">time_start</span><span class="p">,</span> <span class="n">time_next</span> <span class="o">=</span> <span class="n">mod</span><span class="o">.</span><span class="n">initialize_time_elements</span><span class="p">()</span>
+        <span class="n">mod</span><span class="o">.</span><span class="n">initialize_time_slices</span><span class="p">(</span> <span class="n">time_start</span> <span class="p">)</span>
+        <span class="n">mod</span><span class="o">.</span><span class="n">initialize_arrays</span><span class="p">()</span>
+        
+        <span class="c1"># create Plant</span>
+        <span class="n">mod</span><span class="o">.</span><span class="n">create_Plant</span><span class="p">()</span>
+        <span class="n">prePlant</span> <span class="o">=</span> <span class="n">mod</span><span class="o">.</span><span class="n">duplicate_Plant</span><span class="p">(</span> <span class="n">mod</span><span class="o">.</span><span class="n">Plant</span> <span class="p">)</span>
+
+        <span class="c1"># ==============================================================</span>
+        <span class="c1"># pre-run the duplicate plant to gather guesses for Q_nuc</span>
+        <span class="n">ssc_run_success</span><span class="p">,</span> <span class="n">prePlant</span> <span class="o">=</span> <span class="n">mod</span><span class="o">.</span><span class="n">run_Plant_through_SSC</span><span class="p">(</span>
+                                            <span class="n">prePlant</span><span class="p">,</span> <span class="n">time_start</span> <span class="p">,</span> <span class="n">mod</span><span class="o">.</span><span class="n">sim_time_end</span> 
+                                            <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span> <span class="n">ssc_run_success</span> <span class="p">,</span> 
+                            <span class="s2">&quot;Pre-run of simulation failed for </span><span class="si">{0}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span> <span class="n">mod</span> <span class="p">)</span> <span class="p">)</span>
+        
+        <span class="c1"># ==============================================================</span>
+        <span class="c1"># actually run the create_dispatch_params method</span>
+        
+        <span class="c1"># create the dictionary</span>
+        <span class="n">params_dict</span> <span class="o">=</span> <span class="n">mod</span><span class="o">.</span><span class="n">create_dispatch_params</span><span class="p">(</span> <span class="n">prePlant</span> <span class="p">)</span>
+        
+        <span class="c1"># check that pre-run worked</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">mod</span><span class="p">,</span> <span class="s1">&#39;Q_nuc_guess&#39;</span><span class="p">),</span> 
+                          <span class="s2">&quot;Guess for nuclear q_dot profile is not saved to </span><span class="si">{0}</span><span class="s2"> from simulation pre-run&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span> <span class="n">mod</span> <span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span> <span class="nb">sum</span><span class="p">(</span> <span class="n">mod</span><span class="o">.</span><span class="n">Q_nuc_guess</span> <span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> 
+                          <span class="s2">&quot;Nuclear q_dot profile values are all 0 for </span><span class="si">{0}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span> <span class="n">mod</span> <span class="p">))</span>
+        
+        <span class="c1"># looping through all defined attributes</span>
+        <span class="k">for</span> <span class="n">attr</span> <span class="ow">in</span> <span class="n">attr_list</span><span class="p">:</span>
+            
+            <span class="c1"># checking that the attribute exists</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertIn</span><span class="p">(</span> <span class="n">attr</span><span class="p">,</span> <span class="n">params_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="p">,</span>
+                            <span class="s2">&quot;Parameter </span><span class="si">{0}</span><span class="s2"> is not found in dispatch parameter dictionary for </span><span class="si">{1}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">attr</span><span class="p">,</span> <span class="n">mod</span><span class="p">)</span> <span class="p">)</span>
+            
+        <span class="c1"># ==============================================================</span>
+        <span class="c1"># run optimization</span>
+        <span class="n">dispatch_success</span> <span class="o">=</span> <span class="n">mod</span><span class="o">.</span><span class="n">run_pyomo</span><span class="p">(</span> <span class="n">params_dict</span> <span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span> <span class="n">dispatch_success</span><span class="p">,</span> 
+                          <span class="s2">&quot;Dispatch optimization failed for </span><span class="si">{0}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span> <span class="n">mod</span> <span class="p">))</span>
+        
+        <span class="c1"># ==============================================================</span>
+        <span class="c1"># update actual Plant after running Pyomo</span>
+        <span class="n">Plant</span> <span class="o">=</span> <span class="n">mod</span><span class="o">.</span><span class="n">update_Plant_after_Pyomo</span><span class="p">(</span> <span class="n">mod</span><span class="o">.</span><span class="n">Plant</span><span class="p">,</span> <span class="n">pre_dispatch_run</span><span class="o">=</span><span class="kc">False</span> <span class="p">)</span>
+        
+        <span class="c1"># helper method to check that obj has attribute, will raise exception if fails</span>
+        <span class="k">def</span> <span class="nf">check_attr</span><span class="p">(</span> <span class="n">obj</span><span class="p">,</span> <span class="n">att</span> <span class="p">):</span>
+            <span class="k">return</span> <span class="nb">hasattr</span><span class="p">(</span> <span class="n">obj</span><span class="p">,</span> <span class="n">att</span><span class="p">)</span>
+
+        <span class="c1"># running through final attributes at end of timestep</span>
+        <span class="k">for</span> <span class="n">attr</span> <span class="ow">in</span> <span class="n">final_attr</span><span class="p">:</span>
+            
+            <span class="c1"># checking that the attribute exists for the pre-run (should have op_final, etc.)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span>  <span class="nb">hasattr</span><span class="p">(</span><span class="n">prePlant</span><span class="o">.</span><span class="n">Outputs</span><span class="p">,</span> <span class="n">attr</span><span class="p">)</span> <span class="p">,</span>
+                            <span class="s2">&quot;The pre-run for </span><span class="si">{0}</span><span class="s2"> does not have output </span><span class="si">{1}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span> <span class="n">mod</span><span class="p">,</span> <span class="n">attr</span><span class="p">)</span> <span class="p">)</span>
+            
+            <span class="c1"># trying to see if final operating modes, etc. are assigned for the original Plant</span>
+            <span class="c1">#  they should NOT be assigned, so calling the check_attr method should raise exception</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">check_attr</span><span class="p">,</span> <span class="n">Plant</span><span class="o">.</span><span class="n">Outputs</span><span class="p">,</span> <span class="n">attr</span> <span class="p">)</span>
+
+        <span class="c1"># erase mod</span>
+        <span class="k">del</span> <span class="n">mod</span></div></div>
+        
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">unittest</span><span class="o">.</span><span class="n">main</span><span class="p">()</span>
+            
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">NE-2 Simulations  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">simulations.tests.test_nuctes</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2021, Gabriel J. Soto, Una Baker, Grace Stanke, Ben Lindley, Mike Wagner.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.2.0.
+    </div>
+  </body>
+</html>

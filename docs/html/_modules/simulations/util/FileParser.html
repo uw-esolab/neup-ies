@@ -1,0 +1,597 @@
+
+
+<!doctype html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>simulations.util.FileParser &#8212; NE-2 Simulations  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/bizstyle.css" />
+    
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/bizstyle.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <!--[if lt IE 9]>
+    <script src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">NE-2 Simulations  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">simulations.util.FileParser</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for simulations.util.FileParser</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python3</span>
+<span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Created on Fri Apr 16 10:15:51 2021</span>
+
+<span class="sd">@author: gabrielsoto</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">re</span><span class="o">,</span> <span class="nn">pandas</span><span class="o">,</span> <span class="nn">openpyxl</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">util.FileMethods</span> <span class="kn">import</span> <span class="n">FileMethods</span>
+<span class="kn">import</span> <span class="nn">pyomo</span> <span class="k">as</span> <span class="nn">pyo</span>
+
+<div class="viewcode-block" id="FileParser"><a class="viewcode-back" href="../../../simulations.util.html#simulations.util.FileParser.FileParser">[docs]</a><span class="k">class</span> <span class="nc">FileParser</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The FileParser class is a util class used generally to manipulate text data</span>
+<span class="sd">    in files. Some main features is the ability to search existing Python class</span>
+<span class="sd">    files for particular strings. Currently using regex to search for complex</span>
+<span class="sd">    strings, don&#39;t yell at me please.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="c1"># Regex rules for parsing through dispatch files (e.g. GeneralDispatch, NuclearDispatch)</span>
+    <span class="n">param_latex_regex</span>  <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;\s#([\w+\d+\{\}\^</span><span class="se">\\</span><span class="s1">\,-]+):\s&#39;</span>           <span class="c1"># Matches parameter names in LaTeX form</span>
+    <span class="n">param_txt_regex</span>    <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;self.model.(\w+)\s?=&#39;</span>                   <span class="c1"># Matches parameter names in txt form</span>
+    <span class="n">detail_latex_regex</span> <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;:\s([\w+\s+\d+\{\}\[\]\^</span><span class="se">\\</span><span class="s1">\,\$/-]+)&#39;</span>    <span class="c1"># Matches explanation of parameters in LaTeX form</span>
+    <span class="n">section_regex</span>      <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;###\s([\w+\s+]+)\s###&#39;</span>                  <span class="c1"># Matches section titles in txt form</span>
+    <span class="n">subsection_regex</span>   <span class="o">=</span> <span class="sa">r</span><span class="s1">&#39;#-------\s([\w+\s+]+)\s---------&#39;</span>       <span class="c1"># Matches subsection titles in txt form</span>
+
+    
+<div class="viewcode-block" id="FileParser.find_first_string_instance"><a class="viewcode-back" href="../../../simulations.util.html#simulations.util.FileParser.FileParser.find_first_string_instance">[docs]</a>    <span class="k">def</span> <span class="nf">find_first_string_instance</span><span class="p">(</span><span class="n">fpath</span><span class="p">,</span> <span class="n">search_str</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Method to parse through file and locate string</span>
+<span class="sd">        </span>
+<span class="sd">        This method parses through a given file found at the input filepath</span>
+<span class="sd">        and searches for the first instance of a given string. It then returns</span>
+<span class="sd">        the line number and the full line string where it was found. If not found</span>
+<span class="sd">        it returns None for both outputs. </span>
+<span class="sd">        </span>
+<span class="sd">        Inputs:</span>
+<span class="sd">            fpath (str)      : full path to relevant file</span>
+<span class="sd">            search_str (str) : string to search</span>
+<span class="sd">        Outputs:</span>
+<span class="sd">            line_number (str)   : line number where search_str was found (None if not found)</span>
+<span class="sd">            line_contents (str) : full line string where search_str was found (None if not found)</span>
+<span class="sd">            </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="n">fo</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">fpath</span><span class="p">)</span>
+        <span class="c1"># line-by-line search</span>
+        <span class="k">for</span> <span class="n">line_number</span><span class="p">,</span><span class="n">line_contents</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">fo</span><span class="p">):</span>
+            <span class="n">found</span> <span class="o">=</span> <span class="n">search_str</span> <span class="ow">in</span> <span class="n">line_contents</span>
+            <span class="c1"># found the search string in the file!</span>
+            <span class="k">if</span> <span class="n">found</span><span class="p">:</span>
+                <span class="c1">#close file</span>
+                <span class="n">fo</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+                <span class="k">return</span> <span class="n">line_number</span><span class="p">,</span><span class="n">line_contents</span>
+        <span class="c1"># close file</span>
+        <span class="n">fo</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="k">return</span> <span class="kc">None</span><span class="p">,</span><span class="kc">None</span></div>
+    
+
+<div class="viewcode-block" id="FileParser.get_lines_between_strings"><a class="viewcode-back" href="../../../simulations.util.html#simulations.util.FileParser.FileParser.get_lines_between_strings">[docs]</a>    <span class="k">def</span> <span class="nf">get_lines_between_strings</span><span class="p">(</span><span class="n">fpath</span><span class="p">,</span> <span class="n">str_start</span><span class="p">,</span> <span class="n">str_end</span> <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Method to return all lines between two strings in a file</span>
+<span class="sd">        </span>
+<span class="sd">        This method parses through a given file found at the input filepath</span>
+<span class="sd">        and returns a list of lines in between two book-end strings: str_start</span>
+<span class="sd">        and str_end. </span>
+<span class="sd">        </span>
+<span class="sd">        Inputs:</span>
+<span class="sd">            fpath (str)      : full path to relevant file</span>
+<span class="sd">            str_start (str)  : first string to search</span>
+<span class="sd">            str_end (str)    : last string to search</span>
+<span class="sd">        Outputs:</span>
+<span class="sd">            lines (list of str)   : list of lines between book-end strings</span>
+<span class="sd">            </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="n">fo</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">fpath</span><span class="p">)</span>
+        <span class="c1"># find starting and ending lines</span>
+        <span class="n">i_start</span><span class="p">,</span> <span class="n">L_start</span> <span class="o">=</span> <span class="n">FileParser</span><span class="o">.</span><span class="n">find_first_string_instance</span><span class="p">(</span><span class="n">fpath</span><span class="p">,</span> <span class="n">str_start</span><span class="p">)</span>
+        <span class="n">i_end</span><span class="p">,</span>   <span class="n">L_end</span>   <span class="o">=</span> <span class="n">FileParser</span><span class="o">.</span><span class="n">find_first_string_instance</span><span class="p">(</span><span class="n">fpath</span><span class="p">,</span> <span class="n">str_end</span><span class="p">)</span>
+        <span class="c1"># create empty list for lines</span>
+        <span class="n">lines</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="c1"># if that the start and end strings were actually found, otherwise return empty list</span>
+        <span class="k">if</span> <span class="n">i_start</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">i_end</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># line-by-line search</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">l</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">fo</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">i</span><span class="o">&gt;</span><span class="n">i_start</span> <span class="ow">and</span> <span class="n">i</span><span class="o">&lt;</span><span class="n">i_end</span><span class="p">:</span>
+                    <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">l</span><span class="p">)</span>
+        <span class="c1"># close file</span>
+        <span class="n">fo</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">lines</span></div>
+    
+    
+<div class="viewcode-block" id="FileParser.get_dispatch_string_properties"><a class="viewcode-back" href="../../../simulations.util.html#simulations.util.FileParser.FileParser.get_dispatch_string_properties">[docs]</a>    <span class="k">def</span> <span class="nf">get_dispatch_string_properties</span><span class="p">(</span><span class="n">dispatch_name</span><span class="p">,</span><span class="n">return_case</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Method to return relevant dispatch string properties</span>
+<span class="sd">        </span>
+<span class="sd">        This method parses through a given file found at the input filepath</span>
+<span class="sd">        and returns a dictionary with string values and line numbers for different</span>
+<span class="sd">        parameter properties in the dispatcher. For now, it can sort through the </span>
+<span class="sd">        Params and Variables of the Dispatch files. It returns latex+text names for all</span>
+<span class="sd">        entries, latex strings containing parameter details, and section+subsection</span>
+<span class="sd">        titles.</span>
+<span class="sd">        </span>
+<span class="sd">        NOTE: this method is tied to the very specific aesthetic format of the Dispatch</span>
+<span class="sd">        files, should they change this method will no longer work.</span>
+<span class="sd">        </span>
+<span class="sd">        Inputs:</span>
+<span class="sd">            dispatch_name (str)  : name of Dispatch class to document</span>
+<span class="sd">            return_case (int)    : 0=return Param properties, 1=return Var properties</span>
+<span class="sd">        Outputs:</span>
+<span class="sd">            P (dict)   : dictionary with entries for line number and str contents</span>
+<span class="sd">            </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c1">#TODO: check that dispatch name exists</span>
+        <span class="n">filepath</span>  <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="n">FileMethods</span><span class="o">.</span><span class="n">samsim_dir</span><span class="p">,</span> <span class="s1">&#39;dispatch&#39;</span><span class="p">,</span> <span class="n">dispatch_name</span><span class="p">)</span>
+        <span class="n">filepath</span> <span class="o">+=</span> <span class="s1">&#39;.py&#39;</span>
+        
+        <span class="c1"># methods to be used as book-ends</span>
+        <span class="n">method_names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;def generate_params&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;def generate_variables&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;def add_objective&#39;</span><span class="p">]</span>
+        
+        <span class="c1"># define book-end strings that define where all parameters are located</span>
+        <span class="n">param_method_start</span> <span class="o">=</span> <span class="n">method_names</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">return_case</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">method_names</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">param_method_end</span>   <span class="o">=</span> <span class="n">method_names</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="n">return_case</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">method_names</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+    
+        <span class="c1"># get list of relevant lines to parse through</span>
+        <span class="n">lines_list</span> <span class="o">=</span> <span class="n">FileParser</span><span class="o">.</span><span class="n">get_lines_between_strings</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="n">param_method_start</span><span class="p">,</span> <span class="n">param_method_end</span><span class="p">)</span>
+        
+        <span class="c1"># define regex (regular expression) rules for matching strings</span>
+        <span class="n">params_latex_rule</span>   <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span> <span class="n">FileParser</span><span class="o">.</span><span class="n">param_latex_regex</span> <span class="p">)</span>
+        <span class="n">params_txt_rule</span>     <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span> <span class="n">FileParser</span><span class="o">.</span><span class="n">param_txt_regex</span> <span class="p">)</span>
+        <span class="n">detail_latex_rule</span>   <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span> <span class="n">FileParser</span><span class="o">.</span><span class="n">detail_latex_regex</span> <span class="p">)</span>
+        <span class="n">section_rule</span>        <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span> <span class="n">FileParser</span><span class="o">.</span><span class="n">section_regex</span> <span class="p">)</span>
+        <span class="n">subsection_rule</span>     <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span> <span class="n">FileParser</span><span class="o">.</span><span class="n">subsection_regex</span> <span class="p">)</span>
+        
+        <span class="c1"># define empty lists for all properties we want</span>
+        <span class="n">params_latex</span>   <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">params_txt</span>     <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">sections</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">ssection</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">detail</span>   <span class="o">=</span> <span class="p">[]</span>
+        
+        <span class="c1"># define empty lists for line nu where all properties are located</span>
+        <span class="n">params_latex_lineNo</span>  <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">params_txt_lineNo</span>    <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">section_lineNo</span>  <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">ssection_lineNo</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">detail_lineNo</span>   <span class="o">=</span> <span class="p">[]</span>
+        
+        <span class="c1"># define empty dict to store and return everything in</span>
+        <span class="n">P</span> <span class="o">=</span> <span class="p">{}</span>
+        
+        <span class="c1"># begin search</span>
+        <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines_list</span><span class="p">:</span>
+            
+            <span class="c1"># find strings per the regex rules</span>
+            <span class="n">param_latex_str</span>   <span class="o">=</span> <span class="n">params_latex_rule</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+            <span class="n">param_txt_str</span>     <span class="o">=</span> <span class="n">params_txt_rule</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+            <span class="n">section_str</span>       <span class="o">=</span> <span class="n">section_rule</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+            <span class="n">subsection_str</span>    <span class="o">=</span> <span class="n">subsection_rule</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+            <span class="n">detail_str</span>        <span class="o">=</span> <span class="n">detail_latex_rule</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+            
+            <span class="c1"># append strs and line numbers to lists if found</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">param_latex_str</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">params_latex</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">param_latex_str</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                <span class="n">params_latex_lineNo</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">count</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">param_txt_str</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">params_txt</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">param_txt_str</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                <span class="n">params_txt_lineNo</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">count</span><span class="p">)</span>
+            
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">section_str</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>        
+                <span class="n">sections</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">section_str</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                <span class="n">section_lineNo</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">count</span><span class="p">)</span>
+                
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">subsection_str</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>        
+                <span class="n">ssection</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">subsection_str</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                <span class="n">ssection_lineNo</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">count</span><span class="p">)</span>
+            
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">detail_str</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="c1"># getting rid of extra \n&#39;s at the end of the lines</span>
+                <span class="k">if</span> <span class="n">detail_str</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">):</span>
+                    <span class="n">detail</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>  <span class="n">detail_str</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>  <span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">detail</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">detail_str</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                <span class="n">detail_lineNo</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">count</span><span class="p">)</span>
+                
+            <span class="n">count</span> <span class="o">+=</span> <span class="mi">1</span>
+        
+        <span class="n">P</span><span class="p">[</span><span class="s1">&#39;params_latex&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">params_latex</span>
+        <span class="n">P</span><span class="p">[</span><span class="s1">&#39;params_txt&#39;</span><span class="p">]</span>   <span class="o">=</span> <span class="n">params_txt</span>
+        <span class="n">P</span><span class="p">[</span><span class="s1">&#39;sections&#39;</span><span class="p">]</span>     <span class="o">=</span> <span class="n">sections</span>
+        <span class="n">P</span><span class="p">[</span><span class="s1">&#39;ssection&#39;</span><span class="p">]</span>     <span class="o">=</span> <span class="n">ssection</span>
+        <span class="n">P</span><span class="p">[</span><span class="s1">&#39;detail&#39;</span><span class="p">]</span>       <span class="o">=</span> <span class="n">detail</span>
+
+        <span class="n">P</span><span class="p">[</span><span class="s1">&#39;params_latex_lineNo&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">params_latex_lineNo</span>
+        <span class="n">P</span><span class="p">[</span><span class="s1">&#39;params_txt_lineNo&#39;</span><span class="p">]</span>   <span class="o">=</span> <span class="n">params_txt_lineNo</span>
+        <span class="n">P</span><span class="p">[</span><span class="s1">&#39;section_lineNo&#39;</span><span class="p">]</span>      <span class="o">=</span> <span class="n">section_lineNo</span>
+        <span class="n">P</span><span class="p">[</span><span class="s1">&#39;ssection_lineNo&#39;</span><span class="p">]</span>     <span class="o">=</span> <span class="n">ssection_lineNo</span>
+        <span class="n">P</span><span class="p">[</span><span class="s1">&#39;detail_lineNo&#39;</span><span class="p">]</span>       <span class="o">=</span> <span class="n">detail_lineNo</span>
+        
+        <span class="n">P</span><span class="p">[</span><span class="s1">&#39;N_lines&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">count</span>
+        
+        <span class="k">return</span> <span class="n">P</span></div>
+    
+    <span class="c1">#TODO: add file to write LaTeX scripts with all parameter/variable names?</span>
+    
+    
+<div class="viewcode-block" id="FileParser.get_single_pyomo_model_data"><a class="viewcode-back" href="../../../simulations.util.html#simulations.util.FileParser.FileParser.get_single_pyomo_model_data">[docs]</a>    <span class="k">def</span> <span class="nf">get_single_pyomo_model_data</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">params_list</span><span class="p">,</span> <span class="n">ind</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Method to return single parameter data from a Pyomo model</span>
+<span class="sd">        </span>
+<span class="sd">        This method parses through a given Pyomo model and returns a value for</span>
+<span class="sd">        a parameter from params_list specified by the index ind. </span>
+<span class="sd">        </span>
+<span class="sd">        Inputs:</span>
+<span class="sd">            model (PyomoModel) : Pyomo model after execution</span>
+<span class="sd">            params_list (str)  : list of strings representing parameter names</span>
+<span class="sd">            ind (int)          : index of params_list to return </span>
+<span class="sd">        Outputs:</span>
+<span class="sd">            modelData (int or float)   : value of requested Pyomo parameter</span>
+<span class="sd">            </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">OrderedSimpleSet</span> <span class="o">=</span> <span class="n">pyo</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">set</span><span class="o">.</span><span class="n">OrderedSimpleSet</span>
+        <span class="n">SimpleParam</span>  <span class="o">=</span> <span class="n">pyo</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">SimpleParam</span>
+        <span class="n">ScalarParam</span>  <span class="o">=</span> <span class="n">pyo</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">ScalarParam</span>
+        <span class="n">IndexedParam</span> <span class="o">=</span> <span class="n">pyo</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">base</span><span class="o">.</span><span class="n">param</span><span class="o">.</span><span class="n">IndexedParam</span>
+        
+        <span class="c1"># check that the model has the Parameter defined</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">params_list</span><span class="p">[</span><span class="n">ind</span><span class="p">]):</span>
+            <span class="c1"># get the model Parameter</span>
+            <span class="n">modelParam</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">params_list</span><span class="p">[</span><span class="n">ind</span><span class="p">])</span>
+            
+            <span class="c1"># depending on how each parameter was initialized, there are </span>
+            <span class="c1">#    different ways to retrieve them</span>
+            <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">modelParam</span><span class="p">)</span> <span class="ow">is</span> <span class="n">OrderedSimpleSet</span><span class="p">:</span>
+                <span class="n">modelData</span> <span class="o">=</span> <span class="n">modelParam</span><span class="o">.</span><span class="n">data</span><span class="p">()</span>
+            <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">modelParam</span><span class="p">)</span> <span class="ow">is</span> <span class="n">SimpleParam</span> <span class="ow">or</span> <span class="nb">type</span><span class="p">(</span><span class="n">modelParam</span><span class="p">)</span> <span class="ow">is</span> <span class="n">ScalarParam</span><span class="p">:</span>
+                <span class="n">modelData</span> <span class="o">=</span> <span class="n">modelParam</span><span class="o">.</span><span class="n">value</span>
+            <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">modelParam</span><span class="p">)</span> <span class="ow">is</span> <span class="n">IndexedParam</span><span class="p">:</span>
+                <span class="n">ParamDict</span> <span class="o">=</span> <span class="n">modelParam</span><span class="o">.</span><span class="n">extract_values</span><span class="p">()</span>
+                <span class="n">modelData</span> <span class="o">=</span> <span class="p">[</span><span class="n">ParamDict</span><span class="p">[</span><span class="n">x</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">ParamDict</span><span class="o">.</span><span class="n">keys</span><span class="p">()]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Parameter couldn&#39;t be found, return None for now</span>
+                <span class="c1">#TODO: raise some sort of error here</span>
+                <span class="n">modelData</span> <span class="o">=</span> <span class="p">[]</span>
+        
+            <span class="k">return</span> <span class="n">modelData</span>  
+    
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[]</span></div>
+    
+    
+<div class="viewcode-block" id="FileParser.get_list_of_pyomo_data"><a class="viewcode-back" href="../../../simulations.util.html#simulations.util.FileParser.FileParser.get_list_of_pyomo_data">[docs]</a>    <span class="k">def</span> <span class="nf">get_list_of_pyomo_data</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">params_list</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Method to return all parameter data from a Pyomo model</span>
+<span class="sd">        </span>
+<span class="sd">        This method parses through a given Pyomo model and returns a value for</span>
+<span class="sd">        each parameter given in the params_list. Typically should parse through</span>
+<span class="sd">        the DispatchModel first using self.get_dispatch_string_properties() to</span>
+<span class="sd">        get params_list.</span>
+<span class="sd">        </span>
+<span class="sd">        Inputs:</span>
+<span class="sd">            model (PyomoModel) : Pyomo model after execution</span>
+<span class="sd">            params_list (str)  : list of strings representing parameter names</span>
+<span class="sd">        Outputs:</span>
+<span class="sd">            data_list (list of int or float)   : list of data values for each Pyomo parameter</span>
+<span class="sd">            </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">N</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">params_list</span><span class="p">)</span>
+        <span class="n">data_list</span> <span class="o">=</span> <span class="p">[]</span>
+        
+        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N</span><span class="p">):</span>
+            <span class="n">single_data_list</span> <span class="o">=</span> <span class="n">FileParser</span><span class="o">.</span><span class="n">get_single_pyomo_model_data</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">params_list</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+            <span class="n">data_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">single_data_list</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="n">data_list</span></div>
+
+
+<div class="viewcode-block" id="FileParser.write_pyomo_params_to_excel"><a class="viewcode-back" href="../../../simulations.util.html#simulations.util.FileParser.FileParser.write_pyomo_params_to_excel">[docs]</a>    <span class="k">def</span> <span class="nf">write_pyomo_params_to_excel</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">dispatch_name</span><span class="p">,</span> <span class="n">xls_file_name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Method to write all Pyomo parameters to an Excel sheet</span>
+<span class="sd">        </span>
+<span class="sd">        This method parses through a given Pyomo model and returns a value for</span>
+<span class="sd">        each parameter given in the params_list. Then it saves the data to an</span>
+<span class="sd">        Excel sheet called &quot;Raw Data&quot; in an xlsx file specified by the user input.</span>
+<span class="sd">        Output file will be written in the simulations/outputs folder. Excel sheet </span>
+<span class="sd">        will have three columns: Parameter name, its value, and a txt description.</span>
+<span class="sd">        </span>
+<span class="sd">        TODO: perhaps this method belongs in FileMethods?</span>
+<span class="sd">        </span>
+<span class="sd">        Inputs:</span>
+<span class="sd">            model (PyomoModel)  : Pyomo model after execution</span>
+<span class="sd">            dispatch_name (str) : name of Dispatch model in the simulations/dispatch folder</span>
+<span class="sd">            xls_file_name (str) : name of desired output file (just filename, no directories)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c1"># parse through Dispatch class and retrieve string properties of Parameters</span>
+        <span class="n">P</span> <span class="o">=</span> <span class="n">FileParser</span><span class="o">.</span><span class="n">get_dispatch_string_properties</span><span class="p">(</span><span class="n">dispatch_name</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+        
+        <span class="c1"># get the text name for each parameter and details</span>
+        <span class="n">params_txt</span> <span class="o">=</span> <span class="n">P</span><span class="p">[</span><span class="s1">&#39;params_txt&#39;</span><span class="p">]</span>
+        <span class="n">param_details</span> <span class="o">=</span> <span class="n">P</span><span class="p">[</span><span class="s1">&#39;detail&#39;</span><span class="p">]</span>
+        
+        <span class="c1"># lambda function to facilitate getting the pyomo parameter data</span>
+        <span class="n">get_data</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">FileParser</span><span class="o">.</span><span class="n">get_single_pyomo_model_data</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">params_txt</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+            
+        <span class="c1"># create dataframe with parameter text name, data value, and text detail of that parameter</span>
+        <span class="n">dataframe_list</span> <span class="o">=</span> <span class="p">[</span> <span class="p">[</span><span class="n">params_txt</span><span class="p">[</span><span class="n">n</span><span class="p">],</span> <span class="n">get_data</span><span class="p">(</span><span class="n">n</span><span class="p">),</span> <span class="n">param_details</span><span class="p">[</span><span class="n">n</span><span class="o">+</span><span class="mi">3</span><span class="p">]]</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">params_txt</span><span class="p">))</span>  <span class="p">]</span>
+    
+        <span class="c1"># create pandas DataFrame with dataframe list and column names</span>
+        <span class="n">params_dataframe</span> <span class="o">=</span> <span class="n">pandas</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">dataframe_list</span><span class="p">,</span><span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Parameter&#39;</span><span class="p">,</span> <span class="s1">&#39;Value&#39;</span><span class="p">,</span> <span class="s1">&#39;Description&#39;</span><span class="p">])</span>
+        
+        <span class="c1"># define the output file destination in the simulation/outputs folder</span>
+        <span class="n">xls_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">FileMethods</span><span class="o">.</span><span class="n">samsim_dir</span><span class="p">,</span> <span class="s1">&#39;outputs&#39;</span><span class="p">,</span> <span class="n">xls_file_name</span><span class="p">)</span>
+        <span class="n">sheetname</span> <span class="o">=</span> <span class="s1">&#39;Raw Data&#39;</span> <span class="c1"># define worksheet name for dumping data</span>
+        
+        <span class="c1"># if the workbook doesn&#39;t already exist with given filename, create it</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">xls_path</span><span class="p">):</span>
+            <span class="n">wb</span> <span class="o">=</span> <span class="n">openpyxl</span><span class="o">.</span><span class="n">Workbook</span><span class="p">()</span>
+            <span class="n">wb</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">filename</span><span class="o">=</span><span class="n">xls_path</span><span class="p">)</span>
+            <span class="n">wb</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        
+        <span class="c1"># open workbook with openpyxl</span>
+        <span class="k">with</span> <span class="n">pandas</span><span class="o">.</span><span class="n">ExcelWriter</span><span class="p">(</span><span class="n">xls_path</span><span class="p">,</span> <span class="n">engine</span><span class="o">=</span><span class="s1">&#39;openpyxl&#39;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;a&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">writer</span><span class="p">:</span> 
+            <span class="n">workBook</span> <span class="o">=</span> <span class="n">writer</span><span class="o">.</span><span class="n">book</span>
+            <span class="c1"># trying here to overwrite sheet if it exists, otherwise create and write data to it</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">workBook</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">workBook</span><span class="p">[</span><span class="n">sheetname</span><span class="p">])</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Worksheet does not exist&quot;</span><span class="p">)</span>
+            <span class="k">finally</span><span class="p">:</span>
+                <span class="n">params_dataframe</span><span class="o">.</span><span class="n">to_excel</span><span class="p">(</span><span class="n">writer</span><span class="p">,</span> <span class="n">sheet_name</span><span class="o">=</span><span class="n">sheetname</span><span class="p">,</span><span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="c1"># save the excel file and we&#39;re done!</span>
+            <span class="n">writer</span><span class="o">.</span><span class="n">save</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="FileParser.write_pyomo_params_to_text"><a class="viewcode-back" href="../../../simulations.util.html#simulations.util.FileParser.FileParser.write_pyomo_params_to_text">[docs]</a>    <span class="k">def</span> <span class="nf">write_pyomo_params_to_text</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">dispatch_name</span><span class="p">,</span> <span class="n">txt_file_name</span><span class="p">,</span> <span class="n">param_or_var</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Method to write all Pyomo parameters to an text file with LaTeX</span>
+<span class="sd">        </span>
+<span class="sd">        This method parses through a given Pyomo model and returns parameter names </span>
+<span class="sd">        and information. In a text file specified by the user, it writes LaTeX formatted </span>
+<span class="sd">        sections and subsections of the parameter listings. </span>
+<span class="sd">        </span>
+<span class="sd">        Inputs:</span>
+<span class="sd">            model (PyomoModel)  : Pyomo model after execution</span>
+<span class="sd">            dispatch_name (str) : name of Dispatch model in the simulations/dispatch folder</span>
+<span class="sd">            txt_file_name (str) : name of desired output file (just filename, no directories)</span>
+<span class="sd">            param_or_var (int)  : select either Parameters or Variables to write </span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># get dictionary of parsed parameter string properties</span>
+        <span class="n">P</span> <span class="o">=</span> <span class="n">FileParser</span><span class="o">.</span><span class="n">get_dispatch_string_properties</span><span class="p">(</span><span class="n">dispatch_name</span><span class="p">,</span><span class="n">param_or_var</span><span class="p">)</span>
+        
+        <span class="c1"># assign line contents for each type of line</span>
+        <span class="n">params_latex</span> <span class="o">=</span> <span class="n">P</span><span class="p">[</span><span class="s1">&#39;params_latex&#39;</span><span class="p">]</span> 
+        <span class="n">sections</span> <span class="o">=</span> <span class="n">P</span><span class="p">[</span><span class="s1">&#39;sections&#39;</span><span class="p">]</span>
+        <span class="n">subsection</span> <span class="o">=</span> <span class="n">P</span><span class="p">[</span><span class="s1">&#39;ssection&#39;</span><span class="p">]</span> 
+        <span class="n">detail</span> <span class="o">=</span> <span class="n">P</span><span class="p">[</span><span class="s1">&#39;detail&#39;</span><span class="p">]</span>
+        
+        <span class="c1"># assign line numbers where each type of line shows up</span>
+        <span class="n">params_latex_lineNo</span> <span class="o">=</span> <span class="n">P</span><span class="p">[</span><span class="s1">&#39;params_latex_lineNo&#39;</span><span class="p">]</span> 
+        <span class="n">section_lineNo</span>    <span class="o">=</span> <span class="n">P</span><span class="p">[</span><span class="s1">&#39;section_lineNo&#39;</span><span class="p">]</span>  
+        <span class="n">subsection_lineNo</span> <span class="o">=</span> <span class="n">P</span><span class="p">[</span><span class="s1">&#39;ssection_lineNo&#39;</span><span class="p">]</span>
+
+        <span class="c1"># total amount of lines</span>
+        <span class="n">n_lines</span> <span class="o">=</span> <span class="n">P</span><span class="p">[</span><span class="s1">&#39;N_lines&#39;</span><span class="p">]</span>
+        
+        <span class="c1"># defining LaTeX commands for beginning and ending sections/alignings</span>
+        <span class="n">begin_section</span>    <span class="o">=</span> <span class="s1">&#39;\subsection{&#39;</span>
+        <span class="n">begin_subsection</span> <span class="o">=</span> <span class="s1">&#39;\subsubsection{&#39;</span>
+        <span class="n">begin_align</span>      <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\\</span><span class="s1">begin</span><span class="si">{flalign}</span><span class="s1">&#39;</span>
+        <span class="n">end_align</span>        <span class="o">=</span> <span class="s1">&#39;\end</span><span class="si">{flalign}</span><span class="s1">&#39;</span>
+        
+        <span class="c1"># start counting at 0</span>
+        <span class="n">doc_lines</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">count_sec</span>  <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">count_subsec</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">count_params</span> <span class="o">=</span> <span class="mi">0</span>
+        
+        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_lines</span><span class="p">):</span>
+            <span class="c1"># writing section titles</span>
+            <span class="k">if</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">section_lineNo</span><span class="p">:</span>
+                <span class="n">tmp_section</span> <span class="o">=</span> <span class="n">begin_section</span> <span class="o">+</span> <span class="n">sections</span><span class="p">[</span><span class="n">count_sec</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;}&#39;</span>
+                <span class="n">doc_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tmp_section</span><span class="p">)</span>
+                <span class="n">count_sec</span> <span class="o">+=</span> <span class="mi">1</span>
+                
+                <span class="c1"># if params in next line, write a \begin{align} statement</span>
+                <span class="k">if</span> <span class="n">n</span><span class="o">+</span><span class="mi">1</span> <span class="ow">in</span> <span class="n">params_latex_lineNo</span><span class="p">:</span>
+                    <span class="n">doc_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">begin_align</span><span class="p">)</span>
+            
+            <span class="c1"># writing subsection titles</span>
+            <span class="k">if</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">subsection_lineNo</span><span class="p">:</span>
+                <span class="n">tmp_ssection</span> <span class="o">=</span> <span class="n">begin_subsection</span> <span class="o">+</span> <span class="n">subsection</span><span class="p">[</span><span class="n">count_subsec</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;}&#39;</span>
+                <span class="n">doc_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tmp_ssection</span><span class="p">)</span>
+                <span class="n">count_subsec</span> <span class="o">+=</span> <span class="mi">1</span>
+                
+                <span class="c1"># write a \begin{align} statement for params next line</span>
+                <span class="n">doc_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">begin_align</span><span class="p">)</span>
+            
+            <span class="c1"># writing LaTeX representation of params with text details</span>
+            <span class="k">if</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">params_latex_lineNo</span><span class="p">:</span>
+                <span class="n">tmp_params</span> <span class="o">=</span> <span class="s1">&#39;&amp;&#39;</span> <span class="o">+</span> <span class="n">params_latex</span><span class="p">[</span><span class="n">count_params</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39; &amp;&amp;: </span><span class="se">\\</span><span class="s1">text{&#39;</span> <span class="o">+</span> <span class="n">detail</span><span class="p">[</span><span class="n">count_params</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;}&#39;</span>
+                
+                <span class="c1"># if there&#39;s another parameter next, end the line</span>
+                <span class="k">if</span> <span class="n">n</span><span class="o">+</span><span class="mi">1</span> <span class="ow">in</span> <span class="n">params_latex_lineNo</span><span class="p">:</span>
+                    <span class="n">tmp_params</span> <span class="o">+=</span> <span class="s1">&#39; </span><span class="se">\\\\</span><span class="s1"> &#39;</span>
+                    <span class="n">doc_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tmp_params</span><span class="p">)</span>
+                <span class="c1"># if no parameters up next, end the align brackets</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">doc_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tmp_params</span><span class="p">)</span>
+                    <span class="n">doc_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">end_align</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+           
+                <span class="n">count_params</span> <span class="o">+=</span> <span class="mi">1</span>
+        
+        <span class="c1"># print and/or save text file</span>
+        <span class="n">txt_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">FileMethods</span><span class="o">.</span><span class="n">samsim_dir</span><span class="p">,</span> <span class="s1">&#39;outputs&#39;</span><span class="p">,</span> <span class="n">txt_file_name</span><span class="p">)</span>
+        <span class="n">text_file</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">txt_path</span><span class="p">,</span><span class="s1">&#39;w&#39;</span><span class="p">)</span>
+        <span class="n">text_file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39; </span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">doc_lines</span><span class="p">))</span>
+        <span class="n">text_file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="FileParser.write_pyomo_params_to_table"><a class="viewcode-back" href="../../../simulations.util.html#simulations.util.FileParser.FileParser.write_pyomo_params_to_table">[docs]</a>    <span class="k">def</span> <span class="nf">write_pyomo_params_to_table</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">dispatch_name</span><span class="p">,</span> <span class="n">txt_file_name</span><span class="p">,</span> <span class="n">param_or_var</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Method to write all Pyomo parameters to an text file with LaTeX</span>
+<span class="sd">        </span>
+<span class="sd">        This method parses through a given Pyomo model and returns parameter names </span>
+<span class="sd">        and information. In a text file specified by the user, it writes LaTeX formatted </span>
+<span class="sd">        sections and subsections of the parameter listings. </span>
+<span class="sd">        </span>
+<span class="sd">        Inputs:</span>
+<span class="sd">            model (PyomoModel)  : Pyomo model after execution</span>
+<span class="sd">            dispatch_name (str) : name of Dispatch model in the simulations/dispatch folder</span>
+<span class="sd">            txt_file_name (str) : name of desired output file (just filename, no directories)</span>
+<span class="sd">            param_or_var (int)  : select either Parameters or Variables to write </span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># get dictionary of parsed parameter string properties</span>
+        <span class="n">P</span> <span class="o">=</span> <span class="n">FileParser</span><span class="o">.</span><span class="n">get_dispatch_string_properties</span><span class="p">(</span><span class="n">dispatch_name</span><span class="p">,</span> <span class="n">param_or_var</span><span class="p">)</span>
+        
+        <span class="c1"># assign line contents for each type of line</span>
+        <span class="n">params_latex</span> <span class="o">=</span> <span class="n">P</span><span class="p">[</span><span class="s1">&#39;params_latex&#39;</span><span class="p">]</span> 
+        <span class="n">sections</span> <span class="o">=</span> <span class="n">P</span><span class="p">[</span><span class="s1">&#39;sections&#39;</span><span class="p">]</span>
+        <span class="n">subsection</span> <span class="o">=</span> <span class="n">P</span><span class="p">[</span><span class="s1">&#39;ssection&#39;</span><span class="p">]</span> 
+        <span class="n">detail</span> <span class="o">=</span> <span class="n">P</span><span class="p">[</span><span class="s1">&#39;detail&#39;</span><span class="p">]</span>
+        
+        <span class="c1"># assign line numbers where each type of line shows up</span>
+        <span class="n">params_latex_lineNo</span> <span class="o">=</span> <span class="n">P</span><span class="p">[</span><span class="s1">&#39;params_latex_lineNo&#39;</span><span class="p">]</span> 
+        <span class="n">section_lineNo</span>    <span class="o">=</span> <span class="n">P</span><span class="p">[</span><span class="s1">&#39;section_lineNo&#39;</span><span class="p">]</span>  
+        <span class="n">subsection_lineNo</span> <span class="o">=</span> <span class="n">P</span><span class="p">[</span><span class="s1">&#39;ssection_lineNo&#39;</span><span class="p">]</span>
+        <span class="n">params_detail_lineNo</span> <span class="o">=</span> <span class="n">P</span><span class="p">[</span><span class="s1">&#39;detail_lineNo&#39;</span><span class="p">]</span> 
+
+        <span class="c1"># total amount of lines</span>
+        <span class="n">n_lines</span> <span class="o">=</span> <span class="n">P</span><span class="p">[</span><span class="s1">&#39;N_lines&#39;</span><span class="p">]</span>
+        
+        <span class="c1"># start counting at 0</span>
+        <span class="n">doc_lines</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">count_sec</span>  <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">count_subsec</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">count_params</span> <span class="o">=</span> <span class="mi">0</span>
+        
+        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_lines</span><span class="p">):</span>
+            <span class="c1"># writing section titles</span>
+            <span class="k">if</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">section_lineNo</span><span class="p">:</span>
+                <span class="n">tmp_section</span> <span class="o">=</span> <span class="s1">&#39;&amp; &amp;</span><span class="se">\\</span><span class="s1"> </span><span class="se">\&#39;</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="n">sections</span><span class="p">[</span><span class="n">count_sec</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\&#39;</span><span class="s1">&#39;</span>
+                <span class="n">doc_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tmp_section</span><span class="p">)</span>
+                <span class="n">count_sec</span> <span class="o">+=</span> <span class="mi">1</span>
+                
+                <span class="c1"># if params in next line, write a \begin{align} statement</span>
+                <span class="k">if</span> <span class="n">n</span><span class="o">+</span><span class="mi">1</span> <span class="ow">in</span> <span class="n">params_latex_lineNo</span><span class="p">:</span>
+                    <span class="n">doc_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)</span>
+                
+
+            <span class="c1"># writing subsection titles</span>
+            <span class="k">if</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">subsection_lineNo</span><span class="p">:</span>
+                <span class="n">tmp_ssection</span> <span class="o">=</span> <span class="s1">&#39;&amp; &amp;</span><span class="se">\\</span><span class="s1"> </span><span class="se">\&#39;</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="n">subsection</span><span class="p">[</span><span class="n">count_subsec</span><span class="p">]</span>  <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\&#39;</span><span class="s1">&#39;</span>
+                <span class="n">doc_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tmp_ssection</span><span class="p">)</span>
+                <span class="n">count_subsec</span> <span class="o">+=</span> <span class="mi">1</span>
+                
+                <span class="n">doc_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)</span>
+                
+
+            <span class="c1"># writing LaTeX representation of params with text details</span>
+            <span class="k">if</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">params_latex_lineNo</span><span class="p">:</span>
+                <span class="n">detail_line_match</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">params_detail_lineNo</span><span class="p">)</span> <span class="o">==</span> <span class="n">params_latex_lineNo</span><span class="p">[</span><span class="n">count_params</span><span class="p">])[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">tmp_detail</span> <span class="o">=</span> <span class="n">detail</span><span class="p">[</span> <span class="nb">int</span><span class="p">(</span><span class="n">detail_line_match</span><span class="p">)</span>  <span class="p">]</span>
+                
+                <span class="c1"># if there&#39;s another parameter next, end the line</span>
+                <span class="k">if</span> <span class="n">n</span><span class="o">+</span><span class="mi">1</span> <span class="ow">in</span> <span class="n">params_latex_lineNo</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="s1">&#39;[&#39;</span> <span class="ow">in</span> <span class="n">tmp_detail</span><span class="p">:</span>
+                        <span class="n">detail_txt</span><span class="p">,</span> <span class="n">unit_txt</span> <span class="o">=</span> <span class="n">tmp_detail</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;[&#39;</span><span class="p">)</span>
+                        <span class="n">tmp_params</span> <span class="o">=</span> <span class="s1">&#39;$</span><span class="si">{0}</span><span class="s1">$ &amp; $</span><span class="si">{1}</span><span class="s1">$ &amp; </span><span class="si">{2}</span><span class="s1"> </span><span class="se">\\\\</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                            <span class="n">params_latex</span><span class="p">[</span><span class="n">count_params</span><span class="p">],</span> <span class="n">unit_txt</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">detail_txt</span> <span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">tmp_params</span> <span class="o">=</span> <span class="s1">&#39;&amp;&#39;</span> <span class="o">+</span> <span class="n">params_latex</span><span class="p">[</span><span class="n">count_params</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39; &amp;&amp;: </span><span class="se">\\</span><span class="s1">text{&#39;</span> <span class="o">+</span> <span class="n">detail</span><span class="p">[</span><span class="n">count_params</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;}&#39;</span>
+                        
+                    <span class="n">doc_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tmp_params</span><span class="p">)</span>
+                <span class="c1"># if no parameters up next, end the align brackets</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">doc_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tmp_params</span><span class="p">)</span>
+                    <span class="n">doc_lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)</span>
+
+                <span class="n">count_params</span> <span class="o">+=</span> <span class="mi">1</span>
+        
+        <span class="c1"># print and/or save text file</span>
+        <span class="n">txt_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">FileMethods</span><span class="o">.</span><span class="n">samsim_dir</span><span class="p">,</span> <span class="s1">&#39;outputs&#39;</span><span class="p">,</span> <span class="n">txt_file_name</span><span class="p">)</span>
+        <span class="n">text_file</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">txt_path</span><span class="p">,</span><span class="s1">&#39;w&#39;</span><span class="p">)</span>
+        <span class="n">text_file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39; </span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">doc_lines</span><span class="p">))</span>
+        <span class="n">text_file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div></div>
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">NE-2 Simulations  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">simulations.util.FileParser</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2021, Gabriel J. Soto, Una Baker, Grace Stanke, Ben Lindley, Mike Wagner.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.2.0.
+    </div>
+  </body>
+</html>

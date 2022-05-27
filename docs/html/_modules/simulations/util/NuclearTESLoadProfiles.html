@@ -1,0 +1,528 @@
+
+
+<!doctype html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>simulations.util.NuclearTESLoadProfiles &#8212; NE-2 Simulations  documentation</title>
+    <link rel="stylesheet" href="../../../_static/bizstyle.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/language_data.js"></script>
+    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script src="../../../_static/bizstyle.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <!--[if lt IE 9]>
+    <script src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">NE-2 Simulations  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">simulations.util.NuclearTESLoadProfiles</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for simulations.util.NuclearTESLoadProfiles</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python3</span>
+<span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Created on Tue Mar  8 11:46:53 2022</span>
+
+<span class="sd">@author: gabrielsoto</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">pylab</span> <span class="kn">import</span> <span class="n">rc</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">copy</span><span class="o">,</span> <span class="nn">pickle</span>
+<span class="n">rc</span><span class="p">(</span><span class="s1">&#39;axes&#39;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">rc</span><span class="p">(</span><span class="s1">&#39;font&#39;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="s1">&#39;bold&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="NuclearTESLoadProfiles"><a class="viewcode-back" href="../../../simulations.util.html#simulations.util.NuclearTESLoadProfiles.NuclearTESLoadProfiles">[docs]</a><span class="k">class</span> <span class="nc">NuclearTESLoadProfiles</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The LoadProfileFigures class is SEPARATE from the PostProcessing family of classes.</span>
+<span class="sd">    This might in the future best be a part of the PostProcessing family... but doing</span>
+<span class="sd">    this semi-quickly for the Model 1 Energies paper. </span>
+<span class="sd">    </span>
+<span class="sd">    The class sets up all helper methods used to generate overlaid violin plots</span>
+<span class="sd">    for load profiles of a given run. The given run is specified by:</span>
+<span class="sd">        - Pref</span>
+<span class="sd">        - tshours</span>
+<span class="sd">        - tariff schedule</span>
+<span class="sd">        - time horizons (both for SSC and Pyomo)</span>
+<span class="sd">        </span>
+<span class="sd">    Data from these runs is assumed to be stored in a pickle file and contains </span>
+<span class="sd">    data for a full year&#39;s worth of simulation. I keep changing file names, so</span>
+<span class="sd">    the filename is assumed to be an input (a separate script that creates this</span>
+<span class="sd">    class will handle filename creation). </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+<div class="viewcode-block" id="NuclearTESLoadProfiles.__init__"><a class="viewcode-back" href="../../../simulations.util.html#simulations.util.NuclearTESLoadProfiles.NuclearTESLoadProfiles.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filepath</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Initializes the NuclearTESLoadProfiles module</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">filepath</span> <span class="o">=</span> <span class="n">filepath</span>
+        
+        <span class="c1"># set some parameters</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hrs_per_day</span>      <span class="o">=</span> <span class="mi">24</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">days_per_week</span>    <span class="o">=</span> <span class="mi">7</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">weeks_till_a_summer_day</span> <span class="o">=</span> <span class="mi">26</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">summer_start_day</span> <span class="o">=</span> <span class="mi">150</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">summer_end_day</span>   <span class="o">=</span> <span class="mi">273</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">year_end_day</span>     <span class="o">=</span> <span class="mi">365</span>
+
+        <span class="c1"># some basic arrays</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hrs_in_day</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">hrs_per_day</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Mondays</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">year_end_day</span><span class="p">,</span> <span class="mi">7</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Fridays</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">year_end_day</span><span class="p">,</span> <span class="mi">7</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Sundays</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">year_end_day</span><span class="p">,</span> <span class="mi">7</span><span class="p">)</span>
+
+        
+        <span class="c1"># make sure path exists</span>
+        <span class="k">assert</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filepath</span><span class="p">),</span> <span class="s2">&quot;File not found at </span><span class="si">{0}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">filepath</span> <span class="p">)</span>
+        
+        <span class="c1"># extracting data as a dictionary from given filepath</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filepath</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">Storage</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+            
+        <span class="bp">self</span><span class="o">.</span><span class="n">extract_data</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">restructure_array_by_hour</span><span class="p">()</span>
+        
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">Storage</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">array_byHour</span>  <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span> <span class="o">+</span> <span class="s2">&quot;_array_byHour&quot;</span><span class="p">)</span>
+            <span class="n">dict_bySeason</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">restructure_dict_by_season_and_weekday</span><span class="p">(</span> <span class="n">array_byHour</span> <span class="p">)</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span> <span class="o">+</span> <span class="s2">&quot;_dict&quot;</span><span class="p">,</span> <span class="n">dict_bySeason</span><span class="p">)</span></div>
+            
+
+<div class="viewcode-block" id="NuclearTESLoadProfiles.extract_data"><a class="viewcode-back" href="../../../simulations.util.html#simulations.util.NuclearTESLoadProfiles.NuclearTESLoadProfiles.extract_data">[docs]</a>    <span class="k">def</span> <span class="nf">extract_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Extracts raw data from Storage </span>
+<span class="sd">        </span>
+<span class="sd">        This method extracts full year&#39;s worth of data from storage dictionary</span>
+<span class="sd">        and saves it as a member attribute of current object.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">Storage</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            
+            <span class="c1"># extract key from dictionary</span>
+            <span class="n">tmp_array</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Storage</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+            
+            <span class="c1"># check if data has an associated pint unit, remove if so</span>
+            <span class="n">tmp_array</span> <span class="o">=</span> <span class="n">tmp_array</span><span class="o">.</span><span class="n">m</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">tmp_array</span><span class="p">,</span> <span class="s1">&#39;m&#39;</span><span class="p">)</span> <span class="k">else</span> <span class="n">tmp_array</span>
+            
+            <span class="c1"># save data as object attribute</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span> <span class="o">+</span> <span class="s2">&quot;_array&quot;</span><span class="p">,</span> <span class="n">tmp_array</span><span class="p">)</span>
+            
+            <span class="c1"># delete temporary data structure</span>
+            <span class="k">del</span> <span class="n">tmp_array</span></div>
+    
+    
+<div class="viewcode-block" id="NuclearTESLoadProfiles.restructure_array_by_hour"><a class="viewcode-back" href="../../../simulations.util.html#simulations.util.NuclearTESLoadProfiles.NuclearTESLoadProfiles.restructure_array_by_hour">[docs]</a>    <span class="k">def</span> <span class="nf">restructure_array_by_hour</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Restructures data arrays by hour of day</span>
+<span class="sd">        </span>
+<span class="sd">        This method takes data (saved as member arrays of current object)</span>
+<span class="sd">        and restructures it by hour of the day. That is, for each hour of the day,</span>
+<span class="sd">        it populates a new array (24 x 365) with values for all, for example,</span>
+<span class="sd">        midnights throughout the year. </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="n">empty_list</span> <span class="o">=</span> <span class="p">[]</span>
+        
+        <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">hrs_in_day</span><span class="p">:</span>
+            
+            <span class="c1"># creating time slice for all instances of hour h for days in sim</span>
+            <span class="n">start_slice</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span> <span class="n">h</span> <span class="p">)</span>
+            <span class="n">end_slice</span>   <span class="o">=</span> <span class="nb">int</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">year_end_day</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">hrs_per_day</span> <span class="p">)</span>
+            <span class="n">t_slice</span>     <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span> <span class="n">start_slice</span><span class="p">,</span> <span class="n">end_slice</span><span class="p">,</span> <span class="mi">24</span> <span class="p">)</span>
+            
+            <span class="c1"># slice data</span>
+            <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">Storage</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                
+                <span class="k">if</span> <span class="n">h</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span> <span class="o">+</span> <span class="s2">&quot;_array_byHour&quot;</span><span class="p">,</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">empty_list</span><span class="p">)</span> <span class="p">)</span>
+                
+                <span class="n">array_byHour</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span> <span class="o">+</span> <span class="s2">&quot;_array_byHour&quot;</span><span class="p">)</span>
+                <span class="n">array_byHour</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span> <span class="o">+</span> <span class="s2">&quot;_array&quot;</span><span class="p">)[</span><span class="n">t_slice</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span> <span class="p">)</span>
+            
+        <span class="c1"># restructuring as arrays</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">Storage</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">array_byHour</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span> <span class="o">+</span> <span class="s2">&quot;_array_byHour&quot;</span><span class="p">)</span>
+            <span class="n">array_byHour</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">array_byHour</span><span class="p">)</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span> <span class="o">+</span> <span class="s2">&quot;_array_byHour&quot;</span><span class="p">,</span> <span class="n">array_byHour</span><span class="p">)</span></div>
+    
+    
+<div class="viewcode-block" id="NuclearTESLoadProfiles.restructure_dict_by_season_and_weekday"><a class="viewcode-back" href="../../../simulations.util.html#simulations.util.NuclearTESLoadProfiles.NuclearTESLoadProfiles.restructure_dict_by_season_and_weekday">[docs]</a>    <span class="k">def</span> <span class="nf">restructure_dict_by_season_and_weekday</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="n">data_</span> <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Restructures existing data arrays into a data dictionary</span>
+<span class="sd">        </span>
+<span class="sd">        Data dictionary is split into Winter and Summer data. Those two</span>
+<span class="sd">        are then split into WeekDay and WeekEnd data. </span>
+
+<span class="sd">        Inputs:</span>
+<span class="sd">            data_ : ndarry of size 24 x 365</span>
+
+<span class="sd">        Outputs:</span>
+<span class="sd">            data_arrays : dict </span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">data_arrays</span> <span class="o">=</span> <span class="p">{}</span>
+        
+        <span class="n">data_arrays</span><span class="p">[</span><span class="s1">&#39;Winter&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">data_arrays</span><span class="p">[</span><span class="s1">&#39;Winter&#39;</span><span class="p">][</span><span class="s1">&#39;WeekDay&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">data_arrays</span><span class="p">[</span><span class="s1">&#39;Winter&#39;</span><span class="p">][</span><span class="s1">&#39;WeekEnd&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        
+        <span class="n">data_arrays</span><span class="p">[</span><span class="s1">&#39;Summer&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">data_arrays</span><span class="p">[</span><span class="s1">&#39;Summer&#39;</span><span class="p">][</span><span class="s1">&#39;WeekDay&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">data_arrays</span><span class="p">[</span><span class="s1">&#39;Summer&#39;</span><span class="p">][</span><span class="s1">&#39;WeekEnd&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    
+    
+        <span class="n">summer_start</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">summer_start_day</span>
+        <span class="n">summer_end</span>   <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">summer_end_day</span>
+        
+        
+        <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">hrs_in_day</span><span class="p">:</span>
+            <span class="c1"># =========================</span>
+            <span class="c1"># Weekdays</span>
+            <span class="n">tmp_winter_WD</span>    <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">tmp_summer_WD</span>    <span class="o">=</span> <span class="p">[]</span>
+            
+            <span class="k">for</span> <span class="n">m</span><span class="p">,</span><span class="n">f</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Mondays</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Fridays</span><span class="p">):</span>
+                <span class="c1"># slice of data for all hours h -&gt; only grabbing M-F values (as array)</span>
+                
+                <span class="c1"># =============================================================================</span>
+                <span class="c1">### Winter  </span>
+        
+                <span class="c1"># considering the first winter months</span>
+                <span class="k">if</span> <span class="n">m</span> <span class="o">&lt;</span> <span class="n">summer_start</span><span class="p">:</span>
+                    
+                    <span class="c1"># checking if summer started mid-week</span>
+                    <span class="k">if</span> <span class="n">f</span> <span class="o">&lt;=</span> <span class="n">summer_start</span><span class="p">:</span>
+                        <span class="n">winter_weekday</span>    <span class="o">=</span> <span class="n">data_</span><span class="p">[</span><span class="n">h</span><span class="p">,</span> <span class="nb">slice</span><span class="p">(</span><span class="n">m</span><span class="p">,</span><span class="n">f</span><span class="p">,</span><span class="mi">1</span><span class="p">)]</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">winter_weekday</span>    <span class="o">=</span> <span class="n">data_</span><span class="p">[</span><span class="n">h</span><span class="p">,</span> <span class="nb">slice</span><span class="p">(</span><span class="n">m</span><span class="p">,</span><span class="n">summer_start</span><span class="p">,</span><span class="mi">1</span><span class="p">)]</span>
+                        
+                    <span class="c1"># storing all data for hour h, M-F as a list in list</span>
+                    <span class="n">tmp_winter_WD</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">winter_weekday</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span> <span class="p">)</span>
+                
+                <span class="c1"># considering the second winter months</span>
+                <span class="k">elif</span> <span class="n">m</span> <span class="o">&gt;</span> <span class="n">summer_end</span><span class="p">:</span>
+                
+                    <span class="n">winter_weekday</span>    <span class="o">=</span> <span class="n">data_</span><span class="p">[</span><span class="n">h</span><span class="p">,</span> <span class="nb">slice</span><span class="p">(</span><span class="n">m</span><span class="p">,</span><span class="n">f</span><span class="p">,</span><span class="mi">1</span><span class="p">)]</span>
+                    
+                    <span class="c1"># storing all data for hour h, M-F as a list in list</span>
+                    <span class="n">tmp_winter_WD</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">winter_weekday</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span> <span class="p">)</span>
+                
+                <span class="c1"># =============================================================================</span>
+                <span class="c1">### Summer  </span>
+                
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="c1"># checking if summer started mid-week</span>
+                    <span class="k">if</span> <span class="n">f</span> <span class="o">&lt;=</span> <span class="n">summer_end</span><span class="p">:</span>
+                        <span class="n">summer_weekday</span>    <span class="o">=</span> <span class="n">data_</span><span class="p">[</span><span class="n">h</span><span class="p">,</span> <span class="nb">slice</span><span class="p">(</span><span class="n">m</span><span class="p">,</span><span class="n">f</span><span class="p">,</span><span class="mi">1</span><span class="p">)]</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">summer_weekday</span>    <span class="o">=</span> <span class="n">data_</span><span class="p">[</span><span class="n">h</span><span class="p">,</span> <span class="nb">slice</span><span class="p">(</span><span class="n">m</span><span class="p">,</span><span class="n">summer_end</span><span class="p">,</span><span class="mi">1</span><span class="p">)]</span>
+                        
+                    <span class="c1"># storing all data for hour h, M-F as a list in list</span>
+                    <span class="n">tmp_summer_WD</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">summer_weekday</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span> <span class="p">)</span>
+        
+                    
+                
+            <span class="n">winter_data</span>    <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">tmp_winter_WD</span><span class="p">,</span> <span class="p">[])</span>
+            <span class="n">data_arrays</span><span class="p">[</span><span class="s1">&#39;Winter&#39;</span><span class="p">][</span><span class="s1">&#39;WeekDay&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">winter_data</span> <span class="p">)</span>
+            
+            <span class="n">summer_data</span>    <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">tmp_summer_WD</span><span class="p">,</span> <span class="p">[])</span>
+            <span class="n">data_arrays</span><span class="p">[</span><span class="s1">&#39;Summer&#39;</span><span class="p">][</span><span class="s1">&#39;WeekDay&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">summer_data</span> <span class="p">)</span>
+            
+            <span class="c1"># =========================</span>
+            <span class="c1"># Weekends</span>
+            <span class="n">tmp_winter_WE</span>    <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">tmp_summer_WE</span>    <span class="o">=</span> <span class="p">[]</span>
+            
+            <span class="k">for</span> <span class="n">f</span><span class="p">,</span><span class="n">s</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Fridays</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Sundays</span><span class="p">):</span>
+                <span class="c1"># =============================================================================</span>
+                <span class="c1">### Winter  </span>
+        
+                <span class="c1"># considering the first winter months</span>
+                <span class="k">if</span> <span class="n">f</span> <span class="o">&lt;</span> <span class="n">summer_start</span><span class="p">:</span>
+                    
+                    <span class="c1"># checking if summer started mid-week</span>
+                    <span class="k">if</span> <span class="n">s</span> <span class="o">&lt;=</span> <span class="n">summer_start</span><span class="p">:</span>
+                        <span class="n">winter_weekend</span>    <span class="o">=</span> <span class="n">data_</span><span class="p">[</span><span class="n">h</span><span class="p">,</span> <span class="nb">slice</span><span class="p">(</span><span class="n">f</span><span class="p">,</span><span class="n">s</span><span class="p">,</span><span class="mi">1</span><span class="p">)]</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">winter_weekend</span>    <span class="o">=</span> <span class="n">data_</span><span class="p">[</span><span class="n">h</span><span class="p">,</span> <span class="nb">slice</span><span class="p">(</span><span class="n">f</span><span class="p">,</span><span class="n">summer_start</span><span class="p">,</span><span class="mi">1</span><span class="p">)]</span>
+                        
+                    <span class="c1"># storing all data for hour h, F-Su as a list in list</span>
+                    <span class="n">tmp_winter_WE</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">winter_weekend</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span> <span class="p">)</span>
+                    
+                <span class="c1"># considering the second winter months</span>
+                <span class="k">elif</span> <span class="n">f</span> <span class="o">&gt;</span> <span class="n">summer_end</span><span class="p">:</span>
+                
+                    <span class="n">winter_weekend</span>    <span class="o">=</span> <span class="n">data_</span><span class="p">[</span><span class="n">h</span><span class="p">,</span> <span class="nb">slice</span><span class="p">(</span><span class="n">f</span><span class="p">,</span><span class="n">s</span><span class="p">,</span><span class="mi">1</span><span class="p">)]</span>
+                    
+                    <span class="c1"># storing all data for hour h, M-F as a list in list</span>
+                    <span class="n">tmp_winter_WE</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">winter_weekend</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span> <span class="p">)</span>
+                
+                <span class="c1"># =============================================================================</span>
+                <span class="c1">### Summer  </span>
+                
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="c1"># checking if summer started mid-week</span>
+                    <span class="k">if</span> <span class="n">s</span> <span class="o">&lt;=</span> <span class="n">summer_end</span><span class="p">:</span>
+                        <span class="n">summer_weekend</span>    <span class="o">=</span> <span class="n">data_</span><span class="p">[</span><span class="n">h</span><span class="p">,</span> <span class="nb">slice</span><span class="p">(</span><span class="n">f</span><span class="p">,</span><span class="n">s</span><span class="p">,</span><span class="mi">1</span><span class="p">)]</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">summer_weekend</span>    <span class="o">=</span> <span class="n">data_</span><span class="p">[</span><span class="n">h</span><span class="p">,</span> <span class="nb">slice</span><span class="p">(</span><span class="n">f</span><span class="p">,</span><span class="n">summer_end</span><span class="p">,</span><span class="mi">1</span><span class="p">)]</span>
+                        
+                    <span class="c1"># storing all data for hour h, M-F as a list in list</span>
+                    <span class="n">tmp_summer_WE</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">summer_weekend</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span> <span class="p">)</span>
+                    
+            <span class="n">winter_WEdata</span>    <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">tmp_winter_WE</span><span class="p">,</span> <span class="p">[])</span>
+            <span class="n">data_arrays</span><span class="p">[</span><span class="s1">&#39;Winter&#39;</span><span class="p">][</span><span class="s1">&#39;WeekEnd&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">winter_WEdata</span> <span class="p">)</span>
+            
+            <span class="n">summer_WEdata</span>    <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">tmp_summer_WE</span><span class="p">,</span> <span class="p">[])</span>
+            <span class="n">data_arrays</span><span class="p">[</span><span class="s1">&#39;Summer&#39;</span><span class="p">][</span><span class="s1">&#39;WeekEnd&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">summer_WEdata</span> <span class="p">)</span>
+
+        
+        
+        <span class="k">for</span> <span class="n">season</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;Winter&quot;</span><span class="p">,</span> <span class="s2">&quot;Summer&quot;</span><span class="p">]:</span>
+            <span class="k">for</span> <span class="n">dayOfWeek</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;WeekDay&quot;</span><span class="p">,</span> <span class="s2">&quot;WeekEnd&quot;</span><span class="p">]:</span>
+                <span class="n">data_arrays</span><span class="p">[</span><span class="n">season</span><span class="p">][</span><span class="n">dayOfWeek</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span> <span class="n">data_arrays</span><span class="p">[</span><span class="n">season</span><span class="p">][</span><span class="n">dayOfWeek</span><span class="p">])</span>
+                
+        <span class="k">return</span> <span class="n">data_arrays</span></div>
+    
+
+<div class="viewcode-block" id="NuclearTESLoadProfiles.create_violin_plot"><a class="viewcode-back" href="../../../simulations.util.html#simulations.util.NuclearTESLoadProfiles.NuclearTESLoadProfiles.create_violin_plot">[docs]</a>    <span class="k">def</span> <span class="nf">create_violin_plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ax</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">full_data</span><span class="p">,</span> <span class="n">v_color</span><span class="o">=</span><span class="s1">&#39;C0&#39;</span><span class="p">,</span> <span class="n">hide_x</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Creates a violin plot for each hour of the day</span>
+<span class="sd">        </span>
+<span class="sd">        Method repurposed from https://matplotlib.org/stable/gallery/statistics/customized_violin.html</span>
+<span class="sd">        Creates a violin plot from a list of lists for each of those sub-lists. </span>
+<span class="sd">        In our case, the sub-lists are values for a given hour of the day across </span>
+<span class="sd">        the full year (e.g., hour 0 from January to December). Also plots</span>
+<span class="sd">        medians as a white dot, 1st-3rd quartiles in a black rectangle, and the</span>
+<span class="sd">        full distribution in color specified by input. </span>
+<span class="sd">        </span>
+<span class="sd">        Inputs:</span>
+<span class="sd">            ax : Pyplot axis object</span>
+<span class="sd">            data : list of lists </span>
+<span class="sd">            v_color : string</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># full violin plot</span>
+        <span class="n">vp</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">violinplot</span><span class="p">(</span> <span class="n">data</span><span class="p">,</span> <span class="n">positions</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">hrs_in_day</span><span class="p">,</span> 
+                            <span class="n">widths</span><span class="o">=</span><span class="mf">0.75</span><span class="p">,</span> <span class="n">showmeans</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">showmedians</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                            <span class="n">showextrema</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            
+        <span class="k">for</span> <span class="n">pc</span> <span class="ow">in</span> <span class="n">vp</span><span class="p">[</span><span class="s1">&#39;bodies&#39;</span><span class="p">]:</span>
+            <span class="n">pc</span><span class="o">.</span><span class="n">set_facecolor</span><span class="p">(</span><span class="n">v_color</span><span class="p">)</span>
+            <span class="n">pc</span><span class="o">.</span><span class="n">set_edgecolor</span><span class="p">(</span><span class="s1">&#39;black&#39;</span><span class="p">)</span>
+            <span class="n">pc</span><span class="o">.</span><span class="n">set_alpha</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        
+        <span class="n">quartile1</span><span class="p">,</span> <span class="n">medians</span><span class="p">,</span> <span class="n">quartile3</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="p">[</span><span class="mi">25</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">75</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">whiskers</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">violin_adjacent_values</span><span class="p">(</span><span class="n">sorted_array</span><span class="p">,</span> <span class="n">q1</span><span class="p">,</span> <span class="n">q3</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">sorted_array</span><span class="p">,</span> <span class="n">q1</span><span class="p">,</span> <span class="n">q3</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">data</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="n">quartile1</span><span class="p">,</span> <span class="n">quartile3</span><span class="p">)])</span>
+        <span class="n">whiskers_min</span><span class="p">,</span> <span class="n">whiskers_max</span> <span class="o">=</span> <span class="n">whiskers</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">whiskers</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span>
+        
+        <span class="n">inds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">medians</span><span class="p">)</span> <span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">inds</span><span class="p">,</span> <span class="n">medians</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;o&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;black&#39;</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="mi">35</span><span class="p">,</span> <span class="n">zorder</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">inds</span><span class="p">,</span> <span class="n">medians</span><span class="p">,</span> <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;o&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;white&#39;</span><span class="p">,</span> <span class="n">s</span><span class="o">=</span><span class="mi">25</span><span class="p">,</span> <span class="n">zorder</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">vlines</span><span class="p">(</span><span class="n">inds</span><span class="p">,</span> <span class="n">quartile1</span><span class="p">,</span> <span class="n">quartile3</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;-&#39;</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">vlines</span><span class="p">(</span><span class="n">inds</span><span class="p">,</span> <span class="n">whiskers_min</span><span class="p">,</span> <span class="n">whiskers_max</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s1">&#39;-&#39;</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">modify_violin_axes</span><span class="p">(</span> <span class="n">ax</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">full_data</span><span class="p">,</span> <span class="n">hide_x</span> <span class="p">)</span></div>
+        <span class="c1"># ax.grid(True)</span>
+
+
+<div class="viewcode-block" id="NuclearTESLoadProfiles.violin_adjacent_values"><a class="viewcode-back" href="../../../simulations.util.html#simulations.util.NuclearTESLoadProfiles.NuclearTESLoadProfiles.violin_adjacent_values">[docs]</a>    <span class="k">def</span> <span class="nf">violin_adjacent_values</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vals</span><span class="p">,</span> <span class="n">q1</span><span class="p">,</span> <span class="n">q3</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Helper method for violin plots to clip boundaries</span>
+<span class="sd">        </span>
+<span class="sd">        Method taken from https://matplotlib.org/stable/gallery/statistics/customized_violin.html</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">upper_adjacent_value</span> <span class="o">=</span> <span class="n">q3</span> <span class="o">+</span> <span class="p">(</span><span class="n">q3</span> <span class="o">-</span> <span class="n">q1</span><span class="p">)</span> <span class="o">*</span> <span class="mf">1.5</span>
+        <span class="n">upper_adjacent_value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">upper_adjacent_value</span><span class="p">,</span> <span class="n">q3</span><span class="p">,</span> <span class="n">vals</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+        
+        <span class="n">lower_adjacent_value</span> <span class="o">=</span> <span class="n">q1</span> <span class="o">-</span> <span class="p">(</span><span class="n">q3</span> <span class="o">-</span> <span class="n">q1</span><span class="p">)</span> <span class="o">*</span> <span class="mf">1.5</span>
+        <span class="n">lower_adjacent_value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">lower_adjacent_value</span><span class="p">,</span> <span class="n">vals</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">q1</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">lower_adjacent_value</span><span class="p">,</span> <span class="n">upper_adjacent_value</span></div>
+
+
+<div class="viewcode-block" id="NuclearTESLoadProfiles.modify_violin_axes"><a class="viewcode-back" href="../../../simulations.util.html#simulations.util.NuclearTESLoadProfiles.NuclearTESLoadProfiles.modify_violin_axes">[docs]</a>    <span class="k">def</span> <span class="nf">modify_violin_axes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ax</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">full_data</span><span class="p">,</span> <span class="n">hide_x</span><span class="o">=</span><span class="kc">False</span> <span class="p">):</span>
+        
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">hide_x</span><span class="p">:</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="s2">&quot;Hour of the Day&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">14</span><span class="p">,</span> <span class="n">fontweight</span><span class="o">=</span><span class="s1">&#39;bold&#39;</span><span class="p">)</span>
+            
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">([</span><span class="o">-</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">23.5</span><span class="p">])</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hrs_in_day</span><span class="p">)</span>
+        
+        <span class="n">max_data</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">full_data</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">season_data</span> <span class="o">=</span> <span class="n">full_data</span><span class="p">[</span><span class="n">s</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">season_data</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="n">max_data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">season_data</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">())</span>
+    
+        <span class="n">upper_lim</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">max_data</span><span class="p">)</span> <span class="o">*</span> <span class="mf">1.1</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">([</span><span class="o">-</span><span class="mi">5</span><span class="p">,</span> <span class="n">upper_lim</span><span class="p">])</span></div>
+
+
+<div class="viewcode-block" id="NuclearTESLoadProfiles.create_tariff_overlay"><a class="viewcode-back" href="../../../simulations.util.html#simulations.util.NuclearTESLoadProfiles.NuclearTESLoadProfiles.create_tariff_overlay">[docs]</a>    <span class="k">def</span> <span class="nf">create_tariff_overlay</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ax</span><span class="p">,</span> <span class="n">is_winter</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">is_weekday</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">s_color</span><span class="o">=</span><span class="s1">&#39;C0&#39;</span><span class="p">):</span>
+        
+        <span class="n">hrs_per_day</span>   <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">hrs_per_day</span>
+        <span class="n">days_per_week</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">days_per_week</span>
+        <span class="n">weeks_till_summer</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">weeks_till_a_summer_day</span>
+        <span class="n">year_end</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">year_end_day</span>
+    
+        
+        <span class="n">M_or_Su</span> <span class="o">=</span> <span class="mi">0</span> <span class="k">if</span> <span class="n">is_weekday</span> <span class="k">else</span> <span class="mi">6</span>
+        <span class="n">neutral_slice</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">hrs_per_day</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        
+        <span class="n">lw</span> <span class="o">=</span> <span class="mi">3</span>
+        <span class="k">if</span> <span class="s1">&#39;tariffx&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">filepath</span> <span class="ow">or</span> <span class="s1">&#39;TwinPeaks&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">filepath</span><span class="p">:</span>
+            
+            <span class="n">p_time</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_array</span>
+            <span class="n">price</span>  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">price_array</span>
+
+            <span class="c1"># indexing the winter default tariff schedule</span>
+            
+            <span class="n">winter_start_slice</span>  <span class="o">=</span> <span class="mi">0</span> <span class="o">+</span> <span class="n">M_or_Su</span> <span class="o">*</span> <span class="n">hrs_per_day</span>
+            <span class="n">winter_end_slice</span>    <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">winter_start_slice</span> <span class="o">+</span> <span class="n">hrs_per_day</span><span class="p">)</span>
+            <span class="n">winter_slice</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="n">winter_start_slice</span><span class="p">,</span> <span class="n">winter_end_slice</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            
+            <span class="c1"># indexing the summer default tariff schedule</span>
+            <span class="n">summer_start_slice</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span> <span class="n">days_per_week</span> <span class="o">*</span> <span class="n">hrs_per_day</span> <span class="o">*</span> <span class="n">weeks_till_summer</span> <span class="o">+</span> <span class="n">M_or_Su</span> <span class="o">*</span> <span class="n">hrs_per_day</span><span class="p">)</span>
+            <span class="n">summer_end_slice</span>   <span class="o">=</span> <span class="nb">int</span><span class="p">(</span> <span class="n">summer_start_slice</span> <span class="o">+</span> <span class="n">hrs_per_day</span><span class="p">)</span>
+            <span class="n">summer_slice</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="n">summer_start_slice</span><span class="p">,</span> <span class="n">summer_end_slice</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            
+            <span class="n">ax2</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">twinx</span><span class="p">()</span>
+            
+            <span class="k">if</span> <span class="n">is_winter</span><span class="p">:</span>
+                <span class="n">ax2</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">p_time</span><span class="p">[</span><span class="n">neutral_slice</span><span class="p">]</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">price</span><span class="p">[</span><span class="n">winter_slice</span><span class="p">],</span> <span class="n">linewidth</span><span class="o">=</span> <span class="n">lw</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">s_color</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Winter Tariff&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">ax2</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">p_time</span><span class="p">[</span><span class="n">neutral_slice</span><span class="p">]</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">price</span><span class="p">[</span><span class="n">summer_slice</span><span class="p">],</span> <span class="n">linewidth</span><span class="o">=</span> <span class="n">lw</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">s_color</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Summer Tariff&quot;</span><span class="p">)</span>
+                <span class="n">ax2</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Price </span><span class="se">\n</span><span class="s2">Multiplier&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">14</span><span class="p">,</span> <span class="n">fontweight</span><span class="o">=</span><span class="s1">&#39;bold&#39;</span><span class="p">)</span>
+            
+            <span class="n">ax2</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">([</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">3.5</span><span class="p">])</span>
+            <span class="n">ax2</span><span class="o">.</span><span class="n">yaxis</span><span class="o">.</span><span class="n">label</span><span class="o">.</span><span class="n">set_color</span><span class="p">(</span><span class="n">s_color</span><span class="p">)</span>
+            <span class="n">ax2</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="n">colors</span><span class="o">=</span><span class="n">s_color</span><span class="p">)</span>
+            <span class="n">ax2</span><span class="o">.</span><span class="n">spines</span><span class="p">[</span><span class="s2">&quot;right&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">set_edgecolor</span><span class="p">(</span><span class="n">s_color</span><span class="p">)</span>
+            
+            
+            
+        <span class="k">else</span><span class="p">:</span>
+
+            <span class="n">p_time</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_array_byHour</span>
+            
+            <span class="k">if</span> <span class="n">is_winter</span><span class="p">:</span>
+                <span class="n">price</span>  <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span> <span class="bp">self</span><span class="o">.</span><span class="n">price_dict</span><span class="p">[</span><span class="s1">&#39;Winter&#39;</span><span class="p">][</span><span class="n">w</span><span class="p">]</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;WeekDay&#39;</span><span class="p">,</span> <span class="s1">&#39;WeekEnd&#39;</span><span class="p">]</span> <span class="p">])</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="s2">&quot;Price </span><span class="se">\n</span><span class="s2">Multiplier&quot;</span><span class="p">,</span> <span class="n">labelpad</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span> <span class="n">fontweight</span><span class="o">=</span><span class="s1">&#39;bold&#39;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">price</span>  <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span> <span class="bp">self</span><span class="o">.</span><span class="n">price_dict</span><span class="p">[</span><span class="s1">&#39;Summer&#39;</span><span class="p">][</span><span class="n">w</span><span class="p">]</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;WeekDay&#39;</span><span class="p">,</span> <span class="s1">&#39;WeekEnd&#39;</span><span class="p">]</span> <span class="p">])</span>
+            
+            <span class="n">price_mins</span> <span class="o">=</span> <span class="n">price</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">price_maxs</span> <span class="o">=</span> <span class="n">price</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            
+            <span class="n">price_mean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">price</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">price_std</span>  <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span> <span class="n">price</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            
+            <span class="n">price_std_plus</span>  <span class="o">=</span> <span class="n">price_mean</span> <span class="o">+</span> <span class="n">price_std</span>
+            <span class="n">price_std_minus</span> <span class="o">=</span> <span class="n">price_mean</span> <span class="o">-</span> <span class="n">price_std</span>
+            
+            <span class="n">ax</span><span class="o">.</span><span class="n">fill_between</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">hrs_in_day</span><span class="p">,</span> <span class="n">price_mins</span><span class="p">,</span> <span class="n">price_maxs</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;C0&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.4</span> <span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Price Range over 1 Year&#39;</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">fill_between</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">hrs_in_day</span><span class="p">,</span> <span class="n">price_std_minus</span><span class="p">,</span> <span class="n">price_std_plus</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;C0&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.6</span> <span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sa">r</span><span class="s1">&#39;$\pm 1\sigma$&#39;</span><span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">hrs_in_day</span><span class="p">,</span> <span class="n">price_mean</span><span class="p">,</span> <span class="s1">&#39;darkblue&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Mean Price&#39;</span><span class="p">)</span>
+            
+            <span class="c1"># zeroline</span>
+            <span class="n">xzero</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">23.5</span><span class="p">,</span> <span class="mi">1000</span><span class="p">)</span>
+            <span class="n">yzero</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span> <span class="nb">len</span><span class="p">(</span><span class="n">xzero</span><span class="p">)</span> <span class="p">)</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span> <span class="n">xzero</span><span class="p">,</span> <span class="n">yzero</span><span class="p">,</span> <span class="s1">&#39;k--&#39;</span><span class="p">)</span>
+            
+            
+            <span class="c1"># for d in range(len(price.T)):</span>
+            <span class="c1">#     ax.plot(self.hrs_in_day, price[:,d], color=s_color, alpha=0.5, linewidth=0.5)</span>
+
+            
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">([</span><span class="o">-</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">23.5</span><span class="p">])</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hrs_in_day</span><span class="p">)</span>
+            
+            <span class="k">if</span> <span class="n">is_winter</span><span class="p">:</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">([</span><span class="o">-</span><span class="mi">3</span><span class="p">,</span> <span class="mf">8.5</span><span class="p">])</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">set_yticks</span><span class="p">([</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">6</span><span class="p">,</span><span class="mi">8</span><span class="p">])</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s1">&#39;best&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">bbox_to_anchor</span><span class="o">=</span><span class="p">(</span><span class="mf">1.17</span><span class="p">,</span> <span class="mf">1.2</span><span class="p">),</span>
+                          <span class="n">fancybox</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">shadow</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                
+                <span class="n">peak_x</span>  <span class="o">=</span> <span class="mi">18</span>
+                <span class="n">peak_dx</span> <span class="o">=</span> <span class="mf">1.7</span>
+                <span class="n">peak_text</span> <span class="o">=</span> <span class="s2">&quot;-22.3&quot;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">([</span><span class="o">-</span><span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">])</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">set_yticks</span><span class="p">([</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">4</span><span class="p">])</span>
+                
+                <span class="n">peak_x</span> <span class="o">=</span> <span class="mi">21</span>
+                <span class="n">peak_dx</span> <span class="o">=</span> <span class="mf">1.25</span>
+                <span class="n">peak_text</span> <span class="o">=</span> <span class="s2">&quot;-8.5&quot;</span>
+                
+            
+            <span class="n">ax</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">xy</span><span class="o">=</span><span class="p">(</span><span class="n">peak_x</span><span class="p">,</span> <span class="o">-</span><span class="mi">3</span><span class="p">),</span> <span class="n">xytext</span><span class="o">=</span><span class="p">(</span><span class="n">peak_x</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+                    <span class="n">arrowprops</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">arrowstyle</span><span class="o">=</span><span class="s2">&quot;-&gt;&quot;</span><span class="p">))</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="n">peak_x</span><span class="o">-</span><span class="n">peak_dx</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="n">peak_text</span><span class="p">,</span> <span class="n">fontfamily</span><span class="o">=</span><span class="s1">&#39;monospace&#39;</span><span class="p">,</span> <span class="n">fontweight</span><span class="o">=</span><span class="s1">&#39;normal&#39;</span><span class="p">,</span><span class="n">fontsize</span><span class="o">=</span><span class="mi">11</span><span class="p">)</span></div></div>
+                
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">NE-2 Simulations  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">simulations.util.NuclearTESLoadProfiles</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2021, Gabriel J. Soto, Una Baker, Grace Stanke, Ben Lindley, Mike Wagner.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.1.2.
+    </div>
+  </body>
+</html>

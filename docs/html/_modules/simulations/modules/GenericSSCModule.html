@@ -1,0 +1,1117 @@
+
+
+<!doctype html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>simulations.modules.GenericSSCModule &#8212; NE-2 Simulations  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/bizstyle.css" />
+    
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/bizstyle.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <!--[if lt IE 9]>
+    <script src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">NE-2 Simulations  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">simulations.modules.GenericSSCModule</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for simulations.modules.GenericSSCModule</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python3</span>
+<span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Created on Thu Apr  8 13:40:22 2021</span>
+
+<span class="sd">@author: gabrielsoto</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os</span><span class="o">,</span><span class="nn">sys</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;..&#39;</span><span class="p">)</span>
+<span class="kn">import</span> <span class="nn">PySAM.GenericSystem</span> <span class="k">as</span> <span class="nn">GenericSystem</span>
+<span class="kn">import</span> <span class="nn">PySAM.Grid</span> <span class="k">as</span> <span class="nn">Grid</span>
+<span class="kn">import</span> <span class="nn">PySAM.Singleowner</span> <span class="k">as</span> <span class="nn">Singleowner</span>
+<span class="kn">import</span> <span class="nn">PySAM.PySSC</span> <span class="k">as</span> <span class="nn">pssc</span>
+<span class="kn">from</span> <span class="nn">util.FileMethods</span> <span class="kn">import</span> <span class="n">FileMethods</span>
+<span class="kn">from</span> <span class="nn">util.SSCHelperMethods</span> <span class="kn">import</span> <span class="n">SSCHelperMethods</span>
+<span class="kn">from</span> <span class="nn">dispatch.GeneralDispatch</span> <span class="kn">import</span> <span class="n">GeneralDispatch</span> <span class="k">as</span> <span class="n">GD</span>
+<span class="kn">from</span> <span class="nn">dispatch.GeneralDispatch</span> <span class="kn">import</span> <span class="n">GeneralDispatchParamWrap</span> <span class="k">as</span> <span class="n">GDP</span>
+<span class="kn">from</span> <span class="nn">dispatch.GeneralDispatch</span> <span class="kn">import</span> <span class="n">GeneralDispatchOutputs</span> <span class="k">as</span> <span class="n">GDO</span>
+<span class="kn">from</span> <span class="nn">tqdm</span> <span class="kn">import</span> <span class="n">tqdm</span>
+<span class="kn">import</span> <span class="nn">pickle</span> <span class="k">as</span> <span class="nn">pickle</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">copy</span><span class="o">,</span> <span class="nn">time</span>
+<span class="kn">from</span> <span class="nn">numba</span> <span class="kn">import</span> <span class="n">vectorize</span>
+<span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
+<span class="kn">from</span> <span class="nn">multiprocessing</span> <span class="kn">import</span> <span class="n">Process</span>
+
+<div class="viewcode-block" id="GenericSSCModule"><a class="viewcode-back" href="../../../simulations.modules.html#simulations.modules.GenericSSCModule.GenericSSCModule">[docs]</a><span class="k">class</span> <span class="nc">GenericSSCModule</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The GenericSSCModule class works as a way to intialize, update, and</span>
+<span class="sd">    run SSC simulations through PySAM. </span>
+<span class="sd">    </span>
+<span class="sd">    This class is not meant to be run, but instead work as a parent class</span>
+<span class="sd">    for all other models including NuclearTES, a future CSP class, etc. </span>
+<span class="sd">    </span>
+<span class="sd">    NOTE: I over-use the word &quot;module&quot; because everything is apparently a module.</span>
+<span class="sd">    There are three hierarchies of modules at play here:</span>
+<span class="sd">    - SSC modules   : these are the cmod_&lt;name&gt;.cpp files from the SSC repository written in C++</span>
+<span class="sd">    - PySAM modules : these are PySAM wrappers for the SSC modules (also Grid, Financial modules, etc.)</span>
+<span class="sd">    - NE2 modules   : these are Python classes that create PySAM modules (e.g., *THIS* class)</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+<div class="viewcode-block" id="GenericSSCModule.__init__"><a class="viewcode-back" href="../../../simulations.modules.html#simulations.modules.GenericSSCModule.GenericSSCModule.__init__">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">plant_name</span><span class="o">=</span><span class="s2">&quot;abstract&quot;</span><span class="p">,</span> <span class="n">json_name</span><span class="o">=</span><span class="s2">&quot;abstract&quot;</span><span class="p">,</span> 
+                       <span class="n">dual</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">direct</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> 
+                       <span class="n">is_dispatch</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">dispatch_time_step</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                       <span class="n">log_dispatch_targets</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">exec_debug</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> 
+                       <span class="n">exec_timeout</span><span class="o">=</span><span class="mf">10.</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Initializes the GenericSSCModules</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            plant_name (str): </span>
+<span class="sd">                name of SSC module to run </span>
+<span class="sd">            json_name (str): </span>
+<span class="sd">                name of JSON script with input data for module</span>
+<span class="sd">            is_dispatch (bool): </span>
+<span class="sd">                boolean, if True runs Pyomo dispatch optimization</span>
+<span class="sd">            dispatch_time_step (int): </span>
+<span class="sd">                time step for dispatch (hours)</span>
+<span class="sd">            log_dispatch_targets (bool): </span>
+<span class="sd">                boolean, if True logs dispatch targets calculated by Pyomo at each segment</span>
+<span class="sd">            exec_debug (bool):</span>
+<span class="sd">                boolean, allows execution in &quot;debug&quot; mode that times out exec call</span>
+<span class="sd">            exec_timeout (float):</span>
+<span class="sd">                amount of time in seconds to timeout an exec call</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c1"># grab names, either default here or from child class</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">json_name</span>  <span class="o">=</span> <span class="n">json_name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">plant_name</span> <span class="o">=</span> <span class="n">plant_name</span>
+        
+        <span class="c1"># object parameters to distinguish inheritance</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dual</span>    <span class="o">=</span> <span class="n">dual</span>    <span class="c1"># are we combining solar + nuclear?</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">direct</span>  <span class="o">=</span> <span class="n">direct</span>  <span class="c1"># are we directly heating storage?</span>
+        
+        <span class="c1"># create and save a specific unit registry</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;u&#39;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">u</span> <span class="o">=</span> <span class="n">SSCHelperMethods</span><span class="o">.</span><span class="n">define_unit_registry</span><span class="p">()</span>
+        <span class="n">u</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">u</span>
+        
+        <span class="c1"># read in dictionaries from json script</span>
+        <span class="n">PySAM_dict</span><span class="p">,</span> <span class="n">SSC_dict</span><span class="p">,</span> <span class="n">output_keys</span> <span class="o">=</span> <span class="n">FileMethods</span><span class="o">.</span><span class="n">read_json</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">json_name</span> <span class="p">)</span>
+
+        <span class="c1"># save SSC_dict for usage later</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">SSC_dict</span> <span class="o">=</span> <span class="n">SSC_dict</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">PySAM_dict</span> <span class="o">=</span> <span class="n">PySAM_dict</span>
+        
+        <span class="c1"># storing SSC and Pyomo time horizons, inputs are in unit of hours</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ssc_horizon</span>   <span class="o">=</span> <span class="n">PySAM_dict</span><span class="p">[</span><span class="s1">&#39;ssc_horizon&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">hr</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pyomo_horizon</span> <span class="o">=</span> <span class="n">PySAM_dict</span><span class="p">[</span><span class="s1">&#39;pyomo_horizon&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">hr</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">output_keys</span>   <span class="o">=</span> <span class="n">output_keys</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dispatch_time_step</span> <span class="o">=</span> <span class="n">dispatch_time_step</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">hr</span>
+        
+        <span class="c1"># choosing debug mode vs normal execution of Plant</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">exec_debug</span>   <span class="o">=</span> <span class="n">exec_debug</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">exec_timeout</span> <span class="o">=</span> <span class="n">exec_timeout</span>
+        
+        <span class="c1"># save csv arrays to class </span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">store_csv_arrays</span><span class="p">(</span> <span class="n">PySAM_dict</span> <span class="p">)</span>
+        
+        <span class="c1"># save flag for dispatch </span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">is_dispatch</span> <span class="o">=</span> <span class="n">is_dispatch</span>
+
+        <span class="c1"># save flag for logging dispatch targets </span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log_dispatch_targets</span> <span class="o">=</span> <span class="n">log_dispatch_targets</span>
+        
+        <span class="c1"># initialize dispatch-specific parameters and loggers</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_dispatch</span><span class="p">:</span>
+            
+            <span class="c1"># initialize dispatch counter</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">disp_count</span> <span class="o">=</span> <span class="mi">0</span>
+            
+            <span class="c1"># empty dictionaries to store each dispatch run</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">disp_models</span>  <span class="o">=</span> <span class="p">{}</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">disp_results</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">disp_success</span> <span class="o">=</span> <span class="p">{}</span>
+            
+            <span class="bp">self</span><span class="o">.</span><span class="n">interpolants</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;cp_interp&#39;</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">interpolants</span><span class="p">[</span><span class="s1">&#39;cp_interp&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cp_interp</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">interpolants</span><span class="p">[</span><span class="s1">&#39;hp_interp&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">hp_interp</span>
+            
+            <span class="c1"># initialize dispatch wrap class</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dispatch_wrap</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_dispatch_wrapper</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">PySAM_dict</span> <span class="p">)</span></div>
+            
+
+<div class="viewcode-block" id="GenericSSCModule.run_sim"><a class="viewcode-back" href="../../../simulations.modules.html#simulations.modules.GenericSSCModule.GenericSSCModule.run_sim">[docs]</a>    <span class="k">def</span> <span class="nf">run_sim</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">run_loop</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">export</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">filename</span><span class="o">=</span><span class="s1">&#39;temp.csv&#39;</span><span class="p">,</span> <span class="n">overwrite_dispatch_targets</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Method to run single simulation for Generic System</span>
+<span class="sd">        </span>
+<span class="sd">        This method handles the creating and execution of Plant, Grid, and Financial objects to</span>
+<span class="sd">        run through SSC. The Plant has an optional boolean input to allow the running of a full</span>
+<span class="sd">        simulation in a segmented loop.</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            run_loop (bool): </span>
+<span class="sd">                if true, runs simulation in segments. else, runs simulation all at once</span>
+<span class="sd">            export (bool): </span>
+<span class="sd">                if true, exports results to an Excel sheet</span>
+<span class="sd">            filename (str): </span>
+<span class="sd">                name for Excel sheet saved to the /outputs directory</span>
+<span class="sd">            overwrite_dispatch_targets (bool): </span>
+<span class="sd">                if true, overwrites the current stored dispatch target file</span>
+<span class="sd">            </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">run_loop</span> <span class="o">=</span> <span class="n">run_loop</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">overwrite_dispatch_targets</span> <span class="o">=</span> <span class="n">overwrite_dispatch_targets</span>
+        
+        <span class="c1">#--- create Plant object and execute it</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">create_Plant</span><span class="p">(</span> <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">simulate_Plant</span><span class="p">(</span> <span class="p">)</span>
+        
+        <span class="c1"># log final results from looping simulations</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log_SSC_arrays</span><span class="p">(</span><span class="n">log_final</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        
+        <span class="c1">#--- use executed Plant object to create Grid object and execute it</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">create_Grid</span><span class="p">(</span> <span class="p">)</span>
+        <span class="c1"># update gen and annual energy so SystemOutput is consistent, carried over to SO object</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Grid</span><span class="o">.</span><span class="n">SystemOutput</span><span class="o">.</span><span class="n">gen</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gen_log</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Grid</span><span class="o">.</span><span class="n">SystemOutput</span><span class="o">.</span><span class="n">annual_energy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">annual_energy</span><span class="o">.</span><span class="n">m</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Grid</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span> <span class="p">)</span>
+        
+        <span class="c1">#--- use executed Plant object to create SingleOwner object and execute it</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">create_SO</span><span class="p">(</span> <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">SO</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span> <span class="p">)</span>
+        
+        <span class="k">if</span> <span class="n">export</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">export_results</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span></div>
+         
+<div class="viewcode-block" id="GenericSSCModule.store_csv_arrays"><a class="viewcode-back" href="../../../simulations.modules.html#simulations.modules.GenericSSCModule.GenericSSCModule.store_csv_arrays">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">store_csv_arrays</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_dict</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Method to get data from specified csv files and store in class</span>
+<span class="sd">        </span>
+<span class="sd">        This method uses the designated PySAM inputs from a JSON script to extract</span>
+<span class="sd">        csv arrays for use in SSC. The PySAM inputs used here are relative filepaths</span>
+<span class="sd">        to find the respective csv files. We then either save the filepath as a variable</span>
+<span class="sd">        or extract the data from the named csv file and save it to as a member attribute</span>
+<span class="sd">        of this NE2 module class.</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            input_dict (dict): </span>
+<span class="sd">                dictionary with csc relative filepaths</span>
+<span class="sd">            </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c1"># saving location of solar resource file for SSC input</span>
+        <span class="n">parent_dir</span> <span class="o">=</span> <span class="n">FileMethods</span><span class="o">.</span><span class="n">parent_dir</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">solar_resource_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">parent_dir</span><span class="p">,</span> <span class="n">input_dict</span><span class="p">[</span><span class="s1">&#39;solar_resource_rel_parent&#39;</span><span class="p">])</span> </div>
+
+<div class="viewcode-block" id="GenericSSCModule.generate_hash"><a class="viewcode-back" href="../../../simulations.modules.html#simulations.modules.GenericSSCModule.GenericSSCModule.generate_hash">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">generate_hash</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Method to create unique hash for given JSON inputs</span>
+<span class="sd">        </span>
+<span class="sd">        This method creates a unique, permanent hash for a given JSON script.</span>
+<span class="sd">        That is, it gathers all of the JSON inputs (including SSC and PySAM inputs)</span>
+<span class="sd">        from the designated script and converts both their keynames and values</span>
+<span class="sd">        to strings. It collects all of these into a single string variable and</span>
+<span class="sd">        then creates a new hexadecimal string or &quot;hash&quot; for that giant string. </span>
+<span class="sd">        This serves as a unique identifier or &quot;fingerprint&quot; for all the values </span>
+<span class="sd">        in the JSON script. This is then used later on as the file name containing</span>
+<span class="sd">        outputs from this particular run. Any small changes to the JSON script </span>
+<span class="sd">        will result in a drastically different hash, and therefore a new output file.</span>
+<span class="sd">        If a simulation has already been run with the given JSON script, it can</span>
+<span class="sd">        just pull results from the already created hash file instead of needlessly</span>
+<span class="sd">        repeating the simulation. </span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            hash_exists (bool): </span>
+<span class="sd">                if True, a hash file currently exists with all given JSON inputs</span>
+<span class="sd">            filepath (str): </span>
+<span class="sd">                absolute filepath to the hash file in outputs directory</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c1"># static start of the filename</span>
+        <span class="n">filename</span> <span class="o">=</span> <span class="s2">&quot;generic__&quot;</span>
+        
+        <span class="c1"># initializing empty string</span>
+        <span class="n">extstr</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        
+        <span class="c1"># adding SSC dictionary names and values to the existing string</span>
+        <span class="n">sscdict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">SSC_dict</span>
+        <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sscdict</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">extstr</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="si">{0}</span><span class="s2">: </span><span class="si">{1}</span><span class="s2"> &quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span> <span class="n">s</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">sscdict</span><span class="p">[</span><span class="n">s</span><span class="p">])</span> <span class="p">)</span>
+        
+        <span class="c1"># adding PySAM dictionary names and values to the existing string</span>
+        <span class="n">pysamdict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">PySAM_dict</span>
+        <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">pysamdict</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">extstr</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="si">{0}</span><span class="s2">: </span><span class="si">{1}</span><span class="s2"> &quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span> <span class="n">p</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">pysamdict</span><span class="p">[</span><span class="n">p</span><span class="p">])</span> <span class="p">)</span>
+        
+        <span class="c1"># creating a unique hash from giant string of values using md5 algorithm</span>
+        <span class="n">json_hash</span> <span class="o">=</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">md5</span><span class="p">(</span> <span class="n">extstr</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span> <span class="p">)</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span>
+        
+        <span class="c1"># adding the unique hexadecimal hash to the starting filename string</span>
+        <span class="n">filename</span> <span class="o">+=</span> <span class="n">json_hash</span>
+        
+        <span class="c1"># creating full path to output hash file</span>
+        <span class="n">filepath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="n">FileMethods</span><span class="o">.</span><span class="n">output_dir</span> <span class="p">,</span> <span class="n">filename</span> <span class="o">+</span> <span class="s1">&#39;.dispatchTargets&#39;</span><span class="p">)</span>
+        
+        <span class="c1"># checking if this current hash exists already</span>
+        <span class="n">hash_exists</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">filepath</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="n">hash_exists</span><span class="p">,</span> <span class="n">filepath</span></div>
+        
+<div class="viewcode-block" id="GenericSSCModule.create_Plant"><a class="viewcode-back" href="../../../simulations.modules.html#simulations.modules.GenericSSCModule.GenericSSCModule.create_Plant">[docs]</a>    <span class="nd">@abstractmethod</span>    
+    <span class="k">def</span> <span class="nf">create_Plant</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Method to create Plant object for the first time</span>
+<span class="sd">        </span>
+<span class="sd">        This method creates a Plant object using built-in PySAM functionalities</span>
+<span class="sd">        (including some former PySSC structures). Essentially, it creates some</span>
+<span class="sd">        sort of data structure (pointer?) from SSC inputs found in the SSC_dict</span>
+<span class="sd">        and the specified SSC module. That data structure is then used to create</span>
+<span class="sd">        a PySAM module for the specified SSC Plant module (TCSMolten_Salt, etc.). </span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c1"># create plant data encoding for generic system</span>
+        <span class="n">plant_dat</span> <span class="o">=</span> <span class="n">pssc</span><span class="o">.</span><span class="n">dict_to_ssc_table</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">SSC_dict</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">plant_name</span> <span class="p">)</span>
+        
+        <span class="c1"># create new Plant object</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Plant</span> <span class="o">=</span> <span class="n">GenericSystem</span><span class="o">.</span><span class="n">wrap</span><span class="p">(</span><span class="n">plant_dat</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="GenericSSCModule.create_Grid"><a class="viewcode-back" href="../../../simulations.modules.html#simulations.modules.GenericSSCModule.GenericSSCModule.create_Grid">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">create_Grid</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Method to create Grid onuclear_mspt_indirect_tesbject for the first time</span>
+<span class="sd">        </span>
+<span class="sd">        This method creates a Grid object again using built-in PySAM functions.</span>
+<span class="sd">        The Grid object is created similarly to the Plant object, from SSC inputs</span>
+<span class="sd">        listed in the SSC_dict. The Grid object, however, is first created</span>
+<span class="sd">        from the existing Plant object and then the grid-specific input data</span>
+<span class="sd">        is added to create a wrapper for the SSC Grid module.</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c1"># create grid data encoding for grid</span>
+        <span class="n">grid_dat</span> <span class="o">=</span> <span class="n">pssc</span><span class="o">.</span><span class="n">dict_to_ssc_table</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">SSC_dict</span><span class="p">,</span> <span class="s2">&quot;grid&quot;</span> <span class="p">)</span>
+        
+        <span class="c1"># create new Grid object from existing Plant object</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Grid</span> <span class="o">=</span> <span class="n">Grid</span><span class="o">.</span><span class="n">from_existing</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">Plant</span> <span class="p">)</span>
+        
+        <span class="c1"># import Grid-specific data to Grid object</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Grid</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="n">Grid</span><span class="o">.</span><span class="n">wrap</span><span class="p">(</span><span class="n">grid_dat</span><span class="p">)</span><span class="o">.</span><span class="n">export</span><span class="p">())</span></div>
+
+
+<div class="viewcode-block" id="GenericSSCModule.create_SO"><a class="viewcode-back" href="../../../simulations.modules.html#simulations.modules.GenericSSCModule.GenericSSCModule.create_SO">[docs]</a>    <span class="k">def</span> <span class="nf">create_SO</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Method to create SingleOwner object for the first time</span>
+<span class="sd">        </span>
+<span class="sd">        This method creates a Financial object--in this case, the &quot;SingleOwner&quot;</span>
+<span class="sd">        SSC financial module-- using PySAM like before. Similarly to the Grid</span>
+<span class="sd">        object, the SingleOwner object is created first from the existing</span>
+<span class="sd">        Plant object and then SingleOwner-specific input data is added to create</span>
+<span class="sd">        a wrapper for the SSC SingleOwner module. </span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c1"># create singleowner data encoding for singleowner object</span>
+        <span class="n">so_dat</span>   <span class="o">=</span> <span class="n">pssc</span><span class="o">.</span><span class="n">dict_to_ssc_table</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">SSC_dict</span><span class="p">,</span> <span class="s2">&quot;singleowner&quot;</span> <span class="p">)</span>
+        
+        <span class="c1"># create new Singleowner object from existing Plant object</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">SO</span> <span class="o">=</span> <span class="n">Singleowner</span><span class="o">.</span><span class="n">from_existing</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">Plant</span> <span class="p">)</span>
+        
+        <span class="c1"># import Singleowner-specific data to Singleowner object</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">SO</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="n">Singleowner</span><span class="o">.</span><span class="n">wrap</span><span class="p">(</span><span class="n">so_dat</span><span class="p">)</span><span class="o">.</span><span class="n">export</span><span class="p">())</span></div>
+
+<div class="viewcode-block" id="GenericSSCModule.duplicate_Plant"><a class="viewcode-back" href="../../../simulations.modules.html#simulations.modules.GenericSSCModule.GenericSSCModule.duplicate_Plant">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">duplicate_Plant</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Plant</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Method to create Plant object as a duplicate of existing Plant</span>
+<span class="sd">        </span>
+<span class="sd">        This method creates a Plant object from an existing Plant. The new </span>
+<span class="sd">        Plant object will have a copy of the original Plant&#39;s subclasses</span>
+<span class="sd">        EXCEPT the Output subclass. The two plant&#39;s outputs will NOT be linked.</span>
+<span class="sd">        </span>
+<span class="sd">        Note:</span>
+<span class="sd">            Currently verified in simulations/scripts/sanity_check_scripts</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            Plant (obj): </span>
+<span class="sd">                original PySAM Plant module to be copied</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            newPlant (obj): </span>
+<span class="sd">                duplicate PySAM Plant module, unlinked from original</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="k">return</span> <span class="n">Plant</span></div>
+    
+    
+<div class="viewcode-block" id="GenericSSCModule.initialize_time_elements"><a class="viewcode-back" href="../../../simulations.modules.html#simulations.modules.GenericSSCModule.GenericSSCModule.initialize_time_elements">[docs]</a>    <span class="k">def</span> <span class="nf">initialize_time_elements</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Method to initialize time elements</span>
+<span class="sd">        </span>
+<span class="sd">        This method initiliazes start and end times for full simulation and</span>
+<span class="sd">        conducts logic for end of next time segment (could be SSC horizon, or</span>
+<span class="sd">        could be end time).</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            time_start (float Quant): </span>
+<span class="sd">                starting time of current SSC horizon</span>
+<span class="sd">            time_sscH (float Quant): </span>
+<span class="sd">                ending time of current SSC horizon</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">u</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">u</span>
+        
+        <span class="c1"># start and end times for full simulation</span>
+        <span class="n">time_start</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">SSC_dict</span><span class="p">[</span><span class="s1">&#39;time_start&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">s</span>
+        <span class="n">time_end</span>   <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">SSC_dict</span><span class="p">[</span><span class="s1">&#39;time_stop&#39;</span><span class="p">]</span>  <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">s</span>
+        
+        <span class="c1"># storing full simulation end time</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sim_time_end</span> <span class="o">=</span> <span class="n">time_end</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39;s&#39;</span><span class="p">)</span> 
+        
+        <span class="c1"># determining whether next time segment end is the SSC horizon or full sim time</span>
+        <span class="n">time_sscH</span>  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ssc_horizon</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39;s&#39;</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_loop</span> \
+                        <span class="k">else</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">time_end</span><span class="p">)</span>
+        
+        <span class="c1"># setting index for subsequent calls, it&#39;s just a static index for log arrays</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">t_ind</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">time_sscH</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39;hr&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">m</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="n">time_start</span><span class="p">,</span> <span class="n">time_sscH</span></div>
+
+
+<div class="viewcode-block" id="GenericSSCModule.initialize_time_slices"><a class="viewcode-back" href="../../../simulations.modules.html#simulations.modules.GenericSSCModule.GenericSSCModule.initialize_time_slices">[docs]</a>    <span class="k">def</span> <span class="nf">initialize_time_slices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time_start</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Method to advance time segment to the next horizon</span>
+<span class="sd">        </span>
+
+<span class="sd">        This method updates the current time segment bookends and slices to</span>
+<span class="sd">        reflect the next time segment horizon. </span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            time_start (float Quant): </span>
+<span class="sd">                starting time of current SSC horizon</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c1"># setting time slices for first horizon slices</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">slice_ssc_firstH</span>   <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span> <span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">t_ind</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">slice_pyo_firstH</span>   <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span> <span class="mi">0</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">pyomo_horizon</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39;hr&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">m</span> <span class="p">),</span>  <span class="mi">1</span><span class="p">)</span>
+        
+        <span class="c1"># initialize current horizon slices, to be updated after each time iteration</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">slice_ssc_currentH</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span> <span class="nb">int</span><span class="p">(</span> <span class="n">time_start</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39;hr&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">m</span> <span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">t_ind</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>  
+        <span class="bp">self</span><span class="o">.</span><span class="n">slice_pyo_currentH</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span> <span class="nb">int</span><span class="p">(</span> <span class="n">time_start</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39;hr&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">m</span> <span class="p">),</span> <span class="nb">int</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">pyomo_horizon</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39;hr&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">m</span> <span class="p">),</span> <span class="mi">1</span><span class="p">)</span> </div>
+        
+    
+<div class="viewcode-block" id="GenericSSCModule.advance_time_segment"><a class="viewcode-back" href="../../../simulations.modules.html#simulations.modules.GenericSSCModule.GenericSSCModule.advance_time_segment">[docs]</a>    <span class="k">def</span> <span class="nf">advance_time_segment</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prev_time_start</span><span class="p">,</span> <span class="n">prev_time_next</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Method to advance time segment to the next horizon</span>
+<span class="sd">        </span>
+
+<span class="sd">        This method updates the current time segment bookends and slices to</span>
+<span class="sd">        reflect the next time segment horizon. </span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            prev_time_start (float Quant): </span>
+<span class="sd">                starting time of previous time segment</span>
+<span class="sd">            prev_time_next (float Quant): </span>
+<span class="sd">                ending time of previous time segment</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            time_start (float Quant): </span>
+<span class="sd">                starting time of current SSC horizon</span>
+<span class="sd">            time_sscH (float Quant): </span>
+<span class="sd">                ending time of current SSC horizon</span>
+<span class="sd">            time_pyoH (float Quant): </span>
+<span class="sd">                ending time of current SSC horizon</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c1"># advance time segment to next SSC horizon</span>
+        <span class="n">time_start</span> <span class="o">=</span> <span class="n">prev_time_start</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">ssc_horizon</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39;s&#39;</span><span class="p">)</span>
+        <span class="n">time_sscH</span>  <span class="o">=</span> <span class="n">prev_time_next</span>  <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">ssc_horizon</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39;s&#39;</span><span class="p">)</span>
+        
+        <span class="c1"># calculate end time for next Pyomo horizon</span>
+        <span class="n">time_pyoH</span> <span class="o">=</span> <span class="n">time_start</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">pyomo_horizon</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39;s&#39;</span><span class="p">)</span>
+        
+        <span class="c1"># check if the horizon end times exceed the full simulation time</span>
+        <span class="n">time_sscH</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sim_time_end</span> <span class="k">if</span> <span class="n">time_sscH</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">sim_time_end</span> <span class="k">else</span> <span class="n">time_sscH</span>
+        <span class="n">time_pyoH</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sim_time_end</span> <span class="k">if</span> <span class="n">time_pyoH</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">sim_time_end</span> <span class="k">else</span> <span class="n">time_pyoH</span>
+        
+        <span class="c1"># time index for each bookend</span>
+        <span class="n">ind_t_start</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span> <span class="n">time_start</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39;hr&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">m</span> <span class="p">)</span>
+        <span class="n">ind_t_sscH</span>  <span class="o">=</span> <span class="nb">int</span><span class="p">(</span> <span class="n">time_sscH</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39;hr&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">m</span>  <span class="p">)</span>
+        <span class="n">ind_t_pyoH</span>  <span class="o">=</span> <span class="nb">int</span><span class="p">(</span> <span class="n">time_pyoH</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39;hr&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">m</span>  <span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">slice_ssc_currentH</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span> <span class="n">ind_t_start</span><span class="p">,</span> <span class="n">ind_t_sscH</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>  
+        <span class="bp">self</span><span class="o">.</span><span class="n">slice_pyo_currentH</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span> <span class="n">ind_t_start</span><span class="p">,</span> <span class="n">ind_t_pyoH</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> 
+        
+        <span class="k">return</span> <span class="n">time_start</span><span class="p">,</span> <span class="n">time_sscH</span><span class="p">,</span> <span class="n">time_pyoH</span></div>
+        
+        
+<div class="viewcode-block" id="GenericSSCModule.simulate_Plant"><a class="viewcode-back" href="../../../simulations.modules.html#simulations.modules.GenericSSCModule.GenericSSCModule.simulate_Plant">[docs]</a>    <span class="k">def</span> <span class="nf">simulate_Plant</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Method to run full simulation of Plant</span>
+<span class="sd">        </span>
+<span class="sd">        This method is a sub-section of the run_sim() method in that it handles the </span>
+<span class="sd">        execution of *JUST* the Plant object simulation. However, this constitutes most</span>
+<span class="sd">        of the SSC computational cost. Namely, this method carries out the setup steps </span>
+<span class="sd">        and calls a method to execute the Plant in SSC through the PySAM wrapper. </span>
+<span class="sd">        </span>
+<span class="sd">        Major features:</span>
+<span class="sd">            (1) &quot;run_loop&quot; (bool) - We can choose to run the simulation all at once, </span>
+<span class="sd">                     or run it in segments defined by our &quot;SSC Horizon&quot; defined in the </span>
+<span class="sd">                     JSON script.</span>
+<span class="sd">            (2) &quot;is_dispatch&quot; (bool) - We can also choose to run Dispatch optimization </span>
+<span class="sd">                     through a Python package called Pyomo, then use those results to </span>
+<span class="sd">                     update our SSC inputs.</span>
+<span class="sd">        </span>
+<span class="sd">        The Pyomo optimization is generally conducted over a &quot;Pyomo Horizon&quot; longer than</span>
+<span class="sd">        the SSC Horizon, but results are only kept for that SSC Horizon to use in the next</span>
+<span class="sd">        simulation segment. </span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="n">u</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">u</span>
+        
+        <span class="c1"># initialize time start, next time, end times, and indeces of SSC horizon</span>
+        <span class="n">time_start</span><span class="p">,</span> <span class="n">time_next</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">initialize_time_elements</span><span class="p">()</span>
+        
+        <span class="c1"># slice for the first indeces of the SSC Horizon, also initializing current Horizon (updated in loop)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">initialize_time_slices</span><span class="p">(</span> <span class="n">time_start</span> <span class="p">)</span>
+        
+        <span class="c1"># setting up empty log array for log arrays</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">initialize_arrays</span><span class="p">()</span>
+        
+        <span class="c1"># run dispatch optimization for the first time</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_dispatch</span><span class="p">:</span>
+            
+            <span class="c1"># option, if we&#39;re running dispatch, to log all dispatch targets from each segment</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">log_dispatch_targets</span><span class="p">:</span>
+                
+                <span class="c1"># generate unique hash from all JSON inputs</span>
+                <span class="n">hash_exists</span><span class="p">,</span> <span class="n">hash_filepath</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">generate_hash</span><span class="p">()</span>
+                
+                <span class="c1"># save results of hash, including a unique filename for given inputs</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">hash_exists</span>   <span class="o">=</span> <span class="n">hash_exists</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">hash_filepath</span> <span class="o">=</span> <span class="n">hash_filepath</span> <span class="c1"># dispatch targets will be saved here</span>
+            
+                <span class="c1"># printing out locations</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">hash_exists</span><span class="p">:</span>
+                    <span class="c1"># overwrite file if requested</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">overwrite_dispatch_targets</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">hash_exists</span> <span class="o">=</span> <span class="kc">False</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Overwriting current Dispatch Targets at </span><span class="si">{0}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hash_filepath</span><span class="p">))</span> 
+                    <span class="c1"># file exists, do nothing</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Dispatch Targets already exists in </span><span class="si">{0}</span><span class="s2">. </span><span class="se">\n</span><span class="s2">Will skip logging.</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hash_filepath</span><span class="p">))</span> 
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Dispatch Targets do not exist for this configuration. </span><span class="se">\n</span><span class="s2"> Will write to </span><span class="si">{0}</span><span class="s2">.</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hash_filepath</span><span class="p">))</span>
+            
+            <span class="c1"># one pre-run of Plant, used to grab inputs to dispatch in some modules</span>
+            <span class="n">prePlant</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">duplicate_Plant</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">Plant</span> <span class="p">)</span>
+            
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Attempting to run full simulation to gather predictions for Pyomo&quot;</span><span class="p">)</span>
+            <span class="c1"># runs for the full simulation to gather some SSC-specific array calculations</span>
+            <span class="n">ssc_run_success</span><span class="p">,</span> <span class="n">prePlant</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_Plant_through_SSC</span><span class="p">(</span>
+                                                <span class="n">prePlant</span><span class="p">,</span> <span class="n">time_start</span> <span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">sim_time_end</span> 
+                                                <span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;First pre-run attempt:  </span><span class="si">{0}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                            <span class="s2">&quot;success!&quot;</span> <span class="k">if</span> <span class="n">ssc_run_success</span> <span class="k">else</span> <span class="s2">&quot;failed :(&quot;</span><span class="p">))</span>
+            
+            <span class="c1"># create dispatch parameters for the first time</span>
+            <span class="n">disp_params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_dispatch_params</span><span class="p">(</span> <span class="n">prePlant</span> <span class="p">)</span>
+            
+            <span class="c1"># run pyomo optimization</span>
+            <span class="n">dispatch_success</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_pyomo</span><span class="p">(</span> <span class="n">disp_params</span> <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">disp_success</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">disp_count</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">dispatch_success</span>
+            
+            <span class="c1"># update: Pyomo(t) -&gt; Plant(t) </span>
+            <span class="k">if</span> <span class="n">dispatch_success</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">Plant</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">update_Plant_after_Pyomo</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">Plant</span><span class="p">,</span> <span class="n">pre_dispatch_run</span><span class="o">=</span><span class="kc">False</span> <span class="p">)</span>
+            
+            <span class="k">del</span> <span class="n">prePlant</span>
+        
+        <span class="c1"># first real execution of Plant through SSC</span>
+        <span class="n">ssc_run_success</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Plant</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_Plant_through_SSC</span><span class="p">(</span> 
+                                                <span class="bp">self</span><span class="o">.</span><span class="n">Plant</span><span class="p">,</span> <span class="n">time_start</span> <span class="p">,</span> 
+                                                <span class="n">time_next</span> 
+                                                <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log_SSC_arrays</span><span class="p">()</span>
+        
+        <span class="c1"># setting up iterable time to cycle through in for loop</span>
+        <span class="c1"># TODO: this needs to be variable with SSC Horizon</span>
+        <span class="n">p_time_next</span> <span class="o">=</span> <span class="n">time_next</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39;d&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">m</span>
+        <span class="n">p_time_end</span>  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sim_time_end</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39;d&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">m</span>
+        <span class="n">remaining_sim_time</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">p_time_next</span><span class="p">,</span> <span class="n">p_time_end</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ssc_horizon</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39;d&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">m</span> <span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_loop</span> <span class="k">else</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        
+        <span class="c1"># this loop should only be entered if run_loop == True</span>
+        <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">remaining_sim_time</span><span class="p">):</span>
+            
+            <span class="c1"># if t == 266:</span>
+            <span class="c1">#     import pdb</span>
+            <span class="c1">#     pdb.set_trace()</span>
+                
+            <span class="c1"># advance to the next time segment</span>
+            <span class="n">time_start</span><span class="p">,</span> <span class="n">time_next</span><span class="p">,</span> <span class="n">time_pyoH</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">advance_time_segment</span><span class="p">(</span> <span class="n">time_start</span><span class="p">,</span> <span class="n">time_next</span> <span class="p">)</span>
+            
+            <span class="c1"># update: SSC(t) -&gt; Plant(t+1)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">update_Plant_after_SSC</span><span class="p">(</span> <span class="p">)</span>
+            
+            <span class="c1"># run dispatch optimization</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_dispatch</span><span class="p">:</span>
+            
+                <span class="c1"># update: SSC(t) -&gt; Pyomo(t+1)</span>
+                <span class="n">disp_params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">update_Pyomo_after_SSC</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">Plant</span><span class="p">,</span> <span class="n">disp_params</span> <span class="p">)</span>
+                
+                <span class="c1"># run pyomo optimization again</span>
+                <span class="n">dispatch_success</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_pyomo</span><span class="p">(</span> <span class="n">disp_params</span> <span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">disp_success</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">disp_count</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">dispatch_success</span>
+            
+                <span class="c1"># update: Pyomo(t+1) -&gt; Plant(t+1)</span>
+                <span class="k">if</span> <span class="n">dispatch_success</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">Plant</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">update_Plant_after_Pyomo</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">Plant</span><span class="p">,</span> <span class="n">pre_dispatch_run</span><span class="o">=</span><span class="kc">False</span> <span class="p">)</span>
+            
+            <span class="c1"># run Plant again</span>
+            <span class="n">ssc_run_success</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Plant</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_Plant_through_SSC</span><span class="p">(</span> \
+                                                    <span class="bp">self</span><span class="o">.</span><span class="n">Plant</span><span class="p">,</span> <span class="n">time_start</span> <span class="p">,</span> <span class="n">time_next</span> <span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">ssc_run_success</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1"> Plant Simulation ended prematurely.&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">log_SSC_arrays</span><span class="p">(</span> <span class="n">log_final</span><span class="o">=</span><span class="kc">True</span> <span class="p">)</span>
+                <span class="k">break</span>
+            
+            <span class="bp">self</span><span class="o">.</span><span class="n">log_SSC_arrays</span><span class="p">()</span>
+        
+        <span class="k">if</span> <span class="n">ssc_run_success</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1"> Plant Simulation successfully completed.&#39;</span><span class="p">)</span></div>
+        
+        
+<div class="viewcode-block" id="GenericSSCModule.run_Plant_through_SSC"><a class="viewcode-back" href="../../../simulations.modules.html#simulations.modules.GenericSSCModule.GenericSSCModule.run_Plant_through_SSC">[docs]</a>    <span class="k">def</span> <span class="nf">run_Plant_through_SSC</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Plant</span><span class="p">,</span> <span class="n">start_hr</span><span class="p">,</span> <span class="n">end_hr</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Simulation of Plant through SSC for given times</span>
+<span class="sd">        </span>
+<span class="sd">        This method strictly executes the Plant object in SSC through the PySAM</span>
+<span class="sd">        wrapper. It updates the start and end times of the simulation in case</span>
+<span class="sd">        we are running a subsequent segment of the simulation but also handles</span>
+<span class="sd">        full, un-segmented simulations. If running in segments, it stores outputs</span>
+<span class="sd">        to member attributes of this NE2 module.</span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            Plant (obj): </span>
+<span class="sd">                original PySAM Plant module to be executed</span>
+<span class="sd">            start_hr (float Quant): </span>
+<span class="sd">                starting time for next simulation (hours)</span>
+<span class="sd">            end_hr (float Quant): </span>
+<span class="sd">                ending time for next simulation (hours)</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            exec_success (bool): </span>
+<span class="sd">                True if SSC execution is successful</span>
+<span class="sd">            Plant (obj): </span>
+<span class="sd">                original PySAM Plant module after execution</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># start and end times for full simulation</span>
+        <span class="n">Plant</span><span class="o">.</span><span class="n">SystemControl</span><span class="o">.</span><span class="n">time_start</span> <span class="o">=</span> <span class="n">start_hr</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39;s&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">m</span>
+        <span class="n">Plant</span><span class="o">.</span><span class="n">SystemControl</span><span class="o">.</span><span class="n">time_stop</span>  <span class="o">=</span> <span class="n">end_hr</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39;s&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">m</span>
+        
+        <span class="c1"># debugging mode, if selected, creates a process for plant execution</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">exec_debug</span><span class="p">:</span>
+            <span class="n">checker</span> <span class="o">=</span> <span class="n">Process</span><span class="p">(</span> <span class="n">target</span><span class="o">=</span><span class="n">Plant</span><span class="o">.</span><span class="n">execute</span> <span class="p">)</span>
+        
+        <span class="c1"># initialize success boolean</span>
+        <span class="n">exec_success</span> <span class="o">=</span> <span class="kc">True</span>
+        
+        <span class="c1"># try to see if execution succeeds</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># debug execution method</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">exec_debug</span><span class="p">:</span>
+
+                <span class="c1"># start plant execution and add timeout in seconds</span>
+                <span class="n">checker</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+                <span class="n">checker</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">exec_timeout</span><span class="p">)</span>
+            
+                <span class="c1"># ping process to see if execution is stuck</span>
+                <span class="k">if</span> <span class="n">checker</span><span class="o">.</span><span class="n">is_alive</span><span class="p">()</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+                    <span class="n">err</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2"> ...Process stuck. Terminating.&quot;</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+                    <span class="n">exec_success</span> <span class="o">=</span> <span class="kc">False</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">err_message</span> <span class="o">=</span> <span class="n">err</span>
+                    
+                    <span class="c1"># terminate the process, sometimes might need to kill (!!)</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">checker</span><span class="o">.</span><span class="n">terminate</span><span class="p">()</span>
+                    <span class="k">except</span><span class="p">:</span>
+                        <span class="n">checker</span><span class="o">.</span><span class="n">kill</span><span class="p">()</span>
+                        
+                <span class="c1"># if execution didn&#39;t hang, call again (wasn&#39;t saving outputs)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">Plant</span><span class="o">.</span><span class="n">execute</span><span class="p">()</span>
+                    
+            <span class="c1"># normal execution, no debug</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">Plant</span><span class="o">.</span><span class="n">execute</span><span class="p">()</span>
+        <span class="c1"># execution failed</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+            <span class="n">exec_success</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">err_message</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2"> SSC error: </span><span class="si">{0}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">err</span><span class="p">))</span>
+            
+        <span class="k">return</span> <span class="n">exec_success</span><span class="p">,</span> <span class="n">Plant</span></div>
+
+        
+<div class="viewcode-block" id="GenericSSCModule.run_pyomo"><a class="viewcode-back" href="../../../simulations.modules.html#simulations.modules.GenericSSCModule.GenericSSCModule.run_pyomo">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">run_pyomo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Running Pyomo dispatch optimization</span>
+<span class="sd">        </span>
+<span class="sd">        Note:</span>
+<span class="sd">            self.is_dispatch == True</span>
+<span class="sd">        </span>
+<span class="sd">        This method strictly runs the Pyomo optimization before execution of an</span>
+<span class="sd">        SSC segment. It creates a new Dispatch model for the segment, solves it,</span>
+<span class="sd">        then returns results. Results are stored in a dictionary. </span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            params (dict): </span>
+<span class="sd">                dictionary of Pyomo dispatch parameters</span>
+<span class="sd">            </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c1"># Creation of Dispatch model (could be overloaded)</span>
+        <span class="n">dispatch_model</span> <span class="o">=</span> <span class="n">GD</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">u</span><span class="p">)</span>
+        
+        <span class="c1"># Solving Dispatch optimization model</span>
+        <span class="n">rt_results</span> <span class="o">=</span> <span class="n">dispatch_model</span><span class="o">.</span><span class="n">solve_model</span><span class="p">()</span>
+        
+        <span class="c1"># saving current model to self</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">current_disp_model</span> <span class="o">=</span> <span class="n">dispatch_model</span>
+        
+        <span class="c1"># retrieving current dispatch counter</span>
+        <span class="n">count</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">disp_count</span><span class="p">)</span>
+        
+        <span class="c1"># saving model and results to dictionaries with entries being the current counter value</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">disp_models</span><span class="p">[</span><span class="n">count</span><span class="p">]</span>  <span class="o">=</span> <span class="n">dispatch_model</span>    
+        <span class="bp">self</span><span class="o">.</span><span class="n">disp_results</span><span class="p">[</span><span class="n">count</span><span class="p">]</span> <span class="o">=</span> <span class="n">rt_results</span>
+        
+        <span class="c1"># increasing dispatch counter value by 1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">disp_count</span> <span class="o">+=</span> <span class="mi">1</span></div>
+    
+    
+<div class="viewcode-block" id="GenericSSCModule.update_Plant_after_SSC"><a class="viewcode-back" href="../../../simulations.modules.html#simulations.modules.GenericSSCModule.GenericSSCModule.update_Plant_after_SSC">[docs]</a>    <span class="k">def</span> <span class="nf">update_Plant_after_SSC</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Update SSC Plant inputs with SSC outputs from previous segment simulation</span>
+<span class="sd">        </span>
+<span class="sd">        Note:</span>
+<span class="sd">            self.run_loop == True</span>
+<span class="sd">        </span>
+<span class="sd">        This method uses the SSC end results from the previous simulation segment</span>
+<span class="sd">        and sets them as the initial conditions for the next SSC segment. As a </span>
+<span class="sd">        small note: some outputs are arrays that span the full year, however the</span>
+<span class="sd">        only relevant parts are the first indeces corresponding to the SSC Horizon.</span>
+<span class="sd">        All other values are typically 0. </span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">Plant</span><span class="o">.</span><span class="n">SystemControl</span><span class="o">.</span><span class="n">rec_op_mode_initial</span>              <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Plant</span><span class="o">.</span><span class="n">Outputs</span><span class="o">.</span><span class="n">nuc_op_mode_final</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Plant</span><span class="o">.</span><span class="n">SystemControl</span><span class="o">.</span><span class="n">rec_startup_time_remain_init</span>     <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Plant</span><span class="o">.</span><span class="n">Outputs</span><span class="o">.</span><span class="n">nuc_startup_time_remain_final</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Plant</span><span class="o">.</span><span class="n">SystemControl</span><span class="o">.</span><span class="n">rec_startup_energy_remain_init</span>   <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Plant</span><span class="o">.</span><span class="n">Outputs</span><span class="o">.</span><span class="n">nuc_startup_energy_remain_final</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Plant</span><span class="o">.</span><span class="n">SystemControl</span><span class="o">.</span><span class="n">T_tank_cold_init</span>                 <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Plant</span><span class="o">.</span><span class="n">Outputs</span><span class="o">.</span><span class="n">T_tes_cold</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">t_ind</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Plant</span><span class="o">.</span><span class="n">SystemControl</span><span class="o">.</span><span class="n">T_tank_hot_init</span>                  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Plant</span><span class="o">.</span><span class="n">Outputs</span><span class="o">.</span><span class="n">T_tes_hot</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">t_ind</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Plant</span><span class="o">.</span><span class="n">ThermalStorage</span><span class="o">.</span><span class="n">csp_pt_tes_init_hot_htf_percent</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Plant</span><span class="o">.</span><span class="n">Outputs</span><span class="o">.</span><span class="n">hot_tank_htf_percent_final</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Plant</span><span class="o">.</span><span class="n">SystemControl</span><span class="o">.</span><span class="n">pc_op_mode_initial</span>               <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Plant</span><span class="o">.</span><span class="n">Outputs</span><span class="o">.</span><span class="n">pc_op_mode_final</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Plant</span><span class="o">.</span><span class="n">SystemControl</span><span class="o">.</span><span class="n">pc_startup_energy_remain_initial</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Plant</span><span class="o">.</span><span class="n">Outputs</span><span class="o">.</span><span class="n">pc_startup_energy_remain_final</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Plant</span><span class="o">.</span><span class="n">SystemControl</span><span class="o">.</span><span class="n">pc_startup_time_remain_init</span>      <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Plant</span><span class="o">.</span><span class="n">Outputs</span><span class="o">.</span><span class="n">pc_startup_time_remain_final</span></div>
+      
+<div class="viewcode-block" id="GenericSSCModule.update_Pyomo_after_SSC"><a class="viewcode-back" href="../../../simulations.modules.html#simulations.modules.GenericSSCModule.GenericSSCModule.update_Pyomo_after_SSC">[docs]</a>    <span class="nd">@abstractmethod</span>    
+    <span class="k">def</span> <span class="nf">update_Pyomo_after_SSC</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Plant</span><span class="p">,</span> <span class="n">params</span> <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Update Pyomo inputs with SSC outputs from previous segment simulation</span>
+<span class="sd">        </span>
+<span class="sd">        Note:</span>
+<span class="sd">            self.run_loop    == True</span>
+<span class="sd">            self.is_dispatch == True </span>
+<span class="sd">                          </span>
+<span class="sd">        This method uses the SSC end results from the previous simulation segment</span>
+<span class="sd">        and uses them to update the existing Dispatch parameter dictionary that</span>
+<span class="sd">        is ultimately sent to Pyomo. Essentially just updates the initial conditions</span>
+<span class="sd">        of the Dispatch parameter dictionary. </span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            Plant (obj): </span>
+<span class="sd">                original PySAM Plant module</span>
+<span class="sd">            params (dict): </span>
+<span class="sd">                dictionary of Pyomo dispatch parameters</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            params (dict): </span>
+<span class="sd">                updated dictionary of Pyomo dispatch parameters</span>
+<span class="sd">                </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">params</span></div>
+        
+<div class="viewcode-block" id="GenericSSCModule.update_Plant_after_Pyomo"><a class="viewcode-back" href="../../../simulations.modules.html#simulations.modules.GenericSSCModule.GenericSSCModule.update_Plant_after_Pyomo">[docs]</a>    <span class="nd">@abstractmethod</span>    
+    <span class="k">def</span> <span class="nf">update_Plant_after_Pyomo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Plant</span><span class="p">,</span> <span class="n">pre_dispatch_run</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Update SSC Plant inputs with Pyomo optimization outputs from current segment simulation</span>
+
+<span class="sd">        Note:</span>
+<span class="sd">            self.run_loop    == True (can be called outside loop)</span>
+<span class="sd">            self.is_dispatch == True </span>
+<span class="sd">        </span>
+<span class="sd">        This method uses the optimization results from Pyomo and ensures that </span>
+<span class="sd">        the next SSC segment uses them throughout the corresponding SSC Horizon.</span>
+<span class="sd">        SSC normally takes single values for initial conditions (for the first hour</span>
+<span class="sd">        of the SSC Horizon), but it can also take in an array of values for each</span>
+<span class="sd">        step in the SSC Horizon. These are called &quot;dispatch_targets&quot;. Steps are:</span>
+<span class="sd">        (1) extract solutions from Pyomo over the Pyomo Horizon, </span>
+<span class="sd">        (2) keep the solutions for the shorter SSC Horizon and </span>
+<span class="sd">        (3) save these &quot;dispatch target&quot; inputs to the Plant object for the </span>
+<span class="sd">        next SSC simulation segment. </span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            Plant (obj): </span>
+<span class="sd">                original PySAM Plant module to be updated</span>
+<span class="sd">            pre_dispatch_run (bool): </span>
+<span class="sd">                are we updating the Plant for a pre- or post- dispatch run.</span>
+<span class="sd">                Recall that we only log post-dispatch Plant runs</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            Plant (obj): </span>
+<span class="sd">                updated PySAM Plant module</span>
+<span class="sd">                </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c1"># number of times in full simulation </span>
+        <span class="n">N_full</span>     <span class="o">=</span> <span class="nb">int</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">SSC_dict</span><span class="p">[</span><span class="s1">&#39;time_stop&#39;</span><span class="p">]</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">u</span><span class="o">.</span><span class="n">s</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39;hr&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">m</span><span class="p">)</span>
+        
+        <span class="c1"># the heavy-lifting happens here -&gt; return a dictionary of dispatch target arrays from Pyomo optimization results</span>
+        <span class="c1"># NOTE: will need to overload GDO if this somehow gets overloaded by Nuclear Dispatch Outputs class</span>
+        <span class="n">horizon</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pyomo_horizon</span> <span class="k">if</span> <span class="n">pre_dispatch_run</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">ssc_horizon</span>
+        <span class="n">dispatch_targets</span> <span class="o">=</span> <span class="n">GDO</span><span class="o">.</span><span class="n">get_dispatch_targets_from_Pyomo</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">current_disp_model</span><span class="p">,</span> <span class="n">horizon</span><span class="p">,</span> <span class="n">N_full</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_loop</span><span class="p">)</span>
+        
+        <span class="c1">### Set Dispatch Targets ### </span>
+        <span class="c1"># setting dispatch targets to True so that SSC can read in Pyomo inputs</span>
+        <span class="n">Plant</span><span class="o">.</span><span class="n">SystemControl</span><span class="o">.</span><span class="n">is_dispatch_targets</span> <span class="o">=</span> <span class="kc">True</span>
+        
+        <span class="c1"># extract binary arrays for receiver startup and standby</span>
+        <span class="n">Plant</span><span class="o">.</span><span class="n">SystemControl</span><span class="o">.</span><span class="n">is_rec_su_allowed_in</span> <span class="o">=</span> <span class="n">dispatch_targets</span><span class="p">[</span><span class="s1">&#39;is_rec_su_allowed_in&#39;</span><span class="p">]</span>
+        <span class="n">Plant</span><span class="o">.</span><span class="n">SystemControl</span><span class="o">.</span><span class="n">is_rec_sb_allowed_in</span> <span class="o">=</span> <span class="n">dispatch_targets</span><span class="p">[</span><span class="s1">&#39;is_rec_sb_allowed_in&#39;</span><span class="p">]</span>
+        
+        <span class="c1"># extract binary arrays for cycle startup and standby</span>
+        <span class="n">Plant</span><span class="o">.</span><span class="n">SystemControl</span><span class="o">.</span><span class="n">is_pc_su_allowed_in</span>  <span class="o">=</span> <span class="n">dispatch_targets</span><span class="p">[</span><span class="s1">&#39;is_pc_su_allowed_in&#39;</span><span class="p">]</span>
+        <span class="n">Plant</span><span class="o">.</span><span class="n">SystemControl</span><span class="o">.</span><span class="n">is_pc_sb_allowed_in</span>  <span class="o">=</span> <span class="n">dispatch_targets</span><span class="p">[</span><span class="s1">&#39;is_pc_sb_allowed_in&#39;</span><span class="p">]</span>
+        
+        <span class="c1"># extract power arrays for power cycle</span>
+        <span class="n">Plant</span><span class="o">.</span><span class="n">SystemControl</span><span class="o">.</span><span class="n">q_pc_target_su_in</span>    <span class="o">=</span> <span class="n">dispatch_targets</span><span class="p">[</span><span class="s1">&#39;q_pc_target_su_in&#39;</span><span class="p">]</span>
+        <span class="n">Plant</span><span class="o">.</span><span class="n">SystemControl</span><span class="o">.</span><span class="n">q_pc_target_on_in</span>    <span class="o">=</span> <span class="n">dispatch_targets</span><span class="p">[</span><span class="s1">&#39;q_pc_target_on_in&#39;</span><span class="p">]</span>
+        <span class="n">Plant</span><span class="o">.</span><span class="n">SystemControl</span><span class="o">.</span><span class="n">q_pc_max_in</span>          <span class="o">=</span> <span class="n">dispatch_targets</span><span class="p">[</span><span class="s1">&#39;q_pc_max_in&#39;</span><span class="p">]</span>
+        
+        <span class="k">return</span> <span class="n">Plant</span></div>
+        
+<div class="viewcode-block" id="GenericSSCModule.create_dispatch_wrapper"><a class="viewcode-back" href="../../../simulations.modules.html#simulations.modules.GenericSSCModule.GenericSSCModule.create_dispatch_wrapper">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">create_dispatch_wrapper</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">PySAM_dict</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Creating a wrapper object for calling a class that creates dispatch parameters</span>
+<span class="sd">        </span>
+<span class="sd">        Note:</span>
+<span class="sd">            self.is_dispatch == True </span>
+<span class="sd">            (Called in __init__ of NE2 module)</span>
+<span class="sd">        </span>
+<span class="sd">        This method creates an object whose class ultimately calculates and creates </span>
+<span class="sd">        parameters for Dispatch optimization. The reason this class exists separately</span>
+<span class="sd">        is that it gets overlaoded based on the PySAM module we are running. Depending on</span>
+<span class="sd">        the PySAM module, this method calls on a different Dispatch Parameter class that </span>
+<span class="sd">        is specific to the module.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            PySAM_dict (dict): </span>
+<span class="sd">                dictionary of PySAM inputs from a script in /json directory</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            dispatch_wrap (obj): </span>
+<span class="sd">                wrapper object for the class that creates dispatch parameters</span>
+<span class="sd">                </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">DispatchParameterClass</span> <span class="o">=</span> <span class="n">GDP</span>
+        
+        <span class="n">dispatch_wrap</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">DispatchParameterClass</span><span class="p">(</span> <span class="n">unit_registry</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">u</span><span class="p">,</span> 
+                    <span class="n">SSC_dict</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">SSC_dict</span><span class="p">,</span> <span class="n">PySAM_dict</span><span class="o">=</span><span class="n">PySAM_dict</span><span class="p">,</span>
+                    <span class="n">pyomo_horizon</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pyomo_horizon</span><span class="p">,</span> 
+                    <span class="n">dispatch_time_step</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dispatch_time_step</span><span class="p">,</span>
+                    <span class="n">interpolants</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">interpolants</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="n">dispatch_wrap</span></div>
+
+<div class="viewcode-block" id="GenericSSCModule.create_dispatch_params"><a class="viewcode-back" href="../../../simulations.modules.html#simulations.modules.GenericSSCModule.GenericSSCModule.create_dispatch_params">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">create_dispatch_params</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Plant</span> <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Populating a dictionary with dispatch parameters before optimization</span>
+<span class="sd">        </span>
+<span class="sd">        Note:</span>
+<span class="sd">            self.is_dispatch == True </span>
+<span class="sd">            (Called within simulation)</span>
+<span class="sd">        </span>
+<span class="sd">        This method is creates the Dispatch Parameter dictionary that will be </span>
+<span class="sd">        populated with static inputs from SSC_dict as well as initial conditions</span>
+<span class="sd">        for Dispatch optimization. The initial conditions are continuously updated</span>
+<span class="sd">        if simulation is segmented.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            Plant (obj): </span>
+<span class="sd">                original PySAM Plant module</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            dispatch_wrap (obj): </span>
+<span class="sd">                wrapper object for the class that creates dispatch parameters</span>
+<span class="sd">                </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="n">params</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">DW</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dispatch_wrap</span>
+        
+        <span class="c1"># setting parameters for the first time</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="n">DW</span><span class="o">.</span><span class="n">set_power_cycle_parameters</span><span class="p">(</span> <span class="n">params</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ud_array</span> <span class="p">)</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="n">DW</span><span class="o">.</span><span class="n">set_time_indexed_parameters</span><span class="p">(</span> <span class="n">params</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">df_array</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ud_array</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">slice_pyo_firstH</span> <span class="p">)</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="n">DW</span><span class="o">.</span><span class="n">set_fixed_cost_parameters</span><span class="p">(</span> <span class="n">params</span> <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">params</span></div>
+
+<div class="viewcode-block" id="GenericSSCModule.initialize_arrays"><a class="viewcode-back" href="../../../simulations.modules.html#simulations.modules.GenericSSCModule.GenericSSCModule.initialize_arrays">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">initialize_arrays</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Initializing empty arrays to log SSC outputs after segment simulations</span>
+<span class="sd">        </span>
+<span class="sd">        This method creates empty arrays where SSC outputs will be written to.</span>
+<span class="sd">        Also creates a list of str names for logged simulation outputs.</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="n">u</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">u</span>
+        
+        <span class="c1"># start and end times for full simulation</span>
+        <span class="n">i_start</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">SSC_dict</span><span class="p">[</span><span class="s1">&#39;time_start&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">s</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39;hr&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">m</span>
+        <span class="n">i_end</span>   <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">SSC_dict</span><span class="p">[</span><span class="s1">&#39;time_stop&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">s</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39;hr&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">m</span>
+        
+        <span class="c1"># size of simulation arrays</span>
+        <span class="n">N_sim</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span> <span class="n">i_end</span> <span class="o">-</span> <span class="n">i_start</span> <span class="p">)</span>
+        
+        <span class="c1"># dictionary of output variable names to log after each segment simulation</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Log_Arrays</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="c1">#    name of NE2 variable || name of SSC module variable</span>
+                <span class="s1">&#39;time_log&#39;</span><span class="p">:</span>          <span class="s1">&#39;time_hr&#39;</span><span class="p">,</span>          <span class="c1"># logging time</span>
+                <span class="s1">&#39;gen_log&#39;</span><span class="p">:</span>           <span class="s1">&#39;gen&#39;</span><span class="p">,</span>              <span class="c1"># electricity generation log</span>
+                <span class="s1">&#39;eta_log&#39;</span>       <span class="p">:</span>    <span class="s1">&#39;eta&#39;</span>               <span class="c1"># PC efficiency, gross</span>
+            <span class="p">}</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_loop</span> \
+                 <span class="k">else</span> <span class="p">{</span><span class="s1">&#39;gen_log&#39;</span><span class="p">:</span>    <span class="s1">&#39;gen&#39;</span>  <span class="c1"># electricity generation log</span>
+                      <span class="p">}</span>
+        
+        <span class="c1"># empty array to initalize log arrays</span>
+        <span class="n">empty_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">N_sim</span><span class="p">)</span>
+        
+        <span class="c1"># loop through keys in ^ dictionary, save the KEY name to NE2 module as empty array</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">Log_Arrays</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="c1"># meta: if we don&#39;t grab the copy of empty_array, it&#39;ll assign a pointer to the array!!</span>
+            <span class="nb">setattr</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">empty_array</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> <span class="p">)</span> </div>
+
+
+<div class="viewcode-block" id="GenericSSCModule.log_SSC_arrays"><a class="viewcode-back" href="../../../simulations.modules.html#simulations.modules.GenericSSCModule.GenericSSCModule.log_SSC_arrays">[docs]</a>    <span class="k">def</span> <span class="nf">log_SSC_arrays</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">log_final</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Creating a wrapper object for calling a class that creates dispatch parameters</span>
+<span class="sd">        </span>
+<span class="sd">        This method logs SSC outputs if we choose to run a segmented simulation in a loop. </span>
+<span class="sd">        Normally (if log_final == False) it saves outputs to arrays that are members of the </span>
+<span class="sd">        GenericSSCModule class; these are previously initialized to 0. (If log_final == True)</span>
+<span class="sd">        the method gets all the previously logged and filled arrays from the segmented simulation</span>
+<span class="sd">        and saves it to the Plant object which is a member class of GenericSSCModule. The Plant </span>
+<span class="sd">        member class gets a &quot;dummy&quot; subclass made from an empty lambda function but works as a</span>
+<span class="sd">        class with attributes saved to it. </span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            log_final (bool): </span>
+<span class="sd">                if true, save full outputs to Plant. else, log to member arrays of Plant</span>
+<span class="sd">                </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c1"># ==========================================================================</span>
+        <span class="c1"># wanted to create a quick subclass where I can extract things during PostProcessing steps</span>
+        
+        <span class="k">if</span> <span class="n">log_final</span><span class="p">:</span>
+            <span class="c1"># don&#39;t try this at home...</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">Plant</span><span class="o">.</span><span class="n">PySAM_Outputs</span> <span class="o">=</span> <span class="k">lambda</span><span class="p">:</span> <span class="kc">None</span>
+            <span class="c1"># quick lambda to make things look pretty</span>
+            <span class="n">convert_output</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">arr</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">(</span> <span class="n">arr</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span> <span class="p">)</span>
+        
+        <span class="c1"># ==========================================================================</span>
+        <span class="c1"># Main Loop -- we&#39;re working with pointer magic here, tread carefully</span>
+        <span class="c1"># ===== eval(Log_Arrays[&#39;key&#39;]) -&gt; keyword for PySAM_Outputs</span>
+        <span class="c1"># ================ eval(&#39;key&#39;)  -&gt; keyword for self</span>
+        
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">Log_Arrays</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="c1"># get current key&#39;s value from NE2 module</span>
+            <span class="n">self_output</span>  <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span> <span class="p">)</span>
+            
+            <span class="c1"># if we&#39;re still running segmented simulations</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">log_final</span><span class="p">:</span>
+                <span class="c1"># get what we have logged so far</span>
+                <span class="n">plant_output</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Plant</span><span class="o">.</span><span class="n">Outputs</span><span class="p">,</span>  <span class="bp">self</span><span class="o">.</span><span class="n">Log_Arrays</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="p">)</span>
+                <span class="c1"># grab and save corresponding slices to self (this should be some sort of pointer)</span>
+                <span class="n">self_output</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">slice_ssc_currentH</span><span class="p">]</span> <span class="o">=</span> <span class="n">plant_output</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">slice_ssc_firstH</span><span class="p">]</span>
+            
+            <span class="c1"># we&#39;re done with the full simulation</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># convert output array to a tuple</span>
+                <span class="n">self_output_tuple</span> <span class="o">=</span> <span class="n">convert_output</span><span class="p">(</span> <span class="n">self_output</span> <span class="p">)</span>
+                <span class="c1"># save array to the new PySAM_Outputs &quot;subclass&quot;</span>
+                <span class="nb">setattr</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">Plant</span><span class="o">.</span><span class="n">PySAM_Outputs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">Log_Arrays</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="n">self_output_tuple</span> <span class="p">)</span>
+        
+        <span class="c1"># ==========================================================================</span>
+        <span class="c1"># updating capacity factor if logging final OR running non-loop</span>
+        
+        <span class="k">if</span> <span class="n">log_final</span> <span class="ow">or</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_loop</span><span class="p">:</span>
+            <span class="n">u</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">u</span>
+            <span class="c1"># summing up energy for the full simulation and defining reference energy output</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">annual_energy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gen_log</span><span class="p">)</span><span class="o">*</span><span class="n">u</span><span class="o">.</span><span class="n">kWh</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">system_capacity</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">SSC_dict</span><span class="p">[</span><span class="s1">&#39;P_ref&#39;</span><span class="p">]</span><span class="o">*</span><span class="n">u</span><span class="o">.</span><span class="n">MW</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">SSC_dict</span><span class="p">[</span><span class="s1">&#39;gross_net_conversion_factor&#39;</span><span class="p">]</span>
+            <span class="c1"># setting capacity factor to self and (optionally) to PySAM outputs</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">capacity_factor</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">annual_energy</span> <span class="o">/</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">system_capacity</span> <span class="o">*</span> <span class="mi">1</span><span class="o">*</span><span class="n">u</span><span class="o">.</span><span class="n">yr</span><span class="p">)</span> <span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)</span>
+            
+            <span class="k">if</span> <span class="n">log_final</span><span class="p">:</span>
+                <span class="nb">setattr</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">Plant</span><span class="o">.</span><span class="n">PySAM_Outputs</span><span class="p">,</span> <span class="s1">&#39;capacity_factor&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">capacity_factor</span> <span class="p">)</span>
+                <span class="nb">setattr</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">Plant</span><span class="o">.</span><span class="n">PySAM_Outputs</span><span class="p">,</span> <span class="s1">&#39;annual_energy&#39;</span><span class="p">,</span>   <span class="bp">self</span><span class="o">.</span><span class="n">annual_energy</span> <span class="p">)</span>
+
+        <span class="c1"># ==========================================================================</span>
+        <span class="c1"># logging dispatch targets for a debugging run if specified</span>
+        
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">log_dispatch_targets</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">hash_exists</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">Log_Target_Arrays</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                    <span class="c1"># get what we have logged so far</span>
+                    <span class="n">disp_targ</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Plant</span><span class="o">.</span><span class="n">SystemControl</span><span class="p">,</span> <span class="n">l</span> <span class="p">)</span>
+                    <span class="c1"># grab and save corresponding slices to self (this should be some sort of pointer)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">Log_Target_Arrays</span><span class="p">[</span><span class="n">l</span><span class="p">][</span><span class="bp">self</span><span class="o">.</span><span class="n">slice_ssc_currentH</span><span class="p">]</span> <span class="o">=</span> <span class="n">disp_targ</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">slice_ssc_firstH</span><span class="p">]</span>
+            
+                <span class="k">if</span> <span class="n">log_final</span><span class="p">:</span>
+                    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hash_filepath</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                        <span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Log_Target_Arrays</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Dispatch Targets successfuly stored in </span><span class="si">{0}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hash_filepath</span><span class="p">))</span>        </div>
+                
+    
+<div class="viewcode-block" id="GenericSSCModule.export_results"><a class="viewcode-back" href="../../../simulations.modules.html#simulations.modules.GenericSSCModule.GenericSSCModule.export_results">[docs]</a>    <span class="k">def</span> <span class="nf">export_results</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Exports final SSC outputs to a specified Excel file</span>
+<span class="sd">        </span>
+<span class="sd">        This method creates an .xlsx file with SSC output data from the full simulation.</span>
+<span class="sd">        Outputs are specified by keywords in the JSON script supplied by the user. </span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            filename (str): </span>
+<span class="sd">                name of xlsx file to save results to within /output directory</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c1"># empty lists</span>
+        <span class="n">location_list</span> <span class="o">=</span> <span class="p">[]</span> 
+        <span class="n">key_list</span>      <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">value_list</span>    <span class="o">=</span> <span class="p">[]</span>
+        
+        <span class="c1"># looping through keywords specified in the JSON script</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_keys</span><span class="p">[</span><span class="s1">&#39;keywords&#39;</span><span class="p">]:</span>
+            
+            <span class="c1"># keyword found in the NE2 class</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">key</span><span class="p">):</span>
+                <span class="n">location_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;PySAM&#39;</span><span class="p">)</span>          <span class="c1"># save name of module where keyword found</span>
+                <span class="n">value_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">key</span><span class="p">))</span>   <span class="c1"># save value of output</span>
+            
+            <span class="c1"># keyword found as an SSC Plant module output</span>
+            <span class="k">elif</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Plant</span><span class="o">.</span><span class="n">Outputs</span><span class="p">,</span><span class="n">key</span><span class="p">):</span>
+                <span class="n">location_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;Plant&#39;</span><span class="p">)</span>
+                <span class="n">value_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Plant</span><span class="o">.</span><span class="n">Outputs</span><span class="p">,</span><span class="n">key</span><span class="p">))</span>
+            
+            <span class="c1"># keyword found as an SSC Singleowner module output</span>
+            <span class="k">elif</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">SO</span><span class="o">.</span><span class="n">Outputs</span><span class="p">,</span><span class="n">key</span><span class="p">):</span>
+                <span class="n">location_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;SingleOwner&#39;</span><span class="p">)</span>
+                <span class="n">value_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">SO</span><span class="o">.</span><span class="n">Outputs</span><span class="p">,</span><span class="n">key</span><span class="p">))</span>
+            
+            <span class="c1"># keyword not found, return empty cell</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">location_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;Not Found&#39;</span><span class="p">)</span>
+                <span class="n">value_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)</span>
+            
+            <span class="c1"># append empty list with key name (str)</span>
+            <span class="n">key_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+
+        <span class="c1"># created nested list with name of module, name of output, and value of output</span>
+        <span class="n">dataframe_list</span> <span class="o">=</span> <span class="p">[[</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">z</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">z</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">location_list</span><span class="p">,</span> <span class="n">key_list</span><span class="p">,</span> <span class="n">value_list</span><span class="p">)]</span>
+        <span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Object&#39;</span><span class="p">,</span> <span class="s1">&#39;Key&#39;</span><span class="p">,</span> <span class="s1">&#39;Value&#39;</span><span class="p">]</span>
+        
+        <span class="c1"># call the util method to write data to csv/xlsx file</span>
+        <span class="n">FileMethods</span><span class="o">.</span><span class="n">write_csv</span><span class="p">(</span><span class="n">dataframe_list</span><span class="p">,</span> <span class="n">columns</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="GenericSSCModule.reset_all"><a class="viewcode-back" href="../../../simulations.modules.html#simulations.modules.GenericSSCModule.GenericSSCModule.reset_all">[docs]</a>    <span class="k">def</span> <span class="nf">reset_all</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Reset SSC submodules</span>
+<span class="sd">        </span>
+<span class="sd">        This method resets all PySAM wrappers, deleting them from this NE2 class.</span>
+<span class="sd">        Primarily done for unit testing, but could also have use if running </span>
+<span class="sd">        simulations in parallel. </span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="k">def</span> <span class="nf">safe_del</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+                <span class="nb">delattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+                
+        <span class="n">safe_del</span><span class="p">(</span><span class="s1">&#39;Plant&#39;</span><span class="p">)</span>
+        <span class="n">safe_del</span><span class="p">(</span><span class="s1">&#39;Grid&#39;</span><span class="p">)</span>
+        <span class="n">safe_del</span><span class="p">(</span><span class="s1">&#39;SO&#39;</span><span class="p">)</span>
+        
+        <span class="n">keys</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Log_Arrays</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+        
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+            <span class="n">safe_del</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+        
+        <span class="n">safe_del</span><span class="p">(</span><span class="s1">&#39;Log_Arrays&#39;</span><span class="p">)</span></div></div>
+
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">NE-2 Simulations  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">simulations.modules.GenericSSCModule</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2021, Gabriel J. Soto, Una Baker, Grace Stanke, Ben Lindley, Mike Wagner.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.2.0.
+    </div>
+  </body>
+</html>

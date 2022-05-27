@@ -1,0 +1,176 @@
+
+
+<!doctype html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Design Point Mass Flow Calculations &#8212; NE-2 Simulations  documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/bizstyle.css" />
+    
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="_static/bizstyle.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Indirect Configuration Steam-to-Salt Heat Exchanger" href="steam2salthx.html" />
+    <link rel="prev" title="DualIndirectTES Scripts" href="dualindnuctesscripts.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <!--[if lt IE 9]>
+    <script src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="steam2salthx.html" title="Indirect Configuration Steam-to-Salt Heat Exchanger"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="dualindnuctesscripts.html" title="DualIndirectTES Scripts"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">NE-2 Simulations  documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Design Point Mass Flow Calculations</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="design-point-mass-flow-calculations">
+<h1>Design Point Mass Flow Calculations<a class="headerlink" href="#design-point-mass-flow-calculations" title="Permalink to this headline">¶</a></h1>
+<section id="calculations-in-the-direct-charging-case">
+<h2>Calculations in the Direct Charging Case<a class="headerlink" href="#calculations-in-the-direct-charging-case" title="Permalink to this headline">¶</a></h2>
+<p>In the direct TES charging design (e.g., <span class="math notranslate nohighlight">\(\texttt{cmod_tcsmolten_salt}, \texttt{cmod_nuclear_tes}, \texttt{cmod_nuclear_mspt_tes}\)</span>) we create a power cycle object.</p>
+<p>The following happens in the <span class="math notranslate nohighlight">\(\texttt{init()}\)</span> method of the <span class="math notranslate nohighlight">\(\texttt{csp_solver_pc_Rankine_indirect_224.cpp}\)</span> class.</p>
+<p>Using inputs from a JSON script, we can specify the reference power output <span class="math notranslate nohighlight">\(\texttt{P_ref}\)</span> and a design point efficiency <span class="math notranslate nohighlight">\(\texttt{eta}\)</span>. From these two parameters, we calculate a design point thermal power input <span class="math notranslate nohighlight">\(\texttt{m_q_dot_design}\)</span>.</p>
+<div class="math notranslate nohighlight">
+\[\texttt{m_q_dot_design} = \frac{\texttt{P_ref}}{\texttt{eta}}\]</div>
+<p>From there, the design point mass flow <span class="math notranslate nohighlight">\(\texttt{m_q_dot_design}\)</span> is calculated from</p>
+<div class="math notranslate nohighlight">
+\[\texttt{m_m_dot_design} = \frac{\texttt{m_q_dot_design}}{\texttt{m_cp_htf_design} * (\texttt{m_T_htf_hot_ref} - \texttt{m_T_htf_cold_ref})}\]</div>
+<p>and converted to the appropriate units. The specific heat here <span class="math notranslate nohighlight">\(\texttt{m_cp_htf_design}\)</span> is of the heat transfer fluid which, in the nominal case, is #17 in the enumeration which corresponds to molten salt (<em>Salt_60_NaNO3_40_KNO3</em>). The molten salt is calculated using empirical formulas from the <span class="math notranslate nohighlight">\(\texttt{HTFProperties}\)</span> class as a function of temperature:</p>
+<div class="math notranslate nohighlight">
+\[\texttt{m_cp_htf_design} = f( \frac{1}{2} (\texttt{m_T_htf_hot_ref} + \texttt{m_T_htf_cold_ref} ) ).\]</div>
+<p>This formula holds for the HTF fluid because the salt specific heat does not vary <em>too</em> much between those temperature ranges.</p>
+<p>Typical temperatures used here are</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{align}
+   \texttt{m_T_htf_hot_ref}  &amp;= 560 {}^\circ \text{C} \\
+   \texttt{m_T_htf_cold_ref} &amp;= 340 {}^\circ \text{C}
+\end{align}\end{split}\]</div>
+<p>Off-design behavior for this configuration is determined by looking at the <strong>salt</strong> mass flow through the salt-to-steam HX: values are taken from a user-defined table which should capture efficiency hits and other parameters as a function of hot temperature and mass flow as a fraction of <span class="math notranslate nohighlight">\(\texttt{m_m_dot_design}\)</span>.</p>
+</section>
+<section id="calculations-for-the-indirect-charging-case">
+<h2>Calculations for the Indirect Charging Case<a class="headerlink" href="#calculations-for-the-indirect-charging-case" title="Permalink to this headline">¶</a></h2>
+<p>For the indirect charging case, we care more about the mass flow of the power cycle working fluid rather than the salt.</p>
+<p>So instead of salt, we’re looking at steam. The previous equation for mass flow no longer holds because the specific heat of steam varies by a lot between those temperature ranges. Instead we need to use enthalpies.</p>
+<p>We can imagine a control volume before and after the heat addition for this configuration (ignoring complexities of stream splitting for LFR and TES loops). The conservation of energy equation looks like:</p>
+<div class="math notranslate nohighlight">
+\[\dot{q}^{\text{des}} = \dot{m}^{\text{s}} [ \Delta h^{\text{s}}_{H\rightarrow\text{sat}} + \Delta h^{\text{s}}_{sat} + \Delta h^{\text{w}}_{\text{sat}\rightarrow C} ]\]</div>
+<p>where the superscripts <span class="math notranslate nohighlight">\({}^{\text{s}}\)</span> and <span class="math notranslate nohighlight">\({}^{\text{w}}\)</span> are supercritical steam and liquid water, respectively.</p>
+<p>Critical temperature assumed to be <span class="math notranslate nohighlight">\(374 {}^\circ\)</span> C for pressures above critical pressure 22 MPa. Actual pressure of steam here is 33 MPa.</p>
+<p>In SCC, we can calculate all the terms using the <span class="math notranslate nohighlight">\(\texttt{water_properties}\)</span> class.
+The enthalpy change from hot temperature to cold temperature is:</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\begin{align}
+   &amp;\texttt{wp}.\texttt{water_TP}( \texttt{m_T_htf_hot_ref} , \texttt{P_boil} )    \\
+   &amp;\texttt{h_steam_hot} = \texttt{wp}.\texttt{enth} \\
+   &amp;\texttt{wp}.\texttt{water_TP}( \texttt{m_T_htf_cold_ref} , \texttt{P_boil} )    \\
+   &amp;\texttt{h_steam_cold} = \texttt{wp}.\texttt{enth} \\
+   &amp;\texttt{delta_h} =   \texttt{h_steam_hot} - \texttt{h_steam_cold}.
+\end{align}\end{split}\]</div>
+<p>Because we are operating the steam above the critical pressure of 22 MPa, there is no latent heat of vaporization, so</p>
+<div class="math notranslate nohighlight">
+\[\Delta h^{\text{s}}_{sat} = 0\]</div>
+<p>and the energy conservation equation becomes:</p>
+<div class="math notranslate nohighlight">
+\[\dot{q}^{\text{des}} = \dot{m}^{\text{s}} \Delta h^{\text{s}}_{H\rightarrow C}.\]</div>
+<p>Design point mass flow is therefore</p>
+<div class="math notranslate nohighlight">
+\[\texttt{m_m_dot_design} = \frac{\texttt{m_q_dot_design}}{\texttt{delta_h}}\]</div>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Design Point Mass Flow Calculations</a><ul>
+<li><a class="reference internal" href="#calculations-in-the-direct-charging-case">Calculations in the Direct Charging Case</a></li>
+<li><a class="reference internal" href="#calculations-for-the-indirect-charging-case">Calculations for the Indirect Charging Case</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="dualindnuctesscripts.html"
+                        title="previous chapter">DualIndirectTES Scripts</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="steam2salthx.html"
+                        title="next chapter">Indirect Configuration Steam-to-Salt Heat Exchanger</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/indirectTESdesignPointMassFlow.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="steam2salthx.html" title="Indirect Configuration Steam-to-Salt Heat Exchanger"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="dualindnuctesscripts.html" title="DualIndirectTES Scripts"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">NE-2 Simulations  documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Design Point Mass Flow Calculations</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2021, Gabriel J. Soto, Una Baker, Grace Stanke, Ben Lindley, Mike Wagner.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.2.0.
+    </div>
+  </body>
+</html>

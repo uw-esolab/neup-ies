@@ -1,0 +1,232 @@
+
+
+<!doctype html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>simulations.util.FileMethods &#8212; NE-2 Simulations  documentation</title>
+    <link rel="stylesheet" href="../../../_static/bizstyle.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/language_data.js"></script>
+    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script src="../../../_static/bizstyle.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <!--[if lt IE 9]>
+    <script src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">NE-2 Simulations  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">simulations.util.FileMethods</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for simulations.util.FileMethods</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python3</span>
+<span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Created on Fri Apr  2 09:23:58 2021</span>
+
+<span class="sd">@author: gabrielsoto</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">pandas</span><span class="o">,</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">json</span>
+
+<div class="viewcode-block" id="FileMethods"><a class="viewcode-back" href="../../../simulations.util.html#simulations.util.FileMethods.FileMethods">[docs]</a><span class="k">class</span> <span class="nc">FileMethods</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The FileMethods class is a util class used generally to read and write data</span>
+<span class="sd">    from and to files. This can be csv, text, maybe LaTeX files in the future. </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="c1">#defining directory where this particular file is located and other useful directories</span>
+    <span class="n">util_dir</span>     <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">realpath</span><span class="p">(</span><span class="vm">__file__</span><span class="p">))</span>
+    <span class="n">samsim_dir</span>   <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">util_dir</span><span class="p">)</span>
+    <span class="n">neup_dir</span>     <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">samsim_dir</span><span class="p">)</span>
+    <span class="n">parent_dir</span>   <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">neup_dir</span><span class="p">)</span>
+    
+    <span class="c1">#defining directories for data storage and outputs</span>
+    <span class="n">data_dir</span>     <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">samsim_dir</span><span class="p">,</span><span class="s1">&#39;data&#39;</span><span class="p">)</span>
+    <span class="n">output_dir</span>   <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">samsim_dir</span><span class="p">,</span><span class="s1">&#39;outputs&#39;</span><span class="p">)</span>
+    
+    
+<div class="viewcode-block" id="FileMethods.read_csv_through_pandas"><a class="viewcode-back" href="../../../simulations.util.html#simulations.util.FileMethods.FileMethods.read_csv_through_pandas">[docs]</a>    <span class="k">def</span> <span class="nf">read_csv_through_pandas</span><span class="p">(</span><span class="n">filepath</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Method to read csv file and return data array</span>
+<span class="sd">        </span>
+<span class="sd">        Inputs:</span>
+<span class="sd">            filepath (str) : full path to csv file</span>
+<span class="sd">        Outputs:</span>
+<span class="sd">            data_array (list) : data in either list (SSC_ARRAY) or nested list (SSC_MATRIX) form</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="n">dataframe</span> <span class="o">=</span> <span class="n">pandas</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="c1">#important: No Header assumed</span>
+        
+        <span class="c1">#recasting dataframe to a 1D numpy array if there is only 1 columnn in csv (SSC ARRAY)</span>
+        <span class="k">if</span> <span class="n">dataframe</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">data_array</span> <span class="o">=</span> <span class="n">dataframe</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="c1">#recasting dataframe to a ND numpy array, then to list of lists (equiv to SSC MATRIX)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">data_array</span> <span class="o">=</span> <span class="n">dataframe</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+            
+        <span class="k">return</span> <span class="n">data_array</span></div>
+
+
+<div class="viewcode-block" id="FileMethods.read_solar_resource_file"><a class="viewcode-back" href="../../../simulations.util.html#simulations.util.FileMethods.FileMethods.read_solar_resource_file">[docs]</a>    <span class="k">def</span> <span class="nf">read_solar_resource_file</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="n">unit_registry</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Method to read csv file and return data array</span>
+<span class="sd">        </span>
+<span class="sd">        Inputs:</span>
+<span class="sd">            filepath (str)               : full path to file</span>
+<span class="sd">            unitRegistry (pint.registry) : unique unit Pint unit registry</span>
+<span class="sd">        Outputs:</span>
+<span class="sd">            t_dry (float Quant) : dry bulb temperature (in deg K)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c1"># setting a standard unit registry</span>
+        <span class="n">u</span> <span class="o">=</span> <span class="n">unit_registry</span> 
+        
+        <span class="c1"># import csv dataframe</span>
+        <span class="n">dataframe</span> <span class="o">=</span> <span class="n">pandas</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span><span class="n">header</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+        
+        <span class="c1"># extract Temperature from dataframe</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">dataframe</span><span class="p">[</span><span class="s1">&#39;Temperature&#39;</span><span class="p">]</span>
+        
+        <span class="c1"># convert to proper data structure with units in deg C</span>
+        <span class="n">t_dry</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">degC</span>
+        
+        <span class="k">return</span> <span class="n">t_dry</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39;kelvin&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="FileMethods.read_steam_table_file"><a class="viewcode-back" href="../../../simulations.util.html#simulations.util.FileMethods.FileMethods.read_steam_table_file">[docs]</a>    <span class="k">def</span> <span class="nf">read_steam_table_file</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="n">unit_registry</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Method to read csv file and return data array</span>
+<span class="sd">        </span>
+<span class="sd">        Inputs:</span>
+<span class="sd">            filepath (str)               : full path to file</span>
+<span class="sd">            unitRegistry (pint.registry) : unique unit Pint unit registry</span>
+<span class="sd">        Outputs:</span>
+<span class="sd">            T_K (float Quant) : steam temperature (in deg K)</span>
+<span class="sd">            c_p (float Quant) : steam temperature (in kJ/kg*K)</span>
+<span class="sd">            H_p (float Quant) : steam temperature (in kJ/kg)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c1"># setting a standard unit registry</span>
+        <span class="n">u</span> <span class="o">=</span> <span class="n">unit_registry</span> 
+        
+        <span class="c1"># import csv dataframe</span>
+        <span class="n">dataframe</span> <span class="o">=</span> <span class="n">pandas</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">)</span>
+        
+        <span class="c1"># extract Temperature from dataframe</span>
+        <span class="n">T_C</span> <span class="o">=</span> <span class="n">dataframe</span><span class="p">[</span><span class="s1">&#39;Temperature (C)&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">degC</span>
+        <span class="n">c_p</span> <span class="o">=</span> <span class="n">dataframe</span><span class="p">[</span><span class="s1">&#39;Cp (J/g*K)&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">kJ</span> <span class="o">/</span> <span class="n">u</span><span class="o">.</span><span class="n">kg</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">degK</span>
+        <span class="n">H_p</span> <span class="o">=</span> <span class="n">dataframe</span><span class="p">[</span><span class="s1">&#39;Enthalpy (kJ/kg)&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">kJ</span> <span class="o">/</span> <span class="n">u</span><span class="o">.</span><span class="n">kg</span>
+
+        <span class="k">return</span> <span class="n">T_C</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39;kelvin&#39;</span><span class="p">),</span> <span class="n">c_p</span><span class="p">,</span> <span class="n">H_p</span></div>
+
+
+<div class="viewcode-block" id="FileMethods.read_json"><a class="viewcode-back" href="../../../simulations.util.html#simulations.util.FileMethods.FileMethods.read_json">[docs]</a>    <span class="k">def</span> <span class="nf">read_json</span><span class="p">(</span><span class="n">json_name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Method to read json file and return dictionaries</span>
+<span class="sd">        </span>
+<span class="sd">        Inputs:</span>
+<span class="sd">            json_name (str) : name of json script found at &#39;neup-ies/simulations/json&#39;</span>
+<span class="sd">        Outputs:</span>
+<span class="sd">            pysam_dict (dict) : dictionary of PySAM inputs + file names</span>
+<span class="sd">            ssc_dict (dict) : dictionary of SSC inputs needed to run modules</span>
+<span class="sd">            out_dict (dict) : dictionary of PySAM output keywords for extraction</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c1">#defining filepath for JSON script (FUTURE: add non-default functionality to input whole path)</span>
+        <span class="n">samsim_dir</span> <span class="o">=</span> <span class="n">FileMethods</span><span class="o">.</span><span class="n">samsim_dir</span>
+        <span class="n">json_filepath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="n">samsim_dir</span><span class="p">,</span> <span class="s2">&quot;json&quot;</span><span class="p">,</span> <span class="n">json_name</span><span class="p">)</span>
+        <span class="n">json_filepath</span> <span class="o">+=</span> <span class="s2">&quot;.json&quot;</span> 
+        
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">json_filepath</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="c1"># loading JSON script to a dictionary</span>
+            <span class="n">D</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+            
+        <span class="c1">#extracting specific dicts nested inside the JSON script</span>
+        <span class="n">pysam_dict</span> <span class="o">=</span> <span class="n">D</span><span class="p">[</span><span class="s1">&#39;PySAM_inputs&#39;</span><span class="p">]</span>
+        <span class="n">ssc_dict</span>   <span class="o">=</span> <span class="n">D</span><span class="p">[</span><span class="s1">&#39;SSC_inputs&#39;</span><span class="p">]</span>
+        <span class="n">out_dict</span>   <span class="o">=</span> <span class="n">D</span><span class="p">[</span><span class="s1">&#39;PySAM_outputs&#39;</span><span class="p">]</span>
+        
+        <span class="k">return</span> <span class="n">pysam_dict</span><span class="p">,</span> <span class="n">ssc_dict</span><span class="p">,</span> <span class="n">out_dict</span></div>
+
+
+<div class="viewcode-block" id="FileMethods.write_csv"><a class="viewcode-back" href="../../../simulations.util.html#simulations.util.FileMethods.FileMethods.write_csv">[docs]</a>    <span class="k">def</span> <span class="nf">write_csv</span><span class="p">(</span><span class="n">data_list</span><span class="p">,</span> <span class="n">columns</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Method to write csv file </span>
+<span class="sd">        </span>
+<span class="sd">        Inputs:</span>
+<span class="sd">            data_list (list of lists) : list of strings, each list having length n</span>
+<span class="sd">            columns (list of str): list of column names with length n</span>
+<span class="sd">            filename (str): name of file (without path)</span>
+<span class="sd">            </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="n">params_dataframe</span> <span class="o">=</span> <span class="n">pandas</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data_list</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">columns</span><span class="p">)</span>
+        
+        <span class="n">filepath</span> <span class="o">=</span> <span class="s2">&quot;../outputs/&quot;</span> <span class="o">+</span> <span class="n">filename</span>
+        <span class="n">params_dataframe</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div></div>
+
+        
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">NE-2 Simulations  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">simulations.util.FileMethods</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2021, Gabriel J. Soto, Una Baker, Grace Stanke, Ben Lindley, Mike Wagner.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.1.2.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,378 @@
+
+
+<!doctype html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>simulations.dispatch.DualPlantDispatch &#8212; NE-2 Simulations  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/bizstyle.css" />
+    
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/bizstyle.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <!--[if lt IE 9]>
+    <script src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">NE-2 Simulations  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">simulations.dispatch.DualPlantDispatch</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for simulations.dispatch.DualPlantDispatch</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Pyomo real-time dispatch model</span>
+
+
+<span class="sd">Model authors:</span>
+<span class="sd">* Mike Wagner - UW-Madison</span>
+<span class="sd">* Bill Hamilton - NREL </span>
+<span class="sd">* John Cox - Colorado School of Mines</span>
+<span class="sd">* Alex Zolan - NREL</span>
+
+<span class="sd">Pyomo code by Alex Zolan</span>
+<span class="sd">Modified by Gabriel Soto</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">pyomo.environ</span> <span class="k">as</span> <span class="nn">pe</span>
+<span class="kn">from</span> <span class="nn">dispatch.GeneralDispatch</span> <span class="kn">import</span> <span class="n">GeneralDispatch</span>
+<span class="kn">from</span> <span class="nn">dispatch.GeneralDispatch</span> <span class="kn">import</span> <span class="n">GeneralDispatchParamWrap</span>
+<span class="kn">from</span> <span class="nn">dispatch.NuclearDispatch</span> <span class="kn">import</span> <span class="n">NuclearDispatch</span>
+<span class="kn">from</span> <span class="nn">dispatch.NuclearDispatch</span> <span class="kn">import</span> <span class="n">NuclearDispatchParamWrap</span>
+<span class="kn">from</span> <span class="nn">dispatch.SolarDispatch</span>   <span class="kn">import</span> <span class="n">SolarDispatch</span>
+<span class="kn">from</span> <span class="nn">dispatch.SolarDispatch</span>   <span class="kn">import</span> <span class="n">SolarDispatchParamWrap</span>
+<span class="kn">from</span> <span class="nn">dispatch.IndirectNuclearDispatch</span> <span class="kn">import</span> <span class="n">IndirectNuclearDispatch</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">util.FileMethods</span> <span class="kn">import</span> <span class="n">FileMethods</span>
+<span class="kn">from</span> <span class="nn">util.SSCHelperMethods</span> <span class="kn">import</span> <span class="n">SSCHelperMethods</span>
+<span class="kn">import</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">copy</span>
+
+<div class="viewcode-block" id="DualPlantDispatch"><a class="viewcode-back" href="../../../simulations.dispatch.html#simulations.dispatch.DualPlantDispatch.DualPlantDispatch">[docs]</a><span class="k">class</span> <span class="nc">DualPlantDispatch</span><span class="p">(</span><span class="n">SolarDispatch</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The DualPlantDispatch class is meant to set up and run Dispatch</span>
+<span class="sd">    optimization as a mixed integer linear program problem using Pyomo,</span>
+<span class="sd">    specifically for the NuclearMsptTES NE2+SSC module.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="DualPlantDispatch.__init__"><a class="viewcode-back" href="../../../simulations.dispatch.html#simulations.dispatch.DualPlantDispatch.DualPlantDispatch.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>  <span class="n">dual</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Initializes the DualPlantDispatch module</span>
+<span class="sd">        </span>
+<span class="sd">        The instantiation of this class receives a parameter dictionary from</span>
+<span class="sd">        the NE2 module (created using the DualPlantDispatchWrapper class). It calls</span>
+<span class="sd">        on the GeneralDispatch __init__ to create the model. The NuclearDispatch first</span>
+<span class="sd">        creates an empty Concrete Model from Pyomo, then generates Parameters</span>
+<span class="sd">        from the parameter dictionary, Variables, Objectives and Constraints.</span>
+<span class="sd">        </span>
+<span class="sd">        Inputs:</span>
+<span class="sd">            params (dict)                : dictionary of Pyomo dispatch parameters</span>
+<span class="sd">            unitRegistry (pint.registry) : unique unit Pint unit registry</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">dual</span><span class="o">=</span><span class="n">dual</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="DualPlantDispatch.generate_params"><a class="viewcode-back" href="../../../simulations.dispatch.html#simulations.dispatch.DualPlantDispatch.DualPlantDispatch.generate_params">[docs]</a>    <span class="k">def</span> <span class="nf">generate_params</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Method to generate parameters within Pyomo DualPlant Model</span>
+<span class="sd">        </span>
+<span class="sd">        This method reads in a dictionary of pyomo parameters and uses these</span>
+<span class="sd">        inputs to initialize parameters for the Pyomo Concrete Model. This method</span>
+<span class="sd">        sets up parameters particularly for the Power Cycle. It also defines</span>
+<span class="sd">        some lambda functions that helps convert Pint units to Pyomo units. It</span>
+<span class="sd">        first instantiates PowerCycle parameters through GeneralDispatch, then</span>
+<span class="sd">        instantiates Nuclear parameters.</span>
+<span class="sd">        </span>
+<span class="sd">        Note: initial conditions are defined for the time period immediately </span>
+<span class="sd">        preceding the start of this new Pyomo time segment. </span>
+<span class="sd">        </span>
+<span class="sd">        Inputs:</span>
+<span class="sd">            params (dict)  : dictionary of Pyomo dispatch parameters</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">generate_params</span><span class="p">(</span><span class="n">params</span><span class="p">)</span></div>
+        <span class="c1"># generating NuclearDispatch parameters first (PowerCycle, etc.)</span>
+        <span class="c1"># NuclearDispatch.generate_params(self, params)</span>
+        <span class="c1"># SolarDispatch.generate_params(self, params, skip_parent=True)</span>
+
+
+<div class="viewcode-block" id="DualPlantDispatch.generate_variables"><a class="viewcode-back" href="../../../simulations.dispatch.html#simulations.dispatch.DualPlantDispatch.DualPlantDispatch.generate_variables">[docs]</a>    <span class="k">def</span> <span class="nf">generate_variables</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Method to generate parameters within Pyomo DualPlant Model</span>
+<span class="sd">        </span>
+<span class="sd">        This method instantiates variables for the Pyomo Concrete Model, with</span>
+<span class="sd">        domains. Does not need initial guesses here, they are defined in the </span>
+<span class="sd">        parameters. We first define continuous and binary variables for the </span>
+<span class="sd">        Power Cycle through GeneralDispatch, then declare nuclear variables.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">generate_variables</span><span class="p">()</span></div>
+        <span class="c1"># generating NuclearDispatch variables first (PowerCycle, etc.)</span>
+        <span class="c1"># NuclearDispatch.generate_variables(self)</span>
+        <span class="c1"># SolarDispatch.generate_variables(self, skip_parent=True)</span>
+
+
+<div class="viewcode-block" id="DualPlantDispatch.add_objective"><a class="viewcode-back" href="../../../simulations.dispatch.html#simulations.dispatch.DualPlantDispatch.DualPlantDispatch.add_objective">[docs]</a>    <span class="k">def</span> <span class="nf">add_objective</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Method to add an objective function to the Pyomo Solar Model</span>
+<span class="sd">        </span>
+<span class="sd">        This method adds an objective function to the Pyomo Solar Dispatch</span>
+<span class="sd">        model. Typically, the LORE team defined a nested function and passes it</span>
+<span class="sd">        into the Pyomo model. </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">def</span> <span class="nf">objectiveRule</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot; Maximize profits vs. costs &quot;&quot;&quot;</span>
+            <span class="k">return</span> <span class="p">(</span>
+                    <span class="nb">sum</span><span class="p">(</span> <span class="n">model</span><span class="o">.</span><span class="n">D</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">*</span> 
+                    <span class="c1">#obj_profit</span>
+                    <span class="n">model</span><span class="o">.</span><span class="n">Delta</span><span class="p">[</span><span class="n">t</span><span class="p">]</span><span class="o">*</span><span class="n">model</span><span class="o">.</span><span class="n">P</span><span class="p">[</span><span class="n">t</span><span class="p">]</span><span class="o">*</span><span class="mf">0.1</span><span class="o">*</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">wdot_s</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">-</span> <span class="n">model</span><span class="o">.</span><span class="n">wdot_p</span><span class="p">[</span><span class="n">t</span><span class="p">])</span>
+                    <span class="c1">#obj_cost_cycle_su_hs_sd</span>
+                    <span class="o">-</span> <span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">Ccsu</span><span class="o">*</span><span class="n">model</span><span class="o">.</span><span class="n">ycsup</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">+</span> <span class="mf">0.1</span><span class="o">*</span><span class="n">model</span><span class="o">.</span><span class="n">Cchsp</span><span class="o">*</span><span class="n">model</span><span class="o">.</span><span class="n">ychsp</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">+</span> <span class="n">model</span><span class="o">.</span><span class="n">alpha</span><span class="o">*</span><span class="n">model</span><span class="o">.</span><span class="n">ycsd</span><span class="p">[</span><span class="n">t</span><span class="p">])</span>
+                    <span class="c1">#obj_cost_cycle_ramping</span>
+                    <span class="o">-</span> <span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">C_delta_w</span><span class="o">*</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">wdot_delta_plus</span><span class="p">[</span><span class="n">t</span><span class="p">]</span><span class="o">+</span><span class="n">model</span><span class="o">.</span><span class="n">wdot_delta_minus</span><span class="p">[</span><span class="n">t</span><span class="p">])</span><span class="o">+</span><span class="n">model</span><span class="o">.</span><span class="n">C_v_w</span><span class="o">*</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">wdot_v_plus</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">+</span> <span class="n">model</span><span class="o">.</span><span class="n">wdot_v_minus</span><span class="p">[</span><span class="n">t</span><span class="p">]))</span>
+                    <span class="c1">#obj_cost_rec_su_hs_sd</span>
+                    <span class="o">-</span> <span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">Crsu</span><span class="o">*</span><span class="n">model</span><span class="o">.</span><span class="n">yrsup</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">+</span> <span class="n">model</span><span class="o">.</span><span class="n">Crhsp</span><span class="o">*</span><span class="n">model</span><span class="o">.</span><span class="n">yrhsp</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">+</span> <span class="n">model</span><span class="o">.</span><span class="n">alpha</span><span class="o">*</span><span class="n">model</span><span class="o">.</span><span class="n">yrsd</span><span class="p">[</span><span class="n">t</span><span class="p">])</span>
+                    <span class="c1">#obj_cost_nuc_su_hs_sd</span>
+                    <span class="o">-</span> <span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">Cnsu</span><span class="o">*</span><span class="n">model</span><span class="o">.</span><span class="n">ynsup</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">+</span> <span class="n">model</span><span class="o">.</span><span class="n">Cnhsp</span><span class="o">*</span><span class="n">model</span><span class="o">.</span><span class="n">ynhsp</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">+</span> <span class="n">model</span><span class="o">.</span><span class="n">alpha</span><span class="o">*</span><span class="n">model</span><span class="o">.</span><span class="n">ynsd</span><span class="p">[</span><span class="n">t</span><span class="p">])</span>
+                    <span class="c1">#obj_cost_ops</span>
+                    <span class="o">-</span> <span class="n">model</span><span class="o">.</span><span class="n">Delta</span><span class="p">[</span><span class="n">t</span><span class="p">]</span><span class="o">*</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">Cpc</span><span class="o">*</span><span class="n">model</span><span class="o">.</span><span class="n">wdot</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">+</span> <span class="n">model</span><span class="o">.</span><span class="n">Ccsb</span><span class="o">*</span><span class="n">model</span><span class="o">.</span><span class="n">Qb</span><span class="o">*</span><span class="n">model</span><span class="o">.</span><span class="n">ycsb</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">+</span> <span class="n">model</span><span class="o">.</span><span class="n">Crec</span><span class="o">*</span><span class="n">model</span><span class="o">.</span><span class="n">xr</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">+</span> <span class="n">model</span><span class="o">.</span><span class="n">Cnuc</span><span class="o">*</span><span class="n">model</span><span class="o">.</span><span class="n">xn</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="p">)</span>
+                    <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">T</span><span class="p">)</span> 
+                    <span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">OBJ</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Objective</span><span class="p">(</span><span class="n">rule</span><span class="o">=</span><span class="n">objectiveRule</span><span class="p">,</span> <span class="n">sense</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">maximize</span><span class="p">)</span></div>
+        
+
+<div class="viewcode-block" id="DualPlantDispatch.addNuclearSupplyAndDemandConstraints"><a class="viewcode-back" href="../../../simulations.dispatch.html#simulations.dispatch.DualPlantDispatch.DualPlantDispatch.addNuclearSupplyAndDemandConstraints">[docs]</a>    <span class="k">def</span> <span class="nf">addNuclearSupplyAndDemandConstraints</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Method to add nuclear supply and demand constraints to the Pyomo Nuclear Model</span>
+<span class="sd">        </span>
+<span class="sd">        This method adds constraints pertaining to nuclear supply and demand energy</span>
+<span class="sd">        constraints. Some constraints might be redundant, they are adapted from the CSP</span>
+<span class="sd">        constraints (thanks LORE team).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="nb">super</span><span class="p">(</span><span class="n">IndirectNuclearDispatch</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">addNuclearSupplyAndDemandConstraints</span><span class="p">()</span></div>
+        
+        
+<div class="viewcode-block" id="DualPlantDispatch.addTESEnergyBalanceConstraints"><a class="viewcode-back" href="../../../simulations.dispatch.html#simulations.dispatch.DualPlantDispatch.DualPlantDispatch.addTESEnergyBalanceConstraints">[docs]</a>    <span class="k">def</span> <span class="nf">addTESEnergyBalanceConstraints</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Method to add TES constraints to the Pyomo Solar Model</span>
+<span class="sd">        </span>
+<span class="sd">        This method adds constraints pertaining to TES energy balance from charging</span>
+<span class="sd">        with thermal power and discharging to the power cycle. </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">def</span> <span class="nf">tes_balance_rule</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot; Balance of energy to and from TES &quot;&quot;&quot;</span>
+            <span class="k">if</span> <span class="n">t</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">model</span><span class="o">.</span><span class="n">s</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">-</span> <span class="n">model</span><span class="o">.</span><span class="n">s0</span> <span class="o">==</span> <span class="n">model</span><span class="o">.</span><span class="n">Delta</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">xr</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">+</span> <span class="n">model</span><span class="o">.</span><span class="n">xn</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">-</span> <span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">Qc</span><span class="p">[</span><span class="n">t</span><span class="p">]</span><span class="o">*</span><span class="n">model</span><span class="o">.</span><span class="n">ycsu</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">+</span> <span class="n">model</span><span class="o">.</span><span class="n">Qb</span><span class="o">*</span><span class="n">model</span><span class="o">.</span><span class="n">ycsb</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">+</span> <span class="n">model</span><span class="o">.</span><span class="n">x</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">+</span> <span class="n">model</span><span class="o">.</span><span class="n">Qnsb</span><span class="o">*</span><span class="n">model</span><span class="o">.</span><span class="n">ynsb</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">+</span> <span class="n">model</span><span class="o">.</span><span class="n">Qrsb</span><span class="o">*</span><span class="n">model</span><span class="o">.</span><span class="n">yrsb</span><span class="p">[</span><span class="n">t</span><span class="p">]))</span>
+            <span class="k">return</span> <span class="n">model</span><span class="o">.</span><span class="n">s</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">-</span> <span class="n">model</span><span class="o">.</span><span class="n">s</span><span class="p">[</span><span class="n">t</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">model</span><span class="o">.</span><span class="n">Delta</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">xr</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">+</span> <span class="n">model</span><span class="o">.</span><span class="n">xn</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">-</span> <span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">Qc</span><span class="p">[</span><span class="n">t</span><span class="p">]</span><span class="o">*</span><span class="n">model</span><span class="o">.</span><span class="n">ycsu</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">+</span> <span class="n">model</span><span class="o">.</span><span class="n">Qb</span><span class="o">*</span><span class="n">model</span><span class="o">.</span><span class="n">ycsb</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">+</span> <span class="n">model</span><span class="o">.</span><span class="n">x</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">+</span> <span class="n">model</span><span class="o">.</span><span class="n">Qnsb</span><span class="o">*</span><span class="n">model</span><span class="o">.</span><span class="n">ynsb</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">+</span> <span class="n">model</span><span class="o">.</span><span class="n">Qrsb</span><span class="o">*</span><span class="n">model</span><span class="o">.</span><span class="n">yrsb</span><span class="p">[</span><span class="n">t</span><span class="p">]))</span>
+        <span class="k">def</span> <span class="nf">tes_upper_rule</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot; Upper bound to TES charge state &quot;&quot;&quot;</span>
+            <span class="k">return</span> <span class="n">model</span><span class="o">.</span><span class="n">s</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">model</span><span class="o">.</span><span class="n">Eu</span>
+        <span class="k">def</span> <span class="nf">tes_start_up_rule</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot; Ensuring sufficient TES charge level to startup NP &quot;&quot;&quot;</span>
+            <span class="k">if</span> <span class="n">t</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">model</span><span class="o">.</span><span class="n">s0</span> <span class="o">&gt;=</span> <span class="n">model</span><span class="o">.</span><span class="n">Delta</span><span class="p">[</span><span class="n">t</span><span class="p">]</span><span class="o">*</span><span class="n">model</span><span class="o">.</span><span class="n">delta_rs</span><span class="p">[</span><span class="n">t</span><span class="p">]</span><span class="o">*</span><span class="p">(</span> <span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">Qu</span> <span class="o">+</span> <span class="n">model</span><span class="o">.</span><span class="n">Qb</span><span class="p">)</span><span class="o">*</span><span class="p">(</span> <span class="o">-</span><span class="mi">3</span> <span class="o">+</span> <span class="n">model</span><span class="o">.</span><span class="n">yrsu</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">+</span> <span class="n">model</span><span class="o">.</span><span class="n">ynsu</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">+</span> <span class="n">model</span><span class="o">.</span><span class="n">y0</span> <span class="o">+</span> <span class="n">model</span><span class="o">.</span><span class="n">y</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">+</span> <span class="n">model</span><span class="o">.</span><span class="n">ycsb0</span> <span class="o">+</span> <span class="n">model</span><span class="o">.</span><span class="n">ycsb</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="p">)</span> <span class="o">+</span> <span class="n">model</span><span class="o">.</span><span class="n">x</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">+</span> <span class="n">model</span><span class="o">.</span><span class="n">Qb</span><span class="o">*</span><span class="n">model</span><span class="o">.</span><span class="n">ycsb</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="p">)</span>
+            <span class="k">return</span> <span class="n">model</span><span class="o">.</span><span class="n">s</span><span class="p">[</span><span class="n">t</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">model</span><span class="o">.</span><span class="n">Delta</span><span class="p">[</span><span class="n">t</span><span class="p">]</span><span class="o">*</span><span class="n">model</span><span class="o">.</span><span class="n">delta_rs</span><span class="p">[</span><span class="n">t</span><span class="p">]</span><span class="o">*</span><span class="p">(</span> <span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">Qu</span> <span class="o">+</span> <span class="n">model</span><span class="o">.</span><span class="n">Qb</span><span class="p">)</span><span class="o">*</span><span class="p">(</span> <span class="o">-</span><span class="mi">3</span> <span class="o">+</span> <span class="n">model</span><span class="o">.</span><span class="n">yrsu</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">+</span> <span class="n">model</span><span class="o">.</span><span class="n">ynsu</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">+</span> <span class="n">model</span><span class="o">.</span><span class="n">y</span><span class="p">[</span><span class="n">t</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">model</span><span class="o">.</span><span class="n">y</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">+</span> <span class="n">model</span><span class="o">.</span><span class="n">ycsb</span><span class="p">[</span><span class="n">t</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">model</span><span class="o">.</span><span class="n">ycsb</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="p">)</span> <span class="o">+</span> <span class="n">model</span><span class="o">.</span><span class="n">x</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">+</span> <span class="n">model</span><span class="o">.</span><span class="n">Qb</span><span class="o">*</span><span class="n">model</span><span class="o">.</span><span class="n">ycsb</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="p">)</span>
+        <span class="k">def</span> <span class="nf">maintain_tes_rule</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot; Final state of TES has to be less than or equal to start &quot;&quot;&quot;</span>
+            <span class="k">return</span> <span class="n">model</span><span class="o">.</span><span class="n">s</span><span class="p">[</span><span class="n">model</span><span class="o">.</span><span class="n">num_periods</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">model</span><span class="o">.</span><span class="n">s0</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">tes_balance_con</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Constraint</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">T</span><span class="p">,</span><span class="n">rule</span><span class="o">=</span><span class="n">tes_balance_rule</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">tes_upper_con</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Constraint</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">T</span><span class="p">,</span><span class="n">rule</span><span class="o">=</span><span class="n">tes_upper_rule</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">tes_start_up_con</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Constraint</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">T</span><span class="p">,</span><span class="n">rule</span><span class="o">=</span><span class="n">tes_start_up_rule</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">maintain_tes_con</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Constraint</span><span class="p">(</span><span class="n">rule</span><span class="o">=</span><span class="n">maintain_tes_rule</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="DualPlantDispatch.addPiecewiseLinearEfficiencyConstraints"><a class="viewcode-back" href="../../../simulations.dispatch.html#simulations.dispatch.DualPlantDispatch.DualPlantDispatch.addPiecewiseLinearEfficiencyConstraints">[docs]</a>    <span class="k">def</span> <span class="nf">addPiecewiseLinearEfficiencyConstraints</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Method to add efficiency constraints to the Pyomo Solar Model</span>
+<span class="sd">        </span>
+<span class="sd">        This method adds constraints pertaining to efficiency constraints defined</span>
+<span class="sd">        as a piecewise linear approximation. Also referred to as Cycle supply and </span>
+<span class="sd">        demand constraints. In the SolarDispatch, we add an extra balance of power</span>
+<span class="sd">        with respect to energy storage and power produced from the CSP plant. </span>
+<span class="sd">        </span>
+<span class="sd">        TODO: This should be revisited when adding MED!!</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="nb">super</span><span class="p">(</span><span class="n">NuclearDispatch</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">addPiecewiseLinearEfficiencyConstraints</span><span class="p">()</span>
+        
+        <span class="k">def</span> <span class="nf">grid_therm_rule</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot; Balance of power flow, i.e. sold vs purchased &quot;&quot;&quot;</span>
+            <span class="k">return</span> <span class="p">(</span>
+                    <span class="n">model</span><span class="o">.</span><span class="n">wdot_s</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">-</span> <span class="n">model</span><span class="o">.</span><span class="n">wdot_p</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">==</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">model</span><span class="o">.</span><span class="n">etac</span><span class="p">[</span><span class="n">t</span><span class="p">])</span><span class="o">*</span><span class="n">model</span><span class="o">.</span><span class="n">wdot</span><span class="p">[</span><span class="n">t</span><span class="p">]</span>
+                        <span class="o">-</span> <span class="n">model</span><span class="o">.</span><span class="n">Ln</span><span class="o">*</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">xn</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">+</span> <span class="n">model</span><span class="o">.</span><span class="n">xnsu</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">+</span> <span class="n">model</span><span class="o">.</span><span class="n">Qnl</span><span class="o">*</span><span class="n">model</span><span class="o">.</span><span class="n">ynsb</span><span class="p">[</span><span class="n">t</span><span class="p">])</span>
+                		<span class="o">-</span> <span class="n">model</span><span class="o">.</span><span class="n">Lr</span><span class="o">*</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">xr</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">+</span> <span class="n">model</span><span class="o">.</span><span class="n">xrsu</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">+</span> <span class="n">model</span><span class="o">.</span><span class="n">Qrl</span><span class="o">*</span><span class="n">model</span><span class="o">.</span><span class="n">yrsb</span><span class="p">[</span><span class="n">t</span><span class="p">])</span>
+                		<span class="o">-</span> <span class="n">model</span><span class="o">.</span><span class="n">Lc</span><span class="o">*</span><span class="n">model</span><span class="o">.</span><span class="n">x</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> 
+                        <span class="o">-</span> <span class="n">model</span><span class="o">.</span><span class="n">Wh</span><span class="o">*</span><span class="n">model</span><span class="o">.</span><span class="n">yr</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">-</span> <span class="n">model</span><span class="o">.</span><span class="n">Wb</span><span class="o">*</span><span class="n">model</span><span class="o">.</span><span class="n">ycsb</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">-</span> <span class="n">model</span><span class="o">.</span><span class="n">Wht</span><span class="o">*</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">yrsb</span><span class="p">[</span><span class="n">t</span><span class="p">]</span><span class="o">+</span><span class="n">model</span><span class="o">.</span><span class="n">yrsu</span><span class="p">[</span><span class="n">t</span><span class="p">])</span>		<span class="c1">#Is Wrsb energy [kWh] or power [kW]?  [az] Wrsb = Wht in the math?</span>
+                		<span class="o">-</span> <span class="n">model</span><span class="o">.</span><span class="n">Wnht</span><span class="o">*</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">ynsb</span><span class="p">[</span><span class="n">t</span><span class="p">]</span><span class="o">+</span><span class="n">model</span><span class="o">.</span><span class="n">ynsu</span><span class="p">[</span><span class="n">t</span><span class="p">])</span>
+                        <span class="o">-</span> <span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">Ehs</span><span class="o">/</span><span class="n">model</span><span class="o">.</span><span class="n">Delta</span><span class="p">[</span><span class="n">t</span><span class="p">])</span><span class="o">*</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">yrsu</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">+</span> <span class="n">model</span><span class="o">.</span><span class="n">yrsb</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">+</span> <span class="n">model</span><span class="o">.</span><span class="n">yrsd</span><span class="p">[</span><span class="n">t</span><span class="p">])</span>
+            <span class="p">)</span>
+        
+        <span class="c1"># call the parent version of this method</span>
+        <span class="c1"># GeneralDispatch.addPiecewiseLinearEfficiencyConstraints(self)</span>
+        
+        <span class="c1"># additional constraints</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">grid_sun_con</span> <span class="o">=</span> <span class="n">pe</span><span class="o">.</span><span class="n">Constraint</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">T</span><span class="p">,</span><span class="n">rule</span><span class="o">=</span><span class="n">grid_therm_rule</span><span class="p">)</span></div>
+        
+        
+<div class="viewcode-block" id="DualPlantDispatch.generate_constraints"><a class="viewcode-back" href="../../../simulations.dispatch.html#simulations.dispatch.DualPlantDispatch.DualPlantDispatch.generate_constraints">[docs]</a>    <span class="k">def</span> <span class="nf">generate_constraints</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Method to add ALL constraints to the Pyomo Solar Model</span>
+<span class="sd">        </span>
+<span class="sd">        This method calls the previously defined constraint methods to instantiate</span>
+<span class="sd">        them and add to the existing model. This method first calls the GeneralDispatch</span>
+<span class="sd">        version to set PowerCycle constraints, then calls nuclear constraint methods</span>
+<span class="sd">        to add them to the model. </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">generate_constraints</span><span class="p">()</span></div></div>
+        <span class="c1"># generating NuclearDispatch constraints first (PowerCycle, etc.)</span>
+        <span class="c1"># NuclearDispatch.generate_constraints(self)</span>
+        <span class="c1"># SolarDispatch.generate_constraints(self, skip_parent=True)</span>
+
+
+<span class="c1"># =============================================================================</span>
+<span class="c1"># Dispatch Wrapper</span>
+<span class="c1"># =============================================================================</span>
+
+<div class="viewcode-block" id="DualPlantDispatchParamWrap"><a class="viewcode-back" href="../../../simulations.dispatch.html#simulations.dispatch.DualPlantDispatch.DualPlantDispatchParamWrap">[docs]</a><span class="k">class</span> <span class="nc">DualPlantDispatchParamWrap</span><span class="p">(</span><span class="n">SolarDispatchParamWrap</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The DualPlantDispatchParamWrap class is meant to be the staging area for the </span>
+<span class="sd">    creation of Parameters ONLY for the DualPlantDispatch class. It communicates </span>
+<span class="sd">    with the NE2 modules, receiving SSC and PySAM input dictionaries to calculate </span>
+<span class="sd">    both static parameters used for every simulation segment AND initial conditions </span>
+<span class="sd">    that can be updated.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="DualPlantDispatchParamWrap.__init__"><a class="viewcode-back" href="../../../simulations.dispatch.html#simulations.dispatch.DualPlantDispatch.DualPlantDispatchParamWrap.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dual</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Initializes the NuclearDispatchParamWrap module</span>
+<span class="sd">        </span>
+<span class="sd">        Inputs:</span>
+<span class="sd">            unitRegistry (pint.registry)   : unique unit Pint unit registry</span>
+<span class="sd">            SSC_dict (dict)                : dictionary of SSC inputs needed to run modules</span>
+<span class="sd">            PySAM_dict (dict)              : dictionary of PySAM inputs + file names</span>
+<span class="sd">            pyomo_horizon (int Quant)      : length of Pyomo simulation segment (hours)</span>
+<span class="sd">            dispatch_time_step (int Quant) : length of each Pyomo time step (hours)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c1"># here, we invoke the NuclearParamWrap init which calls on the General version</span>
+        <span class="c1"># within this call, the set_design() method is called which then calls upon both</span>
+        <span class="c1">#   the nuclear and solar versions</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">dual</span><span class="o">=</span><span class="n">dual</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+        
+
+<div class="viewcode-block" id="DualPlantDispatchParamWrap.set_design"><a class="viewcode-back" href="../../../simulations.dispatch.html#simulations.dispatch.DualPlantDispatch.DualPlantDispatchParamWrap.set_design">[docs]</a>    <span class="k">def</span> <span class="nf">set_design</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Method to calculate and save design point values of Plant operation</span>
+<span class="sd">        </span>
+<span class="sd">        This method extracts values and calculates for design point parameters </span>
+<span class="sd">        of our Plant (e.g., nuclear thermal power output, power cycle efficiency,</span>
+<span class="sd">        inlet and outlet temperatures, etc.). </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">set_design</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="DualPlantDispatchParamWrap.set_fixed_cost_parameters"><a class="viewcode-back" href="../../../simulations.dispatch.html#simulations.dispatch.DualPlantDispatch.DualPlantDispatchParamWrap.set_fixed_cost_parameters">[docs]</a>    <span class="k">def</span> <span class="nf">set_fixed_cost_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">param_dict</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Method to set fixed costs of the Plant</span>
+<span class="sd">        </span>
+<span class="sd">        This method calculates some fixed costs for the Plant operations, startup,</span>
+<span class="sd">        standby, etc. </span>
+<span class="sd">        </span>
+<span class="sd">        Inputs:</span>
+<span class="sd">            param_dict (dict) : dictionary of Pyomo dispatch parameters</span>
+<span class="sd">        Outputs:</span>
+<span class="sd">            param_dict (dict) : updated dictionary of Pyomo dispatch parameters</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c1"># set up costs from parent class</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">set_fixed_cost_parameters</span><span class="p">(</span><span class="n">param_dict</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">param_dict</span></div>
+
+
+<div class="viewcode-block" id="DualPlantDispatchParamWrap.set_initial_state"><a class="viewcode-back" href="../../../simulations.dispatch.html#simulations.dispatch.DualPlantDispatch.DualPlantDispatchParamWrap.set_initial_state">[docs]</a>    <span class="k">def</span> <span class="nf">set_initial_state</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">param_dict</span><span class="p">,</span> <span class="n">updated_dict</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">plant</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">npts</span><span class="o">=</span><span class="kc">None</span> <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Method to set the initial state of the Plant before Dispatch optimization</span>
+<span class="sd">        </span>
+<span class="sd">        This method uses SSC data to set the initial state of the Plant before Dispatch</span>
+<span class="sd">        optimization in Pyomo. This method is called in two ways: once before starting </span>
+<span class="sd">        the simulation loop, in which case it only uses values from the SSC_dict portion</span>
+<span class="sd">        of the given JSON script. The method is also called within the simulation loop</span>
+<span class="sd">        to update the initial state parameters based on the ending conditions of the </span>
+<span class="sd">        previous simulation segment (provided by SSC). </span>
+<span class="sd">        </span>
+<span class="sd">        TODO: can we just input another dictionary instead of passing the full Plant?</span>
+<span class="sd">        </span>
+<span class="sd">        Inputs:</span>
+<span class="sd">            param_dict (dict)    : dictionary of Pyomo dispatch parameters</span>
+<span class="sd">            updated_dict (dict)  : dictionary with updated SSC initial conditions from previous run</span>
+<span class="sd">            plant (obj)          : the full PySAM Plant object. </span>
+<span class="sd">            npts (int)           : length of the SSC horizon</span>
+<span class="sd">        Outputs:</span>
+<span class="sd">            param_dict (dict) : updated dictionary of Pyomo dispatch parameters</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># First filling out initial states from GeneralDispatcher</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">set_initial_state</span><span class="p">(</span><span class="n">param_dict</span><span class="p">,</span> <span class="n">updated_dict</span><span class="p">,</span> <span class="n">plant</span><span class="p">,</span> <span class="n">npts</span> <span class="p">)</span>
+        
+        <span class="k">return</span> <span class="n">param_dict</span></div></div>
+        
+        
+        
+        
+        
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">NE-2 Simulations  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">simulations.dispatch.DualPlantDispatch</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2021, Gabriel J. Soto, Una Baker, Grace Stanke, Ben Lindley, Mike Wagner.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.2.0.
+    </div>
+  </body>
+</html>

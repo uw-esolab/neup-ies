@@ -1,0 +1,502 @@
+
+
+<!doctype html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>simulations.util.PySSCWrapper &#8212; NE-2 Simulations  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/bizstyle.css" />
+    
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/bizstyle.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <!--[if lt IE 9]>
+    <script src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">NE-2 Simulations  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">simulations.util.PySSCWrapper</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for simulations.util.PySSCWrapper</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python3</span>
+<span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Created on Fri May 21 16:00:31 2021</span>
+
+<span class="sd">@author: gabrielsoto</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">util.FileMethods</span> <span class="kn">import</span> <span class="n">FileMethods</span> 
+<span class="kn">from</span> <span class="nn">scripts.PySSC_scripts.PySSC</span> <span class="kn">import</span> <span class="n">PySSC</span>
+<span class="kn">import</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pickle</span> <span class="k">as</span> <span class="nn">pickle</span>
+<span class="kn">import</span> <span class="nn">hashlib</span> <span class="k">as</span> <span class="nn">hashlib</span>
+
+<div class="viewcode-block" id="PySSCWrapper"><a class="viewcode-back" href="../../../simulations.util.html#simulations.util.PySSCWrapper.PySSCWrapper">[docs]</a><span class="k">class</span> <span class="nc">PySSCWrapper</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The PySSCWrapper class is a util class used to run PySSC from a given JSON</span>
+<span class="sd">    script (similar to what we&#39;re doing in the PySAM NE2 modules). The main </span>
+<span class="sd">    use-case for this method is mixed-mode debugging:</span>
+<span class="sd">        (1) choose an existing script from the /scripts directory that calls this method</span>
+<span class="sd">        (2) run the script</span>
+<span class="sd">        (3) PySSCWrapper class is initialized</span>
+<span class="sd">        (4) PySSCWrapper creates PySSC data structures and modules</span>
+<span class="sd">        (5) PySSC calls SSC</span>
+<span class="sd">        (6) We can debug SSC if we&#39;re running it through CodeLite or Eclipse</span>
+<span class="sd">    </span>
+<span class="sd">    For more information: https://github.com/uw-esolab/docs/blob/main/sam/debugSSCwithPySSC_Linux_CodeLiteIDE.md</span>
+<span class="sd">    </span>
+<span class="sd">    To ensure the debug version of SSC, look into the https://github.com/uw-esolab/neup-ies/build_debug_SAM bash script</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+<div class="viewcode-block" id="PySSCWrapper.__init__"><a class="viewcode-back" href="../../../simulations.util.html#simulations.util.PySSCWrapper.PySSCWrapper.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">json_name</span><span class="o">=</span><span class="s1">&#39;model1&#39;</span><span class="p">,</span> <span class="n">is_debug</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Initializes the PySSCWrapper module</span>
+<span class="sd">        </span>
+<span class="sd">        This method initialized the PySSCWrapper module. If we intend to run</span>
+<span class="sd">        in debug mode, the flag used as input ensures we point to the correct</span>
+<span class="sd">        version of the SSC library (libSSCd.so file which is the Debug version</span>
+<span class="sd">        rather than the Release version). The method also finds and extracts</span>
+<span class="sd">        information from the specified JSON script. </span>
+<span class="sd">        </span>
+<span class="sd">        Inputs:</span>
+<span class="sd">            json_name (str)  : name of JSON script with input data for module</span>
+<span class="sd">            is_debug (bool)  : flag to determine if running in debug mode</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">is_debug</span> <span class="o">=</span> <span class="n">is_debug</span>
+        
+        <span class="c1"># defining useful directories</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">samsim_dir</span> <span class="o">=</span> <span class="n">FileMethods</span><span class="o">.</span><span class="n">samsim_dir</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">NE2_dir</span>    <span class="o">=</span> <span class="n">FileMethods</span><span class="o">.</span><span class="n">parent_dir</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
+        
+        <span class="c1"># defining filepath for user selected JSON script</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">json_filepath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="n">FileMethods</span><span class="o">.</span><span class="n">samsim_dir</span><span class="p">,</span> <span class="s2">&quot;json&quot;</span><span class="p">,</span> <span class="n">json_name</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">json_filepath</span> <span class="o">+=</span> <span class="s2">&quot;.json&quot;</span> 
+        
+        <span class="c1"># loading JSON script to a dictionary</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">json_filepath</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">D</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+        
+        <span class="c1">#extracting specific dicts nested inside the JSON script</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pysam_dict</span> <span class="o">=</span> <span class="n">D</span><span class="p">[</span><span class="s1">&#39;PySAM_inputs&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sscdict</span>    <span class="o">=</span> <span class="n">D</span><span class="p">[</span><span class="s1">&#39;SSC_inputs&#39;</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="PySSCWrapper.run_sim"><a class="viewcode-back" href="../../../simulations.util.html#simulations.util.PySSCWrapper.PySSCWrapper.run_sim">[docs]</a>    <span class="k">def</span> <span class="nf">run_sim</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">run_dispatch_targets</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Method to run full SSC simulation through PySSC</span>
+<span class="sd">        </span>
+<span class="sd">        This method creates an SSC API, saves input data from the specified</span>
+<span class="sd">        JSON script to it and runs a full SSC simulation through PySSC. Much</span>
+<span class="sd">        like PySAM, it creates a Plant, Grid, and Financial module and runs</span>
+<span class="sd">        each in order. </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c1"># creating SSC API and Data object(?) for PySSC</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">create_API</span><span class="p">()</span>
+        
+        <span class="c1"># option to search for file with dispatch_targets and use arrays</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">run_dispatch_targets</span> <span class="o">=</span> <span class="n">run_dispatch_targets</span>
+        
+        <span class="c1">#----Plant sims</span>
+        <span class="c1"># initialize Plant-specific data</span>
+        <span class="n">plant_mod</span><span class="p">,</span> <span class="n">plant_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">init_plant_module</span><span class="p">()</span>
+        <span class="c1"># run Plant simulation</span>
+        <span class="n">plant_mod</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_module</span><span class="p">(</span> <span class="n">plant_mod</span><span class="p">,</span> <span class="n">plant_name</span> <span class="p">)</span>
+        
+        <span class="c1">#----Grid sims</span>
+        <span class="c1"># initialize Grid-specific data</span>
+        <span class="n">grid_mod</span><span class="p">,</span> <span class="n">grid_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">init_grid_module</span><span class="p">()</span>
+        <span class="c1"># run Grid simulation</span>
+        <span class="n">grid_mod</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_module</span><span class="p">(</span> <span class="n">grid_mod</span><span class="p">,</span> <span class="n">grid_name</span> <span class="p">)</span>
+        
+        <span class="c1">#----SingleOwner sims</span>
+        <span class="c1"># initialize SingleOwner-specific data</span>
+        <span class="n">fin_mod</span><span class="p">,</span> <span class="n">fin_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">init_fin_module</span><span class="p">()</span>
+        <span class="c1"># run SingleOwner simulation</span>
+        <span class="n">fin_mod</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_module</span><span class="p">(</span> <span class="n">fin_mod</span><span class="p">,</span> <span class="n">fin_name</span> <span class="p">)</span></div>
+
+    
+<div class="viewcode-block" id="PySSCWrapper.create_API"><a class="viewcode-back" href="../../../simulations.util.html#simulations.util.PySSCWrapper.PySSCWrapper.create_API">[docs]</a>    <span class="k">def</span> <span class="nf">create_API</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Method to create and save a unique SSC API to self</span>
+<span class="sd">        </span>
+<span class="sd">        This method also ensures we use the correct SSC library file, whether</span>
+<span class="sd">        we need the Debug or Release version (both could be in play in different</span>
+<span class="sd">        locations). </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">sscapi</span> <span class="o">=</span> <span class="n">PySSC</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">is_debug</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sscdata</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sscapi</span><span class="o">.</span><span class="n">data_create</span><span class="p">()</span></div>
+    
+    
+<div class="viewcode-block" id="PySSCWrapper.init_plant_module"><a class="viewcode-back" href="../../../simulations.util.html#simulations.util.PySSCWrapper.PySSCWrapper.init_plant_module">[docs]</a>    <span class="k">def</span> <span class="nf">init_plant_module</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Method to initialize the Plant module within PySSC</span>
+<span class="sd">        </span>
+<span class="sd">        This method creates the Plant module using SSC data from csv files</span>
+<span class="sd">        as well as from the SSC_dict within the specified JSON script. </span>
+
+<span class="sd">        Outputs:</span>
+<span class="sd">            plant_module (int)       : some sort of data structure for the Plant (idk, PySSC stuff)</span>
+<span class="sd">            plant_module_name (str)  : name of Plant module, or the cmod SSC file</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="n">slash</span> <span class="o">=</span> <span class="s1">&#39;/&#39;</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
+
+        <span class="c1"># file locations</span>
+        <span class="n">solar_resource_file</span>   <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">NE2_dir</span>    <span class="o">+</span> <span class="n">slash</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">pysam_dict</span><span class="p">[</span><span class="s1">&#39;solar_resource_rel_parent&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
+        <span class="n">dispatch_factors_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">samsim_dir</span> <span class="o">+</span> <span class="n">slash</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">pysam_dict</span><span class="p">[</span><span class="s1">&#39;dispatch_factors_file&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
+        <span class="n">ud_file</span>               <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">samsim_dir</span> <span class="o">+</span> <span class="n">slash</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">pysam_dict</span><span class="p">[</span><span class="s1">&#39;ud_file&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
+        <span class="n">wlim_file</span>             <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">samsim_dir</span> <span class="o">+</span> <span class="n">slash</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">pysam_dict</span><span class="p">[</span><span class="s1">&#39;wlim_file&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
+        <span class="n">helio_file</span>            <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">samsim_dir</span> <span class="o">+</span> <span class="n">slash</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">pysam_dict</span><span class="p">[</span><span class="s1">&#39;helio_file&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
+        <span class="n">eta_file</span>              <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">samsim_dir</span> <span class="o">+</span> <span class="n">slash</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">pysam_dict</span><span class="p">[</span><span class="s1">&#39;eta_file&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
+        <span class="n">flux_file</span>             <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">samsim_dir</span> <span class="o">+</span> <span class="n">slash</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">pysam_dict</span><span class="p">[</span><span class="s1">&#39;flux_file&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
+        
+        <span class="c1"># set data from files</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sscapi</span><span class="o">.</span><span class="n">data_set_string</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">sscdata</span><span class="p">,</span> <span class="sa">b</span><span class="s1">&#39;solar_resource_file&#39;</span><span class="p">,</span> <span class="n">solar_resource_file</span> <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sscapi</span><span class="o">.</span><span class="n">data_set_matrix_from_csv</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">sscdata</span><span class="p">,</span> <span class="sa">b</span><span class="s1">&#39;eta_map&#39;</span><span class="p">,</span>             <span class="n">eta_file</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sscapi</span><span class="o">.</span><span class="n">data_set_matrix_from_csv</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">sscdata</span><span class="p">,</span> <span class="sa">b</span><span class="s1">&#39;flux_maps&#39;</span><span class="p">,</span>           <span class="n">flux_file</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sscapi</span><span class="o">.</span><span class="n">data_set_matrix_from_csv</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">sscdata</span><span class="p">,</span> <span class="sa">b</span><span class="s1">&#39;helio_positions&#39;</span><span class="p">,</span>     <span class="n">helio_file</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sscapi</span><span class="o">.</span><span class="n">data_set_matrix_from_csv</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">sscdata</span><span class="p">,</span> <span class="sa">b</span><span class="s1">&#39;ud_ind_od&#39;</span><span class="p">,</span>           <span class="n">ud_file</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sscapi</span><span class="o">.</span><span class="n">data_set_array_from_csv</span><span class="p">(</span>  <span class="bp">self</span><span class="o">.</span><span class="n">sscdata</span><span class="p">,</span> <span class="sa">b</span><span class="s1">&#39;wlim_series&#39;</span><span class="p">,</span>         <span class="n">wlim_file</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sscapi</span><span class="o">.</span><span class="n">data_set_array_from_csv</span><span class="p">(</span>  <span class="bp">self</span><span class="o">.</span><span class="n">sscdata</span><span class="p">,</span> <span class="sa">b</span><span class="s1">&#39;dispatch_factors_ts&#39;</span><span class="p">,</span> <span class="n">dispatch_factors_file</span><span class="p">)</span>
+        
+        <span class="c1"># set data for dispatch targets if exists</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_dispatch_targets</span><span class="p">:</span>
+            <span class="n">hash_exists</span><span class="p">,</span> <span class="n">hash_filepath</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">generate_hash</span><span class="p">()</span>
+            
+            <span class="k">if</span> <span class="n">hash_exists</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Dispatch Targets exists in </span><span class="si">{0}</span><span class="s2">.</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">hash_filepath</span><span class="p">))</span> 
+                
+                <span class="c1"># loading dispatch targets from file if it exists</span>
+                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">hash_filepath</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">DT</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+                
+                <span class="c1"># setting dispatch targets to True</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">sscapi</span><span class="o">.</span><span class="n">data_set_number</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sscdata</span><span class="p">,</span> <span class="s1">&#39;is_dispatch_targets&#39;</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span>
+                
+                <span class="c1"># setting dispatch target arrays in SSC inputs</span>
+                <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">DT</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">sscapi</span><span class="o">.</span><span class="n">data_set_array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sscdata</span><span class="p">,</span> <span class="n">key</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">DT</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
+                    
+            <span class="k">else</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Dispatch Targets do not exist for this configuration. </span><span class="se">\n</span><span class="s2"> Will write to </span><span class="si">{0}</span><span class="s2">.</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">hash_filepath</span><span class="p">))</span>
+            
+        
+        <span class="c1"># setting dispatch series separately</span>
+        <span class="n">dispatch_series</span> <span class="o">=</span> <span class="p">[</span><span class="mf">1.2</span><span class="p">]</span><span class="o">*</span><span class="mi">8760</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sscapi</span><span class="o">.</span><span class="n">data_set_array</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">sscdata</span><span class="p">,</span> <span class="sa">b</span><span class="s1">&#39;dispatch_series&#39;</span><span class="p">,</span>  <span class="n">dispatch_series</span><span class="p">)</span>
+        
+        <span class="c1"># cycle through JSON script, saving data as respective SSC Datatype, for Plant</span>
+        <span class="n">plant_module</span><span class="p">,</span> <span class="n">plant_module_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">set_ssc_data_from_dict</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="n">plant_module</span><span class="p">,</span> <span class="n">plant_module_name</span></div>
+
+
+<div class="viewcode-block" id="PySSCWrapper.set_ssc_data_from_dict"><a class="viewcode-back" href="../../../simulations.util.html#simulations.util.PySSCWrapper.PySSCWrapper.set_ssc_data_from_dict">[docs]</a>    <span class="k">def</span> <span class="nf">set_ssc_data_from_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">start_ind</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Method used to extract SSC data from a dictionary in a JSON script</span>
+<span class="sd">        </span>
+<span class="sd">        Method adapted from LORE team (particularly the loop). It checks the</span>
+<span class="sd">        data type each entry of the JSON script SSC dictionary and uses the </span>
+<span class="sd">        appropriate SSC API method to store the data. </span>
+<span class="sd">        </span>
+<span class="sd">        Inputs:</span>
+<span class="sd">            start_ind (int)  : index of computer module (0: plant, 1: grid, 2: financial)</span>
+<span class="sd">        Outputs:</span>
+<span class="sd">            ssc_module (int)       : some sort of data structure for the Plant (idk, PySSC stuff)</span>
+<span class="sd">            ssc_module_name (str)  : name of Plant module, or the cmod SSC file</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c1"># defining compute module name to extract data from</span>
+        <span class="n">module_name</span> <span class="o">=</span> <span class="s1">&#39;compute_module_&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">start_ind</span><span class="p">)</span>
+        
+        <span class="c1"># defining &#39;book-end&#39; to end data extraction</span>
+        <span class="n">string_end</span>  <span class="o">=</span> <span class="s1">&#39;compute_module_&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">start_ind</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="k">if</span> <span class="n">start_ind</span> <span class="o">!=</span> <span class="mi">2</span> <span class="k">else</span> <span class="s1">&#39;number_compute_modules&#39;</span>
+        
+        <span class="c1"># local instance of SSC objects</span>
+        <span class="n">sscdict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sscdict</span>
+        <span class="n">sscapi</span>  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sscapi</span>
+        <span class="n">sscdata</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sscdata</span>
+        
+        <span class="c1"># cycle through all SSC dicts from the JSON script</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">sscdict</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>        
+            
+            <span class="c1"># skip the first instance that holds the SSC module name</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="n">module_name</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="c1"># end the loop if we hit the book-end string</span>
+            <span class="k">elif</span> <span class="n">key</span> <span class="o">==</span> <span class="n">string_end</span><span class="p">:</span>
+                <span class="k">break</span>
+            <span class="c1"># otherwise, try to get all values in between book-ends</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span> 
+                    <span class="c1"># set numbers if data is either int or float</span>
+                    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">sscdict</span><span class="p">[</span><span class="n">key</span><span class="p">])</span> <span class="ow">in</span> <span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+                        <span class="n">sscapi</span><span class="o">.</span><span class="n">data_set_number</span><span class="p">(</span><span class="n">sscdata</span><span class="p">,</span> <span class="n">key</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">),</span> <span class="n">sscdict</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
+                    <span class="c1"># set boolean if data is boolean</span>
+                    <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">sscdict</span><span class="p">[</span><span class="n">key</span><span class="p">])</span> <span class="o">==</span> <span class="nb">bool</span><span class="p">:</span>
+                        <span class="n">sscapi</span><span class="o">.</span><span class="n">data_set_number</span><span class="p">(</span><span class="n">sscdata</span><span class="p">,</span> <span class="n">key</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">),</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">sscdict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="k">else</span> <span class="mi">0</span><span class="p">)</span>
+                    <span class="c1"># set string if data is a str</span>
+                    <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">sscdict</span><span class="p">[</span><span class="n">key</span><span class="p">])</span> <span class="o">==</span> <span class="nb">str</span><span class="p">:</span>
+                        <span class="n">sscapi</span><span class="o">.</span><span class="n">data_set_string</span><span class="p">(</span><span class="n">sscdata</span><span class="p">,</span> <span class="n">key</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">),</span> <span class="n">sscdict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">))</span>
+                    <span class="c1"># set matrix or array if data is a list</span>
+                    <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">sscdict</span><span class="p">[</span><span class="n">key</span><span class="p">])</span> <span class="o">==</span> <span class="nb">list</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">sscdict</span><span class="p">[</span><span class="n">key</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                            <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">sscdict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span> <span class="o">==</span> <span class="nb">list</span><span class="p">:</span>
+                                <span class="n">sscapi</span><span class="o">.</span><span class="n">data_set_matrix</span><span class="p">(</span><span class="n">sscdata</span><span class="p">,</span> <span class="n">key</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">),</span> <span class="n">sscdict</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
+                            <span class="k">else</span><span class="p">:</span>
+                                <span class="n">sscapi</span><span class="o">.</span><span class="n">data_set_array</span><span class="p">(</span><span class="n">sscdata</span><span class="p">,</span> <span class="n">key</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">),</span> <span class="n">sscdict</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="c1">#print (&quot;Did not assign empty array &quot; + key)</span>
+                            <span class="k">pass</span>           
+                    <span class="c1"># re-run loop for this key if data entry is a dict</span>
+                    <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">sscdict</span><span class="p">[</span><span class="n">key</span><span class="p">])</span> <span class="o">==</span> <span class="nb">dict</span><span class="p">:</span>
+                        <span class="c1"># TODO: fix this, so far there are no dicts defined within the SSC dict</span>
+                        <span class="n">table</span> <span class="o">=</span> <span class="n">sscapi</span><span class="o">.</span><span class="n">data_create</span><span class="p">()</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">set_sscdata_from_dict</span><span class="p">(</span><span class="n">sscapi</span><span class="p">,</span> <span class="n">table</span><span class="p">,</span> <span class="n">sscdict</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
+                        <span class="n">sscapi</span><span class="o">.</span><span class="n">data_set_table</span><span class="p">(</span><span class="n">sscdata</span><span class="p">,</span> <span class="n">key</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">),</span> <span class="n">table</span><span class="p">)</span>
+                        <span class="n">sscapi</span><span class="o">.</span><span class="n">data_free</span><span class="p">(</span><span class="n">table</span><span class="p">)</span>
+                    <span class="c1"># raise error if key not found</span>
+                    <span class="k">else</span><span class="p">:</span>
+                       <span class="nb">print</span> <span class="p">(</span><span class="s2">&quot;Could not assign variable &quot;</span> <span class="o">+</span> <span class="n">key</span> <span class="p">)</span>
+                       <span class="k">raise</span> <span class="ne">KeyError</span>
+                <span class="c1"># raise error for unknown data type     </span>
+                <span class="k">except</span><span class="p">:</span>
+                    <span class="nb">print</span> <span class="p">(</span><span class="s2">&quot;Error assigning variable &quot;</span> <span class="o">+</span> <span class="n">key</span> <span class="o">+</span> <span class="s2">&quot;: bad data type&quot;</span><span class="p">)</span>
+        
+        <span class="c1"># save module name and module object to return</span>
+        <span class="n">ssc_module_name</span> <span class="o">=</span> <span class="n">sscdict</span><span class="p">[</span><span class="n">module_name</span><span class="p">]</span>
+        <span class="n">ssc_module</span> <span class="o">=</span> <span class="n">sscapi</span><span class="o">.</span><span class="n">module_create</span><span class="p">(</span><span class="n">ssc_module_name</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">))</span>
+        
+        <span class="c1"># update SSC objects saved to self</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sscdict</span> <span class="o">=</span> <span class="n">sscdict</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sscapi</span>  <span class="o">=</span> <span class="n">sscapi</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sscdata</span> <span class="o">=</span> <span class="n">sscdata</span>
+        
+        <span class="k">return</span> <span class="n">ssc_module</span><span class="p">,</span> <span class="n">ssc_module_name</span></div>
+        
+        
+<div class="viewcode-block" id="PySSCWrapper.run_module"><a class="viewcode-back" href="../../../simulations.util.html#simulations.util.PySSCWrapper.PySSCWrapper.run_module">[docs]</a>    <span class="k">def</span> <span class="nf">run_module</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">module</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Method used to run a given SSC module through PySSC</span>
+<span class="sd">        </span>
+<span class="sd">        Method adapted from LORE team (particularly the loop). It runs the given</span>
+<span class="sd">        module (Plant, Grid, Financial) by calling SSC through the SSC API. </span>
+<span class="sd">        </span>
+<span class="sd">        Inputs:</span>
+<span class="sd">            module (int)       : some sort of data structure for the Plant (idk, PySSC stuff)</span>
+<span class="sd">            module_name (str)  : name of Plant module, or the cmod SSC file</span>
+<span class="sd">        Outputs:</span>
+<span class="sd">            module (int)       : updated module with SSC results</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="n">sscdata</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sscdata</span>
+        <span class="n">sscapi</span>  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sscapi</span>
+        
+        <span class="n">sscapi</span><span class="o">.</span><span class="n">module_exec_set_print</span><span class="p">(</span> <span class="mi">0</span> <span class="p">)</span>
+        <span class="k">if</span> <span class="n">sscapi</span><span class="o">.</span><span class="n">module_exec</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">sscdata</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span> <span class="p">(</span><span class="s1">&#39;    &#39;</span> <span class="o">+</span> <span class="n">name</span> <span class="o">+</span> <span class="s1">&#39; simulation error&#39;</span><span class="p">)</span>
+            <span class="n">idx</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="n">sscapi</span><span class="o">.</span><span class="n">module_log</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="k">while</span> <span class="p">(</span><span class="n">msg</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">):</span>
+                <span class="nb">print</span> <span class="p">(</span><span class="s1">&#39;    : &#39;</span> <span class="o">+</span> <span class="n">msg</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf - 8&quot;</span><span class="p">))</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="n">sscapi</span><span class="o">.</span><span class="n">module_log</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">idx</span><span class="p">)</span>
+                <span class="n">idx</span> <span class="o">=</span> <span class="n">idx</span> <span class="o">+</span> <span class="mi">1</span>
+            <span class="ne">SystemExit</span><span class="p">(</span> <span class="s2">&quot;Simulation Error&quot;</span> <span class="p">)</span>
+        <span class="n">sscapi</span><span class="o">.</span><span class="n">module_free</span><span class="p">(</span><span class="n">module</span><span class="p">)</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">sscapi</span>  <span class="o">=</span> <span class="n">sscapi</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sscdata</span> <span class="o">=</span> <span class="n">sscdata</span>
+        
+        <span class="k">return</span> <span class="n">module</span></div>
+        
+    
+<div class="viewcode-block" id="PySSCWrapper.init_grid_module"><a class="viewcode-back" href="../../../simulations.util.html#simulations.util.PySSCWrapper.PySSCWrapper.init_grid_module">[docs]</a>    <span class="k">def</span> <span class="nf">init_grid_module</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Method to initialize the Grid module within PySSC</span>
+<span class="sd">        </span>
+<span class="sd">        This method creates the Grid module using SSC data from csv files</span>
+<span class="sd">        as well as from the SSC_dict within the specified JSON script. </span>
+
+<span class="sd">        Outputs:</span>
+<span class="sd">            grid_module (int)       : some sort of data structure for the Grid mod (idk, PySSC stuff)</span>
+<span class="sd">            grid_module_name (str)  : name of Grid module, or the cmod SSC file</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="n">slash</span> <span class="o">=</span> <span class="s1">&#39;/&#39;</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
+        
+        <span class="c1"># file location</span>
+        <span class="n">grid_file</span>  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">samsim_dir</span> <span class="o">+</span> <span class="n">slash</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">pysam_dict</span><span class="p">[</span><span class="s1">&#39;grid_file&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
+        
+        <span class="c1"># get array from csv file for grid curtailment</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sscapi</span><span class="o">.</span><span class="n">data_set_array_from_csv</span><span class="p">(</span>  <span class="bp">self</span><span class="o">.</span><span class="n">sscdata</span><span class="p">,</span> <span class="sa">b</span><span class="s1">&#39;grid_curtailment&#39;</span><span class="p">,</span> <span class="n">grid_file</span><span class="p">)</span>
+        
+        <span class="c1"># cycle through JSON script, saving data as respective SSC Datatype, for Grid</span>
+        <span class="n">grid_mod</span><span class="p">,</span> <span class="n">grid_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">set_ssc_data_from_dict</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="n">grid_mod</span><span class="p">,</span> <span class="n">grid_name</span></div>
+
+
+<div class="viewcode-block" id="PySSCWrapper.init_fin_module"><a class="viewcode-back" href="../../../simulations.util.html#simulations.util.PySSCWrapper.PySSCWrapper.init_fin_module">[docs]</a>    <span class="k">def</span> <span class="nf">init_fin_module</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Method to initialize the Financial module within PySSC</span>
+<span class="sd">        </span>
+<span class="sd">        This method creates the Financial module using SSC data from the </span>
+<span class="sd">        SSC_dict within the specified JSON script. </span>
+
+<span class="sd">        Outputs:</span>
+<span class="sd">            fin_module (int)       : some sort of data structure for the Financial mod (idk, PySSC stuff)</span>
+<span class="sd">            fin_module_name (str)  : name of Financial module, or the cmod SSC file</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c1"># cycle through JSON script, saving data as respective SSC Datatype, for Grid</span>
+        <span class="n">fin_mod</span><span class="p">,</span> <span class="n">fin_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">set_ssc_data_from_dict</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="n">fin_mod</span><span class="p">,</span> <span class="n">fin_name</span> </div>
+
+
+<div class="viewcode-block" id="PySSCWrapper.generate_hash"><a class="viewcode-back" href="../../../simulations.util.html#simulations.util.PySSCWrapper.PySSCWrapper.generate_hash">[docs]</a>    <span class="k">def</span> <span class="nf">generate_hash</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Method to create unique hash for given JSON inputs</span>
+<span class="sd">        </span>
+<span class="sd">        This method creates a unique, permanent hash for a given JSON script.</span>
+<span class="sd">        That is, it gathers all of the JSON inputs (including SSC and PySAM inputs)</span>
+<span class="sd">        from the designated script and converts both their keynames and values</span>
+<span class="sd">        to strings. It collects all of these into a single string variable and</span>
+<span class="sd">        then creates a new hexadecimal string or &quot;hash&quot; for that giant string. </span>
+<span class="sd">        This serves as a unique identifier or &quot;fingerprint&quot; for all the values </span>
+<span class="sd">        in the JSON script. This is then used later on as the file name containing</span>
+<span class="sd">        outputs from this particular run. Any small changes to the JSON script </span>
+<span class="sd">        will result in a drastically different hash, and therefore a new output file.</span>
+<span class="sd">        If a simulation has already been run with the given JSON script, it can</span>
+<span class="sd">        just pull results from the already created hash file instead of needlessly</span>
+<span class="sd">        repeating the simulation. </span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            hash_exists (bool): </span>
+<span class="sd">                if True, a hash file currently exists with all given JSON inputs</span>
+<span class="sd">            filepath (str): </span>
+<span class="sd">                absolute filepath to the hash file in outputs directory</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c1"># static start of the filename</span>
+        <span class="n">filename</span> <span class="o">=</span> <span class="s2">&quot;NuclearTES__&quot;</span>   <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sscdict</span><span class="p">[</span><span class="s1">&#39;compute_module_0&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;nuclear_tes&#39;</span> <span class="k">else</span> \
+                   <span class="s2">&quot;SolarTES__&quot;</span>     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sscdict</span><span class="p">[</span><span class="s1">&#39;compute_module_0&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;tcsmolten_salt&#39;</span> <span class="k">else</span> \
+                   <span class="s2">&quot;DualPlantTES__&quot;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sscdict</span><span class="p">[</span><span class="s1">&#39;compute_module_0&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;nuclear_mspt_tes&#39;</span> <span class="k">else</span> \
+                   <span class="s2">&quot;__&quot;</span>
+        
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sscdict</span><span class="p">[</span><span class="s1">&#39;compute_module_0&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;nuclear_mspt_indirect_tes&#39;</span><span class="p">:</span>
+            <span class="n">filename</span> <span class="o">=</span> <span class="s1">&#39;IndirectNuclearTES__&#39;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sscdict</span><span class="p">[</span><span class="s1">&#39;q_dot_rec_des&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="s1">&#39;DualIndirectTES__&#39;</span>
+        
+        <span class="c1"># initializing empty string</span>
+        <span class="n">extstr</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        
+        <span class="c1"># adding SSC dictionary names and values to the existing string</span>
+        <span class="n">sscdict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sscdict</span>
+        <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sscdict</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">extstr</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="si">{0}</span><span class="s2">: </span><span class="si">{1}</span><span class="s2"> &quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span> <span class="n">s</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">sscdict</span><span class="p">[</span><span class="n">s</span><span class="p">])</span> <span class="p">)</span>
+        
+        <span class="c1"># adding PySAM dictionary names and values to the existing string</span>
+        <span class="n">pysamdict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pysam_dict</span>
+        <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">pysamdict</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">extstr</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="si">{0}</span><span class="s2">: </span><span class="si">{1}</span><span class="s2"> &quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span> <span class="n">p</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">pysamdict</span><span class="p">[</span><span class="n">p</span><span class="p">])</span> <span class="p">)</span>
+        
+        <span class="c1"># creating a unique hash from giant string of values using md5 algorithm</span>
+        <span class="n">json_hash</span> <span class="o">=</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">md5</span><span class="p">(</span> <span class="n">extstr</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span> <span class="p">)</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span>
+        
+        <span class="c1"># adding the unique hexadecimal hash to the starting filename string</span>
+        <span class="n">filename</span> <span class="o">+=</span> <span class="n">json_hash</span>
+        
+        <span class="c1"># creating full path to output hash file</span>
+        <span class="n">filepath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="n">FileMethods</span><span class="o">.</span><span class="n">output_dir</span> <span class="p">,</span> <span class="n">filename</span> <span class="o">+</span> <span class="s1">&#39;.dispatchTargets&#39;</span><span class="p">)</span>
+        
+        <span class="c1"># checking if this current hash exists already</span>
+        <span class="n">hash_exists</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">filepath</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="n">hash_exists</span><span class="p">,</span> <span class="n">filepath</span></div>
+    
+    
+<div class="viewcode-block" id="PySSCWrapper.get_array"><a class="viewcode-back" href="../../../simulations.util.html#simulations.util.PySSCWrapper.PySSCWrapper.get_array">[docs]</a>    <span class="k">def</span> <span class="nf">get_array</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">out_str</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Method to extract data from SSC results</span>
+<span class="sd">        </span>
+<span class="sd">        This method gets SSC outputs and converts it to arrays.</span>
+
+<span class="sd">        Inputs:</span>
+<span class="sd">            out_str (str)       : string name of the desired output</span>
+<span class="sd">        Outputs:</span>
+<span class="sd">            out_array (ndarray) : SSC result in array form</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">ssc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sscapi</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sscdata</span>
+        
+        <span class="n">out_array</span> <span class="o">=</span> <span class="n">ssc</span><span class="o">.</span><span class="n">data_get_array</span><span class="p">(</span><span class="n">data</span><span class="p">,</span><span class="n">out_str</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">))</span>
+        <span class="n">out_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">out_array</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">out_array</span></div></div>
+        
+
+    
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span> 
+    <span class="n">pw</span> <span class="o">=</span> <span class="n">PySSCWrapper</span><span class="p">()</span>
+    <span class="n">pw</span><span class="o">.</span><span class="n">run_sim</span><span class="p">()</span>
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">NE-2 Simulations  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">simulations.util.PySSCWrapper</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2021, Gabriel J. Soto, Una Baker, Grace Stanke, Ben Lindley, Mike Wagner.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.2.0.
+    </div>
+  </body>
+</html>

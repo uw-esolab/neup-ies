@@ -1,0 +1,1388 @@
+
+
+<!doctype html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>simulations.util.PostProcessing &#8212; NE-2 Simulations  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/bizstyle.css" />
+    
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/bizstyle.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <!--[if lt IE 9]>
+    <script src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">NE-2 Simulations  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">simulations.util.PostProcessing</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for simulations.util.PostProcessing</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python3</span>
+<span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Created on Tue Jun  1 13:11:44 2021</span>
+
+<span class="sd">@author: gabrielsoto</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">pylab</span> <span class="kn">import</span> <span class="n">rc</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">pyomo.environ</span> <span class="k">as</span> <span class="nn">pe</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pint</span>
+<span class="n">u</span> <span class="o">=</span> <span class="n">pint</span><span class="o">.</span><span class="n">UnitRegistry</span><span class="p">(</span><span class="n">autoconvert_offset_to_baseunit</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">rc</span><span class="p">(</span><span class="s1">&#39;axes&#39;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">rc</span><span class="p">(</span><span class="s1">&#39;font&#39;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="s1">&#39;bold&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+
+<div class="viewcode-block" id="OutputExtraction"><a class="viewcode-back" href="../../../simulations.util.html#simulations.util.PostProcessing.OutputExtraction">[docs]</a><span class="k">class</span> <span class="nc">OutputExtraction</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The OutputExtraction class is a part of the PostProcessing family of classes.</span>
+<span class="sd">    It extracts outputs from SSC or Dispatch models. Can be called from other </span>
+<span class="sd">    plotting classes to extract outputs.  </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+<div class="viewcode-block" id="OutputExtraction.__init__"><a class="viewcode-back" href="../../../simulations.util.html#simulations.util.PostProcessing.OutputExtraction.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">module</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Initializes the OutputExtraction module</span>
+
+<span class="sd">        The instantiation of this class receives a full module object, the module</span>
+<span class="sd">        being one of the NE2 modules in the /neup-ies/simulations/modules directory.</span>
+<span class="sd">        or a Dispatch module. </span>
+
+<span class="sd">        Inputs:</span>
+<span class="sd">            module (object)     : object representing NE2 module class after simulations</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c1"># module class name</span>
+        <span class="n">mod_class</span> <span class="o">=</span> <span class="n">module</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__module__</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mod_class_name</span> <span class="o">=</span> <span class="n">mod_class</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="c1"># continuing with SSC plots</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mod_class_name</span> <span class="o">==</span> <span class="s1">&#39;modules&#39;</span><span class="p">:</span>
+            
+            <span class="c1"># full PySAM module</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mod</span> <span class="o">=</span> <span class="n">module</span><span class="o">.</span><span class="n">Plant</span>
+            
+            <span class="c1"># define an Output object to extract information from SSC</span>
+            <span class="n">Outputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mod</span><span class="o">.</span><span class="n">PySAM_Outputs</span> <span class="k">if</span> <span class="n">module</span><span class="o">.</span><span class="n">run_loop</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">mod</span><span class="o">.</span><span class="n">Outputs</span>
+            
+            <span class="bp">self</span><span class="o">.</span><span class="n">t_full</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">Outputs</span><span class="o">.</span><span class="n">time_hr</span><span class="p">)</span><span class="o">*</span><span class="n">u</span><span class="o">.</span><span class="n">hr</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">t_max</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">t_full</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">t_plot</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">t_full</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">u</span><span class="o">.</span><span class="n">hr</span>
+            
+            <span class="c1"># extracting outputs</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">set_ssc_outputs</span><span class="p">(</span> <span class="n">Outputs</span> <span class="p">)</span>
+        
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">mod_class_name</span> <span class="o">==</span> <span class="s1">&#39;dispatch&#39;</span><span class="p">:</span>
+            
+            <span class="c1"># saving module to self</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dm</span> <span class="o">=</span> <span class="n">module</span>
+            
+            <span class="c1"># extract outputs from Dispatch model</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">set_pyomo_outputs</span><span class="p">()</span></div>
+
+    
+<div class="viewcode-block" id="OutputExtraction.set_ssc_outputs"><a class="viewcode-back" href="../../../simulations.util.html#simulations.util.PostProcessing.OutputExtraction.set_ssc_outputs">[docs]</a>    <span class="k">def</span> <span class="nf">set_ssc_outputs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mod_out</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Method to set SSC outputs from module</span>
+<span class="sd">        </span>
+<span class="sd">        The method extracts SSC outputs and save them to arrays. The input to this</span>
+<span class="sd">        method is a subclass to an NE2 class holding all outputs to simulations.          </span>
+<span class="sd">        </span>
+<span class="sd">        Inputs:</span>
+<span class="sd">            mod_out (object)  : object representing Outputs subclass of NE2 module</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># saving some outputs for plotting</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">p_cycle</span>      <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">mod_out</span><span class="o">.</span><span class="n">P_cycle</span><span class="p">)</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">MW</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gen</span>          <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">mod_out</span><span class="o">.</span><span class="n">gen</span><span class="p">)</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">kW</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39;MW&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">q_dot_nuc_in</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">mod_out</span><span class="o">.</span><span class="n">q_dot_nuc_inc</span><span class="p">)</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">MW</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">q_nuc_thermal</span>    <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">mod_out</span><span class="o">.</span><span class="n">Q_nuc_thermal</span><span class="p">)</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">MW</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">q_pb</span>         <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">mod_out</span><span class="o">.</span><span class="n">q_pb</span><span class="p">)</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">MW</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">q_dot_pc_su</span>  <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">mod_out</span><span class="o">.</span><span class="n">q_dot_pc_startup</span><span class="p">)</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">MW</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">m_dot_pc</span>     <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">mod_out</span><span class="o">.</span><span class="n">m_dot_pc</span><span class="p">)</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">kg</span><span class="o">/</span><span class="n">u</span><span class="o">.</span><span class="n">s</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">m_dot_nuc</span>    <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">mod_out</span><span class="o">.</span><span class="n">m_dot_nuc</span><span class="p">)</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">kg</span><span class="o">/</span><span class="n">u</span><span class="o">.</span><span class="n">s</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">T_pc_in</span>      <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">mod_out</span><span class="o">.</span><span class="n">T_pc_in</span><span class="p">)</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">degC</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">T_pc_out</span>     <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">mod_out</span><span class="o">.</span><span class="n">T_pc_out</span><span class="p">)</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">degC</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">T_tes_cold</span>   <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">mod_out</span><span class="o">.</span><span class="n">T_tes_cold</span><span class="p">)</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">degC</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">T_tes_hot</span>    <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">mod_out</span><span class="o">.</span><span class="n">T_tes_hot</span><span class="p">)</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">degC</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">T_cond_out</span>   <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">mod_out</span><span class="o">.</span><span class="n">T_cond_out</span><span class="p">)</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">degC</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">e_ch_tes</span>     <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">mod_out</span><span class="o">.</span><span class="n">e_ch_tes</span><span class="p">)</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">MWh</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">op_mode_1</span>    <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">mod_out</span><span class="o">.</span><span class="n">op_mode_1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">defocus</span>      <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">mod_out</span><span class="o">.</span><span class="n">defocus</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">price</span>        <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mod</span><span class="o">.</span><span class="n">TimeOfDeliveryFactors</span><span class="o">.</span><span class="n">dispatch_factors_ts</span><span class="p">)</span>
+
+        <span class="c1"># setting static inputs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">q_nuc_design</span>  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mod</span><span class="o">.</span><span class="n">SystemDesign</span><span class="o">.</span><span class="n">q_dot_nuclear_des</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">MW</span>  <span class="c1"># receiver design thermal power</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">p_pb_design</span>   <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mod</span><span class="o">.</span><span class="n">SystemDesign</span><span class="o">.</span><span class="n">P_ref</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">MW</span>              <span class="c1"># power block design electrical power</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">eta_design</span>    <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mod</span><span class="o">.</span><span class="n">SystemDesign</span><span class="o">.</span><span class="n">design_eff</span>                <span class="c1"># power block design efficiency</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">q_pb_design</span>  <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">p_pb_design</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">eta_design</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39;MW&#39;</span><span class="p">)</span>    <span class="c1"># power block design thermal rating</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">T_htf_hot</span>    <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mod</span><span class="o">.</span><span class="n">SystemDesign</span><span class="o">.</span><span class="n">T_htf_hot_des</span><span class="o">*</span><span class="n">u</span><span class="o">.</span><span class="n">celsius</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39;degK&#39;</span><span class="p">)</span>   <span class="c1"># heat transfer fluid Hot temp</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">T_htf_cold</span>   <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mod</span><span class="o">.</span><span class="n">SystemDesign</span><span class="o">.</span><span class="n">T_htf_cold_des</span><span class="o">*</span><span class="n">u</span><span class="o">.</span><span class="n">celsius</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39;degK&#39;</span><span class="p">)</span>  <span class="c1"># heat transfer fluid Cold temp</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">e_tes_design</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">q_pb_design</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">mod</span><span class="o">.</span><span class="n">SystemDesign</span><span class="o">.</span><span class="n">tshours</span><span class="o">*</span><span class="n">u</span><span class="o">.</span><span class="n">hr</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39;MWh&#39;</span><span class="p">)</span>  <span class="c1"># TES storage capacity (kWht)</span>
+
+        <span class="c1"># operating modes</span>
+        <span class="n">op_mode_result</span><span class="p">,</span> <span class="n">modes_order</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">op_mode_1</span><span class="p">,</span> <span class="n">return_index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="c1"># mode orders and re-ordering</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">op_mode_result</span> <span class="o">=</span> <span class="n">op_mode_result</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">modes_order</span><span class="p">)]</span>     <span class="c1"># re-order modes by first appearance of each</span></div>
+
+
+<div class="viewcode-block" id="OutputExtraction.set_pyomo_outputs"><a class="viewcode-back" href="../../../simulations.util.html#simulations.util.PostProcessing.OutputExtraction.set_pyomo_outputs">[docs]</a>    <span class="k">def</span> <span class="nf">set_pyomo_outputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Method to define list of Pyomo output arrays</span>
+
+<span class="sd">        This method extracts outputs from the Pyomo Dispatch model, converts them to numpy arrays</span>
+<span class="sd">        and saves them to `self`. </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c1"># Dispatch Model with results</span>
+        <span class="n">dm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dm</span>
+
+        <span class="c1"># lambda functions</span>
+        <span class="n">extract_from_model</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">name</span><span class="p">:</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">dm</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+        <span class="n">extract_array</span>      <span class="o">=</span> <span class="k">lambda</span> <span class="n">name</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span> <span class="n">pe</span><span class="o">.</span><span class="n">value</span><span class="p">(</span><span class="n">extract_from_model</span><span class="p">(</span><span class="n">name</span><span class="p">)[</span><span class="n">t</span><span class="p">])</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">dm</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">T</span> <span class="p">])</span>
+        <span class="n">extract_energy</span>     <span class="o">=</span> <span class="k">lambda</span> <span class="n">name</span><span class="p">:</span> <span class="p">(</span><span class="n">extract_array</span><span class="p">(</span><span class="n">name</span><span class="p">)</span><span class="o">*</span><span class="n">u</span><span class="o">.</span><span class="n">kWh</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39;MWh&#39;</span><span class="p">)</span> 
+        <span class="n">extract_power</span>      <span class="o">=</span> <span class="k">lambda</span> <span class="n">name</span><span class="p">:</span> <span class="p">(</span><span class="n">extract_array</span><span class="p">(</span><span class="n">name</span><span class="p">)</span><span class="o">*</span><span class="n">u</span><span class="o">.</span><span class="n">kW</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39;MW&#39;</span><span class="p">)</span> 
+        
+        <span class="c1"># Time and Pricing Arrays</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">t_full</span> <span class="o">=</span> <span class="n">extract_array</span><span class="p">(</span><span class="s1">&#39;Delta_e&#39;</span><span class="p">)</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">hr</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">p_array</span> <span class="o">=</span> <span class="n">extract_array</span><span class="p">(</span><span class="s1">&#39;P&#39;</span><span class="p">)</span>
+        
+        <span class="c1"># marking the midway point</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">T</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">t_full</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">time_midway</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">T</span><span class="p">])</span><span class="o">*</span><span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">T</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
+
+        <span class="c1"># Energy Arrays</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">s_array</span>     <span class="o">=</span> <span class="n">extract_energy</span><span class="p">(</span><span class="s1">&#39;s&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ucsu_array</span>  <span class="o">=</span> <span class="n">extract_energy</span><span class="p">(</span><span class="s1">&#39;ucsu&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">unsu_array</span>  <span class="o">=</span> <span class="n">extract_energy</span><span class="p">(</span><span class="s1">&#39;unsu&#39;</span><span class="p">)</span>
+        
+        <span class="c1"># Power Arrays</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wdot_array</span>             <span class="o">=</span> <span class="n">extract_power</span><span class="p">(</span><span class="s1">&#39;wdot&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wdot_delta_plus_array</span>  <span class="o">=</span> <span class="n">extract_power</span><span class="p">(</span><span class="s1">&#39;wdot_delta_plus&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wdot_delta_minus_array</span> <span class="o">=</span> <span class="n">extract_power</span><span class="p">(</span><span class="s1">&#39;wdot_delta_minus&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wdot_v_plus_array</span>      <span class="o">=</span> <span class="n">extract_power</span><span class="p">(</span><span class="s1">&#39;wdot_v_plus&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wdot_v_minus_array</span>     <span class="o">=</span> <span class="n">extract_power</span><span class="p">(</span><span class="s1">&#39;wdot_v_minus&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wdot_s_array</span>           <span class="o">=</span> <span class="n">extract_power</span><span class="p">(</span><span class="s1">&#39;wdot_s&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wdot_p_array</span>           <span class="o">=</span> <span class="n">extract_power</span><span class="p">(</span><span class="s1">&#39;wdot_p&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x_array</span>                <span class="o">=</span> <span class="n">extract_power</span><span class="p">(</span><span class="s1">&#39;x&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">xn_array</span>               <span class="o">=</span> <span class="n">extract_power</span><span class="p">(</span><span class="s1">&#39;xn&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">xnsu_array</span>             <span class="o">=</span> <span class="n">extract_power</span><span class="p">(</span><span class="s1">&#39;xnsu&#39;</span><span class="p">)</span>
+
+        <span class="c1"># Binary Arrays (Nuclear)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">yn_array</span>    <span class="o">=</span> <span class="n">extract_array</span><span class="p">(</span><span class="s1">&#39;yn&#39;</span><span class="p">)</span> 
+        <span class="bp">self</span><span class="o">.</span><span class="n">ynhsp_array</span> <span class="o">=</span> <span class="n">extract_array</span><span class="p">(</span><span class="s1">&#39;ynhsp&#39;</span><span class="p">)</span> 
+        <span class="bp">self</span><span class="o">.</span><span class="n">ynsb_array</span>  <span class="o">=</span> <span class="n">extract_array</span><span class="p">(</span><span class="s1">&#39;ynsb&#39;</span><span class="p">)</span> 
+        <span class="bp">self</span><span class="o">.</span><span class="n">ynsd_array</span>  <span class="o">=</span> <span class="n">extract_array</span><span class="p">(</span><span class="s1">&#39;ynsu&#39;</span><span class="p">)</span> 
+        <span class="bp">self</span><span class="o">.</span><span class="n">ynsu_array</span>  <span class="o">=</span> <span class="n">extract_array</span><span class="p">(</span><span class="s1">&#39;ynsu&#39;</span><span class="p">)</span> 
+        <span class="bp">self</span><span class="o">.</span><span class="n">ynsup_array</span> <span class="o">=</span> <span class="n">extract_array</span><span class="p">(</span><span class="s1">&#39;ynsup&#39;</span><span class="p">)</span> 
+        
+        <span class="c1"># Binary Arrays (Cycle)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">y_array</span>     <span class="o">=</span> <span class="n">extract_array</span><span class="p">(</span><span class="s1">&#39;y&#39;</span><span class="p">)</span> 
+        <span class="bp">self</span><span class="o">.</span><span class="n">ychsp_array</span> <span class="o">=</span> <span class="n">extract_array</span><span class="p">(</span><span class="s1">&#39;ychsp&#39;</span><span class="p">)</span> 
+        <span class="bp">self</span><span class="o">.</span><span class="n">ycsb_array</span>  <span class="o">=</span> <span class="n">extract_array</span><span class="p">(</span><span class="s1">&#39;ycsb&#39;</span><span class="p">)</span> 
+        <span class="bp">self</span><span class="o">.</span><span class="n">ycsd_array</span>  <span class="o">=</span> <span class="n">extract_array</span><span class="p">(</span><span class="s1">&#39;ycsd&#39;</span><span class="p">)</span> 
+        <span class="bp">self</span><span class="o">.</span><span class="n">ycsu_array</span>  <span class="o">=</span> <span class="n">extract_array</span><span class="p">(</span><span class="s1">&#39;ycsu&#39;</span><span class="p">)</span> 
+        <span class="bp">self</span><span class="o">.</span><span class="n">ycsup_array</span> <span class="o">=</span> <span class="n">extract_array</span><span class="p">(</span><span class="s1">&#39;ycsup&#39;</span><span class="p">)</span> 
+        <span class="bp">self</span><span class="o">.</span><span class="n">ycgb_array</span>  <span class="o">=</span> <span class="n">extract_array</span><span class="p">(</span><span class="s1">&#39;ycgb&#39;</span><span class="p">)</span>  
+        <span class="bp">self</span><span class="o">.</span><span class="n">ycge_array</span>  <span class="o">=</span> <span class="n">extract_array</span><span class="p">(</span><span class="s1">&#39;ycge&#39;</span><span class="p">)</span> </div></div>
+        
+        
+<div class="viewcode-block" id="Plots"><a class="viewcode-back" href="../../../simulations.util.html#simulations.util.PostProcessing.Plots">[docs]</a><span class="k">class</span> <span class="nc">Plots</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The Plots class is a part of the PostProcessing family of classes. It can </span>
+<span class="sd">    plot outputs from SSC model runs. This might be a </span>
+<span class="sd">    Sisyphus-ian task as some of the parameters are very unique to whatever </span>
+<span class="sd">    plot you are trying to make, but will do my best to provide basic structures</span>
+<span class="sd">    and templates to work off of. </span>
+
+<span class="sd">    Note that the Plots class must be initialized before using. </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="Plots.__init__"><a class="viewcode-back" href="../../../simulations.util.html#simulations.util.PostProcessing.Plots.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">module</span><span class="p">,</span> <span class="n">fsl</span><span class="o">=</span><span class="s1">&#39;x-small&#39;</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="s1">&#39;best&#39;</span><span class="p">,</span> <span class="n">legend_offset</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                 <span class="n">lp</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span> <span class="n">lps</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span> <span class="n">fs</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">x_shrink</span><span class="o">=</span><span class="mf">0.85</span><span class="p">,</span> <span class="n">x_legend</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span>
+                 <span class="n">fE_min</span><span class="o">=-</span><span class="mf">0.05</span><span class="p">,</span> <span class="n">fE_max</span><span class="o">=</span><span class="mf">0.7</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Initializes the Plots module</span>
+
+<span class="sd">        The instantiation of this class receives a full module object, the module</span>
+<span class="sd">        being one of the NE2 modules in the /neup-ies/simulations/modules directory.</span>
+<span class="sd">        It also contains various inputs relating to cosmetic parameters for</span>
+<span class="sd">        matplotlib plots. </span>
+
+<span class="sd">        Inputs:</span>
+<span class="sd">            module (object)     : object representing NE2 module class after simulations</span>
+<span class="sd">            fsl (str)           : fontsize for legend</span>
+<span class="sd">            loc (str)           : location of legend</span>
+<span class="sd">            legend_offset(bool) : are we plotting legends off-axis?</span>
+<span class="sd">            lp (int)            : labelpad for axis labels</span>
+<span class="sd">            lps (int)           : labelpad for axis labels - short version</span>
+<span class="sd">            fs (int)            : fontsize for labels, titles, etc.</span>
+<span class="sd">            lw (int)            : linewidth for plotting</span>
+<span class="sd">            x_shrink (float)    : (legend_offset==True) amount to shrink axis to make room for legend</span>
+<span class="sd">            fE_min (float)      : minimum fraction of TES energy for ylim</span>
+<span class="sd">            fE_max (float)      : maximum fraction of TES energy for ylim</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">u</span> <span class="o">=</span> <span class="n">u</span>
+
+        <span class="c1"># user-defined plotting parameters</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lp</span>  <span class="o">=</span> <span class="n">lp</span>   <span class="c1"># labelpad</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lps</span> <span class="o">=</span> <span class="n">lps</span>  <span class="c1"># labelpad short</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fs</span>  <span class="o">=</span> <span class="n">fs</span>   <span class="c1"># fontsize</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lw</span>  <span class="o">=</span> <span class="n">lw</span>   <span class="c1"># linewidth</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fsl</span> <span class="o">=</span> <span class="n">fsl</span>  <span class="c1"># fontsize legend</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">loc</span> <span class="o">=</span> <span class="n">loc</span>  <span class="c1"># location of legend</span>
+        
+        <span class="c1"># ylims</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fE_min</span> <span class="o">=</span> <span class="n">fE_min</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fE_max</span> <span class="o">=</span> <span class="n">fE_max</span>
+
+        <span class="c1"># offsetting legend</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">legend_offset</span> <span class="o">=</span> <span class="n">legend_offset</span> <span class="c1"># boolean - are we plotting legends off-axis?</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x_shrink</span>      <span class="o">=</span> <span class="n">x_shrink</span> <span class="c1"># amount to shrink x-asis by to make room for legend</span>
+
+        <span class="c1"># alternate legend locations</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">loc_ur</span> <span class="o">=</span> <span class="s1">&#39;upper right&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">loc_ul</span> <span class="o">=</span> <span class="s1">&#39;upper left&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">loc_lr</span> <span class="o">=</span> <span class="s1">&#39;lower right&#39;</span>   <span class="c1"># location of legend</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">loc_ll</span> <span class="o">=</span> <span class="s1">&#39;lower left&#39;</span>    <span class="c1"># location of legend</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">loc_cr</span> <span class="o">=</span> <span class="s1">&#39;center right&#39;</span>  <span class="c1"># location of legend</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">loc_cl</span> <span class="o">=</span> <span class="s1">&#39;center left&#39;</span>   <span class="c1"># location of legend</span>
+        
+        <span class="c1"># module class name</span>
+        <span class="n">mod_class</span> <span class="o">=</span> <span class="n">module</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__module__</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mod_class_name</span> <span class="o">=</span> <span class="n">mod_class</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_extractor</span><span class="p">()</span>
+        
+        <span class="c1"># continuing with SSC plots</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mod_class_name</span> <span class="o">==</span> <span class="s1">&#39;modules&#39;</span><span class="p">:</span>
+            
+            <span class="c1"># full PySAM module</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mod</span> <span class="o">=</span> <span class="n">module</span><span class="o">.</span><span class="n">Plant</span>
+            
+            <span class="c1"># define an Output object to extract information from SSC</span>
+            <span class="n">Outputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mod</span><span class="o">.</span><span class="n">PySAM_Outputs</span> <span class="k">if</span> <span class="n">module</span><span class="o">.</span><span class="n">run_loop</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">mod</span><span class="o">.</span><span class="n">Outputs</span>
+            
+            <span class="c1"># saving full time logs</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">t_full</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">Outputs</span><span class="o">.</span><span class="n">time_hr</span><span class="p">)</span><span class="o">*</span><span class="n">u</span><span class="o">.</span><span class="n">hr</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">full_slice</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">t_full</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">t_max</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">t_full</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">t_plot</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">t_full</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">u</span><span class="o">.</span><span class="n">hr</span>
+            
+            <span class="c1"># setting operating modes, kept it way at the bottom because it&#39;s ugly</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">set_operating_modes_list</span><span class="p">()</span>
+            
+            <span class="c1"># extracting outputs</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">extractor</span><span class="o">.</span><span class="n">set_ssc_outputs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Outputs</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Plots.set_extractor"><a class="viewcode-back" href="../../../simulations.util.html#simulations.util.PostProcessing.Plots.set_extractor">[docs]</a>    <span class="k">def</span> <span class="nf">set_extractor</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Setting the output extraction class</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">extractor</span> <span class="o">=</span> <span class="n">OutputExtraction</span></div>
+        
+        
+<div class="viewcode-block" id="Plots.get_array"><a class="viewcode-back" href="../../../simulations.util.html#simulations.util.PostProcessing.Plots.get_array">[docs]</a>    <span class="k">def</span> <span class="nf">get_array</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array_str</span><span class="p">,</span> <span class="n">slicer</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Method to slice through arrays</span>
+
+<span class="sd">        The method uses a list of array strings and the default getter method</span>
+<span class="sd">        from Python to extract attributes from the instantiated NE2 module. </span>
+<span class="sd">        It can also return just magnitudes and slice the output array. </span>
+
+<span class="sd">        Inputs:</span>
+<span class="sd">            array_str (str)  : string name for output array in NE2 module</span>
+<span class="sd">            slicer (slice)   : slice corresponding to desired simulation times</span>
+<span class="sd">        Outputs:</span>
+<span class="sd">            array (ndarray)  : sliced array of data</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># get array from this class object instance</span>
+        <span class="n">array</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">array_str</span><span class="p">)</span>
+        <span class="c1"># if the array is in Pint units, grab the magnitude only</span>
+        <span class="n">array</span> <span class="o">=</span> <span class="n">array</span><span class="o">.</span><span class="n">m</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="s1">&#39;m&#39;</span><span class="p">)</span> <span class="k">else</span> <span class="n">array</span>
+        <span class="c1"># return the sliced array based on slice input</span>
+        <span class="k">return</span> <span class="n">array</span><span class="p">[</span><span class="n">slicer</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="Plots.get_slice"><a class="viewcode-back" href="../../../simulations.util.html#simulations.util.PostProcessing.Plots.get_slice">[docs]</a>    <span class="k">def</span> <span class="nf">get_slice</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">start_ind</span><span class="p">,</span> <span class="n">end_ind</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Method to create slice object</span>
+
+<span class="sd">        The method creates a slice object for desired simulation times from</span>
+<span class="sd">        full data. This slice object is used elsewhere to slice through data arrays.</span>
+
+<span class="sd">        Inputs:</span>
+<span class="sd">            start_ind (int)  : starting index for simulation times</span>
+<span class="sd">            end_ind (int)    : ending index for simulation times</span>
+<span class="sd">        Outputs:</span>
+<span class="sd">            slicer (slice)   : slice corresponding to desired simulation times</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># define a slice to use on arrays based on given starting and ending times</span>
+        <span class="n">slicer</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">start_ind</span><span class="p">),</span> <span class="nb">int</span><span class="p">(</span><span class="n">end_ind</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">slicer</span></div>
+
+
+<div class="viewcode-block" id="Plots.plot_on_axis"><a class="viewcode-back" href="../../../simulations.util.html#simulations.util.PostProcessing.Plots.plot_on_axis">[docs]</a>    <span class="k">def</span> <span class="nf">plot_on_axis</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ax</span><span class="p">,</span> <span class="n">x_array</span><span class="p">,</span> <span class="n">y_array</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="n">lw</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Method to plot data on given axis as line plot</span>
+
+<span class="sd">        The method receives as input an Axis or AxesSubplot object to plot on.</span>
+<span class="sd">        It then plots the given x and y arrays as a line plot with given label </span>
+<span class="sd">        and color. Results plotted as line plot.</span>
+
+<span class="sd">        Inputs:</span>
+<span class="sd">            ax (object)        : axis object to plot on</span>
+<span class="sd">            x_array (ndarray)  : array of values to plot on x-axis</span>
+<span class="sd">            y_array (ndarray)  : array of values to plot on y-axis</span>
+<span class="sd">            label (str)        : label name for specific line</span>
+<span class="sd">            lw (float)         : linewidth for plot</span>
+<span class="sd">            color(str)         : name of color to use for plot</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># generic plotting given x,y, an axis, label, and optional color for line</span>
+        <span class="k">if</span> <span class="n">color</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x_array</span><span class="o">.</span><span class="n">m</span><span class="p">,</span> <span class="n">y_array</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="n">lw</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x_array</span><span class="o">.</span><span class="n">m</span><span class="p">,</span> <span class="n">y_array</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="n">lw</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Plots.bar_plot_on_axis"><a class="viewcode-back" href="../../../simulations.util.html#simulations.util.PostProcessing.Plots.bar_plot_on_axis">[docs]</a>    <span class="k">def</span> <span class="nf">bar_plot_on_axis</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ax</span><span class="p">,</span> <span class="n">x_array</span><span class="p">,</span> <span class="n">y_array</span><span class="p">,</span> <span class="n">dx</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Method to plot data on given axis as bar plot</span>
+
+<span class="sd">        The method receives as input an Axis or AxesSubplot object to plot on.</span>
+<span class="sd">        It then plots the given x and y arrays as a line plot with given label </span>
+<span class="sd">        and color. Results plotted as a bar plot.</span>
+
+<span class="sd">        Inputs:</span>
+<span class="sd">            ax (object)        : axis object to plot on</span>
+<span class="sd">            x_array (ndarray)  : array of values to plot on x-axis</span>
+<span class="sd">            y_array (ndarray)  : array of values to plot on y-axis</span>
+<span class="sd">            dx (float)         : width of bars </span>
+<span class="sd">            label (str)        : label name for specific line</span>
+<span class="sd">            alpha (float)      : transparency of bar plot (1 is fully opaque)</span>
+<span class="sd">            color(str)         : name of color to use for plot</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># generic plotting given x,y, an axis, label, and optional color for line</span>
+        <span class="k">if</span> <span class="n">color</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">bar</span><span class="p">(</span><span class="n">x_array</span><span class="o">.</span><span class="n">m</span><span class="p">,</span> <span class="n">y_array</span><span class="p">,</span> <span class="n">dx</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">bar</span><span class="p">(</span><span class="n">x_array</span><span class="o">.</span><span class="n">m</span><span class="p">,</span> <span class="n">y_array</span><span class="p">,</span> <span class="n">dx</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="n">label</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Plots.plot_SSC_generic"><a class="viewcode-back" href="../../../simulations.util.html#simulations.util.PostProcessing.Plots.plot_SSC_generic">[docs]</a>    <span class="k">def</span> <span class="nf">plot_SSC_generic</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ax</span><span class="p">,</span> <span class="n">array_list</span><span class="p">,</span> <span class="n">label_list</span><span class="p">,</span> <span class="n">y_label</span><span class="p">,</span> <span class="n">lw_list</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>  
+                         <span class="n">title_label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">plot_all_time</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">start_hr</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">end_hr</span><span class="o">=</span><span class="mi">48</span><span class="p">,</span> 
+                         <span class="n">is_bar_graph</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">return_extra</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">hide_x</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">days_on_x</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> 
+                         <span class="n">left_axis</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Method to plot generic SSC data</span>
+
+<span class="sd">        This method is used to plot any type of SSC data. It lives a level above the</span>
+<span class="sd">        line/bar plotting methods, the ones that are &quot;_on_axis&quot;. This would be the </span>
+<span class="sd">        middle level, at an even higher level would be specific methods to specify</span>
+<span class="sd">        a list of arrays to plot. The method just redirects to either the line or </span>
+<span class="sd">        bar plot and sets up a loop for all arrays to be plotted. </span>
+
+<span class="sd">        Inputs:</span>
+<span class="sd">            ax (object)         : axis object to plot on</span>
+<span class="sd">            array_list (list)   : list of array string names to plot</span>
+<span class="sd">            label_list (list)   : list of label string names for each array</span>
+<span class="sd">            y_label (str)       : label name for y-axis</span>
+<span class="sd">            lw_list (list)      : list of linewidths for each array</span>
+<span class="sd">            title_label(str)    : title name for plot</span>
+<span class="sd">            plot_all_time(bool) : are we plotting all results or just a portion?</span>
+<span class="sd">            start_hr (int)      : (plot_all_time==False) hour used for starting index </span>
+<span class="sd">            end_hr (int)        : (plot_all_time==False) hour used for ending index</span>
+<span class="sd">            is_bar_graph(bool)  : are we plotting a bar graph instead of line graph?</span>
+<span class="sd">            return_extra(bool)  : returning extra outputs</span>
+<span class="sd">            hide_x(bool)        : hiding the x-axis from this particular plot</span>
+<span class="sd">            left_axis (bool)    : are we plotting on the left y-axis, not a twin axis?</span>
+<span class="sd">        Outputs:</span>
+<span class="sd">            ax (object)         : axis object to plot on</span>
+<span class="sd">            d_slice (int)       : (return_extra==True) slicer used for arrays</span>
+<span class="sd">            t_plot (int)        : (return_extra==True) array of times used as x-axis</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">u</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">u</span>
+        
+        <span class="c1"># extracting full time array and slice</span>
+        <span class="n">d_slice</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">full_slice</span>
+        <span class="n">t_plot</span>  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">t_plot</span>
+        
+        <span class="c1"># if we&#39;re not plotting the full results, slice up the arrays for the time portion we want to plot</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">plot_all_time</span><span class="p">:</span>
+            <span class="n">d_slice</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_slice</span><span class="p">(</span><span class="n">start_hr</span><span class="p">,</span> <span class="n">end_hr</span><span class="p">)</span>
+            <span class="n">t_plot</span> <span class="o">=</span> <span class="n">t_plot</span><span class="p">[</span><span class="n">d_slice</span><span class="p">]</span>
+            
+        <span class="n">t_plot</span>     <span class="o">=</span> <span class="n">t_plot</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39;d&#39;</span><span class="p">)</span> <span class="k">if</span> <span class="n">days_on_x</span> <span class="k">else</span> <span class="n">t_plot</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39;hr&#39;</span><span class="p">)</span>
+        <span class="n">time_label</span> <span class="o">=</span> <span class="s1">&#39;Time (d)&#39;</span>     <span class="k">if</span> <span class="n">days_on_x</span> <span class="k">else</span> <span class="s1">&#39;Time (hr)&#39;</span>
+
+        <span class="c1"># nested function to plot arrays to a specific axis</span>
+        <span class="k">def</span> <span class="nf">plot_data_on_axis</span><span class="p">(</span><span class="n">axis</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="n">lw</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">is_bar_graph</span><span class="p">:</span>
+                <span class="c1"># defining width of bars</span>
+                <span class="n">dt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">t_plot</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">m</span>  
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">bar_plot_on_axis</span><span class="p">(</span><span class="n">axis</span><span class="p">,</span> <span class="n">t_plot</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">dt</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="n">color</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">plot_on_axis</span><span class="p">(</span><span class="n">axis</span><span class="p">,</span> <span class="n">t_plot</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="n">lw</span><span class="p">,</span> <span class="n">color</span><span class="p">)</span>
+
+        <span class="c1"># lambda function to get arrays from self and slice em</span>
+        <span class="n">get_array</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">array_str</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_array</span><span class="p">(</span><span class="n">array_str</span><span class="p">,</span> <span class="n">d_slice</span><span class="p">)</span>
+        
+        <span class="c1">#========================#</span>
+        <span class="c1">#--- Creating Figure  ---#</span>
+        <span class="c1">#========================#</span>
+        
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">legend_offset</span> <span class="ow">and</span> <span class="n">left_axis</span><span class="p">:</span>
+            <span class="c1"># Shrinking x-axis to allow room for legends off-plot</span>
+            <span class="n">shrink</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_shrink</span>
+            <span class="n">box</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">get_position</span><span class="p">()</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_position</span><span class="p">([</span><span class="n">box</span><span class="o">.</span><span class="n">x0</span><span class="p">,</span> <span class="n">box</span><span class="o">.</span><span class="n">y0</span><span class="p">,</span> <span class="n">box</span><span class="o">.</span><span class="n">width</span> <span class="o">*</span> <span class="n">shrink</span><span class="p">,</span> <span class="n">box</span><span class="o">.</span><span class="n">height</span><span class="p">])</span>
+        
+        <span class="c1"># reformatting linewidth list</span>
+        <span class="n">lw_list</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">array_list</span><span class="p">)</span> <span class="k">if</span> <span class="n">lw_list</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">lw_list</span>
+
+        <span class="c1"># plotting data from list</span>
+        <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">l</span><span class="p">,</span> <span class="n">w</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">array_list</span><span class="p">,</span> <span class="n">label_list</span><span class="p">,</span> <span class="n">lw_list</span><span class="p">):</span>
+            <span class="n">extracted_array</span> <span class="o">=</span> <span class="n">get_array</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">is_bar_graph</span> <span class="ow">and</span> <span class="n">extracted_array</span><span class="o">.</span><span class="n">min</span><span class="p">()</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">pos_array</span> <span class="o">=</span>  <span class="n">extracted_array</span>
+                <span class="n">neg_array</span> <span class="o">=</span> <span class="o">-</span><span class="n">extracted_array</span>
+                <span class="n">pos_array</span><span class="p">[</span><span class="n">pos_array</span><span class="o">&lt;</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="n">neg_array</span><span class="p">[</span><span class="n">neg_array</span><span class="o">&lt;</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+                
+                <span class="n">plot_data_on_axis</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">pos_array</span><span class="p">,</span> <span class="n">l</span><span class="p">,</span> <span class="n">w</span><span class="p">)</span>
+                <span class="n">plot_data_on_axis</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">neg_array</span><span class="p">,</span> <span class="n">l</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">)</span>
+                <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">plot_data_on_axis</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">extracted_array</span><span class="p">,</span> <span class="n">l</span><span class="p">,</span> <span class="n">w</span><span class="p">)</span>
+
+        <span class="c1">#========================#</span>
+        <span class="c1">#---- Setting Labels ----#</span>
+        <span class="c1">#========================#</span>
+        
+        <span class="c1"># set y label for given axis</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylabel</span><span class="p">(</span><span class="n">y_label</span><span class="p">,</span>  <span class="n">labelpad</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lp</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">fs</span><span class="p">,</span> <span class="n">fontweight</span><span class="o">=</span><span class="s1">&#39;bold&#39;</span><span class="p">)</span>
+
+        <span class="c1"># set x label for given axis</span>
+        <span class="k">if</span> <span class="n">hide_x</span><span class="p">:</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">axes</span><span class="o">.</span><span class="n">xaxis</span><span class="o">.</span><span class="n">set_visible</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span> <span class="c1"># hiding the label (typically if it&#39;s a multiplot axis)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_xlabel</span><span class="p">(</span><span class="n">time_label</span><span class="p">,</span> <span class="n">labelpad</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lp</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">fs</span><span class="p">,</span> <span class="n">fontweight</span><span class="o">=</span><span class="s1">&#39;bold&#39;</span><span class="p">)</span>
+        
+        <span class="c1"># set title if given</span>
+        <span class="k">if</span> <span class="n">title_label</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="n">title_label</span><span class="p">,</span> <span class="n">fontweight</span><span class="o">=</span><span class="s1">&#39;bold&#39;</span><span class="p">)</span>
+
+        <span class="c1"># optional to return the slicer and x-inputs (plotting times)</span>
+        <span class="k">if</span> <span class="n">return_extra</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">ax</span><span class="p">,</span> <span class="n">d_slice</span><span class="p">,</span> <span class="n">t_plot</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">ax</span></div>
+
+    <span class="c1"># =============================================================================</span>
+    <span class="c1">#  Specific SSC plots</span>
+    <span class="c1"># =============================================================================</span>
+    
+<div class="viewcode-block" id="Plots.plot_SSC_power_and_energy"><a class="viewcode-back" href="../../../simulations.util.html#simulations.util.PostProcessing.Plots.plot_SSC_power_and_energy">[docs]</a>    <span class="k">def</span> <span class="nf">plot_SSC_power_and_energy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">title_label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">plot_all_time</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> \
+                                  <span class="n">start_hr</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">end_hr</span><span class="o">=</span><span class="mi">48</span><span class="p">,</span> <span class="n">hide_x</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">x_legend</span><span class="o">=</span><span class="mf">1.2</span><span class="p">,</span> \
+                                  <span class="n">y_legend_L</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">y_legend_R</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">days_on_x</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> 
+                                  <span class="n">left_axis</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Method to plot power and energy data on single plot</span>
+
+<span class="sd">        This method is used specifically to plot power and energy data from SSC simulation</span>
+<span class="sd">        results. Built-in options to plot legend off-axis. </span>
+
+<span class="sd">        Inputs:</span>
+<span class="sd">            ax (object)         : axis object to plot on</span>
+<span class="sd">            plot_all_time(bool) : are we plotting all results or just a portion?</span>
+<span class="sd">            title_label(str)    : title name for plot</span>
+<span class="sd">            start_hr (int)      : (plot_all_time==False) hour used for starting index </span>
+<span class="sd">            end_hr (int)        : (plot_all_time==False) hour used for ending index</span>
+<span class="sd">            hide_x(bool)        : hiding the x-axis from this particular plot</span>
+<span class="sd">            x_legend (float)    : (legend_offset==True) x-offset defining left-most side of legend</span>
+<span class="sd">            y_legend_L (float)  : (legend_offset==True) y-offset of left y-axis plot</span>
+<span class="sd">            y_legend_R (float)  : (legend_offset==True) y-offset of right y-axis plot</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1">#========================#</span>
+        <span class="c1">#--- Creating Figure  ---#</span>
+        <span class="c1">#========================#</span>
+
+        <span class="c1"># if no axis object specified, create a figure and axis from it</span>
+        <span class="k">if</span> <span class="n">ax</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">5</span><span class="p">])</span>
+            <span class="n">ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span>   <span class="c1"># this is the power plot</span>
+
+        <span class="c1"># twin axis to plot energy on opposite y-axis</span>
+        <span class="n">ax2</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">twinx</span><span class="p">()</span>  <span class="c1"># this is the energy plot</span>
+        
+        <span class="c1"># custom y limits and ticks to be integers for Power</span>
+        <span class="c1">#TODO: add these as some sort of input, maybe dict?</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="o">-</span><span class="mi">100</span><span class="p">,</span> <span class="mi">1100</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_yticks</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">250</span><span class="p">,</span> <span class="mi">500</span><span class="p">,</span> <span class="mi">750</span><span class="p">,</span> <span class="mi">1000</span><span class="p">])</span>
+
+        <span class="c1"># plot Power arrays</span>
+        <span class="n">power_array_list</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;p_cycle&#39;</span><span class="p">,</span> <span class="s1">&#39;q_nuc_thermal&#39;</span><span class="p">,</span> <span class="s1">&#39;gen&#39;</span><span class="p">,</span> <span class="s1">&#39;q_dot_pc_su&#39;</span><span class="p">]</span> <span class="c1"># list of array strings</span>
+        <span class="n">power_label_list</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;P_cycle (Electric)&#39;</span><span class="p">,</span>
+                            <span class="s1">&#39;Q_dot to Salt (Thermal)&#39;</span><span class="p">,</span>
+                            <span class="s1">&#39;Power generated (Electric)&#39;</span><span class="p">,</span>
+                            <span class="s1">&#39;PC startup thermal power (Thermal)&#39;</span><span class="p">]</span> <span class="c1"># list of labels for each array string to extract from Outputs</span>
+        <span class="n">power_ylabel</span> <span class="o">=</span> <span class="s1">&#39;Power </span><span class="se">\n</span><span class="s1">(MW)&#39;</span>
+        <span class="n">ax</span>  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">plot_SSC_generic</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">array_list</span><span class="o">=</span><span class="n">power_array_list</span><span class="p">,</span> \
+                                    <span class="n">label_list</span><span class="o">=</span><span class="n">power_label_list</span><span class="p">,</span> \
+                                    <span class="n">y_label</span><span class="o">=</span><span class="n">power_ylabel</span><span class="p">,</span> \
+                                    <span class="n">title_label</span><span class="o">=</span><span class="n">title_label</span><span class="p">,</span> \
+                                    <span class="n">plot_all_time</span><span class="o">=</span><span class="n">plot_all_time</span><span class="p">,</span> \
+                                    <span class="n">start_hr</span><span class="o">=</span><span class="n">start_hr</span><span class="p">,</span> <span class="n">end_hr</span><span class="o">=</span><span class="n">end_hr</span><span class="p">,</span> <span class="n">hide_x</span><span class="o">=</span><span class="n">hide_x</span><span class="p">,</span> \
+                                    <span class="n">days_on_x</span><span class="o">=</span><span class="n">days_on_x</span><span class="p">)</span>
+
+        <span class="c1"># custom y limits and ticks to be integers for Energy</span>
+        <span class="n">ax2</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fE_min</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">e_tes_design</span><span class="o">.</span><span class="n">m</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fE_max</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">e_tes_design</span><span class="o">.</span><span class="n">m</span><span class="p">)</span>
+
+        <span class="c1"># plot Energy array(s)</span>
+        <span class="n">energy_array_list</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;e_ch_tes&#39;</span><span class="p">]</span>
+        <span class="n">energy_label_list</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Salt Charge Energy Level (Thermal)&#39;</span><span class="p">]</span>
+        <span class="n">energy_ylabel</span> <span class="o">=</span> <span class="s1">&#39;Energy </span><span class="se">\n</span><span class="s1">(MWh)&#39;</span>
+        <span class="n">ax2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">plot_SSC_generic</span><span class="p">(</span><span class="n">ax2</span><span class="p">,</span> <span class="n">array_list</span><span class="o">=</span><span class="n">energy_array_list</span><span class="p">,</span> \
+                                    <span class="n">label_list</span><span class="o">=</span><span class="n">energy_label_list</span><span class="p">,</span> \
+                                    <span class="n">y_label</span><span class="o">=</span><span class="n">energy_ylabel</span><span class="p">,</span> \
+                                    <span class="n">title_label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> \
+                                    <span class="n">plot_all_time</span><span class="o">=</span><span class="n">plot_all_time</span><span class="p">,</span> \
+                                    <span class="n">start_hr</span><span class="o">=</span><span class="n">start_hr</span><span class="p">,</span> <span class="n">end_hr</span><span class="o">=</span><span class="n">end_hr</span><span class="p">,</span> <span class="n">hide_x</span><span class="o">=</span><span class="n">hide_x</span><span class="p">,</span> <span class="n">left_axis</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> \
+                                    <span class="n">days_on_x</span><span class="o">=</span><span class="n">days_on_x</span><span class="p">)</span>
+        
+        <span class="c1"># set line color to default C4 (purple)</span>
+        <span class="n">ax2</span><span class="o">.</span><span class="n">get_lines</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_color</span><span class="p">(</span><span class="s2">&quot;C4&quot;</span><span class="p">)</span>
+        
+        <span class="c1">#========================#</span>
+        <span class="c1">#---- Setting Labels ----#</span>
+        <span class="c1">#========================#</span>
+        
+        <span class="c1"># customizing legend(s)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">legend_offset</span><span class="p">:</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span> <span class="n">loc</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">loc_ul</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">fsl</span><span class="p">,</span> <span class="n">bbox_to_anchor</span><span class="o">=</span><span class="p">(</span><span class="n">x_legend</span><span class="p">,</span> <span class="n">y_legend_L</span><span class="p">))</span> <span class="c1"># plot legend for Power arrays</span>
+            <span class="n">ax2</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">loc_ul</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">fsl</span><span class="p">,</span> <span class="n">bbox_to_anchor</span><span class="o">=</span><span class="p">(</span><span class="n">x_legend</span><span class="p">,</span> <span class="n">y_legend_R</span><span class="p">))</span> <span class="c1"># plot legend for Energy arrays and also </span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span> <span class="n">loc</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">loc_ul</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">fsl</span><span class="p">)</span> <span class="c1"># plot legend for Power arrays</span>
+            <span class="n">ax2</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">loc_ul</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">fsl</span><span class="p">)</span> <span class="c1"># plot legend for Energy arrays and also </span></div>
+
+
+<div class="viewcode-block" id="Plots.plot_SSC_massflow"><a class="viewcode-back" href="../../../simulations.util.html#simulations.util.PostProcessing.Plots.plot_SSC_massflow">[docs]</a>    <span class="k">def</span> <span class="nf">plot_SSC_massflow</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">title_label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">plot_all_time</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> \
+                          <span class="n">start_hr</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">end_hr</span><span class="o">=</span><span class="mi">48</span><span class="p">,</span> <span class="n">hide_x</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>  <span class="n">x_legend</span><span class="o">=</span><span class="mf">1.2</span><span class="p">,</span> \
+                          <span class="n">y_legend_L</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">y_legend_R</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">days_on_x</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Method to plot mass flow and defocus data on single plot</span>
+
+<span class="sd">        This method is used specifically to plot mass flow and defocus data from SSC simulation</span>
+<span class="sd">        results. Built-in options to plot legend off-axis. </span>
+
+<span class="sd">        Inputs:</span>
+<span class="sd">            ax (object)         : axis object to plot on</span>
+<span class="sd">            plot_all_time(bool) : are we plotting all results or just a portion?</span>
+<span class="sd">            title_label(str)    : title name for plot</span>
+<span class="sd">            start_hr (int)      : (plot_all_time==False) hour used for starting index </span>
+<span class="sd">            end_hr (int)        : (plot_all_time==False) hour used for ending index</span>
+<span class="sd">            hide_x(bool)        : hiding the x-axis from this particular plot</span>
+<span class="sd">            x_legend (float)    : (legend_offset==True) x-offset defining left-most side of legend</span>
+<span class="sd">            y_legend_L (float)  : (legend_offset==True) y-offset of left y-axis plot</span>
+<span class="sd">            y_legend_R (float)  : (legend_offset==True) y-offset of right y-axis plot</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1">#========================#</span>
+        <span class="c1">#--- Creating Figure  ---#</span>
+        <span class="c1">#========================#</span>
+
+        <span class="c1"># if no axis object specified, create a figure and axis from it</span>
+        <span class="k">if</span> <span class="n">ax</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">5</span><span class="p">])</span>
+            <span class="n">ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span>   <span class="c1"># this is the mass flow plot</span>
+
+        <span class="c1"># twin axis to plot defocus on opposite y-axis</span>
+        <span class="n">ax2</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">twinx</span><span class="p">()</span>  <span class="c1"># this is the defocus plot</span>
+
+        <span class="c1"># plot mass flow arrays</span>
+        <span class="n">mass_array_list</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;m_dot_pc&#39;</span><span class="p">,</span> <span class="s1">&#39;m_dot_nuc&#39;</span><span class="p">]</span> <span class="c1"># list of array strings</span>
+        <span class="n">mass_label_list</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;PC HTF mass flow rate&#39;</span><span class="p">,</span>
+                           <span class="s1">&#39;Receiver Mass Flow Rate&#39;</span><span class="p">]</span> <span class="c1"># list of labels for each array string to extract from Outputs</span>
+        <span class="n">mass_ylabel</span> <span class="o">=</span> <span class="s1">&#39;Mass Flow </span><span class="se">\n</span><span class="s1">(kg/s)&#39;</span>
+        <span class="n">ax</span>  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">plot_SSC_generic</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">array_list</span><span class="o">=</span><span class="n">mass_array_list</span><span class="p">,</span> \
+                                    <span class="n">label_list</span><span class="o">=</span><span class="n">mass_label_list</span><span class="p">,</span> \
+                                    <span class="n">y_label</span><span class="o">=</span><span class="n">mass_ylabel</span><span class="p">,</span> \
+                                    <span class="n">title_label</span><span class="o">=</span><span class="n">title_label</span><span class="p">,</span> \
+                                    <span class="n">plot_all_time</span><span class="o">=</span><span class="n">plot_all_time</span><span class="p">,</span> \
+                                    <span class="n">start_hr</span><span class="o">=</span><span class="n">start_hr</span><span class="p">,</span> <span class="n">end_hr</span><span class="o">=</span><span class="n">end_hr</span><span class="p">,</span> <span class="n">hide_x</span><span class="o">=</span><span class="n">hide_x</span><span class="p">,</span> \
+                                    <span class="n">days_on_x</span><span class="o">=</span><span class="n">days_on_x</span><span class="p">)</span>
+        
+        <span class="c1"># custom y limits and ticks to be integers for Defocus</span>
+        <span class="n">ax2</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">1.3</span><span class="p">)</span>
+        <span class="n">ax2</span><span class="o">.</span><span class="n">set_yticks</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">1.1</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">))</span>
+        
+        <span class="c1"># plot defocus array(s)</span>
+        <span class="n">energy_array_list</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;defocus&#39;</span><span class="p">]</span>
+        <span class="n">energy_label_list</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Defocus&#39;</span><span class="p">]</span>
+        <span class="n">energy_ylabel</span> <span class="o">=</span> <span class="s1">&#39;Defocus&#39;</span>
+        <span class="n">ax2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">plot_SSC_generic</span><span class="p">(</span><span class="n">ax2</span><span class="p">,</span> <span class="n">array_list</span><span class="o">=</span><span class="n">energy_array_list</span><span class="p">,</span> \
+                                    <span class="n">label_list</span><span class="o">=</span><span class="n">energy_label_list</span><span class="p">,</span> \
+                                    <span class="n">y_label</span><span class="o">=</span><span class="n">energy_ylabel</span><span class="p">,</span> \
+                                    <span class="n">title_label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> \
+                                    <span class="n">plot_all_time</span><span class="o">=</span><span class="n">plot_all_time</span><span class="p">,</span> \
+                                    <span class="n">start_hr</span><span class="o">=</span><span class="n">start_hr</span><span class="p">,</span> <span class="n">end_hr</span><span class="o">=</span><span class="n">end_hr</span><span class="p">,</span> <span class="n">hide_x</span><span class="o">=</span><span class="n">hide_x</span><span class="p">,</span> <span class="n">left_axis</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> \
+                                    <span class="n">days_on_x</span><span class="o">=</span><span class="n">days_on_x</span><span class="p">)</span>
+        
+        <span class="c1"># set line color to default C3 (reddish)</span>
+        <span class="n">ax2</span><span class="o">.</span><span class="n">get_lines</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_color</span><span class="p">(</span><span class="s2">&quot;C3&quot;</span><span class="p">)</span>
+        
+        <span class="c1">#========================#</span>
+        <span class="c1">#---- Setting Labels ----#</span>
+        <span class="c1">#========================#</span>
+        
+        <span class="c1"># customizing legend(s)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">legend_offset</span><span class="p">:</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span> <span class="n">loc</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">loc_ul</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">fsl</span><span class="p">,</span> <span class="n">bbox_to_anchor</span><span class="o">=</span><span class="p">(</span><span class="n">x_legend</span><span class="p">,</span> <span class="n">y_legend_L</span><span class="p">))</span> <span class="c1"># plot legend for mass flow arrays</span>
+            <span class="n">ax2</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">loc_ul</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">fsl</span><span class="p">,</span> <span class="n">bbox_to_anchor</span><span class="o">=</span><span class="p">(</span><span class="n">x_legend</span><span class="p">,</span> <span class="n">y_legend_R</span><span class="p">))</span> <span class="c1"># plot legend for defocus arrays and also </span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span> <span class="n">loc</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">loc_ul</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">fsl</span><span class="p">)</span> <span class="c1"># plot legend for mass flow arrays</span>
+            <span class="n">ax2</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">loc_ul</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">fsl</span><span class="p">)</span> <span class="c1"># plot legend for defocus arrays and also </span></div>
+
+
+<div class="viewcode-block" id="Plots.plot_SSC_op_modes"><a class="viewcode-back" href="../../../simulations.util.html#simulations.util.PostProcessing.Plots.plot_SSC_op_modes">[docs]</a>    <span class="k">def</span> <span class="nf">plot_SSC_op_modes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">title_label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">plot_all_time</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> \
+                          <span class="n">start_hr</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">end_hr</span><span class="o">=</span><span class="mi">48</span><span class="p">,</span> <span class="n">hide_x</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>  <span class="n">x_legend</span><span class="o">=</span><span class="mf">1.2</span><span class="p">,</span> \
+                          <span class="n">y_legend_L</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">y_legend_R</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">days_on_x</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Method to plot operating modes history on single plot</span>
+
+<span class="sd">        This method is used specifically to plot operating modes and relative </span>
+<span class="sd">        pricing data from SSC simulation results. Built-in options to plot legend off-axis. </span>
+
+<span class="sd">        Inputs:</span>
+<span class="sd">            ax (object)         : axis object to plot on</span>
+<span class="sd">            plot_all_time(bool) : are we plotting all results or just a portion?</span>
+<span class="sd">            title_label(str)    : title name for plot</span>
+<span class="sd">            start_hr (int)      : (plot_all_time==False) hour used for starting index </span>
+<span class="sd">            end_hr (int)        : (plot_all_time==False) hour used for ending index</span>
+<span class="sd">            hide_x(bool)        : hiding the x-axis from this particular plot</span>
+<span class="sd">            x_legend (float)    : (legend_offset==True) x-offset defining left-most side of legend</span>
+<span class="sd">            y_legend_L (float)  : (legend_offset==True) y-offset of left y-axis plot</span>
+<span class="sd">            y_legend_R (float)  : (legend_offset==True) y-offset of right y-axis plot</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1">#========================#</span>
+        <span class="c1">#--- Creating Figure  ---#</span>
+        <span class="c1">#========================#</span>
+
+        <span class="c1"># if no axis object specified, create a figure and axis from it</span>
+        <span class="k">if</span> <span class="n">ax</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">5</span><span class="p">])</span>
+            <span class="n">ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span>   <span class="c1"># this is the Op Modes plot</span>
+
+        <span class="c1"># twin axis to plot pricing on opposite y-axis</span>
+        <span class="n">ax2</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">twinx</span><span class="p">()</span>  <span class="c1"># this is the pricing plot</span>
+
+        <span class="c1"># custom y limits and ticks to be integers</span>
+        <span class="n">price</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">price</span><span class="p">[</span> <span class="n">start_hr</span><span class="p">:</span><span class="n">end_hr</span>  <span class="p">]</span>
+        <span class="n">minP</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">maxP</span> <span class="o">=</span> <span class="mf">1.05</span><span class="o">*</span><span class="n">price</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+        <span class="n">spacing</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="k">if</span> <span class="n">maxP</span><span class="o">-</span><span class="n">minP</span> <span class="o">&lt;</span> <span class="mi">2</span> <span class="k">else</span> <span class="mi">1</span>
+        
+        <span class="n">ax2</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="n">minP</span><span class="p">,</span> <span class="n">maxP</span><span class="p">)</span>
+        <span class="n">ax2</span><span class="o">.</span><span class="n">set_yticks</span><span class="p">(</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span> <span class="n">minP</span><span class="p">,</span> <span class="n">maxP</span><span class="p">,</span> <span class="n">spacing</span><span class="p">)</span> <span class="p">)</span>
+        
+        <span class="c1"># plot price array(s)</span>
+        <span class="n">price_array_list</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;price&#39;</span><span class="p">]</span>
+        <span class="n">price_label_list</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span>
+        <span class="n">price_ylabel</span> <span class="o">=</span> <span class="s1">&#39;Tariff </span><span class="se">\n</span><span class="s1">($/kWh)&#39;</span>
+        <span class="n">ax2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">plot_SSC_generic</span><span class="p">(</span><span class="n">ax2</span><span class="p">,</span> <span class="n">array_list</span><span class="o">=</span><span class="n">price_array_list</span><span class="p">,</span> \
+                                    <span class="n">label_list</span><span class="o">=</span><span class="n">price_label_list</span><span class="p">,</span> \
+                                    <span class="n">y_label</span><span class="o">=</span><span class="n">price_ylabel</span><span class="p">,</span> \
+                                    <span class="n">title_label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> \
+                                    <span class="n">plot_all_time</span><span class="o">=</span><span class="n">plot_all_time</span><span class="p">,</span> \
+                                    <span class="n">start_hr</span><span class="o">=</span><span class="n">start_hr</span><span class="p">,</span> <span class="n">end_hr</span><span class="o">=</span><span class="n">end_hr</span><span class="p">,</span> <span class="n">hide_x</span><span class="o">=</span><span class="n">hide_x</span><span class="p">,</span> \
+                                    <span class="n">is_bar_graph</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">left_axis</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> \
+                                    <span class="n">days_on_x</span><span class="o">=</span><span class="n">days_on_x</span><span class="p">)</span>
+            
+        <span class="c1"># custom y limits and ticks to be integers</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">operating_modes</span><span class="p">)</span> <span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_yticks</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">operating_modes</span><span class="p">),</span> <span class="mi">5</span><span class="p">))</span>
+
+        <span class="c1"># plot operating mode arrays</span>
+        <span class="n">op_array_list</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;op_mode_1&#39;</span><span class="p">]</span> <span class="c1"># list of array strings</span>
+        <span class="n">op_label_list</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span>        <span class="c1"># list of labels for each array string to extract from Outputs</span>
+        <span class="n">op_ylabel</span> <span class="o">=</span> <span class="s1">&#39;Operating </span><span class="se">\n</span><span class="s1">Mode&#39;</span>
+        <span class="n">ax</span><span class="p">,</span> <span class="n">d_slice</span><span class="p">,</span> <span class="n">t_plot</span>  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">plot_SSC_generic</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">array_list</span><span class="o">=</span><span class="n">op_array_list</span><span class="p">,</span> \
+                                    <span class="n">label_list</span><span class="o">=</span><span class="n">op_label_list</span><span class="p">,</span> \
+                                    <span class="n">y_label</span><span class="o">=</span><span class="n">op_ylabel</span><span class="p">,</span> \
+                                    <span class="n">title_label</span><span class="o">=</span><span class="n">title_label</span><span class="p">,</span> \
+                                    <span class="n">plot_all_time</span><span class="o">=</span><span class="n">plot_all_time</span><span class="p">,</span> \
+                                    <span class="n">start_hr</span><span class="o">=</span><span class="n">start_hr</span><span class="p">,</span> <span class="n">end_hr</span><span class="o">=</span><span class="n">end_hr</span><span class="p">,</span> <span class="n">hide_x</span><span class="o">=</span><span class="n">hide_x</span><span class="p">,</span> \
+                                    <span class="n">return_extra</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> \
+                                    <span class="n">days_on_x</span><span class="o">=</span><span class="n">days_on_x</span><span class="p">)</span>
+        
+        <span class="c1">#==================================================#</span>
+        <span class="c1">#---- extract operating modes to designated array</span>
+        <span class="c1">#==================================================#</span>
+        <span class="n">op_mode_1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_array</span><span class="p">(</span><span class="s1">&#39;op_mode_1&#39;</span><span class="p">,</span> <span class="n">d_slice</span><span class="p">)</span>
+        <span class="c1"># import pdb</span>
+        <span class="c1"># pdb.set_trace()</span>
+        <span class="c1"># Plotting data points over the OP mode line with different colors and labels</span>
+        <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">op_mode_result</span><span class="p">:</span>
+            <span class="c1"># getting unique operating modes</span>
+            <span class="n">inds</span> <span class="o">=</span> <span class="p">(</span><span class="n">op_mode_1</span> <span class="o">==</span> <span class="n">op</span><span class="p">)</span>
+            <span class="c1"># individual index getting plotted with unique color and label</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">inds</span><span class="p">):</span>
+                <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">t_plot</span><span class="p">[</span><span class="n">inds</span><span class="p">]</span><span class="o">.</span><span class="n">m</span><span class="p">,</span> <span class="n">op_mode_1</span><span class="p">[</span><span class="n">inds</span><span class="p">],</span> <span class="s1">&#39;o&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">operating_modes</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">op</span><span class="p">)])</span>
+
+        <span class="c1">#========================#</span>
+        <span class="c1">#---- Setting Labels ----#</span>
+        <span class="c1">#========================#</span>
+        
+        <span class="c1"># set OP Mode line color to black</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">get_lines</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_color</span><span class="p">(</span><span class="s2">&quot;k&quot;</span><span class="p">)</span>
+        
+        <span class="c1"># customizing legend(s)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">legend_offset</span><span class="p">:</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span> <span class="n">loc</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">loc_ul</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">fsl</span><span class="p">,</span> <span class="n">bbox_to_anchor</span><span class="o">=</span><span class="p">(</span><span class="n">x_legend</span><span class="p">,</span> <span class="n">y_legend_L</span><span class="p">))</span> <span class="c1"># plot legend for Op Modes arrays</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span> <span class="n">loc</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">loc_ul</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">fsl</span><span class="p">)</span> <span class="c1"># plot legend for Op Modes arrays</span></div>
+
+
+<div class="viewcode-block" id="Plots.plot_SSC_temperatures"><a class="viewcode-back" href="../../../simulations.util.html#simulations.util.PostProcessing.Plots.plot_SSC_temperatures">[docs]</a>    <span class="k">def</span> <span class="nf">plot_SSC_temperatures</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>  <span class="n">title_label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">plot_all_time</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> \
+                              <span class="n">start_hr</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">end_hr</span><span class="o">=</span><span class="mi">48</span><span class="p">,</span> <span class="n">hide_x</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>  <span class="n">x_legend</span><span class="o">=</span><span class="mf">1.2</span><span class="p">,</span> \
+                              <span class="n">y_legend_L</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">y_legend_R</span><span class="o">=</span><span class="mf">1.0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Method to plot temperature data on single plot</span>
+
+<span class="sd">        This method is used specifically to plot temperature data from SSC simulation</span>
+<span class="sd">        results. Built-in options to plot legend off-axis. </span>
+
+<span class="sd">        Inputs:</span>
+<span class="sd">            ax (object)         : axis object to plot on</span>
+<span class="sd">            plot_all_time(bool) : are we plotting all results or just a portion?</span>
+<span class="sd">            title_label(str)    : title name for plot</span>
+<span class="sd">            start_hr (int)      : (plot_all_time==False) hour used for starting index </span>
+<span class="sd">            end_hr (int)        : (plot_all_time==False) hour used for ending index</span>
+<span class="sd">            hide_x(bool)        : hiding the x-axis from this particular plot</span>
+<span class="sd">            x_legend (float)    : (legend_offset==True) x-offset defining left-most side of legend</span>
+<span class="sd">            y_legend_L (float)  : (legend_offset==True) y-offset of left y-axis plot</span>
+<span class="sd">            y_legend_R (float)  : (legend_offset==True) y-offset of right y-axis plot</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1">#========================#</span>
+        <span class="c1">#--- Creating Figure  ---#</span>
+        <span class="c1">#========================#</span>
+
+        <span class="c1"># if no axis object specified, create a figure and axis from it</span>
+        <span class="k">if</span> <span class="n">ax</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">5</span><span class="p">])</span>
+            <span class="n">ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span>   <span class="c1"># this is the power plot</span>
+
+        <span class="c1"># plot temperature arrays</span>
+        <span class="n">temp_array_list</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;T_pc_in&#39;</span><span class="p">,</span> <span class="s1">&#39;T_pc_out&#39;</span><span class="p">,</span> <span class="s1">&#39;T_tes_cold&#39;</span><span class="p">,</span> <span class="s1">&#39;T_tes_hot&#39;</span><span class="p">]</span> <span class="c1"># list of array strings</span>
+        <span class="n">temp_label_list</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;PC HTF (hot) inlet temperature&#39;</span><span class="p">,</span>
+                           <span class="s1">&#39;PC HTF (cold) outlet temperature&#39;</span><span class="p">,</span>
+                           <span class="s1">&#39;TES cold temperature&#39;</span><span class="p">,</span>
+                           <span class="s1">&#39;TES hot temperature&#39;</span><span class="p">]</span> <span class="c1"># list of labels for each array string to extract from Outputs</span>
+        <span class="n">temp_ylabel</span> <span class="o">=</span> <span class="s1">&#39;Temperature (C)&#39;</span>
+        <span class="n">ax</span>  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">plot_SSC_generic</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">array_list</span><span class="o">=</span><span class="n">temp_array_list</span><span class="p">,</span> \
+                                    <span class="n">label_list</span><span class="o">=</span><span class="n">temp_label_list</span><span class="p">,</span> \
+                                    <span class="n">y_label</span><span class="o">=</span><span class="n">temp_ylabel</span><span class="p">,</span> \
+                                    <span class="n">title_label</span><span class="o">=</span><span class="n">title_label</span><span class="p">,</span> \
+                                    <span class="n">plot_all_time</span><span class="o">=</span><span class="n">plot_all_time</span><span class="p">,</span> \
+                                    <span class="n">start_hr</span><span class="o">=</span><span class="n">start_hr</span><span class="p">,</span> <span class="n">end_hr</span><span class="o">=</span><span class="n">end_hr</span><span class="p">,</span> <span class="n">hide_x</span><span class="o">=</span><span class="n">hide_x</span><span class="p">,</span> \
+                                    <span class="n">days_on_x</span><span class="o">=</span><span class="n">days_on_x</span><span class="p">)</span>
+        
+        <span class="c1">#========================#</span>
+        <span class="c1">#---- Setting Labels ----#</span>
+        <span class="c1">#========================#</span>
+        
+        <span class="c1"># customizing legend(s)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">legend_offset</span><span class="p">:</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span> <span class="n">loc</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">loc_ul</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">fsl</span><span class="p">,</span> <span class="n">bbox_to_anchor</span><span class="o">=</span><span class="p">(</span><span class="n">x_legend</span><span class="p">,</span> <span class="n">y_legend_L</span><span class="p">))</span> <span class="c1"># plot legend for Temperature arrays</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span> <span class="n">loc</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">loc_ul</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">fsl</span><span class="p">)</span> <span class="c1"># plot legend for Temperature arrays</span></div>
+
+
+<div class="viewcode-block" id="Plots.set_operating_modes_list"><a class="viewcode-back" href="../../../simulations.util.html#simulations.util.PostProcessing.Plots.set_operating_modes_list">[docs]</a>    <span class="k">def</span> <span class="nf">set_operating_modes_list</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Method to define list of operating modes</span>
+
+<span class="sd">        This method creates a list of operating modes pertaining to the specific SSC module we are</span>
+<span class="sd">        using. This particular list was taken from /ssc/tcs/csp_solver_core.h, in the </span>
+<span class="sd">        `C_system_operating_modes` class.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">operating_modes</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="s1">&#39;ITER_START&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;NUC_OFF__PC_OFF__TES_OFF&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;NUC_SU__PC_OFF__TES_OFF&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;NUC_ON__PC_SU__TES_OFF&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;NUC_ON__PC_SB__TES_OFF&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;NUC_ON__PC_RM_HI__TES_OFF&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;NUC_ON__PC_RM_LO__TES_OFF&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;NUC_DF__PC_MAX__TES_OFF&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;NUC_OFF__PC_SU__TES_DC&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;NUC_ON__PC_OFF__TES_CH&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;NUC_ON__PC_TARGET__TES_CH&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;NUC_ON__PC_TARGET__TES_DC&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;NUC_ON__PC_RM_LO__TES_EMPTY&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;NUC_DF__PC_OFF__TES_FULL&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;NUC_OFF__PC_SB__TES_DC&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;NUC_OFF__PC_MIN__TES_EMPTY&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;NUC_OFF__PC_RM_LO__TES_EMPTY&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;NUC_ON__PC_SB__TES_CH&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;NUC_SU__PC_MIN__TES_EMPTY&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;NUC_SU__PC_SB__TES_DC&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;NUC_ON__PC_SB__TES_DC&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;NUC_OFF__PC_TARGET__TES_DC&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;NUC_SU__PC_TARGET__TES_DC&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;NUC_ON__PC_RM_HI__TES_FULL&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;NUC_ON__PC_MIN__TES_EMPTY&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;NUC_SU__PC_RM_LO__TES_EMPTY&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;NUC_DF__PC_MAX__TES_FULL&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;NUC_ON__PC_SB__TES_FULL&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;NUC_SU__PC_SU__TES_DC&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;NUC_ON__PC_SU__TES_CH&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;NUC_DF__PC_SU__TES_FULL&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;NUC_DF__PC_SU__TES_OFF&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;NUC_TO_COLD__PC_TARGET__TES_DC&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;NUC_TO_COLD__PC_RM_LO__TES_EMPTY&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;NUC_TO_COLD__PC_SB__TES_DC&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;NUC_TO_COLD__PC_MIN__TES_EMPTY&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;NUC_TO_COLD__PC_OFF__TES_OFF&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;NUC_TO_COLD__PC_SU__TES_DC&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;ITER_END&#39;</span><span class="p">]</span></div></div>
+
+
+<div class="viewcode-block" id="DispatchPlots"><a class="viewcode-back" href="../../../simulations.util.html#simulations.util.PostProcessing.DispatchPlots">[docs]</a><span class="k">class</span> <span class="nc">DispatchPlots</span><span class="p">(</span><span class="n">Plots</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The Plots class is a part of the PostProcessing family of classes. It can </span>
+<span class="sd">    output results from Pyomo Dispatch models. </span>
+
+<span class="sd">    Note that the DispatchPlots class must be initialized before using. </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="DispatchPlots.__init__"><a class="viewcode-back" href="../../../simulations.util.html#simulations.util.PostProcessing.DispatchPlots.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">module</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Initializes the Plots module</span>
+
+<span class="sd">        The instantiation of this class receives a full Dispatch object, the module</span>
+<span class="sd">        being one of the Pyomo Dispatch model created in the /neup-ies/simulations/dispatch directory.</span>
+<span class="sd">        It also contains various inputs relating to cosmetic parameters for</span>
+<span class="sd">        matplotlib plots. </span>
+
+<span class="sd">        Inputs:</span>
+<span class="sd">            module (object)     : object representing Pyomo Dispatch Model with results</span>
+<span class="sd">            fsl (str)           : fontsize for legend</span>
+<span class="sd">            loc (str)           : location of legend</span>
+<span class="sd">            legend_offset(bool) : are we plotting legends off-axis?</span>
+<span class="sd">            lp (int)            : labelpad for axis labels</span>
+<span class="sd">            lps (int)           : labelpad for axis labels - short version</span>
+<span class="sd">            fs (int)            : fontsize for labels, titles, etc.</span>
+<span class="sd">            lw (int)            : linewidth for plotting</span>
+<span class="sd">            x_shrink (float)    : (legend_offset==True) amount to shrink axis to make room for legend</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_plotter</span><span class="p">()</span>
+        
+        <span class="c1"># initialize Plots class</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">plotter</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="n">module</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+ 
+
+        <span class="c1"># continuing with Pyomo Dispatch plots</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mod_class_name</span> <span class="o">==</span> <span class="s1">&#39;dispatch&#39;</span><span class="p">:</span>
+            
+            <span class="c1"># saving module to self</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dm</span> <span class="o">=</span> <span class="n">module</span>
+            
+            <span class="c1"># extract outputs from Dispatch model</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">set_extractor</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">extractor</span><span class="o">.</span><span class="n">set_pyomo_outputs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+            
+            <span class="c1"># slice of arrays</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">full_slice</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">t_full</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">t_max</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">t_full</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">t_plot</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">t_full</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">u</span><span class="o">.</span><span class="n">hr</span></div>
+
+
+<div class="viewcode-block" id="DispatchPlots.set_plotter"><a class="viewcode-back" href="../../../simulations.util.html#simulations.util.PostProcessing.DispatchPlots.set_plotter">[docs]</a>    <span class="k">def</span> <span class="nf">set_plotter</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Setting class for plotting</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">plotter</span> <span class="o">=</span> <span class="n">Plots</span></div>
+        
+        
+<div class="viewcode-block" id="DispatchPlots.plot_pyomo_energy"><a class="viewcode-back" href="../../../simulations.util.html#simulations.util.PostProcessing.DispatchPlots.plot_pyomo_energy">[docs]</a>    <span class="k">def</span> <span class="nf">plot_pyomo_energy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">title_label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">plot_all_time</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> \
+                          <span class="n">start_hr</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">end_hr</span><span class="o">=</span><span class="mi">48</span><span class="p">,</span> <span class="n">hide_x</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>  <span class="n">x_legend</span><span class="o">=</span><span class="mf">1.2</span><span class="p">,</span> \
+                          <span class="n">y_legend_L</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">y_legend_R</span><span class="o">=</span><span class="mf">1.0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Method to plot energy data from Pyomo Dispatch on single plot</span>
+
+<span class="sd">        This method is used specifically to plot energy data from Dispatch simulation</span>
+<span class="sd">        results. Built-in options to plot legend off-axis. </span>
+
+<span class="sd">        Inputs:</span>
+<span class="sd">            ax (object)         : axis object to plot on</span>
+<span class="sd">            plot_all_time(bool) : are we plotting all results or just a portion?</span>
+<span class="sd">            title_label(str)    : title name for plot</span>
+<span class="sd">            start_hr (int)      : (plot_all_time==False) hour used for starting index </span>
+<span class="sd">            end_hr (int)        : (plot_all_time==False) hour used for ending index</span>
+<span class="sd">            hide_x(bool)        : hiding the x-axis from this particular plot</span>
+<span class="sd">            x_legend (float)    : (legend_offset==True) x-offset defining left-most side of legend</span>
+<span class="sd">            y_legend_L (float)  : (legend_offset==True) y-offset of left y-axis plot</span>
+<span class="sd">            y_legend_R (float)  : (legend_offset==True) y-offset of right y-axis plot</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1">#========================#</span>
+        <span class="c1">#--- Creating Figure  ---#</span>
+        <span class="c1">#========================#</span>
+
+        <span class="c1"># if no axis object specified, create a figure and axis from it</span>
+        <span class="k">if</span> <span class="n">ax</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">5</span><span class="p">])</span>
+            <span class="n">ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span>   <span class="c1"># this is the power plot</span>
+
+        <span class="c1"># plot energy arrays</span>
+        <span class="n">energy_array_list</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;s_array&#39;</span><span class="p">,</span> <span class="s1">&#39;ucsu_array&#39;</span><span class="p">,</span> <span class="s1">&#39;unsu_array&#39;</span><span class="p">]</span> <span class="c1"># list of array strings</span>
+        <span class="n">energy_label_list</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;TES Reserve Quantity&#39;</span><span class="p">,</span>
+                             <span class="s1">&#39;Cycle Startup Energy Inventory&#39;</span><span class="p">,</span>
+                             <span class="s1">&#39;Nuclear Startup Energy Inventory&#39;</span><span class="p">]</span> <span class="c1"># list of labels for each array string to extract from Outputs</span>
+        <span class="n">energy_wts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+        <span class="n">energy_ylabel</span> <span class="o">=</span> <span class="s1">&#39;Energy </span><span class="se">\n</span><span class="s1">(MWh)&#39;</span>
+
+        <span class="n">ax</span>  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">plot_SSC_generic</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">array_list</span><span class="o">=</span><span class="n">energy_array_list</span><span class="p">,</span> \
+                                    <span class="n">label_list</span><span class="o">=</span><span class="n">energy_label_list</span><span class="p">,</span> \
+                                    <span class="n">y_label</span><span class="o">=</span><span class="n">energy_ylabel</span><span class="p">,</span> \
+                                    <span class="n">lw_list</span><span class="o">=</span><span class="n">energy_wts</span><span class="p">,</span> \
+                                    <span class="n">title_label</span><span class="o">=</span><span class="n">title_label</span><span class="p">,</span> \
+                                    <span class="n">plot_all_time</span><span class="o">=</span><span class="n">plot_all_time</span><span class="p">,</span> \
+                                    <span class="n">start_hr</span><span class="o">=</span><span class="n">start_hr</span><span class="p">,</span> <span class="n">end_hr</span><span class="o">=</span><span class="n">end_hr</span><span class="p">,</span> <span class="n">hide_x</span><span class="o">=</span><span class="n">hide_x</span><span class="p">)</span>
+            
+        <span class="c1">#========================#</span>
+        <span class="c1">#--- Extra arrays  ---#</span>
+        <span class="c1">#========================#</span>
+        
+        <span class="c1"># retrieving arrays</span>
+        <span class="n">s_array</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">s_array</span><span class="o">.</span><span class="n">m</span>    
+        <span class="n">ucsu_array</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ucsu_array</span><span class="o">.</span><span class="n">m</span>
+        <span class="n">unsu_array</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">unsu_array</span><span class="o">.</span><span class="n">m</span>
+        
+        <span class="c1"># vertical energy line at midpoint</span>
+        <span class="n">energy_vert</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">([</span><span class="n">s_array</span><span class="p">,</span> <span class="n">ucsu_array</span><span class="p">,</span> <span class="n">unsu_array</span><span class="p">]),</span> 
+                                   <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">([</span><span class="n">s_array</span><span class="p">,</span> <span class="n">ucsu_array</span><span class="p">,</span> <span class="n">unsu_array</span><span class="p">])</span><span class="o">*</span><span class="mf">1.1</span><span class="p">,</span> 
+                                   <span class="bp">self</span><span class="o">.</span><span class="n">T</span> <span class="p">)</span>
+            
+        <span class="c1"># Line marking the midpoint line</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time_midway</span><span class="p">,</span> <span class="n">energy_vert</span><span class="p">,</span> <span class="s1">&#39;k--&#39;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lw</span><span class="p">)</span>
+
+
+        <span class="c1">#========================#</span>
+        <span class="c1">#---- Setting Labels ----#</span>
+        <span class="c1">#========================#</span>
+        
+        <span class="c1"># customizing legend(s)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">legend_offset</span><span class="p">:</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span> <span class="n">loc</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">loc_ul</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">fsl</span><span class="p">,</span> <span class="n">bbox_to_anchor</span><span class="o">=</span><span class="p">(</span><span class="n">x_legend</span><span class="p">,</span> <span class="n">y_legend_L</span><span class="p">))</span> <span class="c1"># plot legend for Energy arrays</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span> <span class="n">loc</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">loc_ul</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">fsl</span><span class="p">)</span> <span class="c1"># plot legend for Energy arrays</span></div>
+
+        
+<div class="viewcode-block" id="DispatchPlots.plot_pyomo_power"><a class="viewcode-back" href="../../../simulations.util.html#simulations.util.PostProcessing.DispatchPlots.plot_pyomo_power">[docs]</a>    <span class="k">def</span> <span class="nf">plot_pyomo_power</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">title_label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">plot_all_time</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> \
+                          <span class="n">start_hr</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">end_hr</span><span class="o">=</span><span class="mi">48</span><span class="p">,</span> <span class="n">hide_x</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>  <span class="n">x_legend</span><span class="o">=</span><span class="mf">1.2</span><span class="p">,</span> \
+                          <span class="n">y_legend_L</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">y_legend_R</span><span class="o">=</span><span class="mf">1.0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Method to plot power and pricing data from Pyomo Dispatch on single plot</span>
+
+<span class="sd">        This method is used specifically to plot power data from Dispatch simulation</span>
+<span class="sd">        results. Built-in options to plot legend off-axis. </span>
+
+<span class="sd">        Inputs:</span>
+<span class="sd">            ax (object)         : axis object to plot on</span>
+<span class="sd">            plot_all_time(bool) : are we plotting all results or just a portion?</span>
+<span class="sd">            title_label(str)    : title name for plot</span>
+<span class="sd">            start_hr (int)      : (plot_all_time==False) hour used for starting index </span>
+<span class="sd">            end_hr (int)        : (plot_all_time==False) hour used for ending index</span>
+<span class="sd">            hide_x(bool)        : hiding the x-axis from this particular plot</span>
+<span class="sd">            x_legend (float)    : (legend_offset==True) x-offset defining left-most side of legend</span>
+<span class="sd">            y_legend_L (float)  : (legend_offset==True) y-offset of left y-axis plot</span>
+<span class="sd">            y_legend_R (float)  : (legend_offset==True) y-offset of right y-axis plot</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1">#========================#</span>
+        <span class="c1">#--- Creating Figure  ---#</span>
+        <span class="c1">#========================#</span>
+
+        <span class="c1"># if no axis object specified, create a figure and axis from it</span>
+        <span class="k">if</span> <span class="n">ax</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">5</span><span class="p">])</span>
+            <span class="n">ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span>   <span class="c1"># this is the power plot</span>
+    
+        <span class="c1"># twin axis to plot pricing on opposite y-axis</span>
+        <span class="n">ax2</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">twinx</span><span class="p">()</span>  <span class="c1"># this is the pricing plot</span>
+
+        <span class="c1"># plot energy arrays</span>
+        <span class="n">power_array_list</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;wdot_array&#39;</span><span class="p">,</span> <span class="s1">&#39;x_array&#39;</span><span class="p">,</span> <span class="s1">&#39;xn_array&#39;</span><span class="p">,</span>
+                            <span class="s1">&#39;xnsu_array&#39;</span><span class="p">,</span> <span class="s1">&#39;wdot_s_array&#39;</span><span class="p">,</span> <span class="s1">&#39;wdot_p_array&#39;</span><span class="p">]</span> <span class="c1"># list of array strings</span>
+        <span class="n">power_label_list</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Cycle Out (E)&#39;</span><span class="p">,</span> <span class="s1">&#39;Cycle In (T)&#39;</span><span class="p">,</span>
+                            <span class="s1">&#39;Nuclear Out (T)&#39;</span><span class="p">,</span> <span class="s1">&#39;Nuclear Startup (T)&#39;</span><span class="p">,</span>
+                            <span class="s1">&#39;Energy Sold to Grid (E)&#39;</span><span class="p">,</span> <span class="s1">&#39;Energy Purchased (E)&#39;</span><span class="p">]</span> <span class="c1"># list of labels for each array string to extract from Outputs</span>
+        <span class="n">power_wts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+        <span class="n">power_ylabel</span> <span class="o">=</span> <span class="s1">&#39;Power </span><span class="se">\n</span><span class="s1">(MW)&#39;</span>
+
+        <span class="n">ax</span>  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">plot_SSC_generic</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">array_list</span><span class="o">=</span><span class="n">power_array_list</span><span class="p">,</span> \
+                                    <span class="n">label_list</span><span class="o">=</span><span class="n">power_label_list</span><span class="p">,</span> \
+                                    <span class="n">y_label</span><span class="o">=</span><span class="n">power_ylabel</span><span class="p">,</span> \
+                                    <span class="n">lw_list</span><span class="o">=</span><span class="n">power_wts</span><span class="p">,</span> \
+                                    <span class="n">title_label</span><span class="o">=</span><span class="n">title_label</span><span class="p">,</span> \
+                                    <span class="n">plot_all_time</span><span class="o">=</span><span class="n">plot_all_time</span><span class="p">,</span> \
+                                    <span class="n">start_hr</span><span class="o">=</span><span class="n">start_hr</span><span class="p">,</span> <span class="n">end_hr</span><span class="o">=</span><span class="n">end_hr</span><span class="p">,</span> <span class="n">hide_x</span><span class="o">=</span><span class="n">hide_x</span><span class="p">)</span>
+        
+        <span class="c1">#========================#</span>
+        <span class="c1">#--- Extra arrays  ------#</span>
+        <span class="c1">#========================#</span>
+        
+        <span class="c1"># retrieving arrays</span>
+        <span class="n">wdot_array</span>    <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wdot_array</span><span class="o">.</span><span class="n">m</span>    
+        <span class="n">x_array</span>       <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_array</span><span class="o">.</span><span class="n">m</span>
+        <span class="n">xn_array</span>      <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">xn_array</span><span class="o">.</span><span class="n">m</span>
+        <span class="n">xnsu_array</span>    <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">xnsu_array</span><span class="o">.</span><span class="n">m</span>    
+        <span class="n">wdot_s_array</span>  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wdot_s_array</span><span class="o">.</span><span class="n">m</span>
+        <span class="n">wdot_p_array</span>  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wdot_p_array</span><span class="o">.</span><span class="n">m</span>
+        
+        <span class="c1"># vertical power line at midpoint</span>
+        <span class="n">power_vert</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span>  <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">([</span><span class="n">wdot_array</span><span class="p">,</span> <span class="n">x_array</span><span class="p">,</span> <span class="n">xn_array</span><span class="p">,</span> \
+                                           <span class="n">xnsu_array</span><span class="p">,</span> <span class="n">wdot_s_array</span><span class="p">,</span> <span class="n">wdot_p_array</span><span class="p">]),</span> 
+                                   <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">([</span><span class="n">wdot_array</span><span class="p">,</span> <span class="n">x_array</span><span class="p">,</span> <span class="n">xn_array</span><span class="p">,</span> \
+                                           <span class="n">xnsu_array</span><span class="p">,</span> <span class="n">wdot_s_array</span><span class="p">,</span> <span class="n">wdot_p_array</span><span class="p">])</span><span class="o">*</span><span class="mf">1.1</span><span class="p">,</span> 
+                                   <span class="bp">self</span><span class="o">.</span><span class="n">T</span> <span class="p">)</span>
+            
+        <span class="c1"># Line marking the midpoint line</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time_midway</span><span class="p">,</span> <span class="n">power_vert</span><span class="p">,</span> <span class="s1">&#39;k--&#39;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lw</span><span class="p">)</span>   
+            
+        <span class="c1">#========================#</span>
+        <span class="c1">#--- Double axis      ---#</span>
+        <span class="c1">#========================#</span>
+        
+        <span class="c1"># plot price array(s)</span>
+        <span class="n">price_array_list</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;p_array&#39;</span><span class="p">]</span>
+        <span class="n">price_label_list</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span>
+        <span class="n">price_ylabel</span> <span class="o">=</span> <span class="s1">&#39;Tariff </span><span class="se">\n</span><span class="s1">($/kWh)&#39;</span>
+        <span class="n">ax2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">plot_SSC_generic</span><span class="p">(</span><span class="n">ax2</span><span class="p">,</span> <span class="n">array_list</span><span class="o">=</span><span class="n">price_array_list</span><span class="p">,</span> \
+                                    <span class="n">label_list</span><span class="o">=</span><span class="n">price_label_list</span><span class="p">,</span> \
+                                    <span class="n">y_label</span><span class="o">=</span><span class="n">price_ylabel</span><span class="p">,</span> \
+                                    <span class="n">title_label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> \
+                                    <span class="n">plot_all_time</span><span class="o">=</span><span class="n">plot_all_time</span><span class="p">,</span> \
+                                    <span class="n">start_hr</span><span class="o">=</span><span class="n">start_hr</span><span class="p">,</span> <span class="n">end_hr</span><span class="o">=</span><span class="n">end_hr</span><span class="p">,</span> <span class="n">hide_x</span><span class="o">=</span><span class="n">hide_x</span><span class="p">,</span> \
+                                    <span class="n">is_bar_graph</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">left_axis</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            
+        <span class="c1">#========================#</span>
+        <span class="c1">#---- Setting Labels ----#</span>
+        <span class="c1">#========================#</span>
+        
+        <span class="c1"># customizing legend(s)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">legend_offset</span><span class="p">:</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span> <span class="n">loc</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">loc_ul</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">fsl</span><span class="p">,</span> <span class="n">bbox_to_anchor</span><span class="o">=</span><span class="p">(</span><span class="n">x_legend</span><span class="p">,</span> <span class="n">y_legend_L</span><span class="p">))</span> <span class="c1"># plot legend for Power arrays</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span> <span class="n">loc</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">loc_ul</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">fsl</span><span class="p">)</span> <span class="c1"># plot legend for Power arrays</span></div>
+            
+
+<div class="viewcode-block" id="DispatchPlots.plot_pyomo_power_ramps"><a class="viewcode-back" href="../../../simulations.util.html#simulations.util.PostProcessing.DispatchPlots.plot_pyomo_power_ramps">[docs]</a>    <span class="k">def</span> <span class="nf">plot_pyomo_power_ramps</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">title_label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">plot_all_time</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> \
+                          <span class="n">start_hr</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">end_hr</span><span class="o">=</span><span class="mi">48</span><span class="p">,</span> <span class="n">hide_x</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>  <span class="n">x_legend</span><span class="o">=</span><span class="mf">1.2</span><span class="p">,</span> \
+                          <span class="n">y_legend_L</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">y_legend_R</span><span class="o">=</span><span class="mf">1.0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Method to plot power ramping data from Pyomo Dispatch on single plot</span>
+
+<span class="sd">        This method is used specifically to plot energy data from Dispatch simulation</span>
+<span class="sd">        results. Built-in options to plot legend off-axis. </span>
+
+<span class="sd">        Inputs:</span>
+<span class="sd">            ax (object)         : axis object to plot on</span>
+<span class="sd">            plot_all_time(bool) : are we plotting all results or just a portion?</span>
+<span class="sd">            title_label(str)    : title name for plot</span>
+<span class="sd">            start_hr (int)      : (plot_all_time==False) hour used for starting index </span>
+<span class="sd">            end_hr (int)        : (plot_all_time==False) hour used for ending index</span>
+<span class="sd">            hide_x(bool)        : hiding the x-axis from this particular plot</span>
+<span class="sd">            x_legend (float)    : (legend_offset==True) x-offset defining left-most side of legend</span>
+<span class="sd">            y_legend_L (float)  : (legend_offset==True) y-offset of left y-axis plot</span>
+<span class="sd">            y_legend_R (float)  : (legend_offset==True) y-offset of right y-axis plot</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1">#========================#</span>
+        <span class="c1">#--- Creating Figure  ---#</span>
+        <span class="c1">#========================#</span>
+
+        <span class="c1"># if no axis object specified, create a figure and axis from it</span>
+        <span class="k">if</span> <span class="n">ax</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">5</span><span class="p">])</span>
+            <span class="n">ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span>   <span class="c1"># this is the power plot</span>
+
+        <span class="c1"># plot energy arrays</span>
+        <span class="n">pramp_array_list</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;wdot_delta_plus_array&#39;</span><span class="p">,</span> <span class="s1">&#39;wdot_delta_minus_array&#39;</span><span class="p">,</span> 
+                            <span class="s1">&#39;wdot_v_plus_array&#39;</span><span class="p">,</span> <span class="s1">&#39;wdot_v_minus_array&#39;</span><span class="p">]</span> <span class="c1"># list of array strings</span>
+        <span class="n">pramp_label_list</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;PC Ramp Up (E)&#39;</span><span class="p">,</span> <span class="s1">&#39;PC Ramp Down (E)&#39;</span><span class="p">,</span>
+                            <span class="s1">&#39;PC Ramp Up Beyond (E)&#39;</span><span class="p">,</span> <span class="s1">&#39;PC Ramp Down Beyond(E)&#39;</span><span class="p">]</span> <span class="c1"># list of labels for each array string to extract from Outputs</span>
+        <span class="n">pramp_wts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+        <span class="n">pramp_ylabel</span> <span class="o">=</span> <span class="s1">&#39;Power </span><span class="se">\n</span><span class="s1">Ramping </span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="sa">r</span><span class="s1">&#39;($\Delta$MW)&#39;</span>
+
+        <span class="n">ax</span>  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">plot_SSC_generic</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">array_list</span><span class="o">=</span><span class="n">pramp_array_list</span><span class="p">,</span> \
+                                    <span class="n">label_list</span><span class="o">=</span><span class="n">pramp_label_list</span><span class="p">,</span> \
+                                    <span class="n">y_label</span><span class="o">=</span><span class="n">pramp_ylabel</span><span class="p">,</span> \
+                                    <span class="n">lw_list</span><span class="o">=</span><span class="n">pramp_wts</span><span class="p">,</span> \
+                                    <span class="n">title_label</span><span class="o">=</span><span class="n">title_label</span><span class="p">,</span> \
+                                    <span class="n">plot_all_time</span><span class="o">=</span><span class="n">plot_all_time</span><span class="p">,</span> \
+                                    <span class="n">start_hr</span><span class="o">=</span><span class="n">start_hr</span><span class="p">,</span> <span class="n">end_hr</span><span class="o">=</span><span class="n">end_hr</span><span class="p">,</span> <span class="n">hide_x</span><span class="o">=</span><span class="n">hide_x</span><span class="p">)</span>
+            
+        <span class="c1">#========================#</span>
+        <span class="c1">#--- Extra arrays  ------#</span>
+        <span class="c1">#========================#</span>
+        
+        <span class="c1"># retrieving arrays</span>
+        <span class="n">wdot_delta_plus_array</span>  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wdot_delta_plus_array</span><span class="o">.</span><span class="n">m</span>    
+        <span class="n">wdot_delta_minus_array</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wdot_delta_minus_array</span><span class="o">.</span><span class="n">m</span>
+        <span class="n">wdot_v_plus_array</span>  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wdot_v_plus_array</span><span class="o">.</span><span class="n">m</span>
+        <span class="n">wdot_v_minus_array</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wdot_v_minus_array</span><span class="o">.</span><span class="n">m</span>
+        
+        <span class="c1"># vertical power ramp line at midpoint</span>
+        <span class="n">pramp_vert</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">([</span><span class="n">wdot_delta_plus_array</span><span class="p">,</span> <span class="n">wdot_delta_minus_array</span><span class="p">,</span> 
+                                           <span class="n">wdot_v_plus_array</span><span class="p">,</span> <span class="n">wdot_v_minus_array</span><span class="p">]),</span> 
+                                   <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">([</span><span class="n">wdot_delta_plus_array</span><span class="p">,</span> <span class="n">wdot_delta_minus_array</span><span class="p">,</span> 
+                                           <span class="n">wdot_v_plus_array</span><span class="p">,</span> <span class="n">wdot_v_minus_array</span><span class="p">])</span><span class="o">*</span><span class="mf">1.1</span><span class="p">,</span> 
+                                   <span class="bp">self</span><span class="o">.</span><span class="n">T</span> <span class="p">)</span>
+            
+        <span class="c1"># Line marking the midpoint line</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time_midway</span><span class="p">,</span> <span class="n">pramp_vert</span><span class="p">,</span> <span class="s1">&#39;k--&#39;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lw</span><span class="p">)</span>
+
+
+        <span class="c1">#========================#</span>
+        <span class="c1">#---- Setting Labels ----#</span>
+        <span class="c1">#========================#</span>
+        
+        <span class="c1"># customizing legend(s)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">legend_offset</span><span class="p">:</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span> <span class="n">loc</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">loc_ul</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">fsl</span><span class="p">,</span> <span class="n">bbox_to_anchor</span><span class="o">=</span><span class="p">(</span><span class="n">x_legend</span><span class="p">,</span> <span class="n">y_legend_L</span><span class="p">))</span> <span class="c1"># plot legend for power ramping arrays</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span> <span class="n">loc</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">loc_ul</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">fsl</span><span class="p">)</span> <span class="c1"># plot legend for power ramping arrays</span></div>
+            
+            
+<div class="viewcode-block" id="DispatchPlots.plot_pyomo_nuclear_bin"><a class="viewcode-back" href="../../../simulations.util.html#simulations.util.PostProcessing.DispatchPlots.plot_pyomo_nuclear_bin">[docs]</a>    <span class="k">def</span> <span class="nf">plot_pyomo_nuclear_bin</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">title_label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">plot_all_time</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> \
+                          <span class="n">start_hr</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">end_hr</span><span class="o">=</span><span class="mi">48</span><span class="p">,</span> <span class="n">hide_x</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>  <span class="n">x_legend</span><span class="o">=</span><span class="mf">1.2</span><span class="p">,</span> \
+                          <span class="n">y_legend_L</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">y_legend_R</span><span class="o">=</span><span class="mf">1.0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Method to plot nuclear binary data from Pyomo Dispatch on single plot</span>
+
+<span class="sd">        This method is used specifically to plot data from Dispatch simulation</span>
+<span class="sd">        results pertaining to nuclear binary values. Variables include whether</span>
+<span class="sd">        nuclear plant is running (0 or 1), etc. Built-in options to plot legend </span>
+<span class="sd">        off-axis. </span>
+
+<span class="sd">        Inputs:</span>
+<span class="sd">            ax (object)         : axis object to plot on</span>
+<span class="sd">            plot_all_time(bool) : are we plotting all results or just a portion?</span>
+<span class="sd">            title_label(str)    : title name for plot</span>
+<span class="sd">            start_hr (int)      : (plot_all_time==False) hour used for starting index </span>
+<span class="sd">            end_hr (int)        : (plot_all_time==False) hour used for ending index</span>
+<span class="sd">            hide_x(bool)        : hiding the x-axis from this particular plot</span>
+<span class="sd">            x_legend (float)    : (legend_offset==True) x-offset defining left-most side of legend</span>
+<span class="sd">            y_legend_L (float)  : (legend_offset==True) y-offset of left y-axis plot</span>
+<span class="sd">            y_legend_R (float)  : (legend_offset==True) y-offset of right y-axis plot</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1">#========================#</span>
+        <span class="c1">#--- Creating Figure  ---#</span>
+        <span class="c1">#========================#</span>
+
+        <span class="c1"># if no axis object specified, create a figure and axis from it</span>
+        <span class="k">if</span> <span class="n">ax</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">5</span><span class="p">])</span>
+            <span class="n">ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span>   <span class="c1"># this is the power plot</span>
+
+        <span class="c1"># plot nuclear binary arrays</span>
+        <span class="n">nucbin_array_list</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;yn_array&#39;</span><span class="p">,</span>   <span class="s1">&#39;ynhsp_array&#39;</span><span class="p">,</span> <span class="s1">&#39;ynsb_array&#39;</span><span class="p">,</span>
+                             <span class="s1">&#39;ynsd_array&#39;</span><span class="p">,</span> <span class="s1">&#39;ynsu_array&#39;</span><span class="p">,</span>  <span class="s1">&#39;ynsup_array&#39;</span><span class="p">]</span> <span class="c1"># list of array strings</span>
+        <span class="n">nucbin_label_list</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Is Nuclear On?&#39;</span><span class="p">,</span> <span class="s1">&#39;Is Nuclear HSU Pen?&#39;</span><span class="p">,</span> 
+                             <span class="s1">&#39;Is Nuclear SB?&#39;</span><span class="p">,</span> <span class="s1">&#39;Is Nuclear SD?&#39;</span><span class="p">,</span> 
+                             <span class="s1">&#39;Is Nuclear SU?&#39;</span><span class="p">,</span> <span class="s1">&#39;Is Nuclear CSU Pen?&#39;</span><span class="p">]</span> <span class="c1"># list of labels for each array string to extract from Outputs</span>
+        <span class="n">nucbin_wts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+        <span class="n">nucbin_ylabel</span> <span class="o">=</span> <span class="s1">&#39;Nuclear </span><span class="se">\n</span><span class="s1">Binary </span><span class="se">\n</span><span class="s1">Variables&#39;</span>
+
+        <span class="n">ax</span>  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">plot_SSC_generic</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">array_list</span><span class="o">=</span><span class="n">nucbin_array_list</span><span class="p">,</span> \
+                                    <span class="n">label_list</span><span class="o">=</span><span class="n">nucbin_label_list</span><span class="p">,</span> \
+                                    <span class="n">y_label</span><span class="o">=</span><span class="n">nucbin_ylabel</span><span class="p">,</span> \
+                                    <span class="n">lw_list</span><span class="o">=</span><span class="n">nucbin_wts</span><span class="p">,</span> \
+                                    <span class="n">title_label</span><span class="o">=</span><span class="n">title_label</span><span class="p">,</span> \
+                                    <span class="n">plot_all_time</span><span class="o">=</span><span class="n">plot_all_time</span><span class="p">,</span> \
+                                    <span class="n">start_hr</span><span class="o">=</span><span class="n">start_hr</span><span class="p">,</span> <span class="n">end_hr</span><span class="o">=</span><span class="n">end_hr</span><span class="p">,</span> <span class="n">hide_x</span><span class="o">=</span><span class="n">hide_x</span><span class="p">)</span>
+            
+        <span class="c1">#========================#</span>
+        <span class="c1">#--- Extra arrays  ---#</span>
+        <span class="c1">#========================#</span>
+
+        <span class="c1"># vertical binary line at midpoint</span>
+        <span class="n">binary_vert</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span> <span class="o">-</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">T</span> <span class="p">)</span>
+            
+        <span class="c1"># Line marking the midpoint line</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time_midway</span><span class="p">,</span> <span class="n">binary_vert</span><span class="p">,</span> <span class="s1">&#39;k--&#39;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lw</span><span class="p">)</span>
+        
+        <span class="c1"># set binary ticks and labels</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_yticks</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_yticklabels</span><span class="p">([</span><span class="s1">&#39;No&#39;</span><span class="p">,</span> <span class="s1">&#39;Yes&#39;</span><span class="p">])</span>
+
+        <span class="c1">#========================#</span>
+        <span class="c1">#---- Setting Labels ----#</span>
+        <span class="c1">#========================#</span>
+        
+        <span class="c1"># customizing legend(s)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">legend_offset</span><span class="p">:</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span> <span class="n">loc</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">loc_ul</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">fsl</span><span class="p">,</span> <span class="n">bbox_to_anchor</span><span class="o">=</span><span class="p">(</span><span class="n">x_legend</span><span class="p">,</span> <span class="n">y_legend_L</span><span class="p">))</span> <span class="c1"># plot legend for Nuclear arrays</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span> <span class="n">loc</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">loc_ul</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">fsl</span><span class="p">)</span> <span class="c1"># plot legend for Nuclear arrays</span></div>
+
+
+<div class="viewcode-block" id="DispatchPlots.plot_pyomo_cycle_bin"><a class="viewcode-back" href="../../../simulations.util.html#simulations.util.PostProcessing.DispatchPlots.plot_pyomo_cycle_bin">[docs]</a>    <span class="k">def</span> <span class="nf">plot_pyomo_cycle_bin</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">title_label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">plot_all_time</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> \
+                          <span class="n">start_hr</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">end_hr</span><span class="o">=</span><span class="mi">48</span><span class="p">,</span> <span class="n">hide_x</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>  <span class="n">x_legend</span><span class="o">=</span><span class="mf">1.2</span><span class="p">,</span> \
+                          <span class="n">y_legend_L</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">y_legend_R</span><span class="o">=</span><span class="mf">1.0</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Method to plot power cycle binary data from Pyomo Dispatch on single plot</span>
+
+<span class="sd">        This method is used specifically to plot data from Dispatch simulation</span>
+<span class="sd">        results pertaining to cycle binary values. Variables include whether</span>
+<span class="sd">        power cycle is running (0 or 1), etc. Built-in options to plot legend </span>
+<span class="sd">        off-axis. </span>
+
+<span class="sd">        Inputs:</span>
+<span class="sd">            ax (object)         : axis object to plot on</span>
+<span class="sd">            plot_all_time(bool) : are we plotting all results or just a portion?</span>
+<span class="sd">            title_label(str)    : title name for plot</span>
+<span class="sd">            start_hr (int)      : (plot_all_time==False) hour used for starting index </span>
+<span class="sd">            end_hr (int)        : (plot_all_time==False) hour used for ending index</span>
+<span class="sd">            hide_x(bool)        : hiding the x-axis from this particular plot</span>
+<span class="sd">            x_legend (float)    : (legend_offset==True) x-offset defining left-most side of legend</span>
+<span class="sd">            y_legend_L (float)  : (legend_offset==True) y-offset of left y-axis plot</span>
+<span class="sd">            y_legend_R (float)  : (legend_offset==True) y-offset of right y-axis plot</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1">#========================#</span>
+        <span class="c1">#--- Creating Figure  ---#</span>
+        <span class="c1">#========================#</span>
+
+        <span class="c1"># if no axis object specified, create a figure and axis from it</span>
+        <span class="k">if</span> <span class="n">ax</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">5</span><span class="p">])</span>
+            <span class="n">ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span>   <span class="c1"># this is the power plot</span>
+
+        <span class="c1"># plot cycle binary arrays</span>
+        <span class="n">cyclebin_array_list</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;y_array&#39;</span><span class="p">,</span>   <span class="s1">&#39;ychsp_array&#39;</span><span class="p">,</span> <span class="s1">&#39;ycsb_array&#39;</span><span class="p">,</span>
+                               <span class="s1">&#39;ycsd_array&#39;</span><span class="p">,</span> <span class="s1">&#39;ycsup_array&#39;</span><span class="p">]</span> <span class="c1"># list of array strings</span>
+        <span class="n">cyclebin_label_list</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Is Cycle Generating Power?&#39;</span><span class="p">,</span> <span class="s1">&#39;Is Cycle in Hot Start Up?&#39;</span><span class="p">,</span> <span class="s1">&#39;Is Cycle in Standby?&#39;</span><span class="p">,</span> 
+                               <span class="s1">&#39;Is Cycle Shutting Down?&#39;</span><span class="p">,</span>    <span class="s1">&#39;Is Cycle in Cold Start Up?&#39;</span><span class="p">]</span> 
+
+        <span class="n">cyclebin_wts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">,</span> <span class="mi">8</span><span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+        <span class="n">cyclebin_ylabel</span> <span class="o">=</span> <span class="s1">&#39;Cycle </span><span class="se">\n</span><span class="s1">Binary </span><span class="se">\n</span><span class="s1">Variables&#39;</span>
+
+        <span class="n">ax</span>  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">plot_SSC_generic</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">array_list</span><span class="o">=</span><span class="n">cyclebin_array_list</span><span class="p">,</span> \
+                                    <span class="n">label_list</span><span class="o">=</span><span class="n">cyclebin_label_list</span><span class="p">,</span> \
+                                    <span class="n">y_label</span><span class="o">=</span><span class="n">cyclebin_ylabel</span><span class="p">,</span> \
+                                    <span class="n">lw_list</span><span class="o">=</span><span class="n">cyclebin_wts</span><span class="p">,</span> \
+                                    <span class="n">title_label</span><span class="o">=</span><span class="n">title_label</span><span class="p">,</span> \
+                                    <span class="n">plot_all_time</span><span class="o">=</span><span class="n">plot_all_time</span><span class="p">,</span> \
+                                    <span class="n">start_hr</span><span class="o">=</span><span class="n">start_hr</span><span class="p">,</span> <span class="n">end_hr</span><span class="o">=</span><span class="n">end_hr</span><span class="p">,</span> <span class="n">hide_x</span><span class="o">=</span><span class="n">hide_x</span><span class="p">)</span>
+            
+        <span class="c1">#========================#</span>
+        <span class="c1">#--- Extra arrays  ---#</span>
+        <span class="c1">#========================#</span>
+
+        <span class="c1"># vertical binary line at midpoint</span>
+        <span class="n">binary_vert</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span> <span class="o">-</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">T</span> <span class="p">)</span>
+            
+        <span class="c1"># Line marking the midpoint line</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">time_midway</span><span class="p">,</span> <span class="n">binary_vert</span><span class="p">,</span> <span class="s1">&#39;k--&#39;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lw</span><span class="p">)</span>
+        
+        <span class="c1"># set binary ticks and labels</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_yticks</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_yticklabels</span><span class="p">([</span><span class="s1">&#39;No&#39;</span><span class="p">,</span> <span class="s1">&#39;Yes&#39;</span><span class="p">])</span>
+
+        <span class="c1">#========================#</span>
+        <span class="c1">#---- Setting Labels ----#</span>
+        <span class="c1">#========================#</span>
+        
+        <span class="c1"># customizing legend(s)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">legend_offset</span><span class="p">:</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span> <span class="n">loc</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">loc_ul</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">fsl</span><span class="p">,</span> <span class="n">bbox_to_anchor</span><span class="o">=</span><span class="p">(</span><span class="n">x_legend</span><span class="p">,</span> <span class="n">y_legend_L</span><span class="p">))</span> <span class="c1"># plot legend for Energy arrays</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span> <span class="n">loc</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">loc_ul</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">fsl</span><span class="p">)</span> <span class="c1"># plot legend for Energy arrays</span></div></div>
+            
+
+        <span class="c1"># plt.tight_layout()</span>
+
+        <span class="c1"># =============================================================================</span>
+        <span class="c1"># objective function</span>
+        <span class="c1"># =============================================================================</span>
+
+        <span class="c1"># fig = plt.figure()</span>
+        <span class="c1"># ax1o = fig.add_subplot(211)</span>
+        <span class="c1"># # ax1o = fig.add_subplot(111)</span>
+        <span class="c1"># ax2o = fig.add_subplot(212)</span>
+
+        <span class="c1"># #profit</span>
+        <span class="c1"># Obj_profit      = 0.1 * d_array * p_array * ( wdot_s_array - wdot_p_array )</span>
+        <span class="c1"># Obj_cycle_susd  = (Ccsu * ycsup_array + 0.1*Cchsp*ychsp_array + ycsd_array)</span>
+        <span class="c1"># Obj_cycle_ramp  = C_delta_w*(wdot_delta_plus_array + wdot_delta_minus_array) + C_v_w*(wdot_v_plus_array + wdot_v_minus_array)</span>
+        <span class="c1"># Obj_rec_susd    = Crsu*ynsup_array + Crhsp*ynhsp_array + ynsd_array</span>
+        <span class="c1"># Obj_ops         = d_array*(Cpc*wdot_array + Ccsb*Qb*ycsb_array + Crec*xn_array)</span>
+
+        <span class="c1"># ax1o.plot(t_array, Obj_profit, linewidth=lw, label=&#39;Profit Term&#39;)</span>
+        <span class="c1"># ax2o.plot(t_array, -Obj_cycle_susd, linewidth=lw, label=&#39;Cycle Startup/Shutdown Term&#39;)</span>
+        <span class="c1"># ax1o.plot(t_array, -Obj_cycle_ramp, linewidth=lw, label=&#39;Cycle Ramping Term&#39;)</span>
+        <span class="c1"># ax1o.plot(t_array, -Obj_rec_susd, linewidth=lw, label=&#39;Receiver Startup/Shutdown Term&#39;)</span>
+        <span class="c1"># ax1o.plot(t_array, -Obj_ops, linewidth=lw, label=&#39;Cycle and Rec Ops Term&#39;)</span>
+
+        <span class="c1"># ax1o.legend(loc=&#39;best&#39;)</span>
+        <span class="c1"># ax2o.legend(loc=&#39;best&#39;)</span>
+
+        <span class="c1"># ax1o.set_title(&#39;Pyomo Obj Fun - Normal&#39;, fontweight=&#39;bold&#39;)</span>
+
+        <span class="c1"># plt.tight_layout()</span>
+
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">NE-2 Simulations  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">simulations.util.PostProcessing</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2021, Gabriel J. Soto, Una Baker, Grace Stanke, Ben Lindley, Mike Wagner.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.2.0.
+    </div>
+  </body>
+</html>

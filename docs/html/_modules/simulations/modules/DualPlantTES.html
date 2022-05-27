@@ -1,0 +1,393 @@
+
+
+<!doctype html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>simulations.modules.DualPlantTES &#8212; NE-2 Simulations  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/bizstyle.css" />
+    
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/bizstyle.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <!--[if lt IE 9]>
+    <script src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">NE-2 Simulations  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">simulations.modules.DualPlantTES</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for simulations.modules.DualPlantTES</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python3</span>
+<span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Created on Tue Nov  2 14:03:51 2021</span>
+
+<span class="sd">@author: gabrielsoto</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">sys</span><span class="o">,</span> <span class="nn">copy</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;..&#39;</span><span class="p">)</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">PySAM.NuclearMsptTes</span> <span class="k">as</span> <span class="nn">NuclearMsptTes</span>
+<span class="kn">from</span> <span class="nn">modules.GenericSSCModule</span> <span class="kn">import</span> <span class="n">GenericSSCModule</span>
+<span class="kn">from</span> <span class="nn">modules.NuclearTES</span> <span class="kn">import</span> <span class="n">NuclearTES</span>
+<span class="kn">from</span> <span class="nn">modules.SolarTES</span> <span class="kn">import</span> <span class="n">SolarTES</span>
+<span class="kn">from</span> <span class="nn">dispatch.DualPlantDispatch</span> <span class="kn">import</span> <span class="n">DualPlantDispatch</span> <span class="k">as</span> <span class="n">DD</span>
+<span class="kn">from</span> <span class="nn">dispatch.DualPlantDispatch</span> <span class="kn">import</span> <span class="n">DualPlantDispatchParamWrap</span> <span class="k">as</span> <span class="n">DDP</span>
+<span class="kn">from</span> <span class="nn">dispatch.SolarDispatch</span> <span class="kn">import</span> <span class="n">SolarDispatchParamWrap</span> <span class="k">as</span> <span class="n">SDP</span>
+<span class="kn">from</span> <span class="nn">dispatch.SolarDispatch</span> <span class="kn">import</span> <span class="n">SolarDispatchOutputs</span> <span class="k">as</span> <span class="n">SDO</span>
+
+<div class="viewcode-block" id="DualPlantTES"><a class="viewcode-back" href="../../../simulations.modules.html#simulations.modules.DualPlantTES.DualPlantTES">[docs]</a><span class="k">class</span> <span class="nc">DualPlantTES</span><span class="p">(</span><span class="n">SolarTES</span><span class="p">):</span> 
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The DualPlantTES class intializes, updates, and runs SSC simulations through PySAM,</span>
+<span class="sd">    specifically for the SSC nuclear_mspt_tes module. </span>
+<span class="sd">    </span>
+<span class="sd">    This is meant to simulate the intermediate cycle where the Nuclear and Solar </span>
+<span class="sd">    plants are both directly connected to the storage tank - power cycle loop. </span>
+<span class="sd">    That is, the Nuclear and Solar Power Tower heat parallel mass flows</span>
+<span class="sd">    of molten salt via respective heat exchangers. Each molten salt mass flow</span>
+<span class="sd">    then routes directly to the hot storage tank where it can be dispatched</span>
+<span class="sd">    out to the power cycle. </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="DualPlantTES.__init__"><a class="viewcode-back" href="../../../simulations.modules.html#simulations.modules.DualPlantTES.DualPlantTES.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">plant_name</span><span class="o">=</span><span class="s2">&quot;nuclear_mspt_tes&quot;</span><span class="p">,</span> <span class="n">json_name</span><span class="o">=</span><span class="s2">&quot;model2&quot;</span><span class="p">,</span> <span class="n">dual</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Initializes the DualPlantTES module</span>
+<span class="sd">        </span>
+<span class="sd">        Inputs:</span>
+<span class="sd">            plant_name (str)         : name of SSC module to run </span>
+<span class="sd">            json_name (str)          : name of JSON script with input data for module</span>
+<span class="sd">            is_dispatch (bool)       : boolean, if True runs Pyomo dispatch optimization</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c1"># initialize Solar+Nuclear+Generic module, csv data arrays should be saved here</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span> <span class="n">plant_name</span><span class="p">,</span> <span class="n">json_name</span><span class="p">,</span> <span class="n">dual</span><span class="o">=</span><span class="n">dual</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span> <span class="p">)</span>
+        
+        <span class="c1"># define specific PySAM module to be called later</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">PySAM_Module</span> <span class="o">=</span> <span class="n">NuclearMsptTes</span>
+
+        <span class="c1"># define specific Dispatch module to be called later</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Dispatch_Module</span> <span class="o">=</span> <span class="n">DD</span>
+        
+        <span class="c1"># define the specific Dispatch Outputs module to be called later to create dispatch targets for SSC</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Dispatch_Outputs</span> <span class="o">=</span> <span class="n">SDO</span></div>
+
+
+<div class="viewcode-block" id="DualPlantTES.update_Plant_after_SSC"><a class="viewcode-back" href="../../../simulations.modules.html#simulations.modules.DualPlantTES.DualPlantTES.update_Plant_after_SSC">[docs]</a>    <span class="k">def</span> <span class="nf">update_Plant_after_SSC</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Update SSC Plant inputs with SSC outputs from previous segment simulation</span>
+<span class="sd">        </span>
+<span class="sd">        ** self.run_loop == True</span>
+<span class="sd">        </span>
+<span class="sd">        This method uses the SSC end results from the previous simulation segment</span>
+<span class="sd">        and sets them as the initial conditions for the next SSC segment. As a </span>
+<span class="sd">        small note: some outputs are arrays that span the full year, however the</span>
+<span class="sd">        only relevant parts are the first indeces corresponding to the SSC Horizon.</span>
+<span class="sd">        All other values are typically 0. </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="n">ssc_slice</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">slice_ssc_firstH</span>
+        
+        <span class="c1"># field and receiver initial conditions</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Plant</span><span class="o">.</span><span class="n">SystemControl</span><span class="o">.</span><span class="n">rec_op_mode_initial</span>              <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Plant</span><span class="o">.</span><span class="n">Outputs</span><span class="o">.</span><span class="n">rec_op_mode_final</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Plant</span><span class="o">.</span><span class="n">SystemControl</span><span class="o">.</span><span class="n">rec_startup_time_remain_init</span>     <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Plant</span><span class="o">.</span><span class="n">Outputs</span><span class="o">.</span><span class="n">rec_startup_time_remain_final</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Plant</span><span class="o">.</span><span class="n">SystemControl</span><span class="o">.</span><span class="n">rec_startup_energy_remain_init</span>   <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Plant</span><span class="o">.</span><span class="n">Outputs</span><span class="o">.</span><span class="n">rec_startup_energy_remain_final</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Plant</span><span class="o">.</span><span class="n">SystemControl</span><span class="o">.</span><span class="n">is_field_tracking_init</span>           <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Plant</span><span class="o">.</span><span class="n">Outputs</span><span class="o">.</span><span class="n">is_field_tracking_final</span>
+        
+        <span class="c1"># nuclear initial conditions</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Plant</span><span class="o">.</span><span class="n">SystemControl</span><span class="o">.</span><span class="n">nuc_op_mode_initial</span>              <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Plant</span><span class="o">.</span><span class="n">Outputs</span><span class="o">.</span><span class="n">nuc_op_mode_final</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Plant</span><span class="o">.</span><span class="n">SystemControl</span><span class="o">.</span><span class="n">nuc_startup_time_remain_init</span>     <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Plant</span><span class="o">.</span><span class="n">Outputs</span><span class="o">.</span><span class="n">nuc_startup_time_remain_final</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Plant</span><span class="o">.</span><span class="n">SystemControl</span><span class="o">.</span><span class="n">nuc_startup_energy_remain_init</span>   <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Plant</span><span class="o">.</span><span class="n">Outputs</span><span class="o">.</span><span class="n">nuc_startup_energy_remain_final</span>
+        
+        <span class="c1"># TES initial conditions</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Plant</span><span class="o">.</span><span class="n">SystemControl</span><span class="o">.</span><span class="n">T_tank_cold_init</span>                 <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Plant</span><span class="o">.</span><span class="n">Outputs</span><span class="o">.</span><span class="n">T_tes_cold</span><span class="p">[</span><span class="n">ssc_slice</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Plant</span><span class="o">.</span><span class="n">SystemControl</span><span class="o">.</span><span class="n">T_tank_hot_init</span>                  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Plant</span><span class="o">.</span><span class="n">Outputs</span><span class="o">.</span><span class="n">T_tes_hot</span><span class="p">[</span><span class="n">ssc_slice</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Plant</span><span class="o">.</span><span class="n">ThermalStorage</span><span class="o">.</span><span class="n">csp_pt_tes_init_hot_htf_percent</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Plant</span><span class="o">.</span><span class="n">Outputs</span><span class="o">.</span><span class="n">hot_tank_htf_percent_final</span>
+        
+        <span class="c1"># PC initial conditions</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Plant</span><span class="o">.</span><span class="n">SystemControl</span><span class="o">.</span><span class="n">pc_op_mode_initial</span>               <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Plant</span><span class="o">.</span><span class="n">Outputs</span><span class="o">.</span><span class="n">pc_op_mode_final</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Plant</span><span class="o">.</span><span class="n">SystemControl</span><span class="o">.</span><span class="n">pc_startup_energy_remain_initial</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Plant</span><span class="o">.</span><span class="n">Outputs</span><span class="o">.</span><span class="n">pc_startup_energy_remain_final</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Plant</span><span class="o">.</span><span class="n">SystemControl</span><span class="o">.</span><span class="n">pc_startup_time_remain_init</span>      <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Plant</span><span class="o">.</span><span class="n">Outputs</span><span class="o">.</span><span class="n">pc_startup_time_remain_final</span></div>
+        
+        
+<div class="viewcode-block" id="DualPlantTES.initialize_arrays"><a class="viewcode-back" href="../../../simulations.modules.html#simulations.modules.DualPlantTES.DualPlantTES.initialize_arrays">[docs]</a>    <span class="k">def</span> <span class="nf">initialize_arrays</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Initializing empty arrays to log SSC outputs after segment simulations</span>
+<span class="sd">        </span>
+<span class="sd">        This method creates empty arrays where SSC outputs will be written to.</span>
+<span class="sd">        Also creates a list of str names for logged simulation outputs.</span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="n">u</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">u</span>
+        
+        <span class="c1"># start and end times for full simulation</span>
+        <span class="n">i_start</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">SSC_dict</span><span class="p">[</span><span class="s1">&#39;time_start&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">s</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39;hr&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">m</span>
+        <span class="n">i_end</span>   <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">SSC_dict</span><span class="p">[</span><span class="s1">&#39;time_stop&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="n">u</span><span class="o">.</span><span class="n">s</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="s1">&#39;hr&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">m</span>
+        
+        <span class="c1"># size of simulation arrays</span>
+        <span class="n">N_sim</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span> <span class="n">i_end</span> <span class="o">-</span> <span class="n">i_start</span> <span class="p">)</span>
+        
+        <span class="c1"># dictionary of output variable names to log after each segment simulation</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Log_Arrays</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="c1">#    name of NE2 variable || name of SSC module variable</span>
+                <span class="s1">&#39;time_log&#39;</span><span class="p">:</span>          <span class="s1">&#39;time_hr&#39;</span><span class="p">,</span>          <span class="c1"># logging time</span>
+                <span class="s1">&#39;gen_log&#39;</span><span class="p">:</span>           <span class="s1">&#39;gen&#39;</span><span class="p">,</span>              <span class="c1"># electricity generation log</span>
+                <span class="s1">&#39;q_nuc_thermal_log&#39;</span><span class="p">:</span> <span class="s1">&#39;Q_nuc_thermal&#39;</span><span class="p">,</span>    <span class="c1"># thermal power from nuclear to HTF </span>
+                <span class="s1">&#39;q_rec_thermal_log&#39;</span><span class="p">:</span> <span class="s1">&#39;Q_thermal&#39;</span><span class="p">,</span>        <span class="c1"># thermal power from receiver to HTF </span>
+                <span class="s1">&#39;p_cycle_log&#39;</span> <span class="p">:</span>      <span class="s1">&#39;P_cycle&#39;</span><span class="p">,</span>          <span class="c1"># PC electrical power output (gross)</span>
+                <span class="s1">&#39;q_dot_nuc_inc_log&#39;</span><span class="p">:</span> <span class="s1">&#39;q_dot_nuc_inc&#39;</span><span class="p">,</span>    <span class="c1"># Nuclear incident thermal power</span>
+                <span class="s1">&#39;q_dot_rec_inc_log&#39;</span><span class="p">:</span> <span class="s1">&#39;q_dot_rec_inc&#39;</span><span class="p">,</span>    <span class="c1"># Receiver incident thermal power</span>
+                <span class="s1">&#39;q_pb_log&#39;</span><span class="p">:</span>          <span class="s1">&#39;q_pb&#39;</span><span class="p">,</span>             <span class="c1"># PC input energy</span>
+                <span class="s1">&#39;q_dot_pc_su_log&#39;</span> <span class="p">:</span>  <span class="s1">&#39;q_dot_pc_startup&#39;</span><span class="p">,</span> <span class="c1"># PC startup thermal power</span>
+                <span class="s1">&#39;m_dot_pc_log&#39;</span> <span class="p">:</span>     <span class="s1">&#39;m_dot_pc&#39;</span><span class="p">,</span>         <span class="c1"># PC HTF mass flow rate</span>
+                <span class="s1">&#39;m_dot_nuc_log&#39;</span>  <span class="p">:</span>   <span class="s1">&#39;m_dot_nuc&#39;</span><span class="p">,</span>        <span class="c1"># Nuc mass flow rate</span>
+                <span class="s1">&#39;m_dot_rec_log&#39;</span>  <span class="p">:</span>   <span class="s1">&#39;m_dot_rec&#39;</span><span class="p">,</span>        <span class="c1"># Rec mass flow rate</span>
+                <span class="s1">&#39;T_pc_in_log&#39;</span> <span class="p">:</span>      <span class="s1">&#39;T_pc_in&#39;</span><span class="p">,</span>          <span class="c1"># PC HTF inlet temperature </span>
+                <span class="s1">&#39;T_pc_out_log&#39;</span>   <span class="p">:</span>   <span class="s1">&#39;T_pc_out&#39;</span><span class="p">,</span>         <span class="c1"># PC HTF outlet temperature</span>
+                <span class="s1">&#39;T_tes_cold_log&#39;</span><span class="p">:</span>    <span class="s1">&#39;T_tes_cold&#39;</span><span class="p">,</span>       <span class="c1"># TES cold temperature</span>
+                <span class="s1">&#39;T_tes_hot_log&#39;</span>  <span class="p">:</span>   <span class="s1">&#39;T_tes_hot&#39;</span><span class="p">,</span>        <span class="c1"># TES hot temperature</span>
+                <span class="s1">&#39;T_nuc_in_log&#39;</span><span class="p">:</span>      <span class="s1">&#39;T_nuc_in&#39;</span><span class="p">,</span>         <span class="c1"># Nuclear HTF inlet temperature</span>
+                <span class="s1">&#39;T_nuc_out_log&#39;</span>  <span class="p">:</span>   <span class="s1">&#39;T_nuc_out&#39;</span><span class="p">,</span>        <span class="c1"># Nuclear HTF outlet temperature</span>
+                <span class="s1">&#39;T_rec_in_log&#39;</span><span class="p">:</span>      <span class="s1">&#39;T_rec_in&#39;</span><span class="p">,</span>         <span class="c1"># Receiver HTF inlet temperature</span>
+                <span class="s1">&#39;T_rec_out_log&#39;</span>  <span class="p">:</span>   <span class="s1">&#39;T_rec_out&#39;</span><span class="p">,</span>        <span class="c1"># Receiver HTF outlet temperature</span>
+                <span class="s1">&#39;T_cond_out_log&#39;</span><span class="p">:</span>    <span class="s1">&#39;T_cond_out&#39;</span><span class="p">,</span>       <span class="c1"># PC condenser water outlet temperature</span>
+                <span class="s1">&#39;e_ch_tes_log&#39;</span>  <span class="p">:</span>    <span class="s1">&#39;e_ch_tes&#39;</span><span class="p">,</span>         <span class="c1"># TES charge state</span>
+                <span class="s1">&#39;op_mode_1_log&#39;</span> <span class="p">:</span>    <span class="s1">&#39;op_mode_1&#39;</span><span class="p">,</span>        <span class="c1"># Operating Mode</span>
+                <span class="s1">&#39;defocus_log&#39;</span>   <span class="p">:</span>    <span class="s1">&#39;defocus&#39;</span><span class="p">,</span>          <span class="c1"># Receiver Defocus fraction</span>
+                <span class="s1">&#39;eta_log&#39;</span>       <span class="p">:</span>    <span class="s1">&#39;eta&#39;</span>               <span class="c1"># PC efficiency, gross</span>
+            <span class="p">}</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_loop</span> \
+                 <span class="k">else</span> <span class="p">{</span><span class="s1">&#39;gen_log&#39;</span><span class="p">:</span>    <span class="s1">&#39;gen&#39;</span>  <span class="c1"># electricity generation log</span>
+                      <span class="p">}</span>
+        
+        <span class="c1"># empty array to initalize log arrays</span>
+        <span class="n">empty_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">N_sim</span><span class="p">)</span>
+        
+        <span class="c1"># loop through keys in ^ dictionary, save the KEY name to NE2 module as empty array</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">Log_Arrays</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="c1"># meta: if we don&#39;t grab the copy of empty_array, it&#39;ll assign a pointer to the array!!</span>
+            <span class="nb">setattr</span><span class="p">(</span> <span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">empty_array</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> <span class="p">)</span> 
+            
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">log_dispatch_targets</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">Log_Target_Arrays</span> <span class="o">=</span> <span class="p">{</span>
+                   <span class="s1">&#39;is_rec_su_allowed_in&#39;</span> <span class="p">:</span> <span class="n">empty_array</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span>
+                   <span class="s1">&#39;is_rec_sb_allowed_in&#39;</span> <span class="p">:</span> <span class="n">empty_array</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span>
+                   <span class="s1">&#39;is_pc_su_allowed_in&#39;</span>  <span class="p">:</span> <span class="n">empty_array</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span>
+                   <span class="s1">&#39;is_pc_sb_allowed_in&#39;</span>  <span class="p">:</span> <span class="n">empty_array</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span>
+                   <span class="s1">&#39;q_pc_target_su_in&#39;</span>    <span class="p">:</span> <span class="n">empty_array</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span>
+                   <span class="s1">&#39;q_pc_target_on_in&#39;</span>    <span class="p">:</span> <span class="n">empty_array</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span>
+                   <span class="s1">&#39;q_pc_max_in&#39;</span>          <span class="p">:</span> <span class="n">empty_array</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+                   <span class="p">}</span></div>
+
+
+<div class="viewcode-block" id="DualPlantTES.create_dispatch_wrapper"><a class="viewcode-back" href="../../../simulations.modules.html#simulations.modules.DualPlantTES.DualPlantTES.create_dispatch_wrapper">[docs]</a>    <span class="k">def</span> <span class="nf">create_dispatch_wrapper</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">PySAM_dict</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Creating a wrapper object for calling a class that creates dispatch parameters</span>
+<span class="sd">        </span>
+<span class="sd">        ** self.is_dispatch == True </span>
+<span class="sd">        (Called in __init__ of NE2 module)</span>
+<span class="sd">        </span>
+<span class="sd">        This method creates an object whose class ultimately calculates and creates </span>
+<span class="sd">        parameters for Dispatch optimization. The reason this class exists separately</span>
+<span class="sd">        is that it gets overlaoded based on the PySAM module we are running. Depending on</span>
+<span class="sd">        the PySAM module, this method calls on a different Dispatch Parameter class that </span>
+<span class="sd">        is specific to the module.</span>
+
+<span class="sd">        Inputs:</span>
+<span class="sd">            PySAM_dict (dict)   : dictionary of PySAM inputs from a script in /json directory</span>
+<span class="sd">        Outputs:</span>
+<span class="sd">            dispatch_wrap (obj) : wrapper object for the class that creates dispatch parameters</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">DispatchParameterClass</span> <span class="o">=</span> <span class="n">DDP</span>
+        
+        <span class="n">dispatch_wrap</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">DispatchParameterClass</span><span class="p">(</span> <span class="n">unit_registry</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">u</span><span class="p">,</span> 
+                    <span class="n">SSC_dict</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">SSC_dict</span><span class="p">,</span> <span class="n">PySAM_dict</span><span class="o">=</span><span class="n">PySAM_dict</span><span class="p">,</span>
+                    <span class="n">pyomo_horizon</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pyomo_horizon</span><span class="p">,</span> 
+                    <span class="n">dispatch_time_step</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dispatch_time_step</span><span class="p">,</span>
+                    <span class="n">interpolants</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">interpolants</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="n">dispatch_wrap</span></div>
+
+
+<div class="viewcode-block" id="DualPlantTES.create_dispatch_params"><a class="viewcode-back" href="../../../simulations.modules.html#simulations.modules.DualPlantTES.DualPlantTES.create_dispatch_params">[docs]</a>    <span class="k">def</span> <span class="nf">create_dispatch_params</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Plant</span> <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Populating a dictionary with dispatch parameters before optimization</span>
+<span class="sd">        </span>
+<span class="sd">        Note:</span>
+<span class="sd">            self.is_dispatch == True </span>
+<span class="sd">            (Called within simulation)</span>
+<span class="sd">        </span>
+<span class="sd">        This method is creates the Dispatch Parameter dictionary that will be </span>
+<span class="sd">        populated with static inputs from SSC_dict as well as initial conditions</span>
+<span class="sd">        for Dispatch optimization. The initial conditions are continuously updated</span>
+<span class="sd">        if simulation is segmented.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            Plant (obj): </span>
+<span class="sd">                original PySAM Plant module</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            dispatch_wrap (obj): </span>
+<span class="sd">                wrapper object for the class that creates dispatch parameters</span>
+<span class="sd">                </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># get the object</span>
+        <span class="n">DW</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dispatch_wrap</span>
+        
+        <span class="c1"># run the setters from the GenericSSCModule parent class</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="n">GenericSSCModule</span><span class="o">.</span><span class="n">create_dispatch_params</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Plant</span> <span class="p">)</span>
+        
+        <span class="c1"># extract array from full run of Plant for solar</span>
+        <span class="k">assert</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">Plant</span><span class="o">.</span><span class="n">Outputs</span><span class="p">,</span> <span class="s2">&quot;Q_thermal&quot;</span><span class="p">),</span> <span class="s2">&quot;Q_thermal was not found in the outputs of Plant.&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Q_rec_guess</span> <span class="o">=</span> <span class="n">Plant</span><span class="o">.</span><span class="n">Outputs</span><span class="o">.</span><span class="n">Q_thermal</span>
+        
+        <span class="c1"># extract array from full run of Plant for nuclear</span>
+        <span class="k">assert</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">Plant</span><span class="o">.</span><span class="n">Outputs</span><span class="p">,</span> <span class="s2">&quot;Q_nuc_thermal&quot;</span><span class="p">),</span> <span class="s2">&quot;Q_thermal was not found in the outputs of Plant.&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Q_nuc_guess</span> <span class="o">=</span> <span class="n">Plant</span><span class="o">.</span><span class="n">Outputs</span><span class="o">.</span><span class="n">Q_nuc_thermal</span>
+        
+        <span class="c1"># set up copy of SSC dict</span>
+        <span class="n">updated_SSC_dict</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">SSC_dict</span><span class="p">)</span>
+        <span class="n">updated_SSC_dict</span><span class="p">[</span><span class="s1">&#39;Q_thermal&#39;</span><span class="p">]</span>     <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Q_rec_guess</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">slice_pyo_firstH</span><span class="p">]</span>
+        <span class="n">updated_SSC_dict</span><span class="p">[</span><span class="s1">&#39;Q_nuc_thermal&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Q_nuc_guess</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">slice_pyo_firstH</span><span class="p">]</span>
+        
+        <span class="c1"># these are NuclearTES-specific setters</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="n">DW</span><span class="o">.</span><span class="n">set_nuclear_parameters</span><span class="p">(</span> <span class="n">params</span> <span class="p">)</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="n">DW</span><span class="o">.</span><span class="n">set_time_series_nuclear_parameters</span><span class="p">(</span> <span class="n">params</span><span class="p">,</span> <span class="n">updated_SSC_dict</span> <span class="p">)</span>
+        
+        <span class="c1"># these are SolarTES-specific setters</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="n">SDP</span><span class="o">.</span><span class="n">set_solar_parameters</span><span class="p">(</span> <span class="n">DW</span><span class="p">,</span> <span class="n">params</span> <span class="p">)</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="n">SDP</span><span class="o">.</span><span class="n">set_time_series_solar_parameters</span><span class="p">(</span> <span class="n">DW</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">updated_SSC_dict</span> <span class="p">)</span>
+        
+        <span class="c1"># this sets the initial states for the SolarTES</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="n">DW</span><span class="o">.</span><span class="n">set_initial_state</span><span class="p">(</span> <span class="n">params</span> <span class="p">)</span>
+        
+        <span class="k">return</span> <span class="n">params</span></div>
+
+
+<div class="viewcode-block" id="DualPlantTES.update_Pyomo_after_SSC"><a class="viewcode-back" href="../../../simulations.modules.html#simulations.modules.DualPlantTES.DualPlantTES.update_Pyomo_after_SSC">[docs]</a>    <span class="k">def</span> <span class="nf">update_Pyomo_after_SSC</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Plant</span><span class="p">,</span> <span class="n">params</span> <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Update Pyomo inputs with SSC outputs from previous segment simulation</span>
+<span class="sd">        </span>
+<span class="sd">        Note:</span>
+<span class="sd">            self.run_loop    == True</span>
+<span class="sd">            self.is_dispatch == True </span>
+<span class="sd">                          </span>
+<span class="sd">        This method uses the SSC end results from the previous simulation segment</span>
+<span class="sd">        and uses them to update the existing Dispatch parameter dictionary that</span>
+<span class="sd">        is ultimately sent to Pyomo. Essentially just updates the initial conditions</span>
+<span class="sd">        of the Dispatch parameter dictionary. </span>
+<span class="sd">        </span>
+<span class="sd">        Args:</span>
+<span class="sd">            Plant (obj): </span>
+<span class="sd">                original PySAM Plant module</span>
+<span class="sd">            params (dict): </span>
+<span class="sd">                dictionary of Pyomo dispatch parameters</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            params (dict): </span>
+<span class="sd">                updated dictionary of Pyomo dispatch parameters</span>
+<span class="sd">                </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="n">ssc_slice</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">slice_ssc_firstH</span>
+        
+        <span class="n">updated_SSC_dict</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">SSC_dict</span><span class="p">)</span>
+        
+        <span class="c1"># saving relevant end-of-sim outputs from the last simulation segment</span>
+        <span class="n">updated_SSC_dict</span><span class="p">[</span><span class="s1">&#39;rec_op_mode_initial&#39;</span><span class="p">]</span>              <span class="o">=</span> <span class="n">Plant</span><span class="o">.</span><span class="n">Outputs</span><span class="o">.</span><span class="n">rec_op_mode_final</span>
+        <span class="n">updated_SSC_dict</span><span class="p">[</span><span class="s1">&#39;rec_startup_time_remain_init&#39;</span><span class="p">]</span>     <span class="o">=</span> <span class="n">Plant</span><span class="o">.</span><span class="n">Outputs</span><span class="o">.</span><span class="n">rec_startup_time_remain_final</span>
+        <span class="n">updated_SSC_dict</span><span class="p">[</span><span class="s1">&#39;rec_startup_energy_remain_init&#39;</span><span class="p">]</span>   <span class="o">=</span> <span class="n">Plant</span><span class="o">.</span><span class="n">Outputs</span><span class="o">.</span><span class="n">rec_startup_energy_remain_final</span>
+        <span class="n">updated_SSC_dict</span><span class="p">[</span><span class="s1">&#39;nuc_op_mode_initial&#39;</span><span class="p">]</span>              <span class="o">=</span> <span class="n">Plant</span><span class="o">.</span><span class="n">Outputs</span><span class="o">.</span><span class="n">nuc_op_mode_final</span>
+        <span class="n">updated_SSC_dict</span><span class="p">[</span><span class="s1">&#39;nuc_startup_time_remain_init&#39;</span><span class="p">]</span>     <span class="o">=</span> <span class="n">Plant</span><span class="o">.</span><span class="n">Outputs</span><span class="o">.</span><span class="n">nuc_startup_time_remain_final</span>
+        <span class="n">updated_SSC_dict</span><span class="p">[</span><span class="s1">&#39;nuc_startup_energy_remain_init&#39;</span><span class="p">]</span>   <span class="o">=</span> <span class="n">Plant</span><span class="o">.</span><span class="n">Outputs</span><span class="o">.</span><span class="n">nuc_startup_energy_remain_final</span>
+        <span class="n">updated_SSC_dict</span><span class="p">[</span><span class="s1">&#39;T_tank_cold_init&#39;</span><span class="p">]</span>                 <span class="o">=</span> <span class="n">Plant</span><span class="o">.</span><span class="n">Outputs</span><span class="o">.</span><span class="n">T_tes_cold</span><span class="p">[</span><span class="n">ssc_slice</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">updated_SSC_dict</span><span class="p">[</span><span class="s1">&#39;T_tank_hot_init&#39;</span><span class="p">]</span>                  <span class="o">=</span> <span class="n">Plant</span><span class="o">.</span><span class="n">Outputs</span><span class="o">.</span><span class="n">T_tes_hot</span><span class="p">[</span><span class="n">ssc_slice</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">updated_SSC_dict</span><span class="p">[</span><span class="s1">&#39;csp.pt.tes.init_hot_htf_percent&#39;</span><span class="p">]</span>  <span class="o">=</span> <span class="n">Plant</span><span class="o">.</span><span class="n">Outputs</span><span class="o">.</span><span class="n">hot_tank_htf_percent_final</span>
+        <span class="n">updated_SSC_dict</span><span class="p">[</span><span class="s1">&#39;pc_op_mode_initial&#39;</span><span class="p">]</span>               <span class="o">=</span> <span class="n">Plant</span><span class="o">.</span><span class="n">Outputs</span><span class="o">.</span><span class="n">pc_op_mode_final</span>
+        <span class="n">updated_SSC_dict</span><span class="p">[</span><span class="s1">&#39;pc_startup_time_remain_init&#39;</span><span class="p">]</span>      <span class="o">=</span> <span class="n">Plant</span><span class="o">.</span><span class="n">Outputs</span><span class="o">.</span><span class="n">pc_startup_time_remain_final</span>
+        <span class="n">updated_SSC_dict</span><span class="p">[</span><span class="s1">&#39;pc_startup_energy_remain_initial&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Plant</span><span class="o">.</span><span class="n">Outputs</span><span class="o">.</span><span class="n">pc_startup_energy_remain_final</span>
+        <span class="n">updated_SSC_dict</span><span class="p">[</span><span class="s1">&#39;is_field_tracking_init&#39;</span><span class="p">]</span>           <span class="o">=</span> <span class="n">Plant</span><span class="o">.</span><span class="n">Outputs</span><span class="o">.</span><span class="n">is_field_tracking_final</span>
+        
+        <span class="c1"># these are specific to the initial states</span>
+        <span class="n">updated_SSC_dict</span><span class="p">[</span><span class="s1">&#39;wdot0&#39;</span><span class="p">]</span>     <span class="o">=</span> <span class="n">Plant</span><span class="o">.</span><span class="n">Outputs</span><span class="o">.</span><span class="n">P_cycle</span><span class="p">[</span><span class="n">ssc_slice</span><span class="p">][</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        
+        <span class="c1"># extract time series from a previous SSC run</span>
+        <span class="n">updated_SSC_dict</span><span class="p">[</span><span class="s1">&#39;Q_thermal&#39;</span><span class="p">]</span>     <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Q_rec_guess</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">slice_pyo_currentH</span><span class="p">]</span>
+        <span class="n">updated_SSC_dict</span><span class="p">[</span><span class="s1">&#39;Q_nuc_thermal&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Q_nuc_guess</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">slice_pyo_currentH</span><span class="p">]</span>
+        
+        <span class="c1"># TODO: removing w_dot_s_prev references in all of Dispatch for now, might need to revisit later</span>
+        <span class="c1"># updated_SSC_dict[&#39;wdot_s_prev&#39;] = 0 #np.array([pe.value(dm.model.wdot_s_prev[t]) for t in dm.model.T])[-1]</span>
+        
+        <span class="n">DW</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dispatch_wrap</span>
+        
+        <span class="c1"># set up Plant outputs dictionary</span>
+        <span class="n">plant_dict</span> <span class="o">=</span> <span class="n">Plant</span><span class="o">.</span><span class="n">Outputs</span><span class="o">.</span><span class="n">export</span><span class="p">()</span>
+        
+        <span class="c1"># updating the initial state and time series Nuclear params</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="n">DW</span><span class="o">.</span><span class="n">set_time_indexed_parameters</span><span class="p">(</span> <span class="n">params</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">df_array</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ud_array</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">slice_pyo_currentH</span> <span class="p">)</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="n">DW</span><span class="o">.</span><span class="n">set_initial_state</span><span class="p">(</span> <span class="n">params</span><span class="p">,</span> <span class="n">updated_SSC_dict</span><span class="p">,</span> <span class="n">Plant</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">t_ind</span> <span class="p">)</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="n">DW</span><span class="o">.</span><span class="n">set_time_series_nuclear_parameters</span><span class="p">(</span> <span class="n">params</span><span class="p">,</span> <span class="n">updated_SSC_dict</span> <span class="p">)</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="n">SDP</span><span class="o">.</span><span class="n">set_time_series_solar_parameters</span><span class="p">(</span> <span class="n">DW</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">updated_SSC_dict</span> <span class="p">)</span>
+        
+        <span class="k">return</span> <span class="n">params</span></div></div>
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">NE-2 Simulations  documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">simulations.modules.DualPlantTES</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2021, Gabriel J. Soto, Una Baker, Grace Stanke, Ben Lindley, Mike Wagner.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.2.0.
+    </div>
+  </body>
+</html>
