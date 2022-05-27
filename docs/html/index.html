@@ -1,0 +1,318 @@
+
+
+<!doctype html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Welcome to NE-2 Simulations’s documentation! &#8212; NE-2 Simulations  documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/bizstyle.css" />
+    
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/bizstyle.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Project Set-Up" href="projectsetup.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <!--[if lt IE 9]>
+    <script src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="projectsetup.html" title="Project Set-Up"
+             accesskey="N">next</a> |</li>
+        <li class="nav-item nav-item-0"><a href="#">NE-2 Simulations  documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Welcome to NE-2 Simulations’s documentation!</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="welcome-to-ne-2-simulations-s-documentation">
+<h1>Welcome to NE-2 Simulations’s documentation!<a class="headerlink" href="#welcome-to-ne-2-simulations-s-documentation" title="Permalink to this headline">¶</a></h1>
+<section id="integrated-solar-nuclear-cogeneration-of-electricity-water-using-the-sco2-cycle">
+<h2>Integrated Solar &amp; Nuclear Cogeneration of Electricity &amp; Water using the sCO2 Cycle<a class="headerlink" href="#integrated-solar-nuclear-cogeneration-of-electricity-water-using-the-sco2-cycle" title="Permalink to this headline">¶</a></h2>
+<p>Documentation for the NE-2 project’s private repository. Currently contains documentation primarily for the <em>simulations</em> subproject.</p>
+<a class="reference external image-reference" href="_static/NE2_IES_diagram.png"><img alt="_images/NE2_IES_diagram.png" src="_images/NE2_IES_diagram.png" /></a>
+<p>Simulations are conducted using 3 separate codebases:</p>
+<ul class="simple">
+<li><p><strong>SSC</strong> (SAM Simulation Core) : a C++ library written by NREL used for SAM (System Advisor Model) computations. Repository contains source code for technology and financial models for different energy systems including molten salt power tower plants. <a class="reference external" href="https://github.com/NREL/ssc">Original Github</a> , <a class="reference external" href="https://github.com/gjsoto/ssc">Fork used in this project</a></p></li>
+<li><p><strong>Pyomo</strong> : a Python package for creating and solving optimization problems. Package contains solvers for mixed integer linear programming problems. <a class="reference external" href="https://pyomo.readthedocs.io/en/stable/">Documentation</a></p></li>
+<li><p><strong>Simulations</strong> : a collection of Python class implementations used to orchestrate <code class="docutils literal notranslate"><span class="pre">SSC</span></code> and <code class="docutils literal notranslate"><span class="pre">pyomo</span></code> computations, respectively. This codebase was created specifically for use in the NE-2 project. <a class="reference external" href="https://github.com/uw-esolab/neup-ies">Github</a></p></li>
+</ul>
+<p>The <code class="docutils literal notranslate"><span class="pre">simulations</span></code> classes call <code class="docutils literal notranslate"><span class="pre">pyomo</span></code> directly, but must use certain interfaces to call <code class="docutils literal notranslate"><span class="pre">SSC</span></code>. These include:</p>
+<ul class="simple">
+<li><p><strong>PySAM</strong> : creates individual objects in Python with member classes corresponding to different <em>SSC</em> input groups. Easy extraction and modification of inputs+outputs through <em>JSON</em> scripts or manual changes (therefore easy to break up full simulation into smaller time segments). <em>Not currently possible to debug through mixed-mode debugging.</em> <a class="reference external" href="https://sam.nrel.gov/software-development-kit-sdk/pysam.html">Main Page</a></p></li>
+<li><p><strong>PySSC</strong> : mimics data structures used in the <em>SSC</em>. Not super easy to run smaller time segments. <em>Capable of mixed-mode debugging.</em></p></li>
+</ul>
+<p>Finally, we have a overarching system for perturbing individual <code class="docutils literal notranslate"><span class="pre">simulations</span></code> runs, running parametric studies for different weather conditions and pricing.</p>
+<ul class="simple">
+<li><p><strong>RAVEN</strong> (Risk Analysis Virtual ENvironment) : package written by INL to perform parametric and probabilistic analysis of other complex codes. This is used to create synthetic time histories of available solar resource for the concentrated solar plant. <a class="reference external" href="https://github.com/idaholab/raven">Project Github</a></p></li>
+</ul>
+<p>Below is a diagram of the full code flow.</p>
+<a class="reference external image-reference" href="_static/NE2_full_codeflow.png"><img alt="_images/NE2_full_codeflow.png" src="_images/NE2_full_codeflow.png" /></a>
+<p><strong>Note</strong> that this only shows interfacing with <code class="docutils literal notranslate"><span class="pre">SSC</span></code> through <code class="docutils literal notranslate"><span class="pre">PySAM</span></code>. The <code class="docutils literal notranslate"><span class="pre">PySSC</span></code> interface would replace the middle “Python Module Class” block.
+The <code class="docutils literal notranslate"><span class="pre">PySSC</span></code> block would look more streamlined: it does not have a time loop, instead calling <code class="docutils literal notranslate"><span class="pre">SSC</span></code> directly. It does not have capabilities to call <code class="docutils literal notranslate"><span class="pre">pyomo</span></code> optimization.</p>
+</section>
+</section>
+<section id="project-guides">
+<h1>Project Guides<a class="headerlink" href="#project-guides" title="Permalink to this headline">¶</a></h1>
+<p>Below are some guides to different aspects of the project.</p>
+<section id="guides-to-building-running">
+<h2>Guides to Building/Running<a class="headerlink" href="#guides-to-building-running" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="projectsetup.html">Project Set-Up</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="projectsetup.html#add-repository-to-your-pythonpath">Add repository to your PYTHONPATH</a></li>
+<li class="toctree-l2"><a class="reference internal" href="projectsetup.html#build-debug-version-of-sam">Build Debug Version of SAM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="projectsetup.html#build-export-version-of-sam-linked-through-pysam">Build Export Version of SAM linked through PySAM</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="sscmod.html">SSC Modifications</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="sscmod.html#adding-a-new-module">Adding a new module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sscmod.html#adding-a-new-solver-or-other-file">Adding a new solver or other file</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sscmod.html#creating-new-operating-mode">Creating new operating mode</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="runningpysam.html">Running PySAM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="runningpyssc.html">Running PySSC</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="runningpyssc.html#mixed-mode-debugging">Mixed-Mode Debugging</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+<section id="general-project-structure">
+<h2>General Project Structure<a class="headerlink" href="#general-project-structure" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="highlevelcode.html">High Level Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="jsonscripts.html">JSON Scripts</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="jsonscripts.html#pysam-inputs">PySAM_inputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="jsonscripts.html#pysam-outputs">PySAM_outputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="jsonscripts.html#ssc-inputs">SSC_inputs</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="modulecombinations.html">NE2, Dispatch, and SSC Module Combinations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sscoverview.html">SSC Overview</a></li>
+</ul>
+</div>
+</section>
+<section id="guides-to-model-1a">
+<h2>Guides to Model 1a<a class="headerlink" href="#guides-to-model-1a" title="Permalink to this headline">¶</a></h2>
+<p>Model 1a is the direct TES charging configuration with only LFR heat supply.</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="nuctesoverview.html">NuclearTES Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="nuctesscripts.html">NuclearTES Scripts</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="nuctesscripts.html#generating-data-used-in-paper">Generating Data Used in Paper</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nuctesscripts.html#recreating-figures-from-paper">Recreating Figures from Paper</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+<section id="guides-to-model-2a">
+<h2>Guides to Model 2a<a class="headerlink" href="#guides-to-model-2a" title="Permalink to this headline">¶</a></h2>
+<p>Model 2a is the direct TES charging configuration with LFR and CSP heat supply.</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="dualplanttesoverview.html">DualPlantTES Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dualplanttesscripts.html">DualPlantTES Scripts</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="dualplanttesscripts.html#debugging">Debugging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dualplanttesscripts.html#some-data-generation">Some Data Generation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dualplanttesscripts.html#post-processing-plotting">Post Processing / Plotting</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="directTESoutletMixing.html">Model 2a Mixing of LFR and CSP Outlet Streams</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="directTESoutletMixing.html#outlet-temperature-differences">Outlet Temperature Differences</a></li>
+<li class="toctree-l2"><a class="reference internal" href="directTESoutletMixing.html#enthalpy-averaged-mixing">Enthalpy-Averaged Mixing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="directTESoutletMixing.html#available-ssc-htf-properties">Available SSC HTF Properties</a></li>
+<li class="toctree-l2"><a class="reference internal" href="directTESoutletMixing.html#converting-temperature-to-enthalpy">Converting Temperature to Enthalpy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="directTESoutletMixing.html#converting-enthalpy-to-temperature">Converting Enthalpy to Temperature</a></li>
+<li class="toctree-l2"><a class="reference internal" href="directTESoutletMixing.html#mass-flow-averaged-mixing">Mass Flow-Averaged Mixing</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+<section id="guides-to-model-1b-and-2b">
+<h2>Guides to Model 1b and 2b<a class="headerlink" href="#guides-to-model-1b-and-2b" title="Permalink to this headline">¶</a></h2>
+<p>Model 1b is the <strong>indirect</strong> TES charging configuration with only LFR heat supply.</p>
+<p>Model 2b is the <strong>indirect</strong> TES charging configuration with LFR and CSP heat supply.</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="indirectnuctesoverview.html">IndirectNuclearTES Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dualindnuctesoverview.html">DualIndirectTES Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dualindnuctesscripts.html">DualIndirectTES Scripts</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="dualindnuctesscripts.html#debugging">Debugging</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="indirectTESdesignPointMassFlow.html">Design Point Mass Flow Calculations</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="indirectTESdesignPointMassFlow.html#calculations-in-the-direct-charging-case">Calculations in the Direct Charging Case</a></li>
+<li class="toctree-l2"><a class="reference internal" href="indirectTESdesignPointMassFlow.html#calculations-for-the-indirect-charging-case">Calculations for the Indirect Charging Case</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="steam2salthx.html">Indirect Configuration Steam-to-Salt Heat Exchanger</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="steam2salthx.html#hot-stream-steam">Hot Stream - Steam</a></li>
+<li class="toctree-l2"><a class="reference internal" href="steam2salthx.html#cold-stream-molten-salt">Cold Stream - Molten Salt</a></li>
+<li class="toctree-l2"><a class="reference internal" href="steam2salthx.html#heat-exchanger-effectiveness">Heat Exchanger Effectiveness</a></li>
+<li class="toctree-l2"><a class="reference internal" href="steam2salthx.html#cold-stream-mass-flow">Cold Stream Mass Flow</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+<section id="ne2-classes-and-methods">
+<h2>NE2 Classes and Methods<a class="headerlink" href="#ne2-classes-and-methods" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="simulations.html">simulations package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="simulations.html#subpackages">Subpackages</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="simulations.dispatch.html">simulations.dispatch package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="simulations.dispatch.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="simulations.dispatch.html#module-simulations.dispatch.DualIndirectDispatch">simulations.dispatch.DualIndirectDispatch module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="simulations.dispatch.html#module-simulations.dispatch.DualPlantDispatch">simulations.dispatch.DualPlantDispatch module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="simulations.dispatch.html#module-simulations.dispatch.GeneralDispatch">simulations.dispatch.GeneralDispatch module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="simulations.dispatch.html#module-simulations.dispatch.IndirectNuclearDispatch">simulations.dispatch.IndirectNuclearDispatch module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="simulations.dispatch.html#module-simulations.dispatch.NuclearDispatch">simulations.dispatch.NuclearDispatch module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="simulations.dispatch.html#module-simulations.dispatch.SolarDispatch">simulations.dispatch.SolarDispatch module</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="simulations.modules.html">simulations.modules package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="simulations.modules.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="simulations.modules.html#module-simulations.modules.DualIndirectTES">simulations.modules.DualIndirectTES module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="simulations.modules.html#module-simulations.modules.DualPlantTES">simulations.modules.DualPlantTES module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="simulations.modules.html#module-simulations.modules.GenericSSCModule">simulations.modules.GenericSSCModule module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="simulations.modules.html#module-simulations.modules.IndirectNuclearTES">simulations.modules.IndirectNuclearTES module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="simulations.modules.html#module-simulations.modules.NuclearTES">simulations.modules.NuclearTES module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="simulations.modules.html#module-simulations.modules.SolarTES">simulations.modules.SolarTES module</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="simulations.outputs.html">simulations.outputs package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulations.tests.html">simulations.tests package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="simulations.tests.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="simulations.tests.html#module-simulations.tests.test_modules">simulations.tests.test_modules module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="simulations.tests.html#module-simulations.tests.test_nuctes">simulations.tests.test_nuctes module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="simulations.tests.html#module-simulations.tests.test_nuctes_scenarios">simulations.tests.test_nuctes_scenarios module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="simulations.tests.html#module-simulations.tests.test_util">simulations.tests.test_util module</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="simulations.util.html">simulations.util package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="simulations.util.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="simulations.util.html#module-simulations.util.DualPlots">simulations.util.DualPlots module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="simulations.util.html#module-simulations.util.FileMethods">simulations.util.FileMethods module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="simulations.util.html#module-simulations.util.FileParser">simulations.util.FileParser module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="simulations.util.html#module-simulations.util.NuclearTESLoadProfiles">simulations.util.NuclearTESLoadProfiles module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="simulations.util.html#module-simulations.util.PostProcessing">simulations.util.PostProcessing module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="simulations.util.html#module-simulations.util.PySSCWrapper">simulations.util.PySSCWrapper module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="simulations.util.html#module-simulations.util.SSCHelperMethods">simulations.util.SSCHelperMethods module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="simulations.util.html#module-simulations.util.SolarPlots">simulations.util.SolarPlots module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+</section>
+<section id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
+<ul class="simple">
+<li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
+<li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
+<li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
+</ul>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="#">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Welcome to NE-2 Simulations’s documentation!</a><ul>
+<li><a class="reference internal" href="#integrated-solar-nuclear-cogeneration-of-electricity-water-using-the-sco2-cycle">Integrated Solar &amp; Nuclear Cogeneration of Electricity &amp; Water using the sCO2 Cycle</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#project-guides">Project Guides</a><ul>
+<li><a class="reference internal" href="#guides-to-building-running">Guides to Building/Running</a></li>
+<li><a class="reference internal" href="#general-project-structure">General Project Structure</a></li>
+<li><a class="reference internal" href="#guides-to-model-1a">Guides to Model 1a</a></li>
+<li><a class="reference internal" href="#guides-to-model-2a">Guides to Model 2a</a></li>
+<li><a class="reference internal" href="#guides-to-model-1b-and-2b">Guides to Model 1b and 2b</a></li>
+<li><a class="reference internal" href="#ne2-classes-and-methods">NE2 Classes and Methods</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
+</ul>
+
+  <h4>Next topic</h4>
+  <p class="topless"><a href="projectsetup.html"
+                        title="next chapter">Project Set-Up</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/index.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="projectsetup.html" title="Project Set-Up"
+             >next</a> |</li>
+        <li class="nav-item nav-item-0"><a href="#">NE-2 Simulations  documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Welcome to NE-2 Simulations’s documentation!</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2021, Gabriel J. Soto, Una Baker, Grace Stanke, Ben Lindley, Mike Wagner.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.2.0.
+    </div>
+  </body>
+</html>
