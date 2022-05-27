@@ -1,6 +1,6 @@
 .. _highlevelcode:
 
-High Level Overview
+Code Overview
 #################################################
 
 State of affairs as of 17 May 2022. 
@@ -13,9 +13,9 @@ Current implementation does not include RAVEN functionality. RAVEN can be wrappe
 
 The different aspects of the codeflow are described as follows:
 
-0. **JSON Scripts**: these contain input information necessary to run SSC, including path links to data files used within either SSC or the NE2 modules. They also contain extraneous parameters used within the Pyomo optimization. More information can be found :ref:`here <jsonscripts>`.
+0. **JSON Scripts**: these contain input information necessary to run SSC, including path links to data files used within either SSC or the NE2 modules. They also contain extraneous parameters used within the Pyomo optimization. More information can be found in :ref:`General Project Structure - JSON Scripts <jsonscripts>`.
 
-1. **Python Scripts**: essentially a staging area for the simulations. In some sort of script, we initialize the necessary NE2 modules and link them to a JSON script. This can also happen within a terminal or within some RAVEN interface. General info about what goes in this staging process can be found :ref:`here <runningpysam>`.
+1. **Python Scripts**: essentially a staging area for the simulations. In some sort of script, we initialize the necessary NE2 modules and link them to a JSON script. This can also happen within a terminal or within some RAVEN interface. General info about what goes in this staging process can be found :ref:`Guides to Building/Running - Running PySAM <runningpysam>`.
 
 2. **NE2 Modules**: within these classes, we create PySAM modules that communicate with the desired SSC module. We also loop over the SSC time horizon (1 day) for a full year: during each day we stagger calls to the pyomo dispatch optimization and then to SSC. Here we log all simulation results. 
 
@@ -30,5 +30,5 @@ The different aspects of the codeflow are described as follows:
 7. **PostProcessing**: there are some classes in `neup-ies/simulations/util <https://github.com/uw-esolab/neup-ies/tree/master/simulations/util>`_ that are useful for plotting and displaying simulation outputs. This can also be replaced with some RAVEN functionality if desired. 
 
 
-For a more detailed diagram of how to combine classes and modules from items **2**-**6**, see :ref:`here <modulecombinations>`.
+For a more detailed diagram of how to combine classes and modules from items **2**-**6**, see :ref:`General Project Structure - NE2, Dispatch, and SSC Module Combinations <modulecombinations>`.
 
