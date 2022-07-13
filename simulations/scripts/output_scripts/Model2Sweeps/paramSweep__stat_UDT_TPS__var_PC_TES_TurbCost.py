@@ -207,8 +207,6 @@ for i, th in enumerate(iterator1): #over tshours
         #TODO! reintroduce financing
         nuctes.SSC_dict["construction_financing_cost"]=base_financing + extra_financing#+sol["construction_financing_cost"]
         
-        CHECK INTEREST RATES ETC!
-        
         #set CSP costs to zero for testing purposes
         #TODO! scale the fixed cost (ref_cost should be OK?)
         nuctes.SSC_dict['site_spec_cost']=0
