@@ -54,7 +54,7 @@ def get_turbine_cost( p, pref ):
 
 sscH = 24  # 12 # 24
 pyoH = 48  # 24 # 48
-json = "model2_Hamilton_560_tariffx1_mod"  # model2_Hamilton_560_tariffx1_mod model2_CAISO_Hamilton
+json = "model2_Hamilton_560_tariffx1_mod"  # model2_Hamilton_560_tariffx1_mod model2_CAISO_Hamilton_mod
 
 dispatch = True # True # False
 run_loop = True
