@@ -54,7 +54,7 @@ def get_turbine_cost( p, pref ):
 
 sscH = 24  # 12 # 24
 pyoH = 48  # 24 # 48
-json = "model2_Hamilton_560_tariffx1_mod"  # model1_CAISO_Hamilton # model1 # model1_Hamilton_560_tariffx2 
+json = "model2_Hamilton_560_tariffx1_mod"  # model2_Hamilton_560_tariffx1_mod model2_CAISO_Hamilton
 
 dispatch = True # True # False
 run_loop = True
@@ -67,22 +67,37 @@ fin_yrs  = 4.0
 fin_rate = 0.07
 pnom=465 #used for BOP costs only
 
-for case in ["sol"]:
+for case in ["debug"]:
     
     if case == "nuc":
-        #nuclear only
-        solar_json = "1"
+        #nuclear only as solar should constantly defocus. Currently  hangs
         q_dot_nuclear_des=950
+        solar_json = "115"
         p_cycle    = np.array([ 465]) 
         tshours    = np.array([ 0 ])
     
     elif case == "sol":
-        #solar only
+        #test case. should be consistent with roughyl 40% capacity factor for solar
+        #at 15 c/kWh and nuclear at 440ish MWe and 6.5 c/kWh. Result is 6.9 c/kWh
+        #and capacity factor giving average 480ish MWe which checks out
         q_dot_nuclear_des=950
         solar_json = "115"
         p_cycle = np.array([465+115])
         tshours    = np.array([ 0 ])
     
+    elif case == "sweep":
+        q_dot_nuclear_des=950
+        solar_json = "115"
+        tshours    = np.array([ 0, 2, 4, 6, 8, 10 ])
+        p_cycle    = np.array([ 900, 800, 700, 600 ]) 
+        
+    elif case == "debug":
+        q_dot_nuclear_des=950
+        solar_json = "115"
+        tshours    = np.array([ 2,])
+        p_cycle    = np.array([ 600]) 
+        
+        
     
     # TES sizes to sweep through
     
@@ -112,8 +127,6 @@ for case in ["sol"]:
     sol_params=["focus_type","helio_area_tot","rec_height","D_rec","h_tower",
     "helio_positions","land_area_base","system_capacity","cp_system_nameplate"]
     #note:sol construction financing added later
-    #TODO! do cost parameters follow through?
-    
     
     # =============================================================================
     # Initialize empty arrays
@@ -202,7 +215,8 @@ for case in ["sol"]:
             for param in sol_params:
                 nuctes.SSC_dict[param]=sol[param]
             
-
+            #TODO! scale the fixed tower cost if ever want none-115 tower (ref_cost should be OK?)
+            
             # update TES costs
             nuctes.SSC_dict["tes_spec_cost"] = tes_spec_cost
             
@@ -228,7 +242,7 @@ for case in ["sol"]:
             
             if case=="nuc":
                 #set CSP costs to zero for testing purposes
-                #TODO! scale the fixed cost (ref_cost should be OK?)
+
                 nuctes.SSC_dict['site_spec_cost']=0
                 nuctes.SSC_dict['heliostat_spec_cost']=0
                 nuctes.SSC_dict['land_spec_cost']=0
