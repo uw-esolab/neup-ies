@@ -202,7 +202,7 @@
         "h_tank_min" :          1,
         "hot_tank_Thtr" :       500,
         "hot_tank_max_heat" :   30,
-        "tanks_in_parallel" :   1,
+        "tanks_in_parallel" :  0,
         "h_ctes_tank_min" :   1,
         "ctes_tshours" :      15,
         "ctes_field_fl" :     4,
