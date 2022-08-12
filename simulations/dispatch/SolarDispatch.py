@@ -242,6 +242,9 @@ class SolarDispatch(IndirectNuclearDispatch, NuclearDispatch):
         logic for the CSP. Essentially, to make sure the correct modes
         are activated when they are allowed. 
         """
+        def rec_sb_force_off_rule(model,t):
+            """Force non-use of receiver standby - bug fix"""
+            return model.yrsb[t] == 0
         def rec_su_sb_persist_rule(model,t):
             """ CSP startup and standby cannot coincide """
             return model.yrsu[t] + model.yrsb[t] <= 1
@@ -276,6 +279,7 @@ class SolarDispatch(IndirectNuclearDispatch, NuclearDispatch):
             # only case remaining: Delta[t]<1, t>1
             return model.yrsd[t] >= model.yr[t-1] - model.yr[t] + model.yrsb[t-1] - model.yrsb[t]
         
+        self.model.rec_sb_force_off_con=pe.Constraint(self.model.T,rule=rec_sb_force_off_rule)
         self.model.rec_su_sb_persist_con = pe.Constraint(self.model.T,rule=rec_su_sb_persist_rule)
         self.model.rec_sb_persist_con = pe.Constraint(self.model.T,rule=rec_sb_persist_rule)
         self.model.rsb_persist_con = pe.Constraint(self.model.T,rule=rsb_persist_rule)
