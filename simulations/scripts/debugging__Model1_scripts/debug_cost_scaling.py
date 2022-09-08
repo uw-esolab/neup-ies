@@ -105,6 +105,8 @@ annual_e  = empty.copy()
 cap_fac   = empty.copy()
 nuc_cost  = empty.copy()
 fin_cost  = empty.copy()
+cost_installed = empty.copy()
+total_cost_installed_out = empty.copy()
 TES_CH    = empty.copy()
 TES_DC    = empty.copy()
 iter_log  = empty.copy()
@@ -282,6 +284,8 @@ for i, th in enumerate(iterator1): #over tshours
             cap_fac[idx]   = nuctes.capacity_factor.m * 100
             nuc_cost[idx]  = nt.SystemCosts.nuclear_spec_cost
             fin_cost[idx]  = so.FinancialParameters.construction_financing_cost
+            cost_installed[idx] = so.Outputs.cost_installed
+            total_cost_installed_out[idx] = so.SystemCosts.total_installed_cost
             
             print("ppa  = {0} cents/kWh \n\n".format( ppa[idx] ) )
             print("cost = {0} cents/kWh \n\n".format( fin_cost[idx] ) )
@@ -328,6 +332,8 @@ for i, th in enumerate(iterator1): #over tshours
             cap_fac[idx]   = dummy_val
             nuc_cost[idx]  = dummy_val
             fin_cost[idx]  = dummy_val
+            cost_installed[idx] = dummy_val
+            total_cost_installed_out[idx] = dummy_val            
             
             TES_CH[idx] = dummy_val
             TES_DC[idx] = dummy_val 
@@ -382,6 +388,8 @@ Storage['fin_yrs']     = fin_yrs
 Storage['fin_rate']    = fin_rate
 Storage['nuclear_spec_cost']            = nuc_cost
 Storage['construction_financing_cost'] = fin_cost
+Storage['cost_installed'] = cost_installed
+Storage['total_cost_installed_out'] = total_cost_installed_out
 
 
 # locating output directory
