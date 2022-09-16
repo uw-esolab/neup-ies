@@ -54,20 +54,21 @@ def get_turbine_cost( p, pref ):
 
 sscH = 24  # 12 # 24
 pyoH = 48  # 24 # 48
-json = "model2_Hamilton_560_tariffx1_mod"  # model2_Hamilton_560_tariffx1_mod model2_CAISO_Hamilton_mod
+json = "model2_CAISO_Hamilton_mod"  # model2_Hamilton_560_tariffx1_mod model2_CAISO_Hamilton_mod
 
 dispatch = True # True # False
 run_loop = True
 
 # costs and other params
 # turb_unit_cost = 225 #Cory email 8th Nov 2021
+#TODO! IS THIS TIED TO TURBINE SIZE OR HEAT SIZE. I'm assuming turbine. This feels right (otherwise oversizing turbine would be crazy beneficial to cost)
 nuc_spec_cost  = 4150
 tes_spec_cost  = 29.8
 fin_yrs  = 4.0
 fin_rate = 0.07
 pnom=465 #used for BOP costs only
 
-for case in ["debug"]:
+for case in ["sol"]:
     
     if case == "nuc":
         #nuclear only as solar should constantly defocus. Currently  hangs
@@ -88,16 +89,38 @@ for case in ["debug"]:
     elif case == "sweep":
         q_dot_nuclear_des=950
         solar_json = "115"
-        tshours    = np.array([ 0, 2, 4, 6, 8, 10 ])
-        p_cycle    = np.array([ 900, 800, 700, 600 ]) 
+        tshours    = np.array([ 0, 1,2,3,4,5,6,7,8,9,10 ])
+        p_cycle    = np.array([1000,950,900,850,800,750,700,650,600,550]) 
+        
+    elif case == "small":
+        q_dot_nuclear_des=250
+        pnom = 465*q_dot_nuclear_des/950
+        solar_json = "115"
+        tshours    = np.array([ 0,2,4,6,8,10,12,14,16 ])
+        p_cycle    = np.array([350,300,250,200,150]) 
+        
+    elif case=="large":
+        q_dot_nuclear_des=1900
+        pnom = 465*q_dot_nuclear_des/950
+        solar_json = "115"
+        tshours    = np.array([0,1,2,3,4,5,6,7,8,9,10])
+        p_cycle    = np.array([1900,1800,1700,1600,1500,1400,1300,1200,1100,1000]) 
         
     elif case == "debug":
-        q_dot_nuclear_des=950
+        q_dot_nuclear_des=250
+        pnom = 465*q_dot_nuclear_des/950
         solar_json = "115"
-        tshours    = np.array([ 2,])
-        p_cycle    = np.array([ 600]) 
+        tshours    = np.array([ 2 ])
+        p_cycle    = np.array([350]) 
         
-        
+    elif case=="debug2":
+        q_dot_nuclear_des=1900
+        pnom = 465*q_dot_nuclear_des/950
+        solar_json = "115"
+        tshours    = np.array([ 5])
+        p_cycle    = np.array([ 1800])     
+    
+    
     
     # TES sizes to sweep through
     
@@ -211,6 +234,17 @@ for case in ["debug"]:
             nuctes.SSC_dict['tshours'] = float(th)
             nuctes.SSC_dict['q_dot_nuclear_des']=q_dot_nuclear_des
             
+            """capacity cost for nuclear is 61100000 for 950 MWth nuclear at 450 MWe power cycle
+            for solar - assumption is 66/kWyr + 3.5/MWh
+            SAM simulations suggest that product is 2288.2 cf 6765 for capacity
+            so use capacity cost of 66*(6765+2288.2)/6765 = 88.3
+            """
+            nuclear_om_fixed = 61100000*q_dot_nuclear_des/950
+            solar_om_fixed = 88.3*115000
+            
+            
+            nuctes.SSC_dict['om_fixed']=[nuclear_om_fixed+solar_om_fixed]
+            
             #add in solar paramters
             for param in sol_params:
                 nuctes.SSC_dict[param]=sol[param]
@@ -231,16 +265,23 @@ for case in ["debug"]:
             
             turb_ref = nuctes.SSC_dict['q_dot_nuclear_des'] * nuctes.SSC_dict['design_eff']
             turb_premium = turb_unit_cost * (nuctes.SSC_dict['P_ref'] - turb_ref)  
+            print(turb_ref,nuctes.SSC_dict["P_ref"],turb_premium)
+        
             nuctes.SSC_dict["nuclear_spec_cost"] = (nuc_spec_cost*turb_ref + turb_premium) / nuctes.SSC_dict['P_ref']
             
+
+
             # update construction financial costs
-            base_financing = nuctes.SSC_dict["construction_financing_cost"]
+            #2A ERROR CORRECTION! extra financing of TES is done against thermal not electric power
+            base_financing = nuctes.SSC_dict["construction_financing_cost"]*q_dot_nuclear_des/950
             extra_financing = fin_yrs * fin_rate * 1000 * (turb_premium + \
-                                                    nuctes.SSC_dict['P_ref'] * nuctes.SSC_dict['tshours'] * nuctes.SSC_dict["tes_spec_cost"])
+                                                    950/465*nuctes.SSC_dict['P_ref'] * nuctes.SSC_dict['tshours'] * nuctes.SSC_dict["tes_spec_cost"])
         
             nuctes.SSC_dict["construction_financing_cost"]=base_financing + extra_financing + sol["construction_financing_cost"]
-            
-            if case=="nuc":
+
+
+
+            if case=="nuc" or case=="debug2":
                 #set CSP costs to zero for testing purposes
 
                 nuctes.SSC_dict['site_spec_cost']=0
@@ -253,9 +294,18 @@ for case in ["debug"]:
                 nuctes.SSC_dict["radiator_fluidcost"]=0
                 nuctes.SSC_dict["radiator_installcost"]=0
                 nuctes.SSC_dict["helio_area_tot"]=0
+                nuctes.SSC_dict["rec_cost_exp"]=0
+                nuctes.SSC_dict["rec_ref_cost"]=0
+                
+            if case == "debug2":
+                nuctes.SSC_dict["disp_csu_cost"]=0
+                nuctes.SSC_dict["disp_rsu_cost"]=0
                         
+                
             # reset design point in Dispatch parameter class
             nuctes.dispatch_wrap.set_design()
+            
+            
             
             # =========================================
             # actually run this simulation
@@ -450,7 +500,6 @@ for case in ["debug"]:
     filename = 'paramSweep_varTurbineCost_PySAM__{0}__2022_03__pyomo_{1:.0f}__horizon_{2:.0f}_{3:.0f}__TES_[{4},{5}]__PC_[{6},{7}]__{8}.nuctes'.format(
                     json, dispatch, sscH, pyoH, tshours.min(), tshours.max(), p_cycle.min(), p_cycle.max(),case)
     NTPath = os.path.join(output_dir, filename)
-    
     # pickling
     with open(NTPath, 'wb') as f:
         pickle.dump(Storage, f)

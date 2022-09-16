@@ -167,6 +167,8 @@ for i, th in enumerate(iterator1): #over tshours
         nuctes.SSC_dict['P_ref']   = float(pc)
         nuctes.SSC_dict['tshours'] = float(th)
         nuctes.SSC_dict['q_dot_nuclear_des']=q_dot_nuclear_des
+        #nuctes.SSC_dict['om_fixed']=[61100000*q_dot_nuclear_des/950.0]
+        nuctes.SSC_dict['om_capacity']=[61100000/450000]
         
         # update turbine costs
         turb_unit_cost = get_turbine_cost( pc, pnom )
@@ -401,3 +403,5 @@ NTPath = os.path.join(output_dir, filename)
 # pickling
 with open(NTPath, 'wb') as f:
     pickle.dump(Storage, f)
+    
+print(cost_installed,total_cost_installed_out)
