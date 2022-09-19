@@ -68,7 +68,7 @@ fin_yrs  = 4.0
 fin_rate = 0.07
 pnom=465 #used for BOP costs only
 
-for case in ["sol"]:
+for case in ["debug"]:
     
     if case == "nuc":
         #nuclear only as solar should constantly defocus. Currently  hangs
@@ -79,8 +79,8 @@ for case in ["sol"]:
     
     elif case == "sol":
         #test case. should be consistent with roughyl 40% capacity factor for solar
-        #at 15 c/kWh and nuclear at 440ish MWe and 6.5 c/kWh. Result is 6.9 c/kWh
-        #and capacity factor giving average 480ish MWe which checks out
+        #at 15 c/kWh and nuclear at 450MWsh 6.7 c/kWh. Here 76% capacity factor gives
+        #480 MWe produced. Estimated ppa = (0.4*115*15+450*6.5)/480=7.5 cf 7.7 (good enough)
         q_dot_nuclear_des=950
         solar_json = "115"
         p_cycle = np.array([465+115])
@@ -106,20 +106,21 @@ for case in ["sol"]:
         tshours    = np.array([0,1,2,3,4,5,6,7,8,9,10])
         p_cycle    = np.array([1900,1800,1700,1600,1500,1400,1300,1200,1100,1000]) 
         
-    elif case == "debug":
+    elif case == "test": #enormous nuclear should give cost very close to the CAISO reference cost from Model 1 Paper
+        #This case gives ppa=6.48 which I think satisfies this
+        q_dot_nuclear_des=95000
+        pnom = 465*q_dot_nuclear_des/950
+        solar_json = "115"
+        tshours    = np.array([ 0 ])
+        p_cycle    = np.array([45000]) 
+
+    elif case=="debug":
         q_dot_nuclear_des=250
         pnom = 465*q_dot_nuclear_des/950
         solar_json = "115"
-        tshours    = np.array([ 2 ])
+        tshours    = np.array([2])
         p_cycle    = np.array([350]) 
         
-    elif case=="debug2":
-        q_dot_nuclear_des=1900
-        pnom = 465*q_dot_nuclear_des/950
-        solar_json = "115"
-        tshours    = np.array([ 5])
-        p_cycle    = np.array([ 1800])     
-    
     
     
     # TES sizes to sweep through
