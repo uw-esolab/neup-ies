@@ -68,7 +68,7 @@ fin_yrs  = 4.0
 fin_rate = 0.07
 pnom=465 #used for BOP costs only
 
-for case in ["debug"]:
+for case in ["small"]:
     
     if case == "nuc":
         #nuclear only as solar should constantly defocus. Currently  hangs
@@ -97,8 +97,8 @@ for case in ["debug"]:
         pnom = 465*q_dot_nuclear_des/950
         solar_json = "115"
         tshours    = np.array([ 0,2,4,6,8,10,12,14,16 ])
-        p_cycle    = np.array([350,300,250,200,150]) 
-        
+        p_cycle    = np.array([600,525,450,375,300,225,150]) 
+    
     elif case=="large":
         q_dot_nuclear_des=1900
         pnom = 465*q_dot_nuclear_des/950
@@ -281,26 +281,6 @@ for case in ["debug"]:
             nuctes.SSC_dict["construction_financing_cost"]=base_financing + extra_financing + sol["construction_financing_cost"]
 
 
-
-            if case=="nuc" or case=="debug2":
-                #set CSP costs to zero for testing purposes
-
-                nuctes.SSC_dict['site_spec_cost']=0
-                nuctes.SSC_dict['heliostat_spec_cost']=0
-                nuctes.SSC_dict['land_spec_cost']=0
-                nuctes.SSC_dict['tower_fixed_cost']=0
-                nuctes.SSC_dict["rec_ref_cost"]=0
-                nuctes.SSC_dict["plant_spec_cost"]=0
-                nuctes.SSC_dict["radiator_unitcost"]=0
-                nuctes.SSC_dict["radiator_fluidcost"]=0
-                nuctes.SSC_dict["radiator_installcost"]=0
-                nuctes.SSC_dict["helio_area_tot"]=0
-                nuctes.SSC_dict["rec_cost_exp"]=0
-                nuctes.SSC_dict["rec_ref_cost"]=0
-                
-            if case == "debug2":
-                nuctes.SSC_dict["disp_csu_cost"]=0
-                nuctes.SSC_dict["disp_rsu_cost"]=0
                         
                 
             # reset design point in Dispatch parameter class
