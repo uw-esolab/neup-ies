@@ -25,7 +25,7 @@ u = pint.UnitRegistry()
 # json file names
 # =============================================================================
 
-case = 2 #0-5
+case = 5 #0-5
 
 if case%2 == 0:
     jsons = ['model2_Hamilton_560_tariffx1_mod']

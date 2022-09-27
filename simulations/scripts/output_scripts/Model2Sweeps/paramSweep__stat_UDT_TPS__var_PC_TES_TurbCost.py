@@ -54,7 +54,7 @@ def get_turbine_cost( p, pref ):
 
 sscH = 24  # 12 # 24
 pyoH = 48  # 24 # 48
-json = "model2_CAISO_Hamilton_mod"  # model2_Hamilton_560_tariffx1_mod model2_CAISO_Hamilton_mod
+json = 'model2_Hamilton_560_tariffx1_mod' # model2_Hamilton_560_tariffx1_mod model2_CAISO_Hamilton_mod
 
 dispatch = True # True # False
 run_loop = True
@@ -68,7 +68,7 @@ fin_yrs  = 4.0
 fin_rate = 0.07
 pnom=465 #used for BOP costs only
 
-for case in ["small"]:
+for case in ["small","sweep","large"]:
     
     if case == "nuc":
         #nuclear only as solar should constantly defocus. Currently  hangs
