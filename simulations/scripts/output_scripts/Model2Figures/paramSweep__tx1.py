@@ -25,7 +25,7 @@ u = pint.UnitRegistry()
 # json file names
 # =============================================================================
 
-case = 5 #0-5
+case = 7 #0-9
 
 if case%2 == 0:
     jsons = ['model2_Hamilton_560_tariffx1_mod']
@@ -52,8 +52,12 @@ if case <=1:
     extr_str = 'large'
 elif case <=3:
     extr_str = 'sweep'
-else:
+elif case <=5:
     extr_str = 'small'
+elif case <=7:
+    extr_str = 'micro'
+else:
+    extr_str = 'verym'
 
 if extr_str == 'sweep':
     PC_min= 550
@@ -67,11 +71,23 @@ elif extr_str == 'large':
     TES_min        = 0   
     TES_max        = 10    
 
-else:
+elif extr_str == 'small':
     PC_min         = 150  
     PC_max         = 600  
     TES_min        = 0   
     TES_max        = 16    
+
+elif extr_str == 'micro':
+    PC_min         = 125  
+    PC_max         = 275 
+    TES_min        = 0   
+    TES_max        = 16  
+    
+else:
+    PC_min         = 125 
+    PC_max         = 275  
+    TES_min        = 0   
+    TES_max        = 16  
 
 cbar_label = "PPA Price (c/kWe)"
 
@@ -195,6 +211,9 @@ threshold_contour = np.round(1.1,2)
 
 # using PPA price as metric
 array = copy.deepcopy( ppa ) 
+if case==7:
+    array[3,0]=np.nan #poorly converged case
+    
 # any values equal to -1 set to max (bad values, easier to spot)
 array[array==-1] = np.max(array)
 # normalizing by the reference @ 450 MWe and tshours = 0
@@ -217,7 +236,7 @@ im1 = ax.imshow(array.T, origin='lower', #extent=[tshours[0], tshours[-1], p_cyc
                 cmap=cmap, aspect=asp_df)#, 
                  #vmin = 1 - max_diff, vmax = 1 + max_diff )\
 
-if extr_str != 'small':
+if extr_str != 'small' and extr_str != 'micro' and extr_str != 'verym':
     ax.set_ylim([-0.5, 9.5])
 else:
     ax.set_ylim([-0.5,6.5])

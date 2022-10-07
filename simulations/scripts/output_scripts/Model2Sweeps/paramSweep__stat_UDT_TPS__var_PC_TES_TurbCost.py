@@ -54,7 +54,7 @@ def get_turbine_cost( p, pref ):
 
 sscH = 24  # 12 # 24
 pyoH = 48  # 24 # 48
-json = 'model2_Hamilton_560_tariffx1_mod' # model2_Hamilton_560_tariffx1_mod model2_CAISO_Hamilton_mod
+#json = 'model2_Hamilton_560_tariffx1_mod' # model2_Hamilton_560_tariffx1_mod model2_CAISO_Hamilton_mod
 
 dispatch = True # True # False
 run_loop = True
@@ -68,7 +68,9 @@ fin_yrs  = 4.0
 fin_rate = 0.07
 pnom=465 #used for BOP costs only
 
-for case in ["small","sweep","large"]:
+for json in ['model2_Hamilton_560_tariffx1_mod','model2_CAISO_Hamilton_mod']:
+    
+    case='nano'
     
     if case == "nuc":
         #nuclear only as solar should constantly defocus. Currently  hangs
@@ -105,6 +107,27 @@ for case in ["small","sweep","large"]:
         solar_json = "115"
         tshours    = np.array([0,1,2,3,4,5,6,7,8,9,10])
         p_cycle    = np.array([1900,1800,1700,1600,1500,1400,1300,1200,1100,1000]) 
+        
+    elif case=="micro":
+        q_dot_nuclear_des=100
+        pnom = 465*q_dot_nuclear_des/950
+        solar_json = "115"
+        tshours    = np.array([ 0,2,4,6,8,10,12,14,16 ])
+        p_cycle    = np.array([275,250,225,200,175,150,125]) 
+    
+    elif case=='verym':
+        q_dot_nuclear_des=50
+        pnom = 465*q_dot_nuclear_des/950
+        solar_json = "115"
+        tshours    = np.array([ 0,2,4,6,8,10,12,14,16 ])
+        p_cycle    = np.array([275,250,225,200,175,150,125]) 
+    
+    elif case=='nano':
+        q_dot_nuclear_des=20
+        pnom = 465*q_dot_nuclear_des/950
+        solar_json = "115"
+        tshours    = np.array([ 0,2,4,6,8,10,12,14,16 ])
+        p_cycle    = np.array([275,250,225,200,175,150,125]) 
         
     elif case == "test": #enormous nuclear should give cost very close to the CAISO reference cost from Model 1 Paper
         #This case gives ppa=6.48 which I think satisfies this

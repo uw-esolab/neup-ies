@@ -27,8 +27,8 @@ print("PID = ", pid)
 #     Run Simulation
 # =============================================================================
 
-
-for case in range(2,6):
+#case has been appended to the end of the filename as of 10/6. Only case 6 updated so far. This is because some sizes had same optimum
+for case in range(6,7):
 
     if case%2 == 0:
         # modifying inputs
@@ -44,8 +44,12 @@ for case in range(2,6):
         q_dot_nuclear_des=1900
     elif case<=3:
         q_dot_nuclear_des=950
-    else:
+    elif case<=5:
         q_dot_nuclear_des=250
+    elif case<=7:
+        q_dot_nuclear_des=100
+    else:
+        q_dot_nuclear_des=50
     
     if case==0:
         Pref    = 1100 # (MW)
@@ -62,11 +66,22 @@ for case in range(2,6):
     elif case==4:
         Pref = 300
         tshours = 4
-    else:
+    elif case==5:
         Pref = 375
         tshours = 6
-        
-    
+    elif case==6:
+        Pref = 225
+        tshours=4
+    elif case==7:
+        Pref = 225
+        tshours=10
+    elif case==8:
+        Pref = 225
+        tshours=4
+    elif case==9:
+        Pref = 175
+        tshours=12
+      
     
     # ========================
     
@@ -119,8 +134,8 @@ for case in range(2,6):
     
     # locating output directory
     output_dir = os.path.join( FileMethods.output_dir, "" )
-    filename = 'loadProfile_PySAM__{0}__2022_02__pyomo_{1:.0f}__horizon_{2:.0f}_{3:.0f}__TES_{4}__PC_{5}.nuctes'.format(
-                    json, dispatch, sscH, pyoH, tshours, Pref )
+    filename = 'loadProfile_PySAM__{0}__2022_02__pyomo_{1:.0f}__horizon_{2:.0f}_{3:.0f}__TES_{4}__PC_{5}_{6}.nuctes'.format(
+                    json, dispatch, sscH, pyoH, tshours, Pref ,case)
     NTPath = os.path.join(output_dir, filename)
     
     # pickling

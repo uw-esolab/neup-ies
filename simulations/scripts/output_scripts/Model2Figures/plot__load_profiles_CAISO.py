@@ -27,7 +27,7 @@ print("PID = ", pid)
 #  Simulation Parameters
 # =============================================================================
 
-case = 5 #1,3,5
+case = 9 #1,3,5,7,9
 
 # modifying inputs
 json = "model2_CAISO_Hamilton_mod"   # model1_CAISO_Hamilton # model1_Hamilton_560_tariffx2 # model1_Hamilton_560_tariffx1
@@ -36,7 +36,7 @@ run_loop = True
 sscH    = 24   # (hr)
 pyoH    = 48   # (hr)
 
-
+    
 if case==0:
     Pref    = 1100 # (MW)
     tshours = 1    # (hr)
@@ -52,9 +52,21 @@ elif case==3:
 elif case==4:
     Pref = 300
     tshours = 4
-else:
+elif case==5:
     Pref = 375
     tshours = 6
+elif case==6:
+    Pref = 225
+    tshours=4
+elif case==7:
+    Pref = 225
+    tshours=10
+elif case==8:
+    Pref = 225
+    tshours=4
+elif case==9:
+    Pref = 175
+    tshours=12
 # =============================================================================
 #  Extracting Information
 # =============================================================================
