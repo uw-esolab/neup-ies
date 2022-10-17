@@ -33,7 +33,7 @@ print("PID = ", pid)
 def get_turbine_cost( p ):
     """ Power law approximation to TOTAL cost
     """
-    return 1642.76*p**(1-0.23)
+    return 1630.418*p**(1-0.23)
 
 
 # =============================================================================
