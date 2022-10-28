@@ -39,7 +39,7 @@ def get_turbine_cost( p ):
 # =============================================================================
 sscH = 24  # 12 # 24
 pyoH = 48  # 24 # 48
-json = "model1_Hamilton_560_tariffx1"  # model1_CAISO_Hamilton # model1 # model1_Hamilton_560_tariffx2 
+json = "model1_CAISO_Hamilton" # model1 # model1_Hamilton_560_tariffx2 
 dispatch = True # True # False
 run_loop = True
 
@@ -53,12 +53,12 @@ pnom = 465
 
 if "CAISO" in json:
     tshours_baseline   = [0, 1,2,3,4,5,6,7,8,9,10 ]
-    p_cycle_baseline   = [900,850,800,750,700,650,600,500,550,450]
+    p_cycle_baseline   = [900,850,800,750,700,650,600,500,550,450] #NOTE: silly error where these are wrong way round
 else: #have done enough tests to show that this holds for default
     tshours_baseline   = [0]
     p_cycle_baseline   = [450]
     
-for case in ['sweep','large','small1','small2','micro']:
+for case in ['micro']: #['small1','small2','micro']: #sweep','large','
     override=False
     if case=='bigtest':
         q_dot_nuclear_des=950*2
@@ -83,9 +83,13 @@ for case in ['sweep','large','small1','small2','micro']:
         q_dot_nuclear_des=20
 
     tshours    = np.array(tshours_baseline)
-    p_cycle    = np.array([[item*q_dot_nuclear_des/950 for item in p_cycle_baseline][-1]])
+    
+    if "CAISO" in json:
+        p_cycle    = np.array([item*q_dot_nuclear_des/950.0 for item in p_cycle_baseline])
+    else:
+        p_cycle    = np.array([[item*q_dot_nuclear_des/950.0 for item in p_cycle_baseline][-1]])
+    
 
-        
     
     # =============================================================================
     # Initialize empty arrays
@@ -171,8 +175,7 @@ for case in ['sweep','large','small1','small2','micro']:
             nuctes.SSC_dict['q_dot_nuclear_des']=q_dot_nuclear_des
             
             nuclear_om_fixed = 61100000*q_dot_nuclear_des/950
-            
-            
+
             nuctes.SSC_dict['om_fixed']=[nuclear_om_fixed]
             
     
@@ -199,7 +202,6 @@ for case in ['sweep','large','small1','small2','micro']:
                 turb_cost=get_turbine_cost(float(pc))
                 turb_premium=turb_cost-turb_ref_cost
                 turb_unit_cost=turb_cost/float(pc)
-            
             
             #relative cost of the turbine
             nuctes.SSC_dict["bop_spec_cost"]=0.0
@@ -413,6 +415,7 @@ for case in ['sweep','large','small1','small2','micro']:
                     json, dispatch, sscH, pyoH, tshours.min(), tshours.max(), int(p_cycle.min()), int(p_cycle.max()), str(q_dot_nuclear_des) )
     NTPath = os.path.join(output_dir, filename)
     
+
     # pickling
     with open(NTPath, 'wb') as f:
         pickle.dump(Storage, f)

@@ -54,11 +54,71 @@ tes_spec_cost  = 29.8
 fin_yrs  = 4.0
 fin_rate = 0.07
 
+syn=True
 
-for json in ['model2_Hamilton_560_tariffx1_mod']:#,'model2_CAISO_Hamilton_mod']:
+
+for json in ['model2_CAISO_Hamilton_mod']: #model2_Hamilton_560_tariffx1_mod'
     
-    for case in ['zero','sweep','large','small1','small2','micro']: 
+    for root_case in ['sweep','large','small1','small2','micro']: #'zero'
+        
+        if syn:
+            case='syn_'+root_case
+        else:
+            case=root_case
+        
+        if syn:
+            solar_json="115"
+            if "CAISO" not in json:
+                if root_case=='sweep':
+                    q_dot_nuclear_des=950
+                    p_cycle=np.array([655])
+                    tshours=np.array([1.25])
+                
+                if root_case=='large':
+                    q_dot_nuclear_des=1900
+                    p_cycle=np.array([1105])
+                    tshours=np.array([0.74])
     
+                if root_case=='small1':
+                    q_dot_nuclear_des=250
+                    p_cycle=np.array([323])
+                    tshours=np.array([2.54])
+                    
+                if root_case=='small2':
+                    q_dot_nuclear_des=100
+                    p_cycle=np.array([252])
+                    tshours=np.array([3.25])
+                    
+                if root_case=='micro':
+                    q_dot_nuclear_des=20
+                    p_cycle=np.array([215])
+                    tshours=np.array([3.82])
+            else:
+                if root_case=='sweep':
+                    q_dot_nuclear_des=950
+                    p_cycle=np.array([1060])
+                    tshours=np.array([4.91])
+                
+                if root_case=='large':
+                    q_dot_nuclear_des=1900
+                    p_cycle=np.array([1960])
+                    tshours=np.array([4.49])
+    
+                if root_case=='small1':
+                    q_dot_nuclear_des=250
+                    p_cycle=np.array([383.7])
+                    tshours=np.array([6.50])
+                    
+                if root_case=='small2':
+                    q_dot_nuclear_des=100
+                    p_cycle=np.array([249.5])
+                    tshours=np.array([7.85])
+                    
+                if root_case=='micro':
+                    q_dot_nuclear_des=20
+                    p_cycle=np.array([174.7])
+                    tshours=np.array([9.49])
+
         if case == "nuc":
             #nuclear only as solar should constantly defocus. Currently  hangs
             q_dot_nuclear_des=950
@@ -123,7 +183,7 @@ for json in ['model2_Hamilton_560_tariffx1_mod']:#,'model2_CAISO_Hamilton_mod']:
             q_dot_nuclear_des=0.1
             solar_json = "115"
             tshours    = np.array([ 0,2,4,6,8,10,12,14,16 ])
-            p_cycle    = np.array([225,210,195,160,145,130,115]) 
+            p_cycle    = np.array([220,205,190,175,160,145,130,115]) 
             
         elif case=="samtest":
             #gives 8.5 (default tariff) cf 8.6 in actual SAM for a specific test case (care on BOP cost). Good enough due to Gurobi/code differences
@@ -400,6 +460,7 @@ for json in ['model2_Hamilton_560_tariffx1_mod']:#,'model2_CAISO_Hamilton_mod']:
                     
                     print("ppa  = {0} cents/kWh \n\n".format( ppa[idx] ) )
                     print("cost = {0} cents/kWh \n\n".format( fin_cost[idx] ) )
+                    print("cap_fac = {0} \n".format(cap_fac[idx]))
                     
                     del outputs, op_mode_array, op_mode_str_profile, so
                 

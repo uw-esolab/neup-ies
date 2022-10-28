@@ -4,6 +4,8 @@
 Created on Thu Mar 10 11:30:12 2022
 
 @author: gabrielsoto
+
+TODO! two rows are wrong way round in ppa for CAISO data
 """
 
 import modules.NuclearTES as NuclearTES
@@ -25,7 +27,7 @@ u = pint.UnitRegistry()
 # json file names
 # =============================================================================
 
-jsons = ['model1_Hamilton_560_tariffx1']
+jsons = ['model1_CAISO_Hamilton']
 
 titles = ['CAISO Price Multipliers']
 
@@ -44,8 +46,14 @@ sscH           = 24
 pyoH           = 48  
 TES_min        = 0   
 TES_max        = 10   # 7
-PC_min         = 118
-PC_max         = 236  #1150
+
+# coefficient strings
+q_dot_nuclear_des = 1900
+extr_str = str(q_dot_nuclear_des)
+    
+PC_min = int(q_dot_nuclear_des/950*450)
+PC_max = int(q_dot_nuclear_des/950*900)
+
 
 # selecting coefficient array
 coeffs = [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]  
@@ -65,8 +73,7 @@ coeff_list = ['ec_p',     # proft term
               'ec_nt'     # LFR thermal power generating term
               ]
 
-# coefficient strings
-extr_str = '250'
+
 # for n,coeff in enumerate(coeff_list):
 #     extr_str += "_{0}{1}".format( coeff.split('_')[1], str(coeffs[n]))
 
@@ -118,39 +125,12 @@ ppa      = Storage['ppa'][:,slicing]
 # no TES efficiency penalty
 print("************* {0} ******************** \n No TES Penalty".format(jsons[0]))
 opt_TES, opt_Pref = np.where( ppa == np.min(ppa) )
-print("Optimum PPA = {0} \n ****** at P = {1}MWe and TES = {2}hrs \n".format( (1 - np.min(ppa) / ppa[0,-1])*100, 
+print("Optimum PPA = {3}, reduction = {0}% \n ****** at P = {1}MWe and TES = {2}hrs \n".format( (1 - np.min(ppa) / ppa[0,-1])*100, 
                                                                      p_cycle[opt_Pref][0], 
-                                                                     tshours[opt_TES][0] )  )
+                                                                     tshours[opt_TES][0],
+                                                                     np.min(ppa))  )  
+print("cap fac {0}\n".format(Storage['cap_fac'][opt_TES[0]][opt_Pref[0]]))
 
-# some TES efficiency penalty
-pen = 1.01
-ppa_1 = copy.deepcopy(ppa)
-ppa_1[1:,:] *= pen
-print("************* {0} ******************** \n TES Penalty = {1}".format( jsons[0], (pen-1)*100 ) )
-opt_TES_p1, opt_Pref_p1 = np.where( ppa_1 == np.min(ppa_1) )
-print("Optimum PPA = {0} \n ****** at P = {1}MWe and TES = {2}hrs \n".format( (1 - np.min(ppa_1) / ppa[0,-1])*100,  
-                                                                     p_cycle[opt_Pref_p1][0], 
-                                                                     tshours[opt_TES_p1][0] )  )
-
-# some TES efficiency penalty
-pen = 1.025
-ppa_1 = copy.deepcopy(ppa)
-ppa_1[1:,:] *= pen
-print("************* {0} ******************** \n TES Penalty = {1}".format( jsons[0], (pen-1)*100 ) )
-opt_TES_p1, opt_Pref_p1 = np.where( ppa_1 == np.min(ppa_1) )
-print("Optimum PPA = {0} \n ****** at P = {1}MWe and TES = {2}hrs \n".format( (1 - np.min(ppa_1) / ppa[0,-1])*100,  
-                                                                     p_cycle[opt_Pref_p1][0], 
-                                                                     tshours[opt_TES_p1][0] )  )
-
-# some TES efficiency penalty
-pen = 1.11
-ppa_1 = copy.deepcopy(ppa)
-ppa_1[1:,:] *= pen
-print("************* {0} ******************** \n TES Penalty = {1}".format( jsons[0], (pen-1)*100 ) )
-opt_TES_p1, opt_Pref_p1 = np.where( ppa_1 == np.min(ppa_1) )
-print("Optimum PPA = {0} \n ****** at P = {1}MWe and TES = {2}hrs \n".format( (1 - np.min(ppa_1) / ppa[0,-1])*100,  
-                                                                     p_cycle[opt_Pref_p1][0], 
-                                                                     tshours[opt_TES_p1][0] )  )
 
 # =============================================================================
 # colormap

@@ -25,7 +25,7 @@ u = pint.UnitRegistry()
 # json file names
 # =============================================================================
 
-case = 6
+case = 1
 
 if case%2 == 0:
     jsons = ['model2_Hamilton_560_tariffx1_mod']
@@ -58,7 +58,9 @@ elif case <=7:
     extr_str = 'small2'
 elif case <=9:
     extr_str = 'large'
-    
+elif case <=11:
+    extr_str = 'micro'
+
 """
 elif case <=9:
     extr_str = 'verym'
@@ -94,10 +96,16 @@ elif extr_str == 'small2':
 
     
 elif extr_str == 'zero':
-    PC_min         = 100
-    PC_max         = 225  
+    PC_min         = 115
+    PC_max         = 220  
     TES_min        = 0   
-    TES_max        = 16     
+    TES_max        = 16 
+
+elif extr_str == 'micro':
+    PC_min = 120
+    PC_max = 300
+    TES_min = 0
+    TES_max = 16
     
 
 cbar_label = "PPA Price (c/kWe)"
@@ -165,11 +173,6 @@ tshours  = Storage['tshours']
 p_cycle  = Storage['p_cycle'][slicing] 
 ppa      = Storage['ppa'][:,slicing] 
 
-"""
-if case==0:
-    #delete unnecessary first row, undersized power cycle, didnt converge
-    ppa = np.delete(ppa,-1,axis=1)
-    p_cycle=p_cycle[:-1]
 
 if case==6:
     #issues with zero thermal storage
@@ -177,8 +180,14 @@ if case==6:
     ppa=np.delete(ppa,-1,axis=1)
     tshours=tshours[1:]
     p_cycle=p_cycle[:-1]
-"""  
-    
+
+if case==10:
+    for j in range(3):
+        ppa=np.delete(ppa,-1,axis=1)
+    p_cycle=p_cycle[:-3]
+
+
+
 # ppa[1:,:] *= 1.05
 
 # =============================================================================
@@ -187,6 +196,8 @@ if case==6:
 # no TES efficiency penalty
 print("************* {0} ******************** \n No TES Penalty".format(jsons[0]))
 opt_TES, opt_Pref = np.where( ppa == np.min(ppa) )
+
+
 print("Optimum PPA = {3}, reduction = {0} %\n ****** at P = {1}MWe and TES = {2}hrs \n".format( (1 - np.min(ppa) / ppa[0,-1])*100, 
                                                                      p_cycle[opt_Pref][0], 
                                                                      tshours[opt_TES][0],
@@ -233,6 +244,9 @@ cmap=cm.seismic
 threshold = 1.12 # max threshold to plot
 threshold_contour = np.round(1.1,2)
 
+if case==7:
+    ppa[3,3]=np.nan 
+
 # ========== Arrays ==========
 
 # using PPA price as metric
@@ -264,7 +278,7 @@ if extr_str == 'large' or extr_str == 'sweep':
     ax.set_ylim([-0.5, 9.5])
 elif extr_str == 'small2':
     ax.set_ylim([-0.5,8.5])
-    ax.set_xlim([-0.5,8.5])
+    ax.set_xlim([-0.5,7.5])
 else:
     ax.set_ylim([-0.5,6.5])
     ax.set_xlim([-0.5,8.5])
@@ -307,7 +321,7 @@ ax.set_ylabel('Power Cycle Output\n(MWe)', fontweight='bold', fontsize=16)
 
 plt.tight_layout()
 
-fig.subplots_adjust(right=0.8 if extr_str in ['sweep','large','small2'] else 0.75)
+fig.subplots_adjust(right=0.8 if extr_str in ['sweep','large'] else 0.9 if extr_str == 'small2' else 0.75)
 cbar_ax = fig.add_axes([0.8, 0.1, 0.035, 0.875])
 fig.colorbar(im1, cax=cbar_ax)
 cbar_ax.set_ylabel(cbar_label, labelpad=20, fontweight='bold', fontsize=16)
