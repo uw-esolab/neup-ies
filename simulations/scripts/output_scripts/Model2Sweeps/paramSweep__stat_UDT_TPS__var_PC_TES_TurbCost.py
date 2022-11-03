@@ -54,12 +54,18 @@ tes_spec_cost  = 29.8
 fin_yrs  = 4.0
 fin_rate = 0.07
 
-syn=True
 
 
-for json in ['model2_CAISO_Hamilton_mod']: #model2_Hamilton_560_tariffx1_mod'
+#TODO: first run the zero cases. Then redo the syn cases before procedding to opt as if these dont check out no point
+model1=True
+for json in ['model2_CAISO_Hamilton_mod']:#,'model2_Hamilton_560_tariffx1_mod']:
     
-    for root_case in ['sweep','large','small1','small2','micro']: #'zero'
+    for root_case in ['sweep']:#,'small1','small2','micro']:
+        
+        if root_case == 'zero':
+            syn = False
+        else:
+            syn = True
         
         if syn:
             case='syn_'+root_case
@@ -68,6 +74,8 @@ for json in ['model2_CAISO_Hamilton_mod']: #model2_Hamilton_560_tariffx1_mod'
         
         if syn:
             solar_json="115"
+            if model1:
+                solar_json="1"
             if "CAISO" not in json:
                 if root_case=='sweep':
                     q_dot_nuclear_des=950
@@ -98,11 +106,17 @@ for json in ['model2_CAISO_Hamilton_mod']: #model2_Hamilton_560_tariffx1_mod'
                     q_dot_nuclear_des=950
                     p_cycle=np.array([1060])
                     tshours=np.array([4.91])
+                    if model1:
+                        p_cycle=np.array([900])
+                        tshours=np.array([4])
                 
                 if root_case=='large':
                     q_dot_nuclear_des=1900
                     p_cycle=np.array([1960])
                     tshours=np.array([4.49])
+                    if model1:
+                        p_cycle=np.array([1800])
+                        tshours=np.array([4])
     
                 if root_case=='small1':
                     q_dot_nuclear_des=250
@@ -149,7 +163,7 @@ for json in ['model2_CAISO_Hamilton_mod']: #model2_Hamilton_560_tariffx1_mod'
         
         elif case=='bigtest':
             #very large nuclear unit has been compared to Model1 
-            #seems to produce sensible capacity factor and costs
+            #seems to produce sensible capacity factor and costs for default
             #Model1 seems to break down on capacity factor at extreme turbines but when
             #we set BOP equal we get within 0.1
             q_dot_nuclear_des=950e3
@@ -315,6 +329,8 @@ for json in ['model2_CAISO_Hamilton_mod']: #model2_Hamilton_560_tariffx1_mod'
                 """
                 nuclear_om_fixed = 61100000*q_dot_nuclear_des/950
                 solar_om_fixed = 88.3*115000
+                if model1:
+                    solar_om_fixed=0
                 
                 
                 nuctes.SSC_dict['om_fixed']=[nuclear_om_fixed+solar_om_fixed]
@@ -362,7 +378,9 @@ for json in ['model2_CAISO_Hamilton_mod']: #model2_Hamilton_560_tariffx1_mod'
                 # update construction financial costs
                 #extra financing of TES should be done against thermal not electric power. This is factor 950/465. NOT IMPLEMENTED for consistency with Model1
                 #the impact of this is very small
-                base_financing = nuctes.SSC_dict["construction_financing_cost"]*q_dot_nuclear_des/950
+                base_financing = (nuctes.SSC_dict["construction_financing_cost"]-409000000)+q_dot_nuclear_des/950*409000000
+                if model1:
+                    base_financing=q_dot_nuclear_des/950*409000000
                 extra_financing = fin_yrs * fin_rate * 1000 * (turb_premium + \
                                                         nuctes.SSC_dict['P_ref'] * nuctes.SSC_dict['tshours'] * nuctes.SSC_dict["tes_spec_cost"])
             

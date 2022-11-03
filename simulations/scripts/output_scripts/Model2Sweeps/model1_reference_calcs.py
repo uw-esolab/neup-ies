@@ -58,13 +58,13 @@ else: #have done enough tests to show that this holds for default
     tshours_baseline   = [0]
     p_cycle_baseline   = [450]
     
-for case in ['micro']: #['small1','small2','micro']: #sweep','large','
+for case in ['bigtest']: #['small1','small2','micro']: #sweep','large','
     override=False
     if case=='bigtest':
-        q_dot_nuclear_des=950*2
-        tshours=np.array([0])
-        p_cycle=np.array([450*2])
-        override=True #reduce PCC cost to compare with a model2a test
+        q_dot_nuclear_des=950
+        tshours=np.array([4])
+        p_cycle=np.array([900])
+        override=False #reduce PCC cost to compare with a model2a test
         
         
     elif case == "sweep":
@@ -82,12 +82,15 @@ for case in ['micro']: #['small1','small2','micro']: #sweep','large','
     elif case=="micro":
         q_dot_nuclear_des=20
 
-    tshours    = np.array(tshours_baseline)
     
-    if "CAISO" in json:
-        p_cycle    = np.array([item*q_dot_nuclear_des/950.0 for item in p_cycle_baseline])
-    else:
-        p_cycle    = np.array([[item*q_dot_nuclear_des/950.0 for item in p_cycle_baseline][-1]])
+    
+    if case != 'bigtest':
+        tshours    = np.array(tshours_baseline)
+        
+        if "CAISO" in json:
+            p_cycle    = np.array([item*q_dot_nuclear_des/950.0 for item in p_cycle_baseline])
+        else:
+            p_cycle    = np.array([[item*q_dot_nuclear_des/950.0 for item in p_cycle_baseline][-1]])
     
 
     
@@ -195,7 +198,7 @@ for case in ['micro']: #['small1','small2','micro']: #sweep','large','
             
             #absolute cost of the turbine
             if override: #manual test case
-                turb_unit_cost=82.3
+                turb_unit_cost=81.7 #82.3
                 turb_cost=turb_unit_cost*float(pc)
                 turb_premium=turb_cost-turb_ref_cost
             else:
