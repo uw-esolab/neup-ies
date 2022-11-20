@@ -25,7 +25,7 @@ u = pint.UnitRegistry()
 # json file names
 # =============================================================================
 
-case = 1
+case = 7
 
 if case%2 == 0:
     jsons = ['model2_Hamilton_560_tariffx1_mod']
@@ -43,10 +43,11 @@ output_dir = os.path.join( FileMethods.output_dir,"")
 start_name     = 'paramSweep_varTurbineCost' # failureModes
 PySAM_name     = 'PySAM' 
 add_extra_Name = True
-extra_name     = '2022_04'  #  2022_02
+extra_name     = '2022_05'  #  2022_05
 dispatch       = True 
 sscH           = 24   
 pyoH           = 48  
+solar_json = "__115"
 
 if case <=1:
     extr_str = 'zero'
@@ -61,6 +62,7 @@ elif case <=9:
 elif case <=11:
     extr_str = 'micro'
 
+
 """
 elif case <=9:
     extr_str = 'verym'
@@ -74,25 +76,30 @@ if extr_str == 'sweep':
     PC_min= 550
     PC_max=1000
     TES_min        = 0   
-    TES_max        = 10    
+    TES_max        = 10   
+    q_dot_nuclear_des= 950
+
 
 elif extr_str == 'large':
     PC_min         = 1000  
     PC_max         = 1900  
     TES_min        = 0   
-    TES_max        = 10    
+    TES_max        = 10   
+    q_dot_nuclear_des = 1900
 
 elif extr_str == 'small1':
     PC_min         = 150  
     PC_max         = 600  
     TES_min        = 0   
-    TES_max        = 16    
+    TES_max        = 16   
+    q_dot_nuclear_des=250
 
 elif extr_str == 'small2':
     PC_min         = 125  
     PC_max         = 350 
     TES_min        = 0   
     TES_max        = 16  
+    q_dot_nuclear_des=100
 
     
 elif extr_str == 'zero':
@@ -106,6 +113,16 @@ elif extr_str == 'micro':
     PC_max = 300
     TES_min = 0
     TES_max = 16
+    q_dot_nuclear_des=20
+    
+if solar_json=="__1":
+    PC_min = int(q_dot_nuclear_des*450/950)
+    if case % 2 ==0:
+        PC_max=PC_min
+        TES_max=0
+    else:
+        PC_max=2*PC_min
+        TES_max=10
     
 
 cbar_label = "PPA Price (c/kWe)"
@@ -135,14 +152,14 @@ coeff_list = ['ec_p',     # proft term
 
 # generate name of file
 def updated_json( json ):
-    filename = '{0}_{1}__{2}__{3}__pyomo_{4:.0f}__horizon_{5:.0f}_{6:.0f}__TES_[{7},{8}]__PC_[{9},{10}]__{11}.nuctes'.format(
+    filename = '{0}_{1}__{2}__{3}__pyomo_{4:.0f}__horizon_{5:.0f}_{6:.0f}__TES_[{7},{8}]__PC_[{9},{10}]__{11}{12}.nuctes'.format(
                     start_name,
                     PySAM_name,
                     json,
                     extra_name if add_extra_Name else '',
                     dispatch, sscH, pyoH,
                     TES_min, TES_max,
-                    PC_min, PC_max, extr_str )
+                    PC_min, PC_max, extr_str,solar_json )
     return filename
 
 

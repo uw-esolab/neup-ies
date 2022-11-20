@@ -53,7 +53,7 @@ pnom = 465
 
 if "CAISO" in json:
     tshours_baseline   = [0, 1,2,3,4,5,6,7,8,9,10 ]
-    p_cycle_baseline   = [900,850,800,750,700,650,600,500,550,450] #NOTE: silly error where these are wrong way round
+    p_cycle_baseline   = [900,850,800,750,700,650,600,550,500,450] 
 else: #have done enough tests to show that this holds for default
     tshours_baseline   = [0]
     p_cycle_baseline   = [450]
