@@ -378,7 +378,7 @@ class IndirectNuclearDispatchParamWrap(NuclearDispatchParamWrap):
         intcpts  = intercept * self.p_pb_design
         
         Wnc     = Qnc * self.eta_design  
-        Qnhx    = self.q_nuc_design * 0.9  # TODO: simulating hit in efficiency for nuclear thermal power when charging TES
+        Qnhx    = self.q_nuc_design * self.SSC_dict['nuc2tes_hx_effectiveness']  # TODO: simulating hit in efficiency for nuclear thermal power when charging TES
 
         ### Cost Parameters ###
         param_dict['Wnc']    = Wnc.to('kW')       #W^{nc}: Cycle capacity for nuclear power only [kWe]

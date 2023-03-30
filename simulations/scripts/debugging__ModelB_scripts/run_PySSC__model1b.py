@@ -18,18 +18,18 @@ print("PID = ", pid)
 pw = PySSCWrapper(json_name='model1b_Hamilton_FS_TwinPeaks_x1',is_debug=True)
 
 # update SSC dictionary parameters
-pw.sscdict['P_ref']         = 700
-pw.sscdict['tshours']       = 4
+pw.sscdict['P_ref']         = 581
+pw.sscdict['tshours']       = 10
 
 # run SSC through PySSC
 pw.run_sim(run_dispatch_targets=True)
 
 # get output arrays from the SSC run
-p_cycle       = pw.get_array('P_cycle')
+p_cycle       = pw.get_array('P_out_net')
 gen           = pw.get_array('gen') / 1e3
 p_cool        = pw.get_array('P_cooling_tower_tot')
 q_dot_rec_in  = pw.get_array('q_dot_rec_inc')
-m_dot         = pw.get_array('m_dot_rec')
+m_dot         = pw.get_array('m_dot_nuc')
 T_pc_in       = pw.get_array('T_pc_in')
 T_pc_out      = pw.get_array('T_pc_out')
 e_ch_tes      = pw.get_array('e_ch_tes')
@@ -37,4 +37,8 @@ t_plot        = pw.get_array('time_hr') / 24
 op_mode_1     = pw.get_array('op_mode_1')
 
 plt.figure()
-plt.plot( t_plot, gen)
+plt.plot( t_plot, p_cycle)
+
+plt.figure()
+plt.plot( t_plot, T_pc_out)
+plt.plot( t_plot, T_pc_in)
