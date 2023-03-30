@@ -1,0 +1,17 @@
+<DataObjectMetadata name="synData">
+  <DataSet type="Static">
+    <dims>
+      <DHI>Time</DHI>
+      <DNI>Time</DNI>
+      <Temp>Time</Temp>
+    </dims>
+    <general>
+      <datasetName>synData</datasetName>
+      <inputs>scaling</inputs>
+      <outputs>DNI,DHI,Temp</outputs>
+      <pointwise_meta>PointProbability,ProbabilityWeight,prefix</pointwise_meta>
+      <sampleTag>RAVEN_sample_ID</sampleTag>
+    </general>
+  </DataSet>
+  
+</DataObjectMetadata>
