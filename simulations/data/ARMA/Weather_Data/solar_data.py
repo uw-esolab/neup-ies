@@ -60,7 +60,6 @@ for fname in fnames: #[0:5]:
         plt.xlim(2000,2800)
         plt.show()
         df.plot(y=['Clearsky DNI','DNI','pvlib Clear Sky DNI'])
-        plt.xlim(2000,2800)
         plt.ylim(0,1300)
         plt.legend(loc = 'upper right')
         plt.show()

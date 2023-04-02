@@ -15,7 +15,7 @@ from functions import weather_data, extract_data, syn_data_correction, orig_sola
 import metpy.calc
 from metpy.units import units
 
-starts = ["synDataPrecip_","synDataWind_","synDataT_","synDataRH_","synDataDG_"]
+starts = ["synDataPrecip_","synDataWind_","synDataRH_","synDataGO_","synDataDNI_","synDataT_"]
 origfiles = ["solar_data_without_clearsky15.csv"]
 
 for i in range(1,100,1):
@@ -32,9 +32,9 @@ for i in range(1,100,1):
     tus = pvlib.location.Location(35.93,-115.26, 'US/Pacific', 1021, 'Las Vegas')
     
     # Calculate clear sky. Use Ineichen model with a low turbidity. Choose value to always exceed observed DNI. 3.5 works for this one.
-    cskyn = tus.get_clearsky(times, model='ineichen', linke_turbidity=3.5).dni
-    cskyh = tus.get_clearsky(times, model='ineichen', linke_turbidity=3.5).dhi
-    cskyg = tus.get_clearsky(times, model='ineichen', linke_turbidity=3.5).ghi
+    cskyn = tus.get_clearsky(times, model='ineichen', linke_turbidity=1.5).dni
+    cskyh = tus.get_clearsky(times, model='ineichen', linke_turbidity=1.5).dhi
+    cskyg = tus.get_clearsky(times, model='ineichen', linke_turbidity=1.5).ghi
     
     # Calculate solar zenith angle
     sz = tus.get_solarposition(times).zenith

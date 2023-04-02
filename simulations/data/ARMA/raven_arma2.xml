@@ -9,7 +9,7 @@
   </TestInfo>
 
   <RunInfo>
-    <WorkingDir>r3</WorkingDir>
+    <WorkingDir>r4</WorkingDir>
     <Sequence>read, train, print, sample, dump</Sequence>
     <batchSize>1</batchSize>
   </RunInfo>
@@ -36,7 +36,7 @@
     </MultiRun>
     <IOStep name='dump'>
       <Input class="DataObjects" type="HistorySet">synData</Input>
-      <Output class="OutStreams" type="Print">synData</Output>
+      <Output class="OutStreams" type="Print">synDataDNI</Output>
     </IOStep>
 
   </Steps>
@@ -51,18 +51,19 @@
         <limit>100</limit>
         <initialSeed>42</initialSeed>
       </samplerInit>
-      <constant name="scaling">1</constant>
+      <constant name="scaling">2</constant>
     </MonteCarlo>
   </Samplers>
 
   <Models>
     <ROM name="arma" subType="ARMA">
-      <Target>DNI,Temp,Time,RH</Target>
+      <Target>DNI,Temp,Time</Target>
       <Features>scaling</Features>
       <pivotParameter>Time</pivotParameter>
-	  <SpecificFourier variables ="Temp, RH">
+	  <SpecificFourier variables ="DNI,Temp">
 		  <periods>720,1440,2880,525600</periods>
 	  </SpecificFourier>
+	  <correlate>DNI,Temp</correlate>
       <P>3</P>
       <Q>3</Q>
 	  <ZeroFilter>DNI</ZeroFilter>
@@ -74,7 +75,7 @@
       <type>csv</type>
       <source>romMeta</source>
     </Print>
-    <Print name="synData">
+    <Print name="synDataDNI">
       <type>csv</type>
       <source>synData</source>
     </Print>
@@ -87,14 +88,14 @@
     </PointSet>
     <HistorySet name="rawData">
       <Input>scaling</Input>
-      <Output>DNI,Temp,RH,Time</Output>
+      <Output>DNI,Temp,Time</Output>
       <options>
         <pivotParameter>Time</pivotParameter>
       </options>
     </HistorySet>
     <HistorySet name="synData">
       <Input>scaling</Input>
-      <Output>DNI,Temp,RH,Time</Output>
+      <Output>DNI,Temp,Time</Output>
       <options>
         <pivotParameter>Time</pivotParameter>
       </options>
