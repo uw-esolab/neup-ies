@@ -3,12 +3,11 @@
     <dims>
       <DNI>Time</DNI>
       <GHI>Time</GHI>
-      <Temp>Time</Temp>
     </dims>
     <general>
       <datasetName>synData</datasetName>
       <inputs>scaling</inputs>
-      <outputs>DNI,GHI,Temp</outputs>
+      <outputs>DNI,GHI</outputs>
       <pointwise_meta>PointProbability,ProbabilityWeight,prefix</pointwise_meta>
       <sampleTag>RAVEN_sample_ID</sampleTag>
     </general>

@@ -57,16 +57,16 @@
 
   <Models>
     <ROM name="arma" subType="ARMA">
-      <Target>DNI,GHI,Temp,Time</Target>
+      <Target>DNI,GHI,Time</Target>
       <Features>scaling</Features>
       <pivotParameter>Time</pivotParameter>
       <P>3</P>
       <Q>3</Q>
 	  <ZeroFilter>DNI</ZeroFilter>
 	  <ZeroFilter>GHI</ZeroFilter>
-		<correlate>DNI,GHI,Temp</correlate>
-	  <SpecificFourier variables ="Temp,GHI">
-			<periods>720,1440,2880,525600</periods>
+		<correlate>DNI,GHI</correlate>
+	  <SpecificFourier variables ="GHI">
+			<periods>720,1440,2880,525600,,1051200</periods>
 	  </SpecificFourier>
     </ROM>
   </Models>
@@ -89,14 +89,14 @@
     </PointSet>
     <HistorySet name="rawData">
       <Input>scaling</Input>
-      <Output>DNI,GHI,Temp,Time</Output>
+      <Output>DNI,GHI,Time</Output>
       <options>
         <pivotParameter>Time</pivotParameter>
       </options>
     </HistorySet>
     <HistorySet name="synData">
       <Input>scaling</Input>
-      <Output>DNI,GHI,Temp,Time</Output>
+      <Output>DNI,GHI,Time</Output>
       <options>
         <pivotParameter>Time</pivotParameter>
       </options>

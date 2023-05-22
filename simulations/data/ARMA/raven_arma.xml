@@ -57,17 +57,18 @@
 
   <Models>
     <ROM name="arma" subType="ARMA">
-      <Target>Temp,Time</Target>
+      <Target>Temp,Time,RH</Target>
       <Features>scaling</Features>
       <pivotParameter>Time</pivotParameter>
-	  <SpecificFourier variables ="Temp">
+	  <SpecificFourier variables ="Temp,RH">
 		  <periods>720,1440,2880,525600,1051200</periods>
 	  </SpecificFourier>
       <P>3</P>
       <Q>3</Q>
 	    <Segment>
-		    <subspace divisions="12">Time</subspace>
+		    <subspace divisions="3">Time</subspace>
 	    </Segment>
+		<correlate>RH,Temp</correlate>
     </ROM>
   </Models>
 
@@ -89,14 +90,14 @@
     </PointSet>
     <HistorySet name="rawData">
       <Input>scaling</Input>
-      <Output>Temp,Time</Output>
+      <Output>Temp,Time,RH</Output>
       <options>
         <pivotParameter>Time</pivotParameter>
       </options>
     </HistorySet>
     <HistorySet name="synData">
       <Input>scaling</Input>
-      <Output>Temp,Time</Output>
+      <Output>Temp,Time,RH</Output>
       <options>
         <pivotParameter>Time</pivotParameter>
       </options>

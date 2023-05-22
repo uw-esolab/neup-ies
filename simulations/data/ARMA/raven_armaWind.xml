@@ -60,9 +60,6 @@
       <Target>Wind,Time</Target>
       <Features>scaling</Features>
       <pivotParameter>Time</pivotParameter>
-	  <SpecificFourier variables ="Wind">
-		  <periods>720,1440,2880,525600,1051200</periods>
-	  </SpecificFourier>
       <P>3</P>
       <Q>3</Q>
 	    <Segment>

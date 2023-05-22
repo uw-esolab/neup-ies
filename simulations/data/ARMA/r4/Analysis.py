@@ -17,7 +17,11 @@ from analysis_fuctions import box_plots
 
 synfiles = []
 realfiles = []
-for i in range(1,16,1):
+Variables = ['DHI', 'DNI', 'GHI', 'Dew Point', 'Wind Speed', 'Precipitable Water', 'Relative Humidity', 'Temperature']
+Units = ['$W/m^2$','$W/m^2$','$W/m^2$','$^\circ$C','$ms^{-1}$','cm','%','$^\circ$C']
+#Variables = ['DHI', 'DNI', 'GHI', 'Wind Speed',]
+#Units = ['$W/m^2$','$W/m^2$','$W/m^2$','$ms^{-1}$']
+for i in range(1,100,1):
     fullfile = 'TestSyn' + str(i) + '.csv' 
     synfiles.append(fullfile)
 
@@ -25,4 +29,7 @@ for i in range(1998,2020,1):
     fullfile = 'C:/Users/aidan/projects/neup-ies/simulations/data/ARMA/Weather_Data/102574_35.93_-115.26_' + str(i) + '.csv' 
     realfiles.append(fullfile)
 
-box_plots(realfiles,synfiles,['102574_35.93_-115.26_2004.csv'],'DNI')
+for i in range(len(Variables)):
+    box_plots(realfiles,synfiles,['102574_35.93_-115.26_2004.csv'],Variables[i], Units[i])
+
+#'102574_35.93_-115.26_2004.csv'

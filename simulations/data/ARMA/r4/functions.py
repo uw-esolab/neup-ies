@@ -14,6 +14,7 @@ import pvlib
 import metpy.calc
 from metpy.units import units
 import csv
+import random as rnd
 
 def weather_data(fnames):
     
@@ -81,6 +82,10 @@ def write_data(file_dict,fname, exfile):
 
 def syn_data_correction(file_dict,cskyg,cskyn,cskyh,sz):
     
+    Temp = file_dict["Temp"]
+    Temp = np.convolve(Temp, np.ones(3)/3, mode='same')
+    
+    
     # Subtract Cloud Noise from clearsky GHI. 
     GHI = np.zeros(len(cskyg.values))
     for i in range(len(cskyg.values) -1):
@@ -88,20 +93,22 @@ def syn_data_correction(file_dict,cskyg,cskyn,cskyh,sz):
         GHIi = float(cskyg.values[i]) - file_dict['GHI'][i+1]
         # Constrain values to be physical
         GHIi = max(0,GHIi)
-        #dd = min(dd, cskyg.values[i])
+        GHIi = min(GHIi, cskyg.values[i])
         # Assign result
         GHI[i] = GHIi
+    GHI = np.convolve(GHI, np.ones(2)/2, mode='same')
     
     DNI = np.zeros(len(cskyn.values))
     # Subtract Cloud Noise from clearsky DNI. 
     for i in range(len(cskyn.values) -1):
         # Basic transform
-        DNIi = float(cskyn.values[i]) - file_dict['DNI'][i+1]
+        DNIi = float(cskyn.values[i]) - file_dict['DNI'][i+1]*1.0
         # Constrain values to be physical
         DNIi = max(0,DNIi)
         DNIi = min(DNIi, cskyn.values[i])
         # Assign result
         DNI[i] = DNIi
+    DNI = np.convolve(DNI, np.ones(2)/2, mode='same')
     
     #create empty array for DHI
     DHI = np.zeros(len(cskyh.values))
@@ -109,12 +116,13 @@ def syn_data_correction(file_dict,cskyg,cskyn,cskyh,sz):
     dhienv = np.zeros(len(cskyn.values))
     max_time = max(file_dict['Time'])
     for i in range(len(cskyh.values) -1):
-        dhienv[i] = 400 + 140*np.cos(2*np.pi*((file_dict['Time'][i]-(max_time/2)+25000)/max_time))
+        dhienv[i] = 400 + 150*np.cos(2*np.pi*((file_dict['Time'][i]-(max_time/2)+25500)/max_time))
     
     # Generate DHI from GHI and DNI 
-    for i in range(len(cskyh.values) -1):
+    for i in range(len(cskyh.values)-1):
         # Basic transform
-        DHIi = float(GHI[i]) - float(DNI[i])*np.cos(np.radians(sz.values[i])) + cskyh.values[i]
+        #DHIi = cskyh.values[i] - file_dict['GHI'][i+1] + (file_dict['DNI'][i+1])*np.cos(np.radians(sz.values[i]))
+        DHIi = GHI[i] - DNI[i]*np.cos(np.radians(sz.values[i]))
         # Constrain values to be physical
         DHIi = max(0,DHIi)
         if cskyh.values[i] == 0:
@@ -124,33 +132,37 @@ def syn_data_correction(file_dict,cskyg,cskyn,cskyh,sz):
     
     #constric delta DHI and use envelope
     for i in range(len(DHI)-1):
-        delDHI = DHI[i+1]-DHI[i]
-        if delDHI > 150:
-            DHI[i+1] = DHI[i]+delDHI/20
+        # delDHI = DHI[i+1]-DHI[i]
+        # if delDHI > 150:
+        #     DHI[i+1] = DHI[i]+delDHI/20
         if DHI[i] > dhienv[i]:
             DHI[i] = dhienv[i]
+    #DHI = np.convolve(DHI, np.ones(2)/2, mode='same')
     
     #add limits to relative humidity
     RH = np.zeros(len(file_dict['RH']))
     for i in range(len(file_dict['RH'])):
         RHi = abs(file_dict['RH'][i])
         if RHi > 100:
-            RHi = 100
+            RHi = 200 - RHi - 3*rnd.random()
         if RHi < 3:
-            RHi = 3
+            RHi = 3 + 2*rnd.random() - 2*rnd.random()
         RH[i] = RHi
+    RH = np.convolve(RH, np.ones(3)/3, mode='same')
         
     #add limits to precipitation humidity
     Precip = np.zeros(len(file_dict['Precip']))
     for i in range(len(file_dict['Precip'])):
         Precipi = abs(file_dict['Precip'][i])
         Precip[i] = Precipi
+    Precip = np.convolve(Precip, np.ones(5)/5, mode='same')
         
     #add limits to wind humidity
     Wind = np.zeros(len(file_dict['Wind']))
     for i in range(len(file_dict['Wind'])):
         Windi = abs(file_dict['Wind'][i])
         Wind[i] = Windi
+    Wind = np.convolve(Wind, np.ones(5)/5, mode='same')
         
     #generate dew point
     DP = np.zeros(len(file_dict['RH']))
@@ -159,12 +171,12 @@ def syn_data_correction(file_dict,cskyg,cskyn,cskyh,sz):
             DPi = metpy.calc.dewpoint_from_relative_humidity(35 * units.degC, 4* units.percent).magnitude
         else: 
             DPi = metpy.calc.dewpoint_from_relative_humidity(file_dict['Temp'][i] * units.degC, file_dict['RH'][i]* units.percent).magnitude
-        DP[i] = DPi/2.8
-    for i in range(len(DP)-2):
-        delDP = DP[i+1]-DP[i]
-        delDP2 = DP[i+2] - DP[i]
-        if abs(delDP) > 10 or abs(delDP2) > 10:
-            DP[i+1] = DP[i]+delDP/10
+        DP[i] = DPi/1.8
+    # for i in range(len(DP)-1):
+    #     delDP = DP[i+1]-DP[i]
+    #     if abs(delDP) > 5:
+    #         DP[i+1] = DP[i]+delDP/10
+    DP = np.convolve(DP, np.ones(3)/3, mode='same')
     
     Cloud_type = np.zeros(len(file_dict["Time"]))
     Pressure = np.zeros(len(file_dict["Time"]))
@@ -187,6 +199,7 @@ def syn_data_correction(file_dict,cskyg,cskyn,cskyh,sz):
     file_dict["DNI"] = DNI
     file_dict["DHI"] = DHI
     file_dict["RH"] = RH
+    file_dict["Temp"] = Temp
     file_dict["Precip"] = Precip
     file_dict["Wind"] = Wind
     file_dict["DP"] = DP

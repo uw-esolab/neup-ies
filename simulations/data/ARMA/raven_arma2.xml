@@ -51,19 +51,15 @@
         <limit>100</limit>
         <initialSeed>42</initialSeed>
       </samplerInit>
-      <constant name="scaling">2</constant>
+		<constant name="scaling">9</constant>
     </MonteCarlo>
   </Samplers>
 
   <Models>
     <ROM name="arma" subType="ARMA">
-      <Target>DNI,Temp,Time</Target>
+      <Target>DNI,Time</Target>
       <Features>scaling</Features>
       <pivotParameter>Time</pivotParameter>
-	  <SpecificFourier variables ="DNI,Temp">
-		  <periods>720,1440,2880,525600</periods>
-	  </SpecificFourier>
-	  <correlate>DNI,Temp</correlate>
       <P>3</P>
       <Q>3</Q>
 	  <ZeroFilter>DNI</ZeroFilter>
@@ -88,14 +84,14 @@
     </PointSet>
     <HistorySet name="rawData">
       <Input>scaling</Input>
-      <Output>DNI,Temp,Time</Output>
+      <Output>DNI,Time</Output>
       <options>
         <pivotParameter>Time</pivotParameter>
       </options>
     </HistorySet>
     <HistorySet name="synData">
       <Input>scaling</Input>
-      <Output>DNI,Temp,Time</Output>
+      <Output>DNI,Time</Output>
       <options>
         <pivotParameter>Time</pivotParameter>
       </options>

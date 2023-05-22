@@ -2,12 +2,11 @@
   <DataSet type="Static">
     <dims>
       <DNI>Time</DNI>
-      <Temp>Time</Temp>
     </dims>
     <general>
       <datasetName>synData</datasetName>
       <inputs>scaling</inputs>
-      <outputs>DNI,Temp</outputs>
+      <outputs>DNI</outputs>
       <pointwise_meta>PointProbability,ProbabilityWeight,prefix</pointwise_meta>
       <sampleTag>RAVEN_sample_ID</sampleTag>
     </general>
