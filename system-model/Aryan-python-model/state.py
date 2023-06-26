@@ -57,7 +57,7 @@ class State:
             if 'S' in self.wants: self.S =  CP.PropsSI("S","T",self.T,"P",self.P, "Water")
             self.X = -999
         elif self.T and self.H:
-            if 'P' in self.wants: self.P = CP.PropsSI("P","H",self.H,"T",self.T, "Water")*1000
+            if 'P' in self.wants: self.P = CP.PropsSI("P","H",self.H,"T",self.T, "Water")
             if 'S' in self.wants: self.S =  CP.PropsSI("S","T",self.T,"P",self.P, "Water")
             if 'X' in self.wants: self.X =  CP.PropsSI("Q", "T", self.T, "H", self.H, "Water")
         elif self.P and self.H: 
@@ -69,7 +69,7 @@ class State:
             if 'H' in self.wants: self.H =  CP.PropsSI("H", "P", self.P, "Q", self.X, "Water")
             if 'S' in self.wants: self.S =  CP.PropsSI("S", "P", self.P, "Q", self.X, "Water")
         elif self.T and hasattr(self, 'X'):
-            if 'P' in self.wants: self.P = CP.PropsSI("P", "T", self.T, "Q", self.X, "Water")*1000
+            if 'P' in self.wants: self.P = CP.PropsSI("P", "T", self.T, "Q", self.X, "Water")
             if 'H' in self.wants: self.H =  CP.PropsSI("H", "T", self.T, "Q", self.X, "Water")
             if 'S' in self.wants: self.S =  CP.PropsSI("S", "T", self.T, "Q", self.X, "Water")
         elif self.P and self.S:
@@ -77,9 +77,9 @@ class State:
             if 'H' in self.wants: self.H =  CP.PropsSI("H","P",self.P,"S",self.S, "Water")
             if 'X' in self.wants: self.X =  CP.PropsSI("Q", "P", self.P, "S", self.S, "Water")
         elif self.T and self.S:
-            if 'P' in self.wants: self.P = CP.PropsSI("P","T",self.T,"S",self.S, "Water")*1000
+            if 'P' in self.wants: self.P = CP.PropsSI("P","T",self.T,"S",self.S, "Water")
             if 'H' in self.wants: self.H =  CP.PropsSI("H","T",self.T,"S",self.S, "Water")
-            if 'x' in self.wants: self.X =  CP.PropsSI("Q", "T", self.T, "S", self.S, "Water")
+            if 'X' in self.wants: self.X =  CP.PropsSI("Q", "T", self.T, "S", self.S, "Water")
         else:
             raise RuntimeError("State evaluation failed. Insufficient information provided.")
         
@@ -104,5 +104,11 @@ def quality(**kwargs):
     return State("none", wants='X', **kwargs).X
 def t_sat(P):
     return State("none", P=P, X=0.).T
+def p_sat(T):
+    return State("none", T=T, X=0).P
+def pressure(**kwargs):
+    return State("none", wants='P', **kwargs).P
+    
+
 
 # ######################################################################################################
