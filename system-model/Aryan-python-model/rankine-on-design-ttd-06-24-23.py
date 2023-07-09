@@ -28,10 +28,10 @@ step = lambda xold,xnew: xold + (xnew-xold)*0.66
 # --------------------------
 
 # Define function for updating mass flow with every iteration
-def update_mf(m_dot_new, m_dot_old):
-    # TODO: parametrize update fraction (0.15) and run convergence studies
-    return m_dot_old + (m_dot_new - m_dot_old)*0.15
-
+def update_mf(m_dot_old, err):
+    # TODO: update convergence parameters based on CoE.
+    gr = (1 + sqrt(5))/2
+    return m_dot_old * ()
 tstart = time.time()
 
 # Model start
@@ -47,7 +47,7 @@ N_hxrs = 20 #[-]                                                    # Number of 
 ns = 33                                                             # number of states used + 1
 #-----------------------------------------------#
 # Start writing to iteration log file 
-fout = open('iter-log.csv','w')
+fout = open('iter-log2.csv','w')
 fout.write(log_header(ns, "T P h x m".split(' ')))                  # provide headers to log file
 
 # Initialize arrays
@@ -174,7 +174,7 @@ m[21] = m[1]
 P[3] = 2.365e7 #[Pa]                                                # 
 
 # Initial guess for m[15]
-m[15] = 315 #[kg/s]
+m[15] = 300 #[kg/s]
 
 it = 0
 it_max = 50
@@ -218,7 +218,8 @@ while((err_iter > tol and it<it_max) or it<3 ):
     for i in range(18,25):
         if i != 21:
             h[i] = enthalpy(T=T[i],P=P[i])
-    
+    h[32] = enthalpy(P=P[32],T=T[32])
+
     # HP Turbines
     m[17] = m[16]
     m[18] = m[17]
@@ -232,10 +233,10 @@ while((err_iter > tol and it<it_max) or it<3 ):
     Q_dot_HXF = m[23]*(h[24]-h[23])
     Q_dot_HXG = m[24]*(h[32]-h[24])
 
-    P[6] = pressure(T = (T[24]+TTD_F), X = 0)
+    P[6] = pressure(T = (T[24]+TTD_F), X = 0.1)
     P[5] = (P[6]+P[3])/2
     P[7] = pressure(T = (T[23]+TTD_E), X = 0.1)
-    P[8] = pressure(T = T[22], X = 0)
+    P[8] = pressure(T = T[22], X = 0.1)
     P[9] = P[8]
     P[10] = pressure(T = (T[20]+TTD_D), X = 0.1)
     P[11] = pressure(T = (T[19]+TTD_C), X = 0.1)
@@ -291,16 +292,16 @@ while((err_iter > tol and it<it_max) or it<3 ):
     P[21] = min(P[8],P[20],P[27])
     m[21] = m[1]
     m[8] = -(m[20] + m[27]) + m[21]
+    h[8], W_dot_IPT3 = turbine_simple(m_IPT2, h[7], P[7], P[8], eta_HPT)
     h[21] = (m[20]*h[20] + (m[8]*h[8] + m[27]*h[27]))/m[21]
     h[22], W_dot_HP = pump(m[21], h[21], P[21], P[22], eta_IPT3)
     T[21] = temperature(P = P[21], H = h[21])
-    h[8], W_dot_IPT3 = turbine_simple(m_IPT2, h[7], P[7], P[8], eta_HPT)
     T[8] = temperature(P = P[8], H = h[8])
     x[8] = quality(P = P[8], H = h[8])
     x_IPT3 = x[8]
  
-    # LP Turbines    
-    
+    # LP Turbines     
+    h[17] = enthalpy(P=P[17],T=T[17])
     Q_dot_HXA = m[16]*(h[17]-h[16])
     Q_dot_HXB = m[17]*(h[18]-h[17])
     Q_dot_HXC = m[18]*(h[19]-h[18])
@@ -354,7 +355,7 @@ while((err_iter > tol and it<it_max) or it<3 ):
     m[15] = m[14]+m[31]
  
     # condenser
-    h_cond_in = h[14]*m[14] + h[31]*m[31] / (m[14]+m[31])
+    h_cond_in = (h[14]*m[14] + h[31]*m[31]) / (m[14]+m[31])
     Q_dot_cond = (m[14]+m[31])*(h_cond_in-h[15])
 
     # Efficiencies
@@ -371,7 +372,7 @@ while((err_iter > tol and it<it_max) or it<3 ):
     m[15] = update_mf(m15new, m15old)
     print(m15new, m15old)
     # h[1] = h1old + (h1new-h1old)*0.5
-    err_iter = abs((m[15] - m15old)/m15old)
+    err_iter = abs((1 - eta_test)/eta_test)
     # err_iter = abs((h1new - h1old)/h1old)
     
     # Compute all other temperature states
