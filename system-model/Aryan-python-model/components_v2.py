@@ -389,7 +389,6 @@ def turbine(m_dot,h_in,P_in,P_out,eta,Q_dot_fwh,h_fwh_out,m_dot_D,h_D):
     h_out=h_in-eta*(h_in-h_out_s)               # actual outlet enthalpy
     W_dot=m_dot*(h_in-h_out)                    # power   
     x_out = quality(P=P_out,H=h_out)            # outlet quality 
-    print(W_dot)  
 
     if(x_out<1 and x_out>0):
         # splitter

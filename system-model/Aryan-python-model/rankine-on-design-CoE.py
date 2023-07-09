@@ -28,9 +28,10 @@ step = lambda xold,xnew: xold + (xnew-xold)*0.66
 # --------------------------
 
 # Define function for updating mass flow with every iteration
-def update_mf(m_dot_new, m_dot_old):
+def update_mf(mass, err_iter):
     # TODO: parametrize update fraction (0.15) and run convergence studies
-    return m_dot_old + (m_dot_new - m_dot_old)*0.15
+    mutliplier = 10
+    return mass + err_iter*mutliplier
 
 tstart = time.time()
 
@@ -174,14 +175,14 @@ m[21] = m[1]
 P[3] = 2.365e7 #[Pa]                                                # 
 
 # Initial guess for m[15]
-m[15] = 336 #[kg/s]
+m[15] = 300 #[kg/s]
 
 it = 0
 it_max = 50
 err_iter = 999.
-tol = 0.0001
+tol = 0.001
 
-while((err_iter > tol and it<it_max) or it<3 ):
+while((abs(err_iter) > tol and it<it_max) or it<3 ):
 
     print("Iter {:d}: ".format(it), end='')
 
@@ -260,8 +261,6 @@ while((err_iter > tol and it<it_max) or it<3 ):
    
     h[3] = h[4]
     T[3] = temperature(P = P[3], H = h[3])
-    x[3] = quality(P = P[3], H = h[3])
-    print(x[3])
 
     # HPT 2
     h[5], h_HPT2, m[5], m_HPT2, x_HPT2, W_dot_HPT2 = turbine(m_HPT1, h_HPT1, P[3], P[5], eta_HPT, 0,0,0,0)
@@ -323,7 +322,6 @@ while((err_iter > tol and it<it_max) or it<3 ):
     T[29] = T[18]+DT_HX_C
     P[29] = P[11]
     h[29] = enthalpy(T = T[29], P = P[29])
-    print(m_LPT1)
     h[11], h_LPT2, m[11], m_LPT2, x_LPT2, W_dot_LPT2 = turbine(m_LPT1, h_LPT1, P[10], P[11], eta_LPT2, Q_dot_HXC, h[29], m[28], h[28])
     T[11] = temperature(P = P[11], H = h[11])
     x[11] = quality(P = P[11], H = h[11])
@@ -367,14 +365,13 @@ while((err_iter > tol and it<it_max) or it<3 ):
     eta_test = (W_dot_gen+Q_dot_cond+Q_dot_W2S)/(Q_dot_LFR+W_dot_LP+W_dot_HP+Q_dot_S2W)
 
     # <<<< MJW update estimate of T[1]
-    m15old = m[15]
-    m15new = m[14] + m[31]
-    m[15] = update_mf(m15new, m15old)
-    print(m15new, m15old)
     # h[1] = h1old + (h1new-h1old)*0.5
-    err_iter = abs((m[15] - m15old)/m15old)
+    err_iter = ((1-eta_test)/1)
     # err_iter = abs((h1new - h1old)/h1old)
-    
+    m15old = m[15]
+    m15new = update_mf(m15old, err_iter)
+    print(m15new, m15old)
+    m[15] = m15new
     # Compute all other temperature states
     for i in range(2,ns):
         if (h[i] != 0) and (P[i] != 0):
