@@ -28,10 +28,10 @@ step = lambda xold,xnew: xold + (xnew-xold)*0.66
 # --------------------------
 
 # Define function for updating mass flow with every iteration
-def update_mf(m_dot_old, err):
-    # TODO: update convergence parameters based on CoE.
-    gr = (1 + sqrt(5))/2
-    return m_dot_old * ()
+def update_mf(m_dot_new, m_dot_old):
+    # TODO: parametrize update fraction (0.15) and run convergence studies
+    return m_dot_old + (m_dot_new - m_dot_old)*0.15
+
 tstart = time.time()
 
 # Model start
@@ -372,7 +372,7 @@ while((err_iter > tol and it<it_max) or it<3 ):
     m[15] = update_mf(m15new, m15old)
     print(m15new, m15old)
     # h[1] = h1old + (h1new-h1old)*0.5
-    err_iter = abs((1 - eta_test)/eta_test)
+    err_iter = abs((m[15] - m15old)/m15old)
     # err_iter = abs((h1new - h1old)/h1old)
     
     # Compute all other temperature states
