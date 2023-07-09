@@ -30,7 +30,7 @@ step = lambda xold,xnew: xold + (xnew-xold)*0.66
 # Define function for updating mass flow with every iteration
 def update_mf(mass, err_iter):
     # TODO: parametrize update fraction (0.15) and run convergence studies
-    mutliplier = 10
+    mutliplier = 15
     return mass + err_iter*mutliplier
 
 tstart = time.time()
@@ -178,7 +178,7 @@ P[3] = 2.365e7 #[Pa]                                                #
 m[15] = 300 #[kg/s]
 
 it = 0
-it_max = 50
+it_max = 150
 err_iter = 999.
 tol = 0.001
 
