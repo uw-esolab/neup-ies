@@ -52,8 +52,8 @@ fin_rate = 0.07
 pnom = 465
 
 q_dot_nuclear_des=950
-tshours=np.array([6])
-p_cycle=np.array([1400])
+tshours=np.array([4])
+p_cycle=np.array([900])
 
     
 # =============================================================================

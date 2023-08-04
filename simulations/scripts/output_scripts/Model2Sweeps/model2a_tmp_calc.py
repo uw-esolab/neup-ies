@@ -56,24 +56,24 @@ fin_rate = 0.07
 
 json='model2_CAISO_Hamilton_mod'
 
-for case in range(3): #nuclear only, solar only, both
+for case in range(2,3): #nuclear only, solar only, both
 
     if case == 1:
         q_dot_nuclear_des=0.1
     else:
-        q_dot_nuclear_des=1900
+        q_dot_nuclear_des=950 #temporary! for comparing with model1
         
     if case==0:
-        tshours=np.array([6]) 
-        p_cycle=np.array([1400])
+        tshours=np.array([4]) 
+        p_cycle=np.array([900])
     
     elif case==1:
         tshours    = np.array([ 10])
         p_cycle    = np.array([160])
         
     else:
-        tshours    = np.array([ 6.4 ])
-        p_cycle    = np.array([1560]) 
+        tshours    = np.array([ 4.9])
+        p_cycle    = np.array([1060]) 
         
 
     
