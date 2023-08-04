@@ -56,7 +56,7 @@ fin_rate = 0.07
 
 json='model2_CAISO_Hamilton_mod'
 
-for case in range(2,3): #nuclear only, solar only, both
+for case in range(1): #nuclear only, solar only, both
 
     if case == 1:
         q_dot_nuclear_des=0.1
