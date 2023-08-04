@@ -57,11 +57,7 @@ fin_rate = 0.07
 json='model2_CAISO_Hamilton_mod'
 
 for case in range(3): #nuclear only, solar only, both
-    if case == 0:
-        solar_json='1'
-    else:
-        solar_json='115'
-    
+
     if case == 1:
         q_dot_nuclear_des=0.1
     else:
@@ -80,15 +76,6 @@ for case in range(3): #nuclear only, solar only, both
         p_cycle    = np.array([1560]) 
         
 
-    #load in solar parameters
-    with open("../../../json/sol/"+solar_json+".json") as f:
-        sol = js.load(f)
-    
-    
-    #parameters which vary with system size
-    sol_params=["focus_type","helio_area_tot","rec_height","D_rec","h_tower",
-    "helio_positions","land_area_base","system_capacity","cp_system_nameplate"]
-    #note:sol construction financing added later
     
     # =============================================================================
     # Initialize empty arrays
@@ -185,13 +172,12 @@ for case in range(3): #nuclear only, solar only, both
                 for param in ['site_spec_cost','heliostat_spec_cost','radiator_unitcost','radiator_fluidcost','radiator_installcost',
                               'rec_ref_cost','tower_fixed_cost','land_spec_cost']:
                     nuctes.SSC_dict[param]=0
-            
+                nuctes.SSC_dict['is_hardcode_csp_off']=1
+            else:
+                nuctes.SSC_dict['is_hardcode_csp_off']=0
             
             nuctes.SSC_dict['om_fixed']=[nuclear_om_fixed+solar_om_fixed]
             
-            #add in solar paramters
-            for param in sol_params:
-                nuctes.SSC_dict[param]=sol[param]
 
             
             # update TES costs
@@ -428,8 +414,8 @@ for case in range(3): #nuclear only, solar only, both
     
     # locating output directory
     output_dir = FileMethods.output_dir
-    filename = 'paramSweep_varTurbineCost_PySAM__{0}__2022_06__pyomo_{1:.0f}__horizon_{2:.0f}_{3:.0f}__TES_[{4},{5}]__PC_[{6},{7}]__{8}__{9}.nuctes'.format(
-                    json, dispatch, sscH, pyoH, tshours.min(), tshours.max(), p_cycle.min(), p_cycle.max(),case,solar_json)
+    filename = 'paramSweep_varTurbineCost_PySAM__{0}__2022_06__pyomo_{1:.0f}__horizon_{2:.0f}_{3:.0f}__TES_[{4},{5}]__PC_[{6},{7}]__{8}.nuctes'.format(
+                    json, dispatch, sscH, pyoH, tshours.min(), tshours.max(), p_cycle.min(), p_cycle.max(),case)
     NTPath = os.path.join(output_dir, filename)
     # pickling
     with open(NTPath, 'wb') as f:
