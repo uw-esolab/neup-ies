@@ -1,0 +1,28 @@
+<DataObjectMetadata name="romMeta">
+  <DataSet type="Static">
+    <dims>
+      <DNI_gaussianed>Time</DNI_gaussianed>
+      <DNI_original>Time</DNI_original>
+      <DNI_zerofilter>Time</DNI_zerofilter>
+    </dims>
+    <general>
+      <datasetName>romMeta</datasetName>
+      <pointwise_meta>DNI_gaussianed,DNI_original,DNI_zerofilter</pointwise_meta>
+      <sampleTag>RAVEN_sample_ID</sampleTag>
+    </general>
+  </DataSet>
+  
+  <arma type="Static">
+    <ROM>
+      <type>ARMA</type>
+      <Features>scaling</Features>
+      <Targets>DNI</Targets>
+    </ROM>
+    <DNI>
+      <ARMA_params>
+        <std>0.335835314925</std>
+      </ARMA_params>
+    </DNI>
+  </arma>
+  
+</DataObjectMetadata>

@@ -1,0 +1,75 @@
+<?xml version="1.0" ?>
+<Simulation verbosity="all">
+  <TestInfo>
+    <name>input.pysam</name>
+    <author>ubaker</author>
+    <created>18-04-2021</created>
+    <classesTested>Models.Code</classesTested>
+    <description>Testing RAVEN coupled to PySAM</description>
+  </TestInfo>
+
+  <RunInfo>
+    <WorkingDir>.</WorkingDir>
+    <Sequence>PySAM,outputResults</Sequence>
+    <batchSize>5</batchSize>
+  </RunInfo>
+
+  <Files>
+    <Input name="json_file" type="">/Users/unadavies/Documents/GitHub/neup-ies/simulations/json/model1.json</Input>
+  </Files>
+
+  <Models>
+    <Code name="PySAM" subType="GenericCode">
+      <executable>/Users/unadavies/Documents/GitHub/neup-ies/simulations/scripts/PySAM_RAVEN_model1.py</executable>
+      <clargs arg="python3" type="prepend"/>
+      <clargs type="input" arg="-i" extension=".json"/>
+      <outputFile>output.csv</outputFile>
+    </Code>
+  </Models>
+
+  <Distributions>
+    <Uniform name="dist">
+      <lowerBound>0</lowerBound>
+      <upperBound>5</upperBound>
+    </Uniform>
+  </Distributions>
+
+  <Samplers>
+    <Grid name="intGrid">
+      <variable name="ARMAfileID">
+        <distribution>dist</distribution>
+        <grid construction="equal" steps="5" type="CDF">0 1</grid>
+      </variable>
+    </Grid>
+  </Samplers>
+
+  <Steps>
+    <MultiRun name="PySAM">
+      <Input class="Files" type="">json_file</Input>
+      <Model class="Models" type="Code">PySAM</Model>
+      <Sampler class="Samplers" type="Grid">intGrid</Sampler>
+      <Output class="DataObjects" type="PointSet">results</Output>
+    </MultiRun>
+    <IOStep name="outputResults">
+      <Input class="DataObjects" type="PointSet">results</Input>
+      <Output class="OutStreams" type="Print">to_file</Output>
+    </IOStep>
+  </Steps>
+
+  <OutStreams>
+    <Print name="to_file">
+      <type>csv</type>
+      <source>results</source>
+    </Print>
+  </OutStreams>
+
+  <DataObjects>
+    <PointSet name="placeholder">
+      <Input>ARMAfileID</Input>
+    </PointSet>
+    <PointSet name="results">
+      <Input>ARMAfileID</Input>
+    </PointSet>
+  </DataObjects>
+
+</Simulation>

@@ -1,0 +1,3 @@
+conda activate C:\Users\aidan\\miniconda3\envs\raven_libraries
+cd projects\raven
+python raven_framework.py C:\Users\aidan\projects\neup-ies\simulations\data\ARMA\raven_arma.xml
