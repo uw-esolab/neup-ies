@@ -100,30 +100,36 @@ def fwh(m_dot_D,h_D_in,P_D,m_dot_FW,h_FW_in,P_FW,m_dot_T,h_T_in,P_T,DT,N_hxrs):
 
     # Capacitance rates array
     for i in range(1,(3*N_hxrs+1)):
+        dTH = (T_H[i] - T_H[i+1])
+        dTC = (T_C[i] - T_C[i+1])
+
         if(i <= 2*N_hxrs):
-            if((T_H[i] - T_H[i+1]) <= 0):
+            if(dTH <= 0):
                 C_dot_H[i] = 1e99
             else:
-                C_dot_H[i] = m_dot_T * (h_H[i] - h_H[i+1])/(T_H[i] - T_H[i+1])
-            if((T_C[i] - T_C[i+1]) <= 0):
+                C_dot_H[i] = m_dot_T * (h_H[i] - h_H[i+1])/dTH
+            if(dTC <= 0):
                 C_dot_C[i] = 1e99
             else:
-                C_dot_C[i] = m_dot_FW*(h_C[i] - h_C[i+1])/(T_H[i] - T_H[i+1])
+                C_dot_C[i] = m_dot_FW*(h_C[i] - h_C[i+1])/dTC
         else:
-            if((T_H[i] - T_H[i+1]) <= 0):
+            if(dTH <= 0):
                 C_dot_H[i] = 1e99
             else:
-                C_dot_H[i] = (m_dot_T + m_dot_D) * (h_H[i] - h_H[i+1])/(T_H[i] - T_H[i+1])
-            if((T_C[i] - T_C[i+1]) <= 0):
+                C_dot_H[i] = (m_dot_T + m_dot_D) * (h_H[i] - h_H[i+1])/dTH
+            if(dTC <= 0):
                 C_dot_C[i] = 1e99
             else:
-                C_dot_C[i] = m_dot_FW*(h_C[i] - h_C[i+1])/(T_H[i] - T_H[i+1])
+                C_dot_C[i] = m_dot_FW*(h_C[i] - h_C[i+1])/dTC
 
     # Get effectiveness and NTU array
     for i in range(1,(3*N_hxrs+1)):
         q_dot[i] = m_dot_FW*(h_C[i]-h_C[i+1])
         # effectiveness of sub heat exchanger
-        eff[i] = q_dot[i]/(min(C_dot_H[i],C_dot_C[i])*(T_H[i]-T_C[i+1]))
+        cdotdT=min(C_dot_H[i],C_dot_C[i])*(T_H[i]-T_C[i+1])
+        # if cdotdT==0.: cdotdT=1e-6
+        eff[i] = q_dot[i]/cdotdT
+
         if(eff[i] <= 0):
             NTU[i] = 0
             UA[i] = 0
@@ -131,22 +137,10 @@ def fwh(m_dot_D,h_D_in,P_D,m_dot_FW,h_FW_in,P_FW,m_dot_T,h_T_in,P_T,DT,N_hxrs):
             NTU[i] = NTU_counterflow(eff[i],C_dot_H[i],C_dot_C[i])      # NTU in sub heat exchanger                                          
             UA[i] = NTU[i] *min(C_dot_H[i],C_dot_C[i])                  # conductance in sub heat exchanger
     
-    N_hxrs_ds_end = N_hxrs + 1
-    N_hxrs_cond_start = N_hxrs + 2
-    N_hxrs_cond_end = 2*N_hxrs + 1
-    N_hxrs_dc_start = 2*N_hxrs + 2
-    N_hxrs_tot = 3*N_hxrs + 1
-
-    # get net conductance values:
-    UA_ds = 0
-    UA_cond = 0
-    UA_dc = 0
-    for i in range(1,(N_hxrs_ds_end+1)):
-        UA_ds += UA[i]                  # desuperheater conductance
-    for i in range(N_hxrs_cond_start,(N_hxrs_cond_end+1)):
-        UA_cond += UA[i]                # condensor conductance
-    for i in range(N_hxrs_dc_start,(N_hxrs_tot+1)):
-        UA_dc += UA[i]                  # drain cooler conductance
+    # get net conductance values
+    UA_ds = UA[1:N_hxrs+1].sum()  # desuperheater conductance
+    UA_cond = UA[N_hxrs+1:2*N_hxrs+1].sum() # condensor conductance
+    UA_dc = UA[2*N_hxrs+1:3*N_hxrs+1].sum() # drain cooler conductance
     UA_tot = UA_ds + UA_cond + UA_dc    # total conductance
 
     return [
@@ -352,12 +346,12 @@ def NTU_counterflow(eff,C_dot_H,C_dot_C):
     C_dot_min = min(C_dot_H,C_dot_C)
     CR = C_dot_min/C_dot_max
 
-    if(CR<1):
-        NTU = log((1-eff*CR)/(1-eff))
-    elif(CR==1):
+    if(CR>0.99):
         NTU = eff/(1-eff)
     else:
-        raise Exception("Capacitance Ratio is greater than 1.")
+        NTU = log((1-eff*CR)/(1-eff))
+    # else:
+    #     raise Exception("Capacitance Ratio is greater than 1.")
 
     return NTU
 
