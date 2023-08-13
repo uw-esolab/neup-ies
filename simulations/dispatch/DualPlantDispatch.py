@@ -97,9 +97,9 @@ class DualPlantDispatch(SolarDispatch):
             return (
                     sum( model.D[t] * 
                     #obj_profit
-                    model.Delta[t]*model.P[t]*0.1*(model.wdot_s[t] - model.wdot_p[t])
+                    model.Delta[t]*model.P[t]*1.0*(model.wdot_s[t] - model.wdot_p[t])
                     #obj_cost_cycle_su_hs_sd
-                    - (model.Ccsu*model.ycsup[t] + 0.1*model.Cchsp*model.ychsp[t] + model.alpha*model.ycsd[t])
+                    - (model.Ccsu*model.ycsup[t] + 1.0*model.Cchsp*model.ychsp[t] + model.alpha*model.ycsd[t])
                     #obj_cost_cycle_ramping
                     - (model.C_delta_w*(model.wdot_delta_plus[t]+model.wdot_delta_minus[t])+model.C_v_w*(model.wdot_v_plus[t] + model.wdot_v_minus[t]))
                     #obj_cost_rec_su_hs_sd
