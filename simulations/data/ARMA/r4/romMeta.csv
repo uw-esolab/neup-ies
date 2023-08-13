@@ -1,0 +1,4 @@
+segment_number,RAVEN_sample_ID,seg_index_start,seg_index_end,seg_Time_start,seg_Time_end
+0,0,0,5839,0.0,176610.0
+1,0,5840,11679,176640.0,351810.0
+2,0,11680,17519,351840.0,527010.0
