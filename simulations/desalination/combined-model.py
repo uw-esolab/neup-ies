@@ -102,7 +102,7 @@ def objective(model):
     # return sum(model.w_dot[t] for t in model.T)
     return sum([model.P_elec[t]*model.w_dot[t] + model.P_dist[t]*model.v_dot[t] for t in model.T]) \
          - sum([model.C_c_ramp*(model.w_dot_Delta_up[t]+model.w_dot_Delta_dn[t]) for t in (model.T-[1])]) \
-         - sum(model.C_s * (model.M_cm_max + model.M_dm_max)) #\
+         - [(model.C_hs*model.M_cm_max) + (model.C_cs*model.M_dm_max)] #\
         #  - sum([model.C_d_ramp*(model.v_dot_Delta_up[t]+model.v_dot_Delta_dn[t]) for t in (model.T-[1])])
 model.objective = pyomo.Objective(rule=objective, sense=pyomo.maximize)
 
@@ -232,8 +232,8 @@ for t in model.T:
         model.m_dot_hpt[t](),
         model.m_dot_e[t](),
         model.m_dot_ds[t](),
-        model.M_cm_max[t]()*1e-3
-        model.M_dm_max[t]()*1e-3
+        model.M_cm_max
+        model.M_dm_max
         ]
     fstr = '{:d}\t' + '\t'.join(['{:f}' for i in range(len(outs)-1)])
     print(fstr.format(*outs))
