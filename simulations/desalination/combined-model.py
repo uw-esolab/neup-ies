@@ -65,9 +65,9 @@ model.F_lpt = pyomo.Param(initialize= 0.53)  #[-] Max fraction of steam mass flo
 model.W_dot_ramp_max = pyomo.Param(initialize=0.1*W_dot_gen)    #[Delta MW/hr]  Maximum allowable power system ramp rate 
 # model.V_dot_ramp_max = pyomo.Param(initialize=)    #[Delta m_dot/hr]  Maximum allowable desal system ramp rate 
 model.K_dhx = pyomo.Param(initialize=m_dot_esteam/m_dot_dtes)    #[(kg/s)/(kg/s)]  Conversion constant for HPT extraction steam mass flow to desal storage charge mass flow
-model.M_cm_max = pyomo.Param(initialize=m_ctes_ref)    #[kg]  Cycle thermal storage maximum inventory
+#model.M_cm_max = pyomo.Param(initialize=m_ctes_ref)    #[kg]  Cycle thermal storage maximum inventory
 model.M_cm_min = pyomo.Param(initialize=0)    #[kg]  Cycle thermal storage minimum inventory
-model.M_dm_max = pyomo.Param(initialize=m_dtes_ref)    #[kg]  Desal thermal storage maximum inventory
+#model.M_dm_max = pyomo.Param(initialize=m_dtes_ref)    #[kg]  Desal thermal storage maximum inventory
 model.M_dm_min = pyomo.Param(initialize=0)    #[kg]  Desal thermal storage minimum inventory
 model.K_d = pyomo.Param(initialize=0.55)    #[(kg/s)/(kg/s)]  Rate of distillate production per unit mass flow into the desal system
 model.M_dot_ch_init = pyomo.Param(initialize=0.1*m_ctes_ref)  #[kg] Initial cycle thermal storage inventory
@@ -76,7 +76,7 @@ model.W_dot_max = pyomo.Param(initialize=W_dot_gen)
 model.W_dot_min = pyomo.Param(initialize=W_dot_gen*0.25)
 model.V_dot_max = pyomo.Param(initialize=m_dot_dtes*model.K_d())
 model.V_dot_min = pyomo.Param(initialize=m_dot_dtes*model.K_d()*0)
-
+model.C_s = pyomo.Param(initialize=10) #[$/kg] Cost associated with storage systems
 
 #  ==================================================
 #       Variables
@@ -93,13 +93,15 @@ model.w_dot_Delta_up = pyomo.Var(model.T-[1], domain=pyomo.NonNegativeReals)   #
 model.w_dot_Delta_dn = pyomo.Var(model.T-[1], domain=pyomo.NonNegativeReals)   #[]  Negative change in electric power produced at time step $t$ relative to the previous time step, $t\geq 2$
 # model.v_dot_Delta_up = pyomo.Var(model.T-[1], domain=pyomo.NonNegativeReals)   #[]  Positive change in distillate produced at time step $t$ relative to the previous time step, $t\geq 2$
 # model.v_dot_Delta_dn = pyomo.Var(model.T-[1], domain=pyomo.NonNegativeReals)   #[]  Negative change in distillate produced at time step $t$ relative to the previous time step, $t\geq 2$
-
+model.M_cm_max = pyomo.Var(model.T, domain=pyomo.NonNegativeReals) #[] Cycle thermal storage maximum inventory
+model.M_dm_max = pyomo.Var(model.T, domain=pyomo.NonNegativeReals) #[] Desal thermal storage maximum inventory
 #  ==================================================
 #   Objective
 def objective(model):
     # return sum(model.w_dot[t] for t in model.T)
     return sum([model.P_elec[t]*model.w_dot[t] + model.P_dist[t]*model.v_dot[t] for t in model.T]) \
-         - sum([model.C_c_ramp*(model.w_dot_Delta_up[t]+model.w_dot_Delta_dn[t]) for t in (model.T-[1])]) #\
+         - sum([model.C_c_ramp*(model.w_dot_Delta_up[t]+model.w_dot_Delta_dn[t]) for t in (model.T-[1])]) \
+         - sum(model.C_s * (model.M_cm_max[t] + model.M_dm_max[t]) for t in model.T) #\
         #  - sum([model.C_d_ramp*(model.v_dot_Delta_up[t]+model.v_dot_Delta_dn[t]) for t in (model.T-[1])])
 model.objective = pyomo.Objective(rule=objective, sense=pyomo.maximize)
 
@@ -117,7 +119,7 @@ model.constr_csmass = pyomo.Constraint(model.T, rule=constr_csmass)
 
 # Inventory limits on the cycle storage 
 def constr_csmmax(model,t):
-    return model.m_ch[t] <= model.M_cm_max
+    return model.m_ch[t] <= model.M_cm_max[t]
 model.constr_csmmax = pyomo.Constraint(model.T, rule=constr_csmmax)
 def constr_csmmin(model,t):
     return model.m_ch[t] >= model.M_cm_min
@@ -177,7 +179,7 @@ model.constr_dsmass = pyomo.Constraint(model.T, rule=constr_dsmass)
 
 # Inventory limits on the desal storage 
 def constr_dsmmax(model,t):
-    return model.m_dh[t] <= model.M_dm_max
+    return model.m_dh[t] <= model.M_dm_max[t]
 model.constr_dsmmax = pyomo.Constraint(model.T, rule=constr_dsmmax)
 def constr_dsmmin(model,t):
     return model.m_dh[t] >= model.M_dm_min
@@ -214,7 +216,7 @@ solver = pyomo.SolverFactory('gurobi')
 results = solver.solve(model, keepfiles = True, logfile = 'solve.log')
 # print(model.display())
 print(results)
-outlabs = ['time', 'eprice','wprice','cyctes', 'dtes', 'w_dot', 'v_dot', 'mdcs','mdhpt','mde','mdds']
+outlabs = ['time', 'P_elec','P_dist','m_ch', 'm_dh', 'w_dot', 'v_dot', 'm_dot_cs','m_dot_hpt','m_dot_e','m_dot_ds', 'M_cm_max', 'M_dm_max']
 print( ('{:6s}\t'+ '\t'.join(['{:10s}' for i in range(len(outlabs)-1)])).format(*outlabs) )
 for t in model.T:
     outs = [
@@ -229,6 +231,8 @@ for t in model.T:
         model.m_dot_hpt[t](),
         model.m_dot_e[t](),
         model.m_dot_ds[t](),
+        model.M_cm_max[t]()*1e-3
+        model.M_dm_max[t]()*1e-3
         ]
     fstr = '{:d}\t' + '\t'.join(['{:f}' for i in range(len(outs)-1)])
     print(fstr.format(*outs))
