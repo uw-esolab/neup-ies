@@ -76,7 +76,8 @@ model.W_dot_max = pyomo.Param(initialize=W_dot_gen)
 model.W_dot_min = pyomo.Param(initialize=W_dot_gen*0.25)
 model.V_dot_max = pyomo.Param(initialize=m_dot_dtes*model.K_d())
 model.V_dot_min = pyomo.Param(initialize=m_dot_dtes*model.K_d()*0)
-model.C_s = pyomo.Param(initialize=10) #[$/kg] Cost associated with storage systems
+model.C_hs = pyomo.Param(initialize=10) #[$/kg] Cost associated with hot storage
+model.C_cs = pyomo.Param(initialize=5) #[$/kg] Cost associated with cold storage
 
 #  ==================================================
 #       Variables
@@ -93,15 +94,15 @@ model.w_dot_Delta_up = pyomo.Var(model.T-[1], domain=pyomo.NonNegativeReals)   #
 model.w_dot_Delta_dn = pyomo.Var(model.T-[1], domain=pyomo.NonNegativeReals)   #[]  Negative change in electric power produced at time step $t$ relative to the previous time step, $t\geq 2$
 # model.v_dot_Delta_up = pyomo.Var(model.T-[1], domain=pyomo.NonNegativeReals)   #[]  Positive change in distillate produced at time step $t$ relative to the previous time step, $t\geq 2$
 # model.v_dot_Delta_dn = pyomo.Var(model.T-[1], domain=pyomo.NonNegativeReals)   #[]  Negative change in distillate produced at time step $t$ relative to the previous time step, $t\geq 2$
-model.M_cm_max = pyomo.Var(model.T, domain=pyomo.NonNegativeReals) #[] Cycle thermal storage maximum inventory
-model.M_dm_max = pyomo.Var(model.T, domain=pyomo.NonNegativeReals) #[] Desal thermal storage maximum inventory
+model.M_cm_max = pyomo.Var(domain=pyomo.NonNegativeReals) #[] Cycle thermal storage maximum inventory
+model.M_dm_max = pyomo.Var(domain=pyomo.NonNegativeReals) #[] Desal thermal storage maximum inventory
 #  ==================================================
 #   Objective
 def objective(model):
     # return sum(model.w_dot[t] for t in model.T)
     return sum([model.P_elec[t]*model.w_dot[t] + model.P_dist[t]*model.v_dot[t] for t in model.T]) \
          - sum([model.C_c_ramp*(model.w_dot_Delta_up[t]+model.w_dot_Delta_dn[t]) for t in (model.T-[1])]) \
-         - sum(model.C_s * (model.M_cm_max[t] + model.M_dm_max[t]) for t in model.T) #\
+         - sum(model.C_s * (model.M_cm_max + model.M_dm_max)) #\
         #  - sum([model.C_d_ramp*(model.v_dot_Delta_up[t]+model.v_dot_Delta_dn[t]) for t in (model.T-[1])])
 model.objective = pyomo.Objective(rule=objective, sense=pyomo.maximize)
 
@@ -119,7 +120,7 @@ model.constr_csmass = pyomo.Constraint(model.T, rule=constr_csmass)
 
 # Inventory limits on the cycle storage 
 def constr_csmmax(model,t):
-    return model.m_ch[t] <= model.M_cm_max[t]
+    return model.m_ch[t] <= model.M_cm_max
 model.constr_csmmax = pyomo.Constraint(model.T, rule=constr_csmmax)
 def constr_csmmin(model,t):
     return model.m_ch[t] >= model.M_cm_min
@@ -179,7 +180,7 @@ model.constr_dsmass = pyomo.Constraint(model.T, rule=constr_dsmass)
 
 # Inventory limits on the desal storage 
 def constr_dsmmax(model,t):
-    return model.m_dh[t] <= model.M_dm_max[t]
+    return model.m_dh[t] <= model.M_dm_max
 model.constr_dsmmax = pyomo.Constraint(model.T, rule=constr_dsmmax)
 def constr_dsmmin(model,t):
     return model.m_dh[t] >= model.M_dm_min
