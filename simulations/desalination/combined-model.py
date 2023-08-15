@@ -12,7 +12,7 @@ N = 96
 
 # Some preliminary sizing calculations
 Q_dot_LFR = 950  #MW
-W_dot_gen = 475  #MW
+W_dot_gen = 475*1.2  #MW
 eta_cycle_ref = 0.48
 cp_salt = 1500 #J/kg-K
 DeltaT_ctes = 565-330  #K
@@ -29,11 +29,11 @@ m_dot_esteam = m_dot_csteam*f_lpt  #nominal extraction flow rate
 m_dot_dtes = m_dot_esteam*DeltaH_dsteam/DeltaH_dtes  #nominal flow rate of water into the desal storage tank
 
 
-ctshours = 5
-dtshours = 5
+# ctshours = 5
+# dtshours = 5
 
-m_ctes_ref = ctshours*m_dot_salt*3600
-m_dtes_ref = dtshours*m_dot_dtes*3600
+# m_ctes_ref = ctshours*m_dot_salt*3600
+# m_dtes_ref = dtshours*m_dot_dtes*3600
 
 
 price_schedule = [math.sin(i/24*math.pi ) + 0.5 for i in range(N)]  #electricity price
@@ -70,8 +70,8 @@ model.M_cm_min = pyomo.Param(initialize=0)    #[kg]  Cycle thermal storage minim
 #model.M_dm_max = pyomo.Param(initialize=m_dtes_ref)    #[kg]  Desal thermal storage maximum inventory
 model.M_dm_min = pyomo.Param(initialize=0)    #[kg]  Desal thermal storage minimum inventory
 model.K_d = pyomo.Param(initialize=0.55)    #[(kg/s)/(kg/s)]  Rate of distillate production per unit mass flow into the desal system
-model.M_dot_ch_init = pyomo.Param(initialize=0.1*m_ctes_ref)  #[kg] Initial cycle thermal storage inventory
-model.M_dot_dh_init  = pyomo.Param(initialize=0.1*m_dtes_ref)  #[kg] Initial desal thermal storage inventory
+model.M_dot_ch_init = pyomo.Param(initialize=0.0)  #[kg] Initial cycle thermal storage inventory
+model.M_dot_dh_init  = pyomo.Param(initialize=0.0)  #[kg] Initial desal thermal storage inventory
 model.W_dot_max = pyomo.Param(initialize=W_dot_gen)
 model.W_dot_min = pyomo.Param(initialize=W_dot_gen*0.25)
 model.V_dot_max = pyomo.Param(initialize=m_dot_dtes*model.K_d())
@@ -102,7 +102,7 @@ def objective(model):
     # return sum(model.w_dot[t] for t in model.T)
     return sum([model.P_elec[t]*model.w_dot[t] + model.P_dist[t]*model.v_dot[t] for t in model.T]) \
          - sum([model.C_c_ramp*(model.w_dot_Delta_up[t]+model.w_dot_Delta_dn[t]) for t in (model.T-[1])]) \
-         - [(model.C_hs*model.M_cm_max) + (model.C_cs*model.M_dm_max)] #\
+         - (model.C_hs*model.M_cm_max) - (model.C_cs*model.M_dm_max) #\
         #  - sum([model.C_d_ramp*(model.v_dot_Delta_up[t]+model.v_dot_Delta_dn[t]) for t in (model.T-[1])])
 model.objective = pyomo.Objective(rule=objective, sense=pyomo.maximize)
 
@@ -224,16 +224,16 @@ for t in model.T:
         t, 
         model.P_elec[t], 
         model.P_dist[t], 
-        model.m_ch[t]()*1e-3, 
-        model.m_dh[t]()*1e-3, 
+        model.m_ch[t](), 
+        model.m_dh[t](), 
         model.w_dot[t](), 
         model.v_dot[t](),
         model.m_dot_cs[t](),
         model.m_dot_hpt[t](),
         model.m_dot_e[t](),
         model.m_dot_ds[t](),
-        model.M_cm_max
-        model.M_dm_max
+        model.M_cm_max(),
+        model.M_dm_max()
         ]
     fstr = '{:d}\t' + '\t'.join(['{:f}' for i in range(len(outs)-1)])
     print(fstr.format(*outs))
