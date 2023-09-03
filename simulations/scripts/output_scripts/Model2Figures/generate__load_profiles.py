@@ -16,6 +16,7 @@ import os, pint, time, copy, pickle
 import numpy as np
 import pyomo.environ as pe
 from pylab import rc
+import json as js
 rc('axes', linewidth=2)
 rc('font', weight='bold',size=12)
 u = pint.UnitRegistry()
@@ -28,7 +29,7 @@ print("PID = ", pid)
 # =============================================================================
 
 #case has been appended to the end of the filename as of 10/6. Only case 6 updated so far. This is because some sizes had same optimum
-for case in range(6,7):
+for case in [0,1,2,3,5,8,9,12,13]:
 
     if case%2 == 0:
         # modifying inputs
@@ -48,40 +49,59 @@ for case in range(6,7):
         q_dot_nuclear_des=250
     elif case<=7:
         q_dot_nuclear_des=100
+    elif case<=9:
+        q_dot_nuclear_des=20
+    elif case<=11:
+        q_dot_nuclear_des=0.1
+    elif case<=13:
+        q_dot_nuclear_des=950 #nuclear only cases
     else:
-        q_dot_nuclear_des=50
+        raise ValueError
     
     if case==0:
-        Pref    = 1100 # (MW)
-        tshours = 1    # (hr)
+        Pref    = 1160 # (MW)
+        tshours = 0.22    # (hr)
     elif case==1:
-        Pref = 1300
-        tshours = 5
+        Pref = 1940
+        tshours = 4.87
     elif case==2:
-        Pref = 650
-        tshours = 1
+        Pref = 710
+        tshours = 0.37
     elif case==3:
-        Pref = 750
-        tshours = 6
+        Pref = 1040
+        tshours = 5.62
     elif case==4:
-        Pref = 300
-        tshours = 4
+        Pref = 378
+        tshours = 0.69
     elif case==5:
-        Pref = 375
-        tshours = 6
+        Pref = 363.7
+        tshours = 8.61
     elif case==6:
-        Pref = 225
-        tshours=4
+        Pref = 307
+        tshours=0.85
     elif case==7:
-        Pref = 225
-        tshours=10
+        Pref = 229.5
+        tshours=11.32
     elif case==8:
-        Pref = 225
-        tshours=4
+        Pref = 269.5
+        tshours=0.96
     elif case==9:
-        Pref = 175
-        tshours=12
-      
+        Pref = 154.7
+        tshours=14.86
+    elif case==10:
+        Pref=260
+        tshours=1
+    elif case==11:
+        Pref=140
+        tshours=16
+    elif case==12:
+        Pref=450
+        tshours=0
+    elif case==13:
+        Pref=900
+        tshours=4
+        
+    
     
     # ========================
     
@@ -102,6 +122,11 @@ for case in range(6,7):
     nuctes.SSC_dict['P_ref'] = Pref
     nuctes.SSC_dict['tshours'] = tshours
     nuctes.SSC_dict['q_dot_nuclear_des']=q_dot_nuclear_des
+    
+    if case==12 or case==13:
+        nuctes.SSC_dict['is_hardcode_csp_off']=1
+    
+
     nuctes.dispatch_wrap.set_design()
     
     print(json )

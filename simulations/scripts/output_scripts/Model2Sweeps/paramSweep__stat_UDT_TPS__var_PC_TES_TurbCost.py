@@ -57,9 +57,9 @@ fin_rate = 0.07
 
 syn=False #a variable used to look at the cases that are simple summtion of the optimal nuc+solar cases
 
-for json in ['model2_Hamilton_560_tariffx1_mod','model2_CAISO_Hamilton_mod']:
+for json in ['model2_CAISO_Hamilton_mod']: #
     
-    for root_case in ['nuclear']: #['micro','small2','small1','sweep','large']: #['nuclear'] solar
+    for root_case in ['micro','small2','small1','sweep','large']: #['nuclear'] solar
         
         tmp_ppa=None
         
@@ -84,7 +84,7 @@ for json in ['model2_Hamilton_560_tariffx1_mod','model2_CAISO_Hamilton_mod']:
                 if root_case=='small2':
                     q_dot_nuclear_des=100
                     p_cycle=np.array([307])
-                    tshours=np.array([0.96])
+                    tshours=np.array([0.85])
                     
                 if root_case=='small1':
                     q_dot_nuclear_des=250
@@ -100,7 +100,11 @@ for json in ['model2_Hamilton_560_tariffx1_mod','model2_CAISO_Hamilton_mod']:
                     q_dot_nuclear_des=1900
                     p_cycle=np.array([1160])
                     tshours=np.array([0.22])
-    
+                    
+                if root_case=='test':
+                    q_dot_nuclear_des=0.1
+                    p_cycle=np.array([260])
+                    tshours=np.array([1])
 
             else:
                 
@@ -135,10 +139,10 @@ for json in ['model2_Hamilton_560_tariffx1_mod','model2_CAISO_Hamilton_mod']:
             if case=='nuclear':
                 q_dot_nuclear_des_array=([20,100,250,950,1900])
                 if 'CAISO' in json:
-                    tshours=np.array([4,4,4,4,4])
+                    tshours=np.array([4])
                     p_cycle=np.array([14.7,89.5,223.7,900,1800])
                 else:
-                    tshours=np.array([0,0,0,0,0])
+                    tshours=np.array([0])
                     p_cycle=np.array([9.5,47,118,450,900])
             
             if case == 'solar':
@@ -152,30 +156,47 @@ for json in ['model2_Hamilton_560_tariffx1_mod','model2_CAISO_Hamilton_mod']:
                 
             elif case=="micro":
                 q_dot_nuclear_des=20
-                tshours    = np.array([ 0,2,4,6,8,10,12,14,16 ])
-                p_cycle    = np.array([300,280,260,240,220,200,180,160,140,120])
-                
+                if "CAISO" in json:
+                    tshours    = np.array([11,12,13,14,15,16,17])
+                    p_cycle    = np.array([190,170,150,130,110])
+                else:
+                    tshours    = np.array([ 0.1,1,2])
+                    p_cycle    = np.array([310,290,270,250,230])
                 
             elif case=="small2":
                 q_dot_nuclear_des=100
-                tshours    = np.array([ 0,2,4,6,8,10,12,14,16 ])
-                p_cycle    = np.array([350,325,300,275,250,225,200,175,150,125])    
+                if "CAISO" in json:
+                    tshours    = np.array([9,10,11,12,13])
+                    p_cycle    = np.array([270,250,230,210,190])
+                else:
+                    tshours    = np.array([ 0.1,1,2])
+                    p_cycle    = np.array([350,330,310,290,270])
                 
             elif case == "small1":
                 q_dot_nuclear_des=250
-                tshours    = np.array([ 0,2,4,6,8,10,12,14,16 ])
-                p_cycle    = np.array([600,525,450,375,300,225,150]) 
+                if "CAISO" in json:
+                    tshours    = np.array([7,8,9,10,11])
+                    p_cycle    = np.array([400,380,360,340,320])
+                else:
+                    tshours    = np.array([ 0.1,1,2])
+                    p_cycle    = np.array([420,400,380,360,240])
             
             elif case == "sweep":
                 q_dot_nuclear_des=950
-                tshours    = np.array([ 0, 1,2,3,4,5,6,7,8,9,10 ])
-                p_cycle    = np.array([1000,950,900,850,800,750,700,650,600,550]) 
+                if "CAISO" in json:
+                    tshours    = np.array([11,12,13,14,15,16,17])
+                    p_cycle    = np.array([1140,1090,1040,990,940])
+                else:
+                    tshours    = np.array([ 0.1,1,2])
+                    p_cycle    = np.array([810,760,710,660,610]) 
             
             elif case=="large":
                 q_dot_nuclear_des=1900
-                tshours    = np.array([0,1,2,3,4,5,6,7,8,9,10])
-                p_cycle    = np.array([1900,1800,1700,1600,1500,1400,1300,1200,1100,1000]) 
-
+                if "CAISO" in json:
+                    tshours    = np.array([3,4,5,6,7])
+                    p_cycle    = np.array([2140,2040,1940,1840,1740])
+                    tshours    = np.array([ 0.1,1,2])
+                    p_cycle    = np.array([1360,1260,1160,1060,960])
             
     
     

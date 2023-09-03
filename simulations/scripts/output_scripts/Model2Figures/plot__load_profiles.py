@@ -27,11 +27,14 @@ print("PID = ", pid)
 #  Simulation Parameters
 # =============================================================================
 
-case = 6 #0,2,4,6,8
-#case has been appended to the end of the filename as of 10/6. Only case 6 updated so far. This is because some sizes had same optimum
+case = 7
 
 # modifying inputs
-json = "model2_Hamilton_560_tariffx1_mod"   # model1_CAISO_Hamilton # model1_Hamilton_560_tariffx2 # model1_Hamilton_560_tariffx1
+if case%2 == 0:
+    json = "model2_Hamilton_560_tariffx1_mod"
+else:
+    json = "model2_CAISO_Hamilton_mod"
+
 dispatch = True
 run_loop = True
 sscH    = 24   # (hr)
@@ -40,35 +43,43 @@ pyoH    = 48   # (hr)
 
     
 if case==0:
-    Pref    = 1100 # (MW)
-    tshours = 1    # (hr)
+    Pref    = 1160 # (MW)
+    tshours = 0.22    # (hr)
 elif case==1:
-    Pref = 1300
-    tshours = 5
+    Pref = 1940
+    tshours = 4.87
 elif case==2:
-    Pref = 650
-    tshours = 1
+    Pref = 710
+    tshours = 0.37
 elif case==3:
-    Pref = 750
-    tshours = 6
+    Pref = 1040
+    tshours = 5.62
 elif case==4:
-    Pref = 300
-    tshours = 4
+    Pref = 378
+    tshours = 0.69
 elif case==5:
-    Pref = 375
-    tshours = 6
+    Pref = 363.7
+    tshours = 8.61
 elif case==6:
-    Pref = 225
-    tshours=4
+    Pref = 307
+    tshours=0.85
 elif case==7:
-    Pref = 225
-    tshours=10
+    Pref = 229.5
+    tshours=11.32
 elif case==8:
-    Pref = 225
-    tshours=4
+    Pref = 269.5
+    tshours=0.96
 elif case==9:
-    Pref = 175
-    tshours=12
+    Pref = 154.7
+    tshours=14.86
+elif case==10:
+    Pref=260
+    tshours=1
+elif case==11:
+    Pref=140
+    tshours=16
+
+    
 # =============================================================================
 #  Extracting Information
 # =============================================================================
