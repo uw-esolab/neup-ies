@@ -27,7 +27,7 @@ print("PID = ", pid)
 #  Simulation Parameters
 # =============================================================================
 
-case = 9 #1,3,5,7,9
+case = 11 #1,3,5,7,9,11
 
 # modifying inputs
 json = "model2_CAISO_Hamilton_mod"   # model1_CAISO_Hamilton # model1_Hamilton_560_tariffx2 # model1_Hamilton_560_tariffx1
@@ -38,36 +38,43 @@ pyoH    = 48   # (hr)
 
     
 if case==0:
-    Pref    = 1100 # (MW)
-    tshours = 1    # (hr)
+    Pref    = 1160 # (MW)
+    tshours = 0.22    # (hr)
 elif case==1:
-    Pref = 1300
-    tshours = 5
+    Pref = 1940
+    tshours = 4.87
 elif case==2:
-    Pref = 650
-    tshours = 1
+    Pref = 710
+    tshours = 0.37
 elif case==3:
-    Pref = 750
-    tshours = 6
+    Pref = 1040
+    tshours = 5.62
 elif case==4:
-    Pref = 300
-    tshours = 4
+    Pref = 378
+    tshours = 0.69
 elif case==5:
-    Pref = 375
-    tshours = 6
+    Pref = 363.7
+    tshours = 8.61
 elif case==6:
-    Pref = 225
-    tshours=4
+    Pref = 307
+    tshours=0.85
 elif case==7:
-    Pref = 225
-    tshours=10
+    Pref = 229.5
+    tshours=11.32
 elif case==8:
-    Pref = 225
-    tshours=4
+    Pref = 269.5
+    tshours=0.96
 elif case==9:
-    Pref = 175
-    tshours=12
-# =============================================================================
+    Pref = 154.7
+    tshours=14.86
+elif case==10:
+    Pref=260
+    tshours=1
+elif case==11:
+    Pref=140
+    tshours=16
+    
+#================================================================
 #  Extracting Information
 # =============================================================================
 
@@ -75,8 +82,8 @@ elif case==9:
 output_dir = os.path.join( FileMethods.output_dir, "" )
 
 # generating filename 
-filename = 'loadProfile_PySAM__{0}__2022_02__pyomo_{1:.0f}__horizon_{2:.0f}_{3:.0f}__TES_{4}__PC_{5}.nuctes'.format(
-                json, dispatch, sscH, pyoH, tshours, Pref )
+filename = 'loadProfile_PySAM__{0}__2022_02__pyomo_{1:.0f}__horizon_{2:.0f}_{3:.0f}__TES_{4}__PC_{5}_{6}.nuctes'.format(
+                json, dispatch, sscH, pyoH, tshours, Pref, case)
 
 # full filepath
 NTPath = os.path.join(output_dir, filename)

@@ -27,13 +27,13 @@ print("PID = ", pid)
 #  Simulation Parameters
 # =============================================================================
 
-case = 7
+case =11
 
 # modifying inputs
 if case%2 == 0:
     json = "model2_Hamilton_560_tariffx1_mod"
 else:
-    json = "model2_CAISO_Hamilton_mod"
+    raise ValueError("Use other plotting script")
 
 dispatch = True
 run_loop = True
