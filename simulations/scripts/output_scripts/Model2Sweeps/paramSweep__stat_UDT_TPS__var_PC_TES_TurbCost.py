@@ -57,9 +57,9 @@ fin_rate = 0.07
 
 syn=False #a variable used to look at the cases that are simple summtion of the optimal nuc+solar cases
 
-for json in ['model2_CAISO_Hamilton_mod']: #
+for json in ['model2_CAISO_Hamilton_mod']: #[: #model2_Hamilton_560_tariffx1_mod'
     
-    for root_case in ['micro','small2','small1','sweep','large']: #['nuclear'] solar
+    for root_case in ['sweep','large']: #['nuclear'] solar 'micro','small2','small1'
         
         tmp_ppa=None
         
@@ -102,9 +102,9 @@ for json in ['model2_CAISO_Hamilton_mod']: #
                     tshours=np.array([0.22])
                     
                 if root_case=='test':
-                    q_dot_nuclear_des=0.1
-                    p_cycle=np.array([260])
-                    tshours=np.array([1])
+                    q_dot_nuclear_des=125
+                    p_cycle=np.array([319])
+                    tshours=np.array([0.82])
 
             else:
                 
@@ -184,7 +184,7 @@ for json in ['model2_CAISO_Hamilton_mod']: #
             elif case == "sweep":
                 q_dot_nuclear_des=950
                 if "CAISO" in json:
-                    tshours    = np.array([11,12,13,14,15,16,17])
+                    tshours    = np.array([4,5,6,7,8])
                     p_cycle    = np.array([1140,1090,1040,990,940])
                 else:
                     tshours    = np.array([ 0.1,1,2])
@@ -195,6 +195,7 @@ for json in ['model2_CAISO_Hamilton_mod']: #
                 if "CAISO" in json:
                     tshours    = np.array([3,4,5,6,7])
                     p_cycle    = np.array([2140,2040,1940,1840,1740])
+                else:
                     tshours    = np.array([ 0.1,1,2])
                     p_cycle    = np.array([1360,1260,1160,1060,960])
             
