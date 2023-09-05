@@ -36,7 +36,8 @@ m_dot_dtes = m_dot_esteam*DeltaH_dsteam/DeltaH_dtes  #nominal flow rate of water
 # m_dtes_ref = dtshours*m_dot_dtes*3600
 
 
-price_schedule = [math.sin(i/24*math.pi ) + 0.5 for i in range(N)]  #electricity price
+price_schedule = pd.read_csv("./simulations/data/IRONMTN_2_N001_DAM_20190101_20191231_sorted.csv", usecols=["LMP"])    #electricity prices
+price_schedule = price_schedule["LMP"].values
 distillate_schedule = [(math.sin(i/24*math.pi + math.pi/4) + 0.5)*0.2 for i in range(N)]  #distillate price
 inflow_schedule = [max(math.sin( i/(N*math.pi) + math.pi/4 )*m_dot_salt*random.gauss(1, .25) + m_dot_salt/4, 0) for i in range(N)]  #LFR salt into storage
 temperature_schedule = pd.read_csv("./simulations/desalination/Phoenix_TMY_temps.csv", usecols=["Temperature"]) #temperatures in Phoenix for TMY
