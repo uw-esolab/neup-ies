@@ -8,7 +8,7 @@ import random
 # ----------------------------
 # prep
 
-N = 480
+N = 8760
 
 # Some preliminary sizing calculations
 Q_dot_LFR = 950  #MW
@@ -39,9 +39,14 @@ m_dot_dtes = m_dot_esteam*DeltaH_dsteam/DeltaH_dtes  #nominal flow rate of water
 price_schedule = [math.sin(i/24*math.pi ) + 0.5 for i in range(N)]  #electricity price
 distillate_schedule = [(math.sin(i/24*math.pi + math.pi/4) + 0.5)*0.2 for i in range(N)]  #distillate price
 inflow_schedule = [max(math.sin( i/(N*math.pi) + math.pi/4 )*m_dot_salt*random.gauss(1, .25) + m_dot_salt/4, 0) for i in range(N)]  #LFR salt into storage
-temperature_schedule = pd.read_csv("Phoenix_TMY_temps.csv", usecols=["Temperature"])
-print(temperature_schedule)
-efficiency_schedule = 12 #ambient efficiency correction
+temperature_schedule = pd.read_csv("./simulations/desalination/Phoenix_TMY_temps.csv", usecols=["Temperature"]) #temperatures in Phoenix for TMY
+temperature_schedule = temperature_schedule["Temperature"].values
+
+efficiency_schedule = []    #efficiency schedule as function of ambient temperatures
+for temp in temperature_schedule:
+    efficiency = (-0.0036*temp + 1.2161) - 0.073
+    efficiency_schedule.append(efficiency)
+
 # -------------------------------
 
 model = pyomo.ConcreteModel()
