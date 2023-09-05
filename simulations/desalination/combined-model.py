@@ -8,7 +8,7 @@ import random
 # ----------------------------
 # prep
 
-N = 240
+N = 480
 
 # Some preliminary sizing calculations
 Q_dot_LFR = 950  #MW
@@ -41,7 +41,7 @@ distillate_schedule = [(math.sin(i/24*math.pi + math.pi/4) + 0.5)*0.2 for i in r
 inflow_schedule = [max(math.sin( i/(N*math.pi) + math.pi/4 )*m_dot_salt*random.gauss(1, .25) + m_dot_salt/4, 0) for i in range(N)]  #LFR salt into storage
 temperature_schedule = pd.read_csv("Phoenix_TMY_temps.csv", usecols=["Temperature"])
 print(temperature_schedule)
-##efficiency_schedule #ambient efficiency correction
+efficiency_schedule = 12 #ambient efficiency correction
 # -------------------------------
 
 model = pyomo.ConcreteModel()
