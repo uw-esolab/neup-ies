@@ -415,25 +415,45 @@ class NuclearTESLoadProfiles(object):
             ax.set_xlim([-0.5, 23.5])
             ax.set_xticks(self.hrs_in_day)
             
-            if is_winter:
-                ax.set_ylim([-3, 8.5])
-                ax.set_yticks([-2,0,2,4,6,8])
-                ax.legend(loc='best', fontsize=10, bbox_to_anchor=(1.17, 1.2),
-                          fancybox=True, shadow=True)
-                
-                peak_x  = 18
-                peak_dx = 1.7
-                peak_text = "-22.3"
+            if 'Palo' in self.filepath:
+                if is_winter:
+                   ax.set_ylim([-1, 8.5])
+                   ax.set_yticks([-2,0,2,4,6,8])
+                   ax.legend(loc='best', fontsize=10, bbox_to_anchor=(1.17, 1.2),
+                	                  fancybox=True, shadow=True)
+                	                  
+                else:
+                    ax.set_ylim([-1, 8.5])
+                    ax.set_yticks([-2,0,2,4,6,8])
+                    	        
+                    peak_x = 18
+                    peak_dx = 1.25
+                    peak_text = "16.0"
+                    	            
+                    ax.annotate("", xy=(peak_x, 8.5), xytext=(peak_x, 0),
+                                 arrowprops=dict(arrowstyle="->"))
+                    ax.text(peak_x-peak_dx, 6, peak_text, fontfamily='monospace', fontweight='normal',fontsize=11)
+	                  
             else:
-                ax.set_ylim([-3, 5])
-                ax.set_yticks([-2,0,2,4])
-                
-                peak_x = 21
-                peak_dx = 1.25
-                peak_text = "-8.5"
-                
-            
-            ax.annotate("", xy=(peak_x, -3), xytext=(peak_x, 0),
-                    arrowprops=dict(arrowstyle="->"))
-            ax.text(peak_x-peak_dx, -2, peak_text, fontfamily='monospace', fontweight='normal',fontsize=11)
+                if is_winter:
+                    ax.set_ylim([-3, 8.5])
+                    ax.set_yticks([-2,0,2,4,6,8])
+                    ax.legend(loc='best', fontsize=10, bbox_to_anchor=(1.17, 1.2),
+                    	                  fancybox=True, shadow=True)
+                    	        
+                    peak_x  = 18
+                    peak_dx = 1.7
+                    peak_text = "-22.3"
+                else:
+                    ax.set_ylim([-3, 5])
+                    ax.set_yticks([-2,0,2,4])
+                    	        
+                    peak_x = 21
+                    peak_dx = 1.25
+                    peak_text = "-8.5"
+                	        
+                	    
+                ax.annotate("", xy=(peak_x, -3), xytext=(peak_x, 0),
+                            arrowprops=dict(arrowstyle="->"))
+                ax.text(peak_x-peak_dx, -2, peak_text, fontfamily='monospace', fontweight='normal',fontsize=11)
                 

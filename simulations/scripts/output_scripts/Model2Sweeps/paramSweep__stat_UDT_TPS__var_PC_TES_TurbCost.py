@@ -57,9 +57,9 @@ fin_rate = 0.07
 
 syn=False #a variable used to look at the cases that are simple summtion of the optimal nuc+solar cases
 
-for json in ['model2_CAISO_Hamilton_mod']: #[: #model2_Hamilton_560_tariffx1_mod'
+for json in ['model2_Palo_Hamilton_mod']: #[: #model2_Hamilton_560_tariffx1_mod'model2_CAISO_Hamilton_mod
     
-    for root_case in ['sweep','large']: #['nuclear'] solar 'micro','small2','small1'
+    for root_case in ['solar','nuclear']: #['nuclear'] solar 'micro','small2','small1' 'sweep','large']
         
         tmp_ppa=None
         
@@ -137,6 +137,11 @@ for json in ['model2_CAISO_Hamilton_mod']: #[: #model2_Hamilton_560_tariffx1_mod
         else:
             
             if case=='nuclear':
+                q_dot_nuclear_des = 950
+                tshours=np.array([1,2,3,4,5,6,7])
+                p_cycle=np.array([1200,1100,1000,900,800,700,600])
+            
+            if case=='nuclear_survey': #used to generate the costs for all the scaled down nuclear cases
                 q_dot_nuclear_des_array=([20,100,250,950,1900])
                 if 'CAISO' in json:
                     tshours=np.array([4])
@@ -150,6 +155,9 @@ for json in ['model2_CAISO_Hamilton_mod']: #[: #model2_Hamilton_560_tariffx1_mod
                 if "CAISO" in json:
                     tshours=np.array([12,14,16,18,20])
                     p_cycle=np.array([180,160,140,120,100])
+                elif 'Palo' in json:
+                    tshours=np.array([10,12,14,16,18,20,22])
+                    p_cycle=np.array([220,200,180,160,140,120,100])
                 else:
                     tshours    = np.array([0.1,1,2,3,4])
                     p_cycle    = np.array([300,280,260,240,220]) 
