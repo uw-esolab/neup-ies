@@ -36,10 +36,35 @@ run_loop = True
 sscH    = 24   # (hr)
 pyoH    = 48   # (hr)
 
-    
-if case==-7:
-    Pref    = 900 # (MW)
-    tshours = 4   # (hr)
+
+if case == -1:
+    q_dot_nuclear_des=1900
+    Pref=1940
+    tshours=4.72
+elif case == -2:
+    q_dot_nuclear_des=950
+    Pref=1040
+    tshours=5.35
+elif case == -3:
+    q_dot_nuclear_des=250
+    Pref=376.8
+    tshours=7.72
+elif case == -4:
+    q_dot_nuclear_des=100
+    Pref=234.7
+    tshours=9.97
+elif case == -5:
+    q_dot_nuclear_des=20
+    Pref = 158.95
+    tshours=12.81
+elif case == -6:
+    q_dot_nuclear_des=0.1 #solar only
+    Pref = 140
+    tshours=14
+elif case == -7:
+    q_dot_nuclear_des=950 #nuclear only 
+    Pref=900
+    tshours=4
 
     
 #================================================================
@@ -66,7 +91,7 @@ Plots = NuclearTESLoadProfiles( NTPath )
 gen_data_array   = Plots.gen_dict
 tch_data_array   = Plots.e_ch_tes_dict
 
-title = "CAISO Market"
+title = "CAISO Market (Palo Verde)"
     
 # create full figure
 full_fig = plt.figure(figsize=(18,10))

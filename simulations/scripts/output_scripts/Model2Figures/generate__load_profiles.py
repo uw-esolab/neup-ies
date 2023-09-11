@@ -28,8 +28,7 @@ print("PID = ", pid)
 #     Run Simulation
 # =============================================================================
 
-#case has been appended to the end of the filename as of 10/6. Only case 6 updated so far. This is because some sizes had same optimum
-for case in [-7]:
+for case in [-7,-6,-5,-4,-3,-2,-1,5,7,9]:
     
     dispatch = True
     run_loop = True
@@ -40,18 +39,30 @@ for case in [-7]:
         json = "model2_Palo_Hamilton_mod"
         if case == -1:
             q_dot_nuclear_des=1900
+            Pref=1940
+            tshours=4.72
         elif case == -2:
             q_dot_nuclear_des=950
+            Pref=1040
+            tshours=5.35
         elif case == -3:
             q_dot_nuclear_des=250
+            Pref=376.8
+            tshours=7.72
         elif case == -4:
             q_dot_nuclear_des=100
+            Pref=234.7
+            tshours=9.97
         elif case == -5:
             q_dot_nuclear_des=20
+            Pref = 158.95
+            tshours=12.81
         elif case == -6:
-            q_dot_nuclear_des=0.1
+            q_dot_nuclear_des=0.1 #solar only
+            Pref = 140
+            tshours=14
         elif case == -7:
-            q_dot_nuclear_des=950 #nuclear only case. Currently set up as a test case
+            q_dot_nuclear_des=950 #nuclear only 
             Pref=900
             tshours=4
         
@@ -97,20 +108,20 @@ for case in [-7]:
             Pref = 378
             tshours = 0.69
         elif case==5:
-            Pref = 363.7
-            tshours = 8.61
+            Pref = 376.8
+            tshours = 8.46
         elif case==6:
             Pref = 307
             tshours=0.85
         elif case==7:
-            Pref = 229.5
-            tshours=11.32
+            Pref = 234.7
+            tshours=11.16
         elif case==8:
             Pref = 269.5
             tshours=0.96
         elif case==9:
-            Pref = 154.7
-            tshours=14.86
+            Pref = 158.95
+            tshours=14.57
         elif case==10:
             Pref=260
             tshours=1

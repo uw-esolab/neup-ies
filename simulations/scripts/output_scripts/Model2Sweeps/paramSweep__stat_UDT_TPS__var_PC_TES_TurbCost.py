@@ -55,15 +55,15 @@ fin_yrs  = 4.0
 fin_rate = 0.07
 
 
-syn=False #a variable used to look at the cases that are simple summtion of the optimal nuc+solar cases
+syn=True #a variable used to look at the cases that are simple summtion of the optimal nuc+solar cases
 
-for json in ['model2_Palo_Hamilton_mod']: #[: #model2_Hamilton_560_tariffx1_mod'model2_CAISO_Hamilton_mod
+for json in ['model2_Palo_Hamilton_mod']:#,'model2_CAISO_Hamilton_mod']: #[: #model2_Hamilton_560_tariffx1_mod'
     
-    for root_case in ['solar','nuclear']: #['nuclear'] solar 'micro','small2','small1' 'sweep','large']
+    for root_case in ['micro']: #['nuclear'] solar 'micro','small2','small1' 'sweep','large'] 'nuclear_survey'
         
         tmp_ppa=None
         
-        if (root_case == 'nuclear' or root_case == 'solar') and syn:
+        if (root_case == 'nuclear' or root_case == 'solar' or root_case == 'nuclear_survey') and syn:
             raise ValueError('This is not a synergy case')
         
         if syn:
@@ -74,7 +74,7 @@ for json in ['model2_Palo_Hamilton_mod']: #[: #model2_Hamilton_560_tariffx1_mod'
         
         if syn:
     
-            if "CAISO" not in json:
+            if "tariffx1" in json:
                 
                 if root_case=='micro':
                     q_dot_nuclear_des=20
@@ -105,23 +105,50 @@ for json in ['model2_Palo_Hamilton_mod']: #[: #model2_Hamilton_560_tariffx1_mod'
                     q_dot_nuclear_des=125
                     p_cycle=np.array([319])
                     tshours=np.array([0.82])
+             
+            elif "Palo" in json:
+                
+                if root_case=='micro':
+                    q_dot_nuclear_des=20
+                    p_cycle=np.array([158.95])
+                    tshours=np.array([12.81])
+                    
+                if root_case=='small2':
+                    q_dot_nuclear_des=100
+                    p_cycle=np.array([234.7])
+                    tshours=np.array([9.97])
+                    
+                if root_case=='small1':
+                    q_dot_nuclear_des=250
+                    p_cycle=np.array([376.8])
+                    tshours=np.array([7.72])
+                
+                if root_case=='sweep':
+                    q_dot_nuclear_des=950
+                    p_cycle=np.array([1040])
+                    tshours=np.array([5.35])
+                
+                if root_case=='large':
+                    q_dot_nuclear_des=1900
+                    p_cycle=np.array([1940])
+                    tshours=np.array([4.72])   
 
             else:
                 
                 if root_case=='micro':
                     q_dot_nuclear_des=20
-                    p_cycle=np.array([154.7])
-                    tshours=np.array([14.86])
+                    p_cycle=np.array([158.95])
+                    tshours=np.array([14.57])
                     
                 if root_case=='small2':
                     q_dot_nuclear_des=100
-                    p_cycle=np.array([229.5])
-                    tshours=np.array([11.32])
+                    p_cycle=np.array([234.7])
+                    tshours=np.array([11.16])
                     
                 if root_case=='small1':
                     q_dot_nuclear_des=250
-                    p_cycle=np.array([363.7])
-                    tshours=np.array([8.61])
+                    p_cycle=np.array([376.8])
+                    tshours=np.array([8.46])
                 
                 if root_case=='sweep':
                     q_dot_nuclear_des=950
@@ -142,10 +169,10 @@ for json in ['model2_Palo_Hamilton_mod']: #[: #model2_Hamilton_560_tariffx1_mod'
                 p_cycle=np.array([1200,1100,1000,900,800,700,600])
             
             if case=='nuclear_survey': #used to generate the costs for all the scaled down nuclear cases
-                q_dot_nuclear_des_array=([20,100,250,950,1900])
-                if 'CAISO' in json:
+                q_dot_nuclear_des_array=([20,100,250])
+                if 'CAISO' in json or "Palo" in json:
                     tshours=np.array([4])
-                    p_cycle=np.array([14.7,89.5,223.7,900,1800])
+                    p_cycle=np.array([18.95,94.7,236.8])
                 else:
                     tshours=np.array([0])
                     p_cycle=np.array([9.5,47,118,450,900])
@@ -208,27 +235,6 @@ for json in ['model2_Palo_Hamilton_mod']: #[: #model2_Hamilton_560_tariffx1_mod'
                     p_cycle    = np.array([1360,1260,1160,1060,960])
             
     
-    
-        # TES sizes to sweep through
-        
-        # tshours    = np.array([ 7, 8, 9 ])
-        # tshours    = np.array([ 0, 2, 4, 6, 8, 10 ])
-        # tshours    = np.array([ 0, 2, 4, 6, 8, 10, 12, 14 ])
-        # tshours    = np.array([ 0, 4, 8, 12, 16, 20 ])
-        # tshours    = np.array([ 12, 14, 16, 18, 20, 22 ])
-        
-        # PC sizes to sweep through
-        
-        # p_cycle    = np.array([ 700,  650,  600]) 
-        # p_cycle    = np.array([ 900, 850,  800,  750]) 
-        # p_cycle    = np.array([ 1050, 1000,  950]) 
-        
-        # p_cycle    = np.array([ 750,  700,  650,  600 ]) 
-        # p_cycle    = np.array([ 950,  900,  850,  800 ]) 
-        # p_cycle    = np.array([ 1150, 1100, 1050, 1000 ]) 
-        
-        
-
         
         # =============================================================================
         # Initialize empty arrays
@@ -283,7 +289,7 @@ for json in ['model2_Palo_Hamilton_mod']: #[: #model2_Hamilton_560_tariffx1_mod'
         for i, th in enumerate(iterator1): #over tshours
             for j, pc in enumerate(iterator2): #over P_cycle rating
             
-                if case=='nuclear':
+                if case=='nuclear_survey':
                     q_dot_nuclear_des=q_dot_nuclear_des_array[j]
                 
                 # =========================================
@@ -323,7 +329,7 @@ for json in ['model2_Palo_Hamilton_mod']: #[: #model2_Hamilton_560_tariffx1_mod'
                 """
                 nuclear_om_fixed = 61100000*q_dot_nuclear_des/950
                 solar_om_fixed = 88.3*115000
-                if case=='nuclear':
+                if case=='nuclear' or case == 'nuclear_survey':
                     solar_om_fixed=0
                     for param in ['site_spec_cost','heliostat_spec_cost','radiator_unitcost','radiator_fluidcost','radiator_installcost',
                                   'rec_ref_cost','tower_fixed_cost','land_spec_cost']:
@@ -365,7 +371,7 @@ for json in ['model2_Palo_Hamilton_mod']: #[: #model2_Hamilton_560_tariffx1_mod'
                 #extra financing of TES should be done against thermal not electric power. This is factor 950/465. NOT IMPLEMENTED for consistency with Model1
                 #the impact of this is very small
                 base_financing = (nuctes.SSC_dict["construction_financing_cost"]-409000000)+q_dot_nuclear_des/950*409000000
-                if case=='nuclear':
+                if case=='nuclear' or case == 'nuclear_survey':
                     base_financing=q_dot_nuclear_des/950*409000000
                     nuctes.SSC_dict['is_hardcode_csp_off']=1
                 else:

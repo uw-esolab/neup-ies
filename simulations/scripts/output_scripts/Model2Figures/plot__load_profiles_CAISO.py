@@ -27,7 +27,7 @@ print("PID = ", pid)
 #  Simulation Parameters
 # =============================================================================
 
-case = 13 #1,3,5,7,9,11
+case = 9 #1,3,5,7,9,11
 
 # modifying inputs
 json = "model2_CAISO_Hamilton_mod"   # model1_CAISO_Hamilton # model1_Hamilton_560_tariffx2 # model1_Hamilton_560_tariffx1
@@ -53,20 +53,20 @@ elif case==4:
     Pref = 378
     tshours = 0.69
 elif case==5:
-    Pref = 363.7
-    tshours = 8.61
+    Pref = 376.8
+    tshours = 8.46
 elif case==6:
     Pref = 307
     tshours=0.85
 elif case==7:
-    Pref = 229.5
-    tshours=11.32
+    Pref = 234.7
+    tshours=11.16
 elif case==8:
     Pref = 269.5
     tshours=0.96
 elif case==9:
-    Pref = 154.7
-    tshours=14.86
+    Pref = 158.95
+    tshours=14.57
 elif case==10:
     Pref=260
     tshours=1
