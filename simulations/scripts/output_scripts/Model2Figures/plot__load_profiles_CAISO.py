@@ -27,7 +27,7 @@ print("PID = ", pid)
 #  Simulation Parameters
 # =============================================================================
 
-case = 9 #1,3,5,7,9,11
+case = 3 #1,3,5,7,9,11
 
 # modifying inputs
 json = "model2_CAISO_Hamilton_mod"   # model1_CAISO_Hamilton # model1_Hamilton_560_tariffx2 # model1_Hamilton_560_tariffx1
@@ -104,7 +104,7 @@ Plots = NuclearTESLoadProfiles( NTPath )
 gen_data_array   = Plots.gen_dict
 tch_data_array   = Plots.e_ch_tes_dict
 
-title = "CAISO Market"
+title = "CAISO Market (Iron Mtn)"
     
 # create full figure
 full_fig = plt.figure(figsize=(18,10))

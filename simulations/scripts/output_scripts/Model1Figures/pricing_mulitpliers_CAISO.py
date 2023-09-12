@@ -16,6 +16,8 @@ rc('axes', linewidth=2)
 rc('font', weight='bold',size=12)
 u = pint.UnitRegistry()
 
+model2a = True
+
 # create object for NuclearTES for some setup steps
 nuctes = NuclearTES.NuclearTES( is_dispatch=False )
 
@@ -60,6 +62,18 @@ print("CAISO Tariff rates over time average out to: {0} \n Deviations are {1}.".
                                     summed_LMP, 
                                     "within tolerance" if math.isclose( summed_LMP, 1, rel_tol=1e-4 ) else "too large."
                                     ) )
+    
+# =============================================================================
+# Palo
+# =============================================================================
+
+if model2a:
+    with open("../../../data/PaloVerdeProcessing/palo_data.csv","r") as f:
+        palo=[]
+        for line in f:
+            palo.append(float(line))
+        LMP_norm_palo=np.array(palo)
+            
 
 # =============================================================================
 # Default Tariff Rate Plot
@@ -86,8 +100,8 @@ xlabel_loc = np.arange(0, winter_end_slice, 24)
 xlabels = ["Mon", "Tues", "Wed", "Thurs", "Fri", "Sat", "Sun"]
 
 #====== Figure ======#
-fig = plt.figure(figsize=(10,6))
-ax = fig.add_subplot(211)
+fig = plt.figure(figsize=(10,9 if model2a else 6))
+ax = fig.add_subplot(311 if model2a else 211)
 
 ax.plot(p_time[winter_slice], default_tariff[winter_slice], linewidth= 3, label="Oct-May")
 ax.plot(p_time[winter_slice], default_tariff[summer_slice], linewidth= 3, label="Jun-Sep")
@@ -140,7 +154,7 @@ xlabels = ["Mon", "Tues", "Wed", "Thurs", "Fri", "Sat", "Sun"]
 
 
 #====== Figure ======#
-axp = fig.add_subplot(212)
+axp = fig.add_subplot(312 if model2a else 212)
 # axn = axp.twinx()
 
 # ax.plot(p_time[winter_slice], LMP_norm[winter_slice], linewidth= 3, label="Week #5")
@@ -202,7 +216,7 @@ for w in range(52):
     axp.set_xticklabels(xlabels)
     axp.grid(True)
     axp.set_ylim([-3, 8.25])
-    axp.set_ylabel("CAISO \n Price Multiplier", fontweight='bold')
+    axp.set_ylabel("CAISO{0}\n Price Multiplier".format(" (Iron Mtn)" if model2a else ""), fontweight='bold')
     
     # axn.set_xlim([-0.25, 7.25])
     # axn.set_xticklabels(xlabels)
@@ -214,3 +228,71 @@ for w in range(52):
     
     # axp.legend(loc='best')
     # axn.legend(loc='best')
+    
+if model2a:
+    #====== Figure ======#
+    axp = fig.add_subplot(313)
+
+    for w in range(52):
+        
+        start_slice = int( days_per_week * hrs_per_day * w)
+        end_slice   = int( start_slice + days_per_week * hrs_per_day)
+        t_slice     = slice(start_slice, end_slice, 1)
+        
+        if w == 0:
+            s_slice = t_slice
+            
+        LMP_slice = LMP_norm_palo[t_slice]
+        LMP_pos   = copy.deepcopy(LMP_slice)
+        # LMP_pos[LMP_pos<0] = 0
+
+        # LMP_neg   = copy.deepcopy(LMP_slice)
+        # LMP_neg[LMP_neg>0] = 0
+        # LMP_neg *= -1
+        
+        axp.plot(p_time[s_slice], LMP_pos, color='C0', linewidth= 0.5, alpha=0.5)
+        
+        tmp=list(LMP_pos)
+        for item in tmp:
+            if item>10.5:
+                print(item,p_time[s_slice][tmp.index(item)])
+        
+        xzero = np.linspace(-1, 23.5, 1000)
+        yzero = np.zeros( len(xzero) )
+        axp.plot( xzero, yzero, 'k')
+        # axn.plot(p_time[s_slice], LMP_neg, color='C1', linewidth= 1, alpha=1)
+        
+        # axn.yaxis.label.set_color('C1')
+        # axn.tick_params(axis='y', colors='C1')
+        # axn.spines["right"].set_edgecolor('C1')
+        
+        axp.annotate("", xy=(3.75, 10.5), xytext=(3.75, 4.0),
+                arrowprops=dict(arrowstyle="->"))
+        axp.text(3.25, 7, "14.6", fontfamily='monospace', fontweight='normal',fontsize=11)
+
+        axp.annotate("", xy=(4.75, 10.5), xytext=(4.75, 4.0),
+                arrowprops=dict(arrowstyle="->"))
+        axp.text(4.25, 7, "16.0", fontfamily='monospace', fontweight='normal',fontsize=11)
+        
+        axp.annotate("", xy=(5.75, 10.5), xytext=(5.75, 4.0),
+                arrowprops=dict(arrowstyle="->"))
+        axp.text(5.25, 7, "12.2", fontfamily='monospace', fontweight='normal',fontsize=11)
+        
+        axp.set_xlim([-0.25, 7.25])
+        axp.set_xticklabels(xlabels)
+        axp.set_xticks(p_time[s_slice][xlabel_loc])
+        axp.set_xticklabels(xlabels)
+        axp.grid(True)
+        axp.set_ylim([-0.25, 10.5])
+        axp.set_ylabel("CAISO (Palo Verde)\n Price Multiplier", fontweight='bold')
+        
+        # axn.set_xlim([-0.25, 7.25])
+        # axn.set_xticklabels(xlabels)
+        # axn.set_xticks(p_time[s_slice][xlabel_loc])
+        # axn.set_xticklabels(xlabels)
+        # axn.grid(True)
+        # axn.set_ylim([0, 8.25])
+        # axn.set_ylabel("CAISO \n Price Multiplier \n Negative Prices", fontweight='bold')
+        
+        # axp.legend(loc='best')
+        # axn.legend(loc='best')
