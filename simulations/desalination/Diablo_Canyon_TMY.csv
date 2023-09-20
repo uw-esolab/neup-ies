@@ -1,5 +1,3 @@
-Source,Location ID,City,State,Country,Latitude,Longitude,Time Zone,Elevation,Local Time Zone,Dew Point Units,DHI Units,DNI Units,GHI Units,Temperature Units,Pressure Units,Wind Direction Units,Wind Speed Units,Surface Albedo Units,Version
-NSRDB,161003,-,-,-,35.21,-120.86,0,33,-8,c,w/m2,w/m2,w/m2,c,mbar,Degrees,m/s,N/A,3.2.2
 Year,Month,Day,Hour,Minute,Temperature
 2006,1,1,0,30,13.200000000000001
 2006,1,1,1,30,12.5
