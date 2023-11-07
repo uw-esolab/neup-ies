@@ -256,3 +256,45 @@ for t in model.T:
 df_out = pd.DataFrame(data_out, columns=outlabs)
 df_out.to_csv('results5.csv', header=True)
 
+# graph for power output and electricity pricing
+# fig, ax = plt.subplots()
+# ax.plot(range(model.nt()),electric_price_schedule, color='red')
+# ax.set_xlabel("Timestep (hr)")
+# ax.set_ylabel("Electricity Prices ($/MWh) & Power Output (MW)")
+# ax2 = ax.twinx()
+# ax.plot(range(model.nt()),[model.w_dot[t]() for t in model.T], color='blue')
+# ax2.set_ylabel("Power Output (MW)")
+# plt.show()
+
+# graph for mass of salt stored in TES and mass flow rate out of TES
+# fig, ax = plt.subplots()
+# ax.plot(range(model.nt()), [model.m_ch[t]() for t in model.T], color='red')
+# ax.set_xlabel("Timestep (hr)")
+# ax.set_ylabel("Mass in Cycle TES (kg)")
+# ax2 = ax.twinx()
+# ax2.plot(range(model.nt()), [model.m_dot_cs[t]() for t in model.T], color='blue')
+# ax2.set_ylabel("Mass flow from Cycle TES (kg/s)")
+# plt.show()
+
+# graph for amount of distillate produced
+# plt.plot(range(model.nt()), [model.v_dot[t]() for t in model.T])
+# plt.xlabel("Timestep (hr)")
+# plt.ylabel("Distillate Produced (kg/s)")
+# plt.show()
+
+# fig, ax = plt.subplots()
+# ax.plot(range(model.nt()), [model.w_dot[t]() for t in model.T], color='red')
+# ax2 = ax.twin()
+# ax.plot(range(model.nt()), [model.m_ch[t]() for t in model.T], color='blue')
+# plt.show()
+
+
+# graph for distillate produced & power output
+# fig, ax = plt.subplots()
+# ax.plot(range(model.nt()),[model.v_dot[t]() for t in model.T], color='red')
+# ax.set_xlabel("Timestep (hr)")
+# ax.set_ylabel("Distillate Production (kg/s)")
+# ax2 = ax.twinx()
+# ax.plot(range(model.nt()),[model.w_dot[t]() for t in model.T], color='blue')
+# ax2.set_ylabel("Power Output (MW)")
+# plt.show()
