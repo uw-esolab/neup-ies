@@ -1,0 +1,47 @@
+Solver command line: ['/usr/local/bin/gurobi.sh']
+
+Set parameter Username
+Academic license - for non-commercial use only - expires 2024-08-14
+Read LP format model from file /var/folders/5f/nmqydr1d4jv76vhtqyys2b8c0000gn/T/tmppab2_09i.pyomo.lp
+Reading time = 0.22 seconds
+x87603: 148919 rows, 87603 columns, 280315 nonzeros
+Gurobi Optimizer version 10.0.2 build v10.0.2rc0 (mac64[rosetta2])
+
+CPU model: Apple M2
+Thread count: 8 physical cores, 8 logical processors, using up to 8 threads
+
+Optimize a model with 148919 rows, 87603 columns and 280315 nonzeros
+Model fingerprint: 0xd07b2b79
+Coefficient statistics:
+  Matrix range     [3e-03, 2e+04]
+  Objective range  [5e-05, 1e+03]
+  Bounds range     [0e+00, 0e+00]
+  RHS range        [1e+00, 1e+07]
+Presolve removed 105122 rows and 52563 columns
+Presolve time: 0.09s
+Presolved: 43797 rows, 43799 columns, 113870 nonzeros
+
+Concurrent LP optimizer: primal simplex, dual simplex, and barrier
+Showing barrier log only...
+
+Ordering time: 0.01s
+
+Barrier statistics:
+ Dense cols : 2
+ AA' NZ     : 8.759e+04
+ Factor NZ  : 7.926e+05 (roughly 40 MB of memory)
+ Factor Ops : 1.731e+07 (less than 1 second per iteration)
+ Threads    : 6
+
+Barrier performed 0 iterations in 0.40 seconds (1.11 work units)
+Barrier solve interrupted - model solved by another algorithm
+
+
+Solved with dual simplex
+Extra simplex iterations after uncrush: 1
+Iteration    Objective       Primal Inf.    Dual Inf.      Time
+     171    2.3857242e+08   0.000000e+00   0.000000e+00      0s
+
+Solved in 171 iterations and 0.45 seconds (1.20 work units)
+Optimal objective  2.385724231e+08
+
