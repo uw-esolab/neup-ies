@@ -22,7 +22,7 @@ N                         = 8760
 
 # Some preliminary sizing calculations
 Q_dot_LFR                 = 950  #MW
-W_dot_gen                 = 494 #MW
+W_dot_gen                 = 2*494 #MW
 eta_cycle_ref             = 0.52
 cp_salt                   = 1.5 #kJ/kg-K
 DeltaT_ctes               = 565-330  #K
@@ -46,7 +46,7 @@ desal_price_per_kg        = 0
 
 
 m_dot_salt                = Q_dot_LFR*1e3 / (cp_salt * DeltaT_ctes)  #kg/s
-m_dot_csteam              = W_dot_gen/eta_cycle_ref*1e6 / (DeltaH_csteam*1e3)  #kg/s
+m_dot_csteam              = W_dot_gen/eta_cycle_ref*1e6 /(DeltaH_csteam*1e3)  #kg/s
 
 f_lpt                     = 0.53  #nominal fraction of steam flow that makes it to LPT stage 3
 
@@ -95,16 +95,13 @@ model.M_dm_min       = pyomo.Param(initialize=0)    #[kg]  Desal thermal storage
 model.K_d            = pyomo.Param(initialize=0.55)    #[(kg/s)/(kg/s)]  Rate of distillate production per unit mass flow into the desal system
 model.M_dot_ch_init  = pyomo.Param(initialize=0.0)  #[kg] Initial cycle thermal storage inventory
 model.M_dot_dh_init  = pyomo.Param(initialize=0.0)  #[kg] Initial desal thermal storage inventory
-model.W_dot_max      = pyomo.Param(initialize=W_dot_gen*2) #[MW]   
+model.W_dot_max      = pyomo.Param(initialize=W_dot_gen) #[MW]   
 model.W_dot_min      = pyomo.Param(initialize=0.25*W_dot_gen)    #[MW]
 # model.V_dot_max      = pyomo.Param(initialize=m_dot_dtes*model.K_d()) #[kg/s]
 model.V_dot_min      = pyomo.Param(initialize=m_dot_dtes*model.K_d()*0) #[kg/s]
 model.C_cs           = pyomo.Param(initialize=cost_molten_salt_TES_kWh) #[$/kWh] Cost associated with cycle thermal energy storage
 model.C_ds           = pyomo.Param(initialize=cost_desal_TES_kWh) #[$/kWh] Cost associated with desal thermal energy storage
-#model.m_dot_csteam  = pyomo.Param(initialize=m_dot_csteam) #[kg/s] Steam flow to turbine
-#model.m_dot_cs      = pyomo.Param(initialize=m_dot_salt)
-#model.m_dot_hpt      = pyomo.Param(initialize=m_dot_csteam)
-model.M_cm_max       = pyomo.Param(initialize=2E6) #2000 MWh of cycle-side storage
+model.M_cm_max       = pyomo.Param(initialize=4000000) #4000 MWh of cycle-side storage
 #  ==================================================
 #       Variables
 #  ==================================================
@@ -122,7 +119,7 @@ model.w_dot_Delta_dn = pyomo.Var(model.T-[1], domain=pyomo.NonNegativeReals)   #
 model.M_dm_max       = pyomo.Var(domain=pyomo.NonNegativeReals) #[kWh] Desal thermal storage maximum inventory
 model.V_dot_max      = pyomo.Var(domain=pyomo.NonNegativeReals) #[] Size of desalination system
 model.C_desal        = pyomo.Var(domain=pyomo.NonNegativeReals) #[] Cost of desalination system
-model.y_w            = pyomo.Var(model.T, domain=pyomo.Binary)  # [0 if no mass flow to hpt, 1 otherwise]
+
 #  ==================================================
 #   Objective
 def objective(model):
@@ -175,7 +172,7 @@ model.constr_chx = pyomo.Constraint(model.T, rule=constr_chx)
 
 # Conversion of mass flow to power in the cycle
 def constr_cmass(model, t):
-    return model.w_dot[t] == model.eta[t]*W_dot_gen * (0.7*(model.m_dot_hpt[t]/m_dot_csteam) + 0.3*((0.38*model.m_dot_hpt[t]/m_dot_csteam)+ (0.62*model.F_lpt*(model.m_dot_hpt[t] - model.m_dot_e[t])/m_dot_esteam)))
+    return model.w_dot[t] == ((model.eta[t]*W_dot_gen)/m_dot_csteam) * (1.075*model.m_dot_hpt[t] - 0.186*model.m_dot_e[t] - 0.0748*m_dot_csteam)
 model.constr_cmass = pyomo.Constraint(model.T, rule=constr_cmass)
                                                          
 
