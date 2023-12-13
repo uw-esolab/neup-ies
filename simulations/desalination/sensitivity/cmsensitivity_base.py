@@ -6,7 +6,7 @@ Created on Tue Nov 28 09:13:42 2023
 @author: elizabethkeith
 """
 
-"This model generates data for different high-temperature TES (kWh) prices ranging from 25% base case to 200% base case"
+"This model has all design component costs at their base prices."
 
 import pyomo.environ as pyomo
 import pandas as pd
