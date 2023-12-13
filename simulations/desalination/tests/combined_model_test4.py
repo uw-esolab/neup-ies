@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Mon Oct 23 14:51:38 2023
+Created on Tue Oct 24 10:14:01 2023
 
 @author: elizabethkeith
 """
 
-"For this test case, the price at which water is sold at is set to 0, as is the penalty associated \
-    with ramping the NPP, maximum output from NPP is twice the nominal output\
-        the ramping rate is set to 0.5*W_dot_gen rather than 0.1*W_dot_gen"
+"For this test case, the price at which water is sold at is set to $0.002/kg \
+    the cost of the desalination facility is $1E6, price of low-temp TES is $100/KWh (expensive)"
 
 import pyomo.environ as pyomo
 # from pyomo import Parameter, Variable, Set
@@ -31,18 +30,18 @@ DeltaH_dsteam             = 2494  #kJ/kg  (h(4.8bar,x=.98) - h(4.5bar,50C))  # s
 DeltaH_dtes               = 421.3 #kJ/kg  (h(5bar,140C) - h(5bar,40C))       # water through HX to desal hot storage 
 
 # calculations for molten salt TES
-cost_molten_salt_TES_kWh  = 10   # [$/kWh-th]
+cost_molten_salt_TES_kWh  = 20   # [$/kWh-th]
 #cost_molten_salt_TES_kg   = (cost_molten_salt_TES_kWh/3600)*cp_salt*DeltaT_ctes  # [$/kg]
 
 # calculations for desalination TES
-cost_desal_TES_kWh        = 50.0  # [$/KWh-th], scaled from German TES
+cost_desal_TES_kWh        = 20  # [$/KWh-th], scaled from German TES
 #cost_desal_TES_kg         = (cost_desal_TES_kWh/3600)*DeltaH_dtes # [$/kg]
 
 # esalinated water prices
 desal_price_acre_foot     = 2637.10 # [$/acre-foot]  price of desalinated water in 2021 in San Diego County from:(https://www.sdcwa.org/wp-content/uploads/2020/11/desal-carlsbad-fs.pdf)
 cubic_meter_per_acre_foot = 1233.48 # [m^3/acre-foot]
 specific_volume_H2O       = 0.001 # [m^3/kg]
-desal_price_per_kg        = 0
+desal_price_per_kg        = .002
 
 
 m_dot_salt                = Q_dot_LFR*1e3 / (cp_salt * DeltaT_ctes)  #kg/s
@@ -81,30 +80,30 @@ model.M_dot_LFR      = pyomo.Param(model.T, initialize = dict(zip(model.T, inflo
 model.eta            = pyomo.Param(model.T, initialize = dict(zip(model.T, efficiency_schedule)))   #[]  Ambient temperature efficiency modifier in the power cycle at time t
 model.P_elec         = pyomo.Param(model.T, initialize = dict(zip(model.T, electric_price_schedule)))    #[$/MWh]  Price at which electricity is sold at time t
 model.P_dist         = pyomo.Param(model.T, initialize = dict(zip(model.T, distillate_price_schedule)))   #[$/kg]  Price at which distillate is sold at time t
-model.C_c_ramp       = pyomo.Param(initialize=0)    #[$/Delta MW]  Cost associated with change in electric power production, from Gabriel's paper
+model.C_c_ramp       = pyomo.Param(initialize=43.75)    #[$/Delta MW]  Cost associated with change in electric power production, from Gabriel's paper
 model.C_d_ramp       = pyomo.Param(initialize=0.2)    #[$/Delta kg/s]  Cost associated with change in distillate production 
 model.K_chx          = pyomo.Param(initialize=m_dot_csteam/m_dot_salt)   #[(kg/s)/(kg/s)]  Conversion constant for salt mass flow to steam mass flow in the cycle heat exchanger
-#model.K_chpt         = pyomo.Param(initialize=W_dot_gen/m_dot_csteam)    #[MW/(kg/s)]  Conversion constant for HPT steam mass flow to power in the cycle
-#model.K_clpt         = pyomo.Param(initialize=W_dot_gen/m_dot_esteam)   #[MW/(kg/s)]  Conversion constant for LPT extraction steam mass flow to lost power in the cycle
+model.K_chpt         = pyomo.Param(initialize=W_dot_gen/m_dot_csteam)    #[MW/(kg/s)]  Conversion constant for HPT steam mass flow to power in the cycle
+model.K_clpt         = pyomo.Param(initialize=W_dot_gen/m_dot_esteam)   #[MW/(kg/s)]  Conversion constant for LPT extraction steam mass flow to lost power in the cycle
 model.K_cint         = pyomo.Param(initialize=-0.073*W_dot_gen)    #[MW]  Constant equation intercept for cycle mass flow to power conversion
 model.F_lpt          = pyomo.Param(initialize=0.53)  #[-] Max fraction of steam mass flow available for extraction
-model.W_dot_ramp_max = pyomo.Param(initialize=0.5*W_dot_gen)    #[Delta MW/hr]  Maximum allowable power system ramp rate 
+model.W_dot_ramp_max = pyomo.Param(initialize=0.1*W_dot_gen)    #[Delta MW/hr]  Maximum allowable power system ramp rate 
 model.K_dhx          = pyomo.Param(initialize=m_dot_dtes/m_dot_esteam)    #[(kg/s)/(kg/s)]  Conversion constant for HPT extraction steam mass flow to desal storage charge mass flow
 model.M_cm_min       = pyomo.Param(initialize=0)    #[kg]  Cycle thermal storage minimum inventory
 model.M_dm_min       = pyomo.Param(initialize=0)    #[kg]  Desal thermal storage minimum inventory
 model.K_d            = pyomo.Param(initialize=0.55)    #[(kg/s)/(kg/s)]  Rate of distillate production per unit mass flow into the desal system
 model.M_dot_ch_init  = pyomo.Param(initialize=0.0)  #[kg] Initial cycle thermal storage inventory
 model.M_dot_dh_init  = pyomo.Param(initialize=0.0)  #[kg] Initial desal thermal storage inventory
-model.W_dot_max      = pyomo.Param(initialize=W_dot_gen*2) #[MW]   
-model.W_dot_min      = pyomo.Param(initialize=0.25*W_dot_gen)    #[MW]
+model.W_dot_max      = pyomo.Param(initialize=W_dot_gen) #[MW]   
+model.W_dot_min      = pyomo.Param(initialize=W_dot_gen*0.25)    #[MW]
 # model.V_dot_max      = pyomo.Param(initialize=m_dot_dtes*model.K_d()) #[kg/s]
 model.V_dot_min      = pyomo.Param(initialize=m_dot_dtes*model.K_d()*0) #[kg/s]
 model.C_cs           = pyomo.Param(initialize=cost_molten_salt_TES_kWh) #[$/kWh] Cost associated with cycle thermal energy storage
 model.C_ds           = pyomo.Param(initialize=cost_desal_TES_kWh) #[$/kWh] Cost associated with desal thermal energy storage
-#model.m_dot_csteam  = pyomo.Param(initialize=m_dot_csteam) #[kg/s] Steam flow to turbine
-#model.m_dot_cs      = pyomo.Param(initialize=m_dot_salt)
-#model.m_dot_hpt      = pyomo.Param(initialize=m_dot_csteam)
-model.M_cm_max       = pyomo.Param(initialize=2E6) #2000 MWh of cycle-side storage
+#model.C_desal        = pyomo.Param(initialize=1e6)
+#model.m_dot_csteam   = pyomo.Param(initialize=m_dot_csteam) #[kg/s] Steam flow to turbine
+#model.m_dot_cs       = pyomo.Param(initialize=m_dot_salt)
+#model.m_dot_hpt       = pyomo.Param(initialize=m_dot_csteam)
 #  ==================================================
 #       Variables
 #  ==================================================
@@ -118,11 +117,10 @@ model.w_dot          = pyomo.Var(model.T, domain=pyomo.NonNegativeReals)   #[]  
 model.v_dot          = pyomo.Var(model.T, domain=pyomo.NonNegativeReals)   #[]  Distillate produced by the desal system at time step $t$
 model.w_dot_Delta_up = pyomo.Var(model.T-[1], domain=pyomo.NonNegativeReals)   #[]  Positive change in electric power produced at time step $t$ relative to the previous time step, $t\geq 2$
 model.w_dot_Delta_dn = pyomo.Var(model.T-[1], domain=pyomo.NonNegativeReals)   #[]  Negative change in electric power produced at time step $t$ relative to the previous time step, $t\geq 2$
-#model.M_cm_max       = pyomo.Var(domain=pyomo.NonNegativeReals) #[kWh] Cycle thermal storage maximum inventory
+model.M_cm_max       = pyomo.Var(domain=pyomo.NonNegativeReals) #[kWh] Cycle thermal storage maximum inventory
 model.M_dm_max       = pyomo.Var(domain=pyomo.NonNegativeReals) #[kWh] Desal thermal storage maximum inventory
 model.V_dot_max      = pyomo.Var(domain=pyomo.NonNegativeReals) #[] Size of desalination system
 model.C_desal        = pyomo.Var(domain=pyomo.NonNegativeReals) #[] Cost of desalination system
-model.y_w            = pyomo.Var(model.T, domain=pyomo.Binary)  # [0 if no mass flow to hpt, 1 otherwise]
 #  ==================================================
 #   Objective
 def objective(model):
@@ -153,31 +151,32 @@ model.constr_C_desal2 = pyomo.Constraint(rule=constr_C_desal2)
 # ------- Power cycle subsystem ------------- 
 def constr_csmass(model,t):
     if t>1: 
-        return model.m_ch[t] == (model.M_dot_LFR[t] - model.m_dot_cs[t]) * 3600 * model.Delta_t + model.m_ch[t-1]
+        return model.m_ch[t] == (model.M_dot_LFR[t] - model.m_dot_cs[t])*3600*model.Delta_t + model.m_ch[t-1] 
     else:
-        return model.m_ch[t] == (model.M_dot_LFR[t] - model.m_dot_cs[t]) * 3600 * model.Delta_t + model.M_dot_ch_init
+        return model.m_ch[t] == (model.M_dot_LFR[t] - model.m_dot_cs[t])*3600*model.Delta_t + model.M_dot_ch_init
 model.constr_csmass = pyomo.Constraint(model.T, rule=constr_csmass)
 
 #Inventory limits on the cycle storage 
 def constr_csmmax(model,t):
-    return (model.m_ch[t] * cp_salt * DeltaT_ctes)/3600 <= model.M_cm_max
+    return model.m_ch[t] <= (model.M_cm_max*3600)/(cp_salt*DeltaT_ctes)
 model.constr_csmmax = pyomo.Constraint(model.T, rule=constr_csmmax)
 def constr_csmmin(model,t):
-    return (model.m_ch[t] * cp_salt * DeltaT_ctes)/3600 >= model.M_cm_min
+    return model.m_ch[t] >= model.M_cm_min
 model.constr_csmmin = pyomo.Constraint(model.T, rule=constr_csmmin)
 
 
 #Mass flow conversion from cycle storage to HPT inlet
 def constr_chx(model,t):
-    return model.m_dot_hpt[t] == model.K_chx * model.m_dot_cs[t]
+    return model.m_dot_hpt[t] <= model.K_chx * model.m_dot_cs[t]
 model.constr_chx = pyomo.Constraint(model.T, rule=constr_chx)
 
 
 # Conversion of mass flow to power in the cycle
 def constr_cmass(model, t):
-    return model.w_dot[t] == model.eta[t]*W_dot_gen * (0.7*(model.m_dot_hpt[t]/m_dot_csteam) + 0.3*((0.38*model.m_dot_hpt[t]/m_dot_csteam)+ (0.62*model.F_lpt*(model.m_dot_hpt[t] - model.m_dot_e[t])/m_dot_esteam)))
+    return model.w_dot[t] == ((model.eta[t]*W_dot_gen)/m_dot_csteam) * (1.075*model.m_dot_hpt[t] - 0.186*model.m_dot_e[t] - 0.0748*m_dot_csteam)
 model.constr_cmass = pyomo.Constraint(model.T, rule=constr_cmass)
                                                          
+
 
 # Mass flow limit on the extraction
 def constr_mext(model, t):
@@ -233,10 +232,11 @@ def constr_distillate(model,t):
     return model.v_dot[t] == model.K_d * model.m_dot_ds[t]
 model.constr_distillate = pyomo.Constraint(model.T, rule=constr_distillate)
 
-# # Range limits on desal system
-# def constr_vbounds_up(model, t):
-#     return model.v_dot[t] <= model.V_dot_max
-# model.constr_vbounds_up = pyomo.Constraint(model.T, rule=constr_vbounds_up)
+# Range limits on desal system
+def constr_vbounds_up(model, t):
+    return model.v_dot[t] <= model.V_dot_max
+model.constr_vbounds_up = pyomo.Constraint(model.T, rule=constr_vbounds_up)
+
 def constr_vbounds_dn(model, t):
     return model.v_dot[t] >= model.V_dot_min
 model.constr_vbounds_dn = pyomo.Constraint(model.T, rule=constr_vbounds_dn)
@@ -248,8 +248,8 @@ solver = pyomo.SolverFactory('gurobi')
 results = solver.solve(model, keepfiles = True, logfile = 'solve.log')
 # print(model.display())
 
-outlabs = ['t', 'P_elec','eta','m_ch', 'm_dh', 'w_dot', 'v_dot', 'm_dot_cs','m_dot_hpt','m_dot_e','m_dot_ds', 'M_cm_max', 'M_dm_max', 'V_dot_max']
-data_out = np.zeros((8760,14))
+outlabs = ['t', 'P_elec','eta','m_ch', 'm_dh', 'w_dot', 'v_dot', 'm_dot_cs','m_dot_hpt','m_dot_e','m_dot_ds', 'M_cm_max', 'M_dm_max', 'V_dot_max','C_desal']
+data_out = np.zeros((8760,15))
 for t in model.T:
     outs = [
         t, 
@@ -257,7 +257,7 @@ for t in model.T:
         model.eta[t],
         model.m_ch[t](), 
         model.m_dh[t](), 
-        model.w_dot[t](),
+        model.w_dot[t](), 
         model.v_dot[t](),
         model.m_dot_cs[t](),
         model.m_dot_hpt[t](),
@@ -266,12 +266,10 @@ for t in model.T:
         model.M_cm_max(),
         model.M_dm_max(),
         model.V_dot_max(),
+        model.C_desal()
 
         ]
 
     data_out[t-1] = np.array(outs)
 df_out = pd.DataFrame(data_out, columns=outlabs)
-df_out.to_csv('results3.csv', header=True)
-
-
-
+df_out.to_csv('results4.csv', header=True)
