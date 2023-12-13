@@ -100,10 +100,10 @@ def box_plots(origfnames,synfnames,orig_file,variable, Units):
             
         file_names.append(file)
         
-        mean_real = statistics.mean(y)   
-        stdev_real = statistics.stdev(y) 
-        skew_real = stats.skew(y)   
-        kurt_real = stats.kurtosis(y)
+        mean_real = statistics.mean(list(np.float_(y)   ))
+        stdev_real = statistics.stdev(list(np.float_(y) ))
+        skew_real = stats.skew(list(np.float_(y)   ))
+        kurt_real = stats.kurtosis(list(np.float_(y)))
         
         mean_list_r.append(mean_real)
         stdev_list_r.append(stdev_real)
@@ -142,11 +142,10 @@ def box_plots(origfnames,synfnames,orig_file,variable, Units):
             if math.isnan(y[i]):
                 y[i] = 0
         
-        
-        mean_synthetic = statistics.mean(y)
-        stdev_synthetic = statistics.stdev(y) 
-        skew_synthetic = stats.skew(y)   
-        kurt_synthetic = stats.kurtosis(y)
+        mean_synthetic = statistics.mean(list(np.float_(y)))
+        stdev_synthetic = statistics.stdev(list(np.float_(y))) 
+        skew_synthetic = stats.skew(list(np.float_(y)   ))
+        kurt_synthetic = stats.kurtosis(list(np.float_(y)))
         
         mean_list_s.append(mean_synthetic)
         stdev_list_s.append(stdev_synthetic)
@@ -230,11 +229,160 @@ def box_plots(origfnames,synfnames,orig_file,variable, Units):
     plt.legend()
     plt.show()
 
+def table_vars(origfnames,synfnames,orig_file,variable, Units, f):
 
+    
+    synthetic_data = []
+    real_data = []
+    KS_test_stat_list = []
+    mean_list_r = []
+    stdev_list_r = []
+    skew_list_r = []
+    kurt_list_r = []
+    mean_list_s = []
+    stdev_list_s = []
+    skew_list_s = []
+    kurt_list_s = []
+    file_names = []
+    
+    for file in orig_file:
+        df = pd.read_csv(file, skiprows=2)
+        
+        # Extract time data
+        date=pd.to_datetime(df[['Year', 'Month', 'Day', 'Hour', 'Minute']])
+        
+        # Convert time data to minutes
+        delta=(pd.to_datetime(df['Year'].astype(str)+'-01-01')-date)
+        
+        time_data=delta.dt.total_seconds().abs() //60
+        
+        #extract data to lists
+        x = np.array(time_data)
+        y = np.array(df[variable])
+        y.astype(float)
+    
+        for values in y:
+            real_data.append(values)
+        
+            
+        file_names.append(file)
+        
+        
+        mean_orig = statistics.mean(list(np.float_(y)   ))
+        stdev_orig = statistics.stdev(list(np.float_(y) ))
+        skew_orig = stats.skew(list(np.float_(y)   ))
+        kurt_orig = stats.kurtosis(list(np.float_(y)))
+        
+        mean_list_r.append(mean_orig)
+        stdev_list_r.append(stdev_orig)
+        skew_list_r.append(skew_orig)
+        kurt_list_r.append(kurt_orig)
+        
 
+    for file in origfnames:
+        
 
+        df = pd.read_csv(file, skiprows=2)
+        
+        # Extract time data
+        date=pd.to_datetime(df[['Year', 'Month', 'Day', 'Hour', 'Minute']])
+        
+        # Convert time data to minutes
+        delta=(pd.to_datetime(df['Year'].astype(str)+'-01-01')-date)
+        
+        time_data=delta.dt.total_seconds().abs() //60
+        
+        #extract data to lists
+        x = np.array(time_data)
+        y = np.array(df[variable])
+        y.astype(float)
+    
+        for values in y:
+            real_data.append(values)
+            
+        file_names.append(file)
+        
 
+        mean_real = statistics.mean(list(np.float_(y)   ))
+        stdev_real = statistics.stdev(list(np.float_(y) ))
+        skew_real = stats.skew(list(np.float_(y)   ))
+        kurt_real = stats.kurtosis(list(np.float_(y)))
+        
+        mean_list_r.append(mean_real)
+        stdev_list_r.append(stdev_real)
+        skew_list_r.append(skew_real)
+        kurt_list_r.append(kurt_real)
+ 
+    
+    for file in synfnames:
+        df = pd.read_csv(file, skiprows=2)
+        
+        # Extract time data
+        date=pd.to_datetime(df[['Year', 'Month', 'Day', 'Hour', 'Minute']])
+        
+        # Convert time data to minutes
+        delta=(pd.to_datetime(df['Year'].astype(str)+'-01-01')-date)
+        
+        time_data=delta.dt.total_seconds().abs() //60
+        
+        #extract data to lists
+        x = np.array(time_data)
+        y = np.array(df[variable])
+        y.astype(float)
+    
+        k = []
+        for value in y:
+            if math.isnan(value):
+                #print('nan!')
+                value = 0
+                #print(values)
+            k.append(value)
+            synthetic_data.append(value)
+        
+        mean_synthetic = statistics.mean(list(np.float_(k)))
+        stdev_synthetic = statistics.stdev(list(np.float_(k))) 
+        skew_synthetic = stats.skew(list(np.float_(k)   ))
+        kurt_synthetic = stats.kurtosis(list(np.float_(k)))
+        
+        mean_list_s.append(mean_synthetic)
+        stdev_list_s.append(stdev_synthetic)
+        skew_list_s.append(skew_synthetic)
+        kurt_list_s.append(kurt_synthetic)
+     
+    
+    print(mean_list_r, mean_list_s)
+    print(stdev_list_r, stdev_list_s)
+    print(skew_list_r, skew_list_s)
+    print(kurt_list_r, kurt_list_s)
+    
+    meanMWU = stats.mannwhitneyu(mean_list_r, mean_list_s)
+    stdevMWU = stats.mannwhitneyu(stdev_list_r, stdev_list_s)
+    skewMWU = stats.mannwhitneyu(skew_list_r, skew_list_s)
+    kurtMWU = stats.mannwhitneyu(kurt_list_r, kurt_list_s)
 
+    print(variable + ' mean :' + str(meanMWU)    )
+    print(variable + ' standard dev :' + str(stdevMWU)  )  
+    print(variable + ' skew :' + str(skewMWU)    )
+    print(variable + ' kurtosis :' + str(kurtMWU))    
+    
+    mean_synthetic = statistics.mean(list(np.float_(synthetic_data)))
+    stdev_synthetic = statistics.stdev(list(np.float_(synthetic_data))) 
+    skew_synthetic = stats.skew(list(np.float_(synthetic_data)))   
+    kurt_synthetic = stats.kurtosis(list(np.float_(synthetic_data)))
+    
+    mean_real = statistics.mean(list(np.float_(real_data))  )
+    stdev_real = statistics.stdev(list(np.float_(real_data)) )
+    skew_real = stats.skew(list(np.float_(real_data))   )
+    kurt_real = stats.kurtosis(list(np.float_(real_data)))
+        
 
+    f.write(variable +',Mean,'+ str(mean_orig)+','+ str(mean_synthetic)+','+ str(mean_real)+',' + str(meanMWU[0])+',' + str(meanMWU[1]))
+    f.write('\n')
+    f.write(variable +',Standard Deviation,'+ str(stdev_orig)+','+ str(stdev_synthetic)+','+ str(stdev_real)+',' + str(stdevMWU[0])+',' + str(stdevMWU[1]))
+    f.write('\n')
+    f.write(variable +',Skewness,'+ str(skew_orig)+','+ str(skew_synthetic)+','+ str(skew_real)+',' + str(skewMWU[0])+',' + str(skewMWU[1]))
+    f.write('\n')
+    f.write(variable +',Kurtosis,'+ str(kurt_orig)+','+ str(kurt_synthetic)+','+ str(kurt_real)+',' + str(kurtMWU[0])+',' + str(kurtMWU[1]))
+    f.write('\n')
 
 

@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 synfiles = []
 realfiles=[]
 variable = 'PV'
-choice = 'DNIGHI'
+choice = ''
 
 annualenergy_list_s = []
 capfactor_list_s = []

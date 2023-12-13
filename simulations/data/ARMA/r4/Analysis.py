@@ -13,8 +13,11 @@ import pvlib
 from scipy import stats
 import statistics
 from statsmodels.distributions.empirical_distribution import ECDF
-from analysis_fuctions import box_plots
+from analysis_fuctions import box_plots, table_vars
 
+f = open('measures.txt', 'w')
+f.write('Variable, Original, Synthetic , Real, MWU Stat, MWU P-Value')
+f.write('\n')
 synfiles = []
 realfiles = []
 Variables = ['DHI', 'DNI', 'GHI', 'Dew Point', 'Wind Speed', 'Precipitable Water', 'Relative Humidity', 'Temperature']
@@ -30,6 +33,8 @@ for i in range(1998,2020,1):
     realfiles.append(fullfile)
 
 for i in range(len(Variables)):
-    box_plots(realfiles,synfiles,['102574_35.93_-115.26_2004.csv'],Variables[i], Units[i])
+    table_vars(realfiles,synfiles,['102574_35.93_-115.26_2004.csv'],Variables[i], Units[i], f)
+    
+f.close()
 
 #'102574_35.93_-115.26_2004.csv'

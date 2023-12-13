@@ -249,4 +249,3 @@ def orig_solar_data_correction(file_dict,cskyg,cskyn,cskyh,sz):
     
     return(file_dict)
 
-
