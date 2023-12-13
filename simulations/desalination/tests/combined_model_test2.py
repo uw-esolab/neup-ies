@@ -30,11 +30,11 @@ DeltaH_dsteam                     = 2494                                        
 DeltaH_dtes                       = 421.3                                                                             #[kJ/kg]                 (h(5bar,140C) - h(5bar,40C))       # water through HX to desal hot storage 
 
 # calculations for molten salt TES
-cost_molten_salt_TES_kWh          = 10                                                                                #[$/kWh-th]
+cost_molten_salt_TES_kWh          = 100                                                                                #[$/kWh-th]
 #cost_molten_salt_TES_kg          = (cost_molten_salt_TES_kWh/3600)*cp_salt*DeltaT_ctes  # [$/kg]
 
 # calculations for desalination TES
-cost_desal_TES_kWh                = 50.0                                                                              #[$/KWh-th], scaled from German TES
+cost_desal_TES_kWh                = 100                                                                              #[$/KWh-th], scaled from German TES
 #cost_desal_TES_kg                = (cost_desal_TES_kWh/3600)*DeltaH_dtes # [$/kg]
 
 # esalinated water prices
@@ -130,9 +130,9 @@ model.objective = pyomo.Objective(rule=objective, sense=pyomo.maximize)
 #   Constraints
 #  ==================================================
 
-def constr_Vdotmax(model,t):
-    return model.V_dot_max         <= model.v_dot[t] 
-model.constr_Vdotmax               = pyomo.Constraint(model.T, rule=constr_Vdotmax)
+# def constr_Vdotmax(model,t):
+#     return model.V_dot_max         <= model.v_dot[t] 
+# model.constr_Vdotmax               = pyomo.Constraint(model.T, rule=constr_Vdotmax)
 
 def constr_C_desal1(model):
     return model.C_desal           >= -0.003*model.V_dot_max + 1300.1
@@ -232,6 +232,10 @@ model.constr_distillate            =  pyomo.Constraint(model.T, rule=constr_dist
 def constr_vbounds_dn(model, t):
     return model.v_dot[t] >= model.V_dot_min
 model.constr_vbounds_dn = pyomo.Constraint(model.T, rule=constr_vbounds_dn)
+
+def constr_vbounds_up(model, t):
+    return model.v_dot[t] <= model.V_dot_max
+model.constr_vbounds_up = pyomo.Constraint(model.T, rule=constr_vbounds_up)
 
 # ------------------
 

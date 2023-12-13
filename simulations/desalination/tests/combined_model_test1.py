@@ -31,11 +31,11 @@ DeltaH_dsteam                     = 2494                                        
 DeltaH_dtes                       = 421.3                                                                             # kJ/kg  (h(5bar,140C) - h(5bar,40C))       # water through HX to desal hot storage 
 
 # Molten salt TES calcs
-cost_molten_salt_TES_kWh          = 10                                                                                # [$/kWh-th], from Gabriel's model
+cost_molten_salt_TES_kWh          = 100                                                                               # [$/kWh-th], from Gabriel's model
 #cost_molten_salt_TES_kg          = (cost_molten_salt_TES_kWh/3600)*cp_salt*DeltaT_ctes                               # [$/kg]
 
 # Desalination TES calcs
-cost_desal_TES_kWh                = 50.0                                                                              # [$/KWh-th], scaled from German TES
+cost_desal_TES_kWh                = 100                                                                              # [$/KWh-th], scaled from German TES
 #cost_desal_TES_kg                = (cost_desal_TES_kWh/3600)*DeltaH_dtes                                             # [$/kg]
 
 # Desalinated water prices
@@ -131,9 +131,9 @@ model.objective                    = pyomo.Objective(rule=objective, sense=pyomo
 #   Constraints
 #  ==================================================
 
-def constr_Vdotmax(model,t): 
-    return model.V_dot_max         <= model.v_dot[t] 
-model.constr_Vdotmax               =  pyomo.Constraint(model.T, rule=constr_Vdotmax)
+# def constr_Vdotmax(model,t): 
+#     return model.V_dot_max         <= model.v_dot[t] 
+# model.constr_Vdotmax               =  pyomo.Constraint(model.T, rule=constr_Vdotmax)
 
 def constr_C_desal1(model):
     return model.C_desal           >= -0.003*model.V_dot_max + 1300.1
@@ -230,10 +230,10 @@ def constr_distillate(model,t):
     return model.v_dot[t]          == model.K_d * model.m_dot_ds[t]
 model.constr_distillate            =  pyomo.Constraint(model.T, rule=constr_distillate)
 
-# # Range limits on desal system
-# def constr_vbounds_up(model, t):
-#     return model.v_dot[t]        <= model.V_dot_max
-# model.constr_vbounds_up          =  pyomo.Constraint(model.T, rule=constr_vbounds_up)
+# # # Range limits on desal system
+def constr_vbounds_up(model, t):
+    return model.v_dot[t]          <= model.V_dot_max
+model.constr_vbounds_up            =  pyomo.Constraint(model.T, rule=constr_vbounds_up)
 
 
 def constr_vbounds_dn(model, t):
