@@ -54,7 +54,7 @@ temperature_schedule                          = pd.read_csv("./Diablo_Canyon_Tem
 temperature_schedule                          = temperature_schedule["Temperature"].values
 
 efficiency_schedule       = []    #efficiency schedule as function of ambient temperatures
-for temp in temperature_schedule:
+for temp in temperature_schedule[:N]:
     efficiency = (-0.0036*temp + 1.2161) - 0.073
     efficiency_schedule.append(efficiency)
 
@@ -73,8 +73,8 @@ model.T                                       = pyomo.Set(initialize = range(1,N
 model.Delta_t                                 = pyomo.Param(initialize = 1)                                                         #[hr]             Time step duration
 model.M_dot_LFR                               = pyomo.Param(model.T, initialize = dict(zip(model.T, inflow_schedule)))              #[kg/s]           Mass flow produced by the LFR at time t
 model.eta                                     = pyomo.Param(model.T, initialize = dict(zip(model.T, efficiency_schedule)))          #[-]              Ambient temperature efficiency modifier in the power cycle at time t
-model.P_elec                                  = pyomo.Param(model.T, initialize = dict(zip(model.T, electric_price_schedule)))      #[$/MWh]          Price at which electricity is sold at time t
-model.P_dist                                  = pyomo.Param(model.T, initialize = dict(zip(model.T, distillate_price_schedule)))    #[$/kg]           Price at which distillate is sold at time t
+model.P_elec                                  = pyomo.Param(model.T, initialize = dict(zip(model.T, electric_price_schedule[:N])))      #[$/MWh]          Price at which electricity is sold at time t
+model.P_dist                                  = pyomo.Param(model.T, initialize = dict(zip(model.T, distillate_price_schedule[:N])))    #[$/kg]           Price at which distillate is sold at time t
 model.C_c_ramp                                = pyomo.Param(initialize=43.75)                                                       #[$/Delta MW]     Cost associated with change in electric power production, from Gabriel's paper
 model.C_d_ramp                                = pyomo.Param(initialize=0.2)                                                         #[$/Delta kg/s]   Cost associated with change in distillate production 
 model.K_chx                                   = pyomo.Param(initialize=m_dot_csteam/m_dot_salt)                                     #[(kg/s)/(kg/s)]  Conversion constant for salt mass flow to steam mass flow in the cycle heat exchanger
@@ -193,8 +193,6 @@ def constr_cramp_dn(model,t):
     return model.w_dot_Delta_dn[t]           <= model.W_dot_ramp_max*model.Delta_t
 model.constr_cramp_dn                        =  pyomo.Constraint(model.T-[1], rule=constr_cramp_dn)
 
-
-
 # ------- Desal subsystem -------------
 # Mass balance on the desal storage
 def constr_dsmass(model,t):
@@ -227,11 +225,21 @@ def constr_vbounds_dn(model, t):
     return model.v_dot[t]                    >= model.V_dot_min
 model.constr_vbounds_dn                      =  pyomo.Constraint(model.T, rule=constr_vbounds_dn)
 
+# Distillate ramping tracking
+def constr_vtrack_up(model, t):
+    return model.v_dot_Delta_up[t]           >= model.v_dot[t] - model.v_dot[t-1]
+model.constr_vtrack_up                       =  pyomo.Constraint(model.T-[1], rule=constr_vtrack_up)
+def constr_vtrack_dn(model, t):
+    return model.v_dot_Delta_dn[t]           >= model.v_dot[t-1] - model.v_dot[t]
+model.constr_vtrack_dn                       =  pyomo.Constraint(model.T-[1], rule=constr_vtrack_dn)
+
+
 # ------------------
 
-
+print("Starting pyomo solver")
 solver = pyomo.SolverFactory('gurobi')
 results = solver.solve(model, keepfiles = True, logfile = 'solve.log')
+print("Pyomo solver complete")
 
 outlabs = ['t', 'm_ch', 'm_dh', 'w_dot', 'v_dot', 'm_dot_cs','m_dot_hpt','m_dot_e','m_dot_ds', 'M_cm_max', 'M_dm_max', 'V_dot_max','C_desal']
 data_out = np.zeros((8760,13))
