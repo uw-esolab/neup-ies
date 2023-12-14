@@ -65,7 +65,7 @@ for i in high_temp_TES_sensitivity:
         efficiency = (-0.0036*temp + 1.2161) - 0.073
         efficiency_schedule.append(efficiency)
     
-    electric_price_schedule                       = pd.read_csv("../../electric_price_schedule.csv")
+    electric_price_schedule                       = pd.read_csv("./electric_price_schedule.csv")
     electric_price_schedule                       = electric_price_schedule["LMP"].values
     
     # # -------------------------------
