@@ -24,22 +24,22 @@ class MED:
     """
     
     def __init__(self,k):
-        self.vapor_rate = []                          #Flow of the vapor rate for each n-effect
+        self.vapor_rate = []                         #Flow of the vapor rate for each n-effect
         self.feed_conc = .0335                       #Average concentration of salt in seawater
         self.brine_rate = []                         #Brine flow rate 
-        self.max_brine_conc= .067                     #Maximum brine concentration
+        self.max_brine_conc= .067                    #Maximum brine concentration
         self.k = k                                   #Number of desired effects + 1 for starting values
-        self.vbtemp = np.zeros(self.k)            #Vapor and brine temperature vector creation
-        self.vbtemp[self.k-1] = 40                  #Fixing the final temperature of the brine and vapor
-        self.enth_vapor = np.zeros(self.k)            #Vapor enthalpy vector creation
-        self.enth_brine = np.zeros(self.k)            #Brine enthalpy vector creation
+        self.vbtemp = np.zeros(self.k)               #Vapor and brine temperature vector creation
+        self.vbtemp[self.k-1] = 40                   #Fixing the final temperature of the brine and vapor
+        self.enth_vapor = np.zeros(self.k)           #Vapor enthalpy vector creation
+        self.enth_brine = np.zeros(self.k)           #Brine enthalpy vector creation
         self.enth_brine_nea = np.zeros(self.k)       #allowance for flashing
-        self.water_temp = 67.6                     #Known starting/inlet temp of the DEMINERALIZED WATER [T2] (sCO2 outlet - delta_T_PCHE)
-        #self.feed_temp  = 20                       #Known starting/inlet temp of the BRINE [T1]
-        self.latentheat = np.zeros(self.k)            #Latent heat of vapor vector creation
-        self.tempchange = 3.                          #Known temperature change, from Sharan paper (delta_T_NEA)
-        self.water_rate = 308                      #Is this the feed flow rate of the DEMINERALIZED WATER? m_dot_w2
-        self.pressure = np.zeros(self.k)                          #Pressure in MPa 
+        self.water_temp = 140                        #Known starting/inlet temp of the DEMINERALIZED WATER [T2] (sCO2 outlet - delta_T_PCHE)
+        #self.feed_temp  = 20                        #Known starting/inlet temp of the BRINE [T1]
+        self.latentheat = np.zeros(self.k)           #Latent heat of vapor vector creation
+        self.tempchange = 3.                         #Known temperature change, from Sharan paper (delta_T_NEA)
+        self.water_rate = 308                        #Is this the feed flow rate of the DEMINERALIZED WATER? m_dot_w2
+        self.pressure = np.zeros(self.k)             #Pressure in MPa 
         self.brine_out = []
         self.nea = 3. 
         """NEA: upper value from MSF NEA is 1. The correlation Sharan used (JPME paper) is very dififcult to interpret. 
@@ -127,7 +127,7 @@ class MED:
             self.brine_rate.append(self.brine_flow_out(i))    #Updates brine_rate variable for every n-effect
             brine_conc.append(self.brine_conctn(i))
         
-        self.m3_per_day = self.distill*3600*24/1000.0 #from Sharan - convert the units from m3/s
+        self.m3_per_day = self.distill #*3600*24/1000 #from Sharan - convert the units from m3/s
         return brine_conc
         
     
