@@ -1,0 +1,787 @@
+{
+  "objType": "EMRALD_Model",
+  "name": "Main-Condenser",
+  "desc": "",
+  "version": 1,
+  "emraldVersion": 3,
+  "DiagramList": [
+    {
+      "name": "Main-Condenser",
+      "desc": "",
+      "diagramType": "dtSingle",
+      "diagramTemplate": "",
+      "diagramLabel": "Component",
+      "states": [
+        "M-Cond_StandBy",
+        "M-Cond_Active",
+        "M-Cond_Failed",
+        "M-Cond_Corr_Maint",
+        "M-Cond_Degrading",
+        "M-Cond_Maint",
+        "M-Cond_Transient_Response"
+      ],
+      "id": "ae39cd0d-c552-4de6-afb3-00d5502f18a7",
+      "objType": "Diagram",
+      "required": false
+    }
+  ],
+  "ExtSimList": [],
+  "StateList": [
+    {
+      "name": "M-Cond_StandBy",
+      "desc": "",
+      "stateType": "stStandard",
+      "diagramName": "Main-Condenser",
+      "immediateActions": [],
+      "events": [
+        "M-Cond_Demand",
+        "M-Cond_Transient_Response_Trigger"
+      ],
+      "eventActions": [
+        {
+          "actions": [
+            "Goto_MC_Active"
+          ],
+          "moveFromCurrent": true
+        },
+        {
+          "moveFromCurrent": true,
+          "actions": [
+            "Goto_M-Cond_Transient_Response"
+          ]
+        }
+      ],
+      "id": "830dc7b8-9ddd-413c-9199-5914af209465",
+      "objType": "State",
+      "geometryInfo": {
+        "x": 661.4928763484195,
+        "y": -8.952063181997971,
+        "width": 200,
+        "height": 130
+      },
+      "defaultSingleStateValue": "True"
+    },
+    {
+      "name": "M-Cond_Active",
+      "desc": "",
+      "stateType": "stStart",
+      "diagramName": "Main-Condenser",
+      "immediateActions": [],
+      "events": [
+        "M-Cond_Degradation",
+        "M-Cond_RandFail",
+        "M-Cond_Transient_Response_Trigger"
+      ],
+      "eventActions": [
+        {
+          "actions": [
+            "Goto_MC_Degrad"
+          ],
+          "moveFromCurrent": true
+        },
+        {
+          "actions": [
+            "Count_MC_RandFail",
+            "Goto_MC_Fail"
+          ],
+          "moveFromCurrent": true
+        },
+        {
+          "moveFromCurrent": true,
+          "actions": [
+            "Goto_M-Cond_Transient_Response"
+          ]
+        }
+      ],
+      "id": "5b8e97a4-c467-4ee1-938e-70deb65ea4c8",
+      "objType": "State",
+      "geometryInfo": {
+        "x": 756.3926153429982,
+        "y": 269.14400559893676,
+        "width": 200,
+        "height": 190
+      },
+      "defaultSingleStateValue": "True"
+    },
+    {
+      "name": "M-Cond_Failed",
+      "desc": "",
+      "stateType": "stKeyState",
+      "diagramName": "Main-Condenser",
+      "immediateActions": [
+        "Count_MC_Fail",
+        "Set_MC_Maint_Duration"
+      ],
+      "events": [
+        ""
+      ],
+      "eventActions": [
+        {
+          "actions": [
+            "Goto_MC_Recover"
+          ],
+          "moveFromCurrent": true
+        }
+      ],
+      "id": "3828d888-f738-4ed0-ab9c-98370d778e87",
+      "objType": "State",
+      "geometryInfo": {
+        "x": 410.5,
+        "y": 300,
+        "width": 200,
+        "height": 160
+      },
+      "defaultSingleStateValue": "False"
+    },
+    {
+      "name": "M-Cond_Corr_Maint",
+      "desc": "",
+      "stateType": "stStandard",
+      "diagramName": "Main-Condenser",
+      "immediateActions": [],
+      "events": [
+        "Maint_Duration"
+      ],
+      "eventActions": [
+        {
+          "actions": [
+            "Goto_MC_StandBy"
+          ],
+          "moveFromCurrent": true
+        }
+      ],
+      "id": "dd2870b7-92c2-4624-8dbb-8b31b1a34eff",
+      "objType": "State",
+      "geometryInfo": {
+        "x": 350.5,
+        "y": 60,
+        "width": 200,
+        "height": 130
+      },
+      "defaultSingleStateValue": "False"
+    },
+    {
+      "name": "M-Cond_Degrading",
+      "desc": "",
+      "stateType": "stStandard",
+      "diagramName": "Main-Condenser",
+      "immediateActions": [
+        "Reset_MC_FP",
+        "Assign_MC_DegStart",
+        "Reset_MC_DegradTime"
+      ],
+      "events": [
+        "M-Cond_WearOut",
+        "Start_Outage_PC",
+        "M-Cond_Transient_Response_Trigger"
+      ],
+      "eventActions": [
+        {
+          "actions": [
+            "Count_MC_WearOut",
+            "Goto_MC_Fail"
+          ],
+          "moveFromCurrent": true
+        },
+        {
+          "actions": [
+            "Update_MC_FP",
+            "Goto_MC_Maint"
+          ],
+          "moveFromCurrent": true
+        },
+        {
+          "moveFromCurrent": true,
+          "actions": [
+            "Goto_M-Cond_Transient_Response"
+          ]
+        }
+      ],
+      "id": "dff0fb21-9459-4c81-bfdc-7aa27de19f17",
+      "objType": "State",
+      "geometryInfo": {
+        "x": 768.3253911298202,
+        "y": 675.5932610877248,
+        "width": 200,
+        "height": 230
+      },
+      "defaultSingleStateValue": "True"
+    },
+    {
+      "name": "M-Cond_Maint",
+      "desc": "",
+      "stateType": "stStandard",
+      "diagramName": "Main-Condenser",
+      "immediateActions": [
+        "Set_MC_Maint_Duration"
+      ],
+      "events": [
+        "End_Outage_PC"
+      ],
+      "eventActions": [
+        {
+          "actions": [
+            "Goto_MC_Active"
+          ],
+          "moveFromCurrent": true
+        }
+      ],
+      "id": "940182f3-a0d0-4209-ab70-90f7472d9930",
+      "objType": "State",
+      "geometryInfo": {
+        "x": 390,
+        "y": 628,
+        "width": 200,
+        "height": 150
+      },
+      "defaultSingleStateValue": "True"
+    },
+    {
+      "id": "413e75d9-6039-4586-b758-1c764036de09",
+      "name": "M-Cond_Transient_Response",
+      "desc": "",
+      "diagramName": "Main-Condenser",
+      "stateType": "stStandard",
+      "events": [
+        "M-Cond_End_Transient",
+        "M-Cond_Fail_Transient"
+      ],
+      "eventActions": [
+        {
+          "moveFromCurrent": true,
+          "actions": [
+            "Set_MCond_TimeToDegrad"
+          ]
+        },
+        {
+          "moveFromCurrent": true,
+          "actions": [
+            "Goto_MC_Fail"
+          ]
+        }
+      ],
+      "immediateActions": [
+        "Set_MC_Transient_StartTime"
+      ],
+      "geometryInfo": {
+        "x": 1217.856820457331,
+        "y": 292.45108621051355,
+        "width": 0,
+        "height": 0
+      },
+      "required": false,
+      "objType": "State",
+      "defaultSingleStateValue": "True"
+    }
+  ],
+  "ActionList": [
+    {
+      "name": "Goto_MC_Active",
+      "desc": "",
+      "actType": "atTransition",
+      "mainItem": false,
+      "mutExcl": true,
+      "newStates": [
+        {
+          "toState": "M-Cond_Active",
+          "prob": -1,
+          "failDesc": ""
+        }
+      ],
+      "id": "f9e66120-5a6a-4ca7-9334-01a2ab93371b",
+      "objType": "Action"
+    },
+    {
+      "id": "5fd404c1-e324-4399-97a0-24115cc65ef8",
+      "name": "Goto_M-Cond_Transient_Response",
+      "desc": "",
+      "actType": "atTransition",
+      "mainItem": true,
+      "objType": "Action",
+      "required": false,
+      "newStates": [
+        {
+          "toState": "M-Cond_Transient_Response",
+          "prob": -1,
+          "varProb": null,
+          "failDesc": ""
+        }
+      ],
+      "mutExcl": true,
+      "codeVariables": [],
+      "variableName": "",
+      "scriptCode": "",
+      "sim3DMessage": "atCompModify",
+      "extSim": "",
+      "sim3DConfigData": "",
+      "sim3DModelRef": "",
+      "simEndTime": "",
+      "makeInputFileCode": "",
+      "exePath": "",
+      "processOutputFileCode": "",
+      "openSimVarParams": false,
+      "raType": "",
+      "returnProcess": "rtNone"
+    },
+    {
+      "name": "Goto_MC_Degrad",
+      "desc": "",
+      "actType": "atTransition",
+      "mainItem": false,
+      "mutExcl": true,
+      "newStates": [
+        {
+          "toState": "M-Cond_Degrading",
+          "prob": -1,
+          "failDesc": ""
+        }
+      ],
+      "id": "b8c8cfe1-ce2c-42e9-982d-8b27e585fd5b",
+      "objType": "Action"
+    },
+    {
+      "name": "Count_MC_RandFail",
+      "desc": "",
+      "actType": "atCngVarVal",
+      "mainItem": false,
+      "mutExcl": true,
+      "newStates": [],
+      "scriptCode": "return n_MC_RandFail+1;",
+      "variableName": "",
+      "codeVariables": [],
+      "id": "ca5882a9-1000-4134-a0bf-1ffb6a810afc",
+      "objType": "Action"
+    },
+    {
+      "name": "Goto_MC_Fail",
+      "desc": "",
+      "actType": "atTransition",
+      "mainItem": false,
+      "mutExcl": true,
+      "newStates": [
+        {
+          "toState": "M-Cond_Failed",
+          "prob": -1,
+          "failDesc": ""
+        }
+      ],
+      "id": "6991ab9e-7b46-4249-bb87-598ec0cf6270",
+      "objType": "Action"
+    },
+    {
+      "name": "Count_MC_Fail",
+      "desc": "",
+      "actType": "atCngVarVal",
+      "mainItem": false,
+      "mutExcl": true,
+      "newStates": [],
+      "scriptCode": "return n_MC_Fail+1;",
+      "variableName": "",
+      "codeVariables": [],
+      "id": "5bcb7a2d-0eeb-48fe-923c-efd7b0468438",
+      "objType": "Action"
+    },
+    {
+      "name": "Set_MC_Maint_Duration",
+      "desc": "",
+      "actType": "atCngVarVal",
+      "mainItem": false,
+      "mutExcl": true,
+      "newStates": [],
+      "scriptCode": "if (Maint_Duration < HX_Repair_Time)\n\treturn HX_Repair_Time;\nelse\n\treturn Maint_Duration;",
+      "variableName": "",
+      "codeVariables": [],
+      "id": "e80091e0-2413-44f3-b664-8dfc72805261",
+      "objType": "Action"
+    },
+    {
+      "name": "Goto_MC_Recover",
+      "desc": "",
+      "actType": "atTransition",
+      "mainItem": false,
+      "mutExcl": true,
+      "newStates": [
+        {
+          "toState": "M-Cond_Corr_Maint",
+          "prob": -1,
+          "failDesc": ""
+        }
+      ],
+      "id": "ebb737ec-08b4-46a3-90b5-fd78b672e2ba",
+      "objType": "Action"
+    },
+    {
+      "name": "Goto_MC_StandBy",
+      "desc": "",
+      "actType": "atTransition",
+      "mainItem": false,
+      "mutExcl": true,
+      "newStates": [
+        {
+          "toState": "M-Cond_StandBy",
+          "prob": -1,
+          "failDesc": ""
+        }
+      ],
+      "id": "14d68921-16ff-4fee-9a01-7e953b4a7db8",
+      "objType": "Action"
+    },
+    {
+      "name": "Reset_MC_FP",
+      "desc": "",
+      "actType": "atCngVarVal",
+      "mainItem": false,
+      "mutExcl": true,
+      "newStates": [],
+      "scriptCode": "return 0;",
+      "variableName": "",
+      "codeVariables": [],
+      "id": "7aca03fe-a4e5-4db6-b5ee-5a089f1da776",
+      "objType": "Action"
+    },
+    {
+      "name": "Assign_MC_DegStart",
+      "desc": "",
+      "actType": "atCngVarVal",
+      "mainItem": false,
+      "mutExcl": true,
+      "newStates": [],
+      "scriptCode": "return CurTime;",
+      "variableName": "",
+      "codeVariables": [],
+      "id": "bc7f60e5-88b4-43b8-99ac-76fc7c12ac65",
+      "objType": "Action"
+    },
+    {
+      "id": "bfee04f1-0d19-4643-a17f-b9f6ce97dd57",
+      "name": "Reset_MC_DegradTime",
+      "desc": "",
+      "actType": "atCngVarVal",
+      "mainItem": true,
+      "objType": "Action",
+      "required": false,
+      "newStates": [],
+      "mutExcl": true,
+      "codeVariables": [],
+      "variableName": "",
+      "scriptCode": "return 1000;",
+      "sim3DMessage": "atCompModify",
+      "extSim": "",
+      "sim3DConfigData": "",
+      "sim3DModelRef": "",
+      "simEndTime": "",
+      "makeInputFileCode": "",
+      "exePath": "",
+      "processOutputFileCode": "",
+      "openSimVarParams": false,
+      "raType": "",
+      "returnProcess": "rtNone"
+    },
+    {
+      "name": "Count_MC_WearOut",
+      "desc": "",
+      "actType": "atCngVarVal",
+      "mainItem": false,
+      "mutExcl": true,
+      "newStates": [],
+      "scriptCode": "return n_MC_WearOut+1;",
+      "variableName": "",
+      "codeVariables": [],
+      "id": "0c1fe349-6c85-4c93-b4b1-34d6e2db0e38",
+      "objType": "Action"
+    },
+    {
+      "name": "Update_MC_FP",
+      "desc": "",
+      "actType": "atCngVarVal",
+      "mainItem": false,
+      "mutExcl": true,
+      "newStates": [],
+      "scriptCode": "double NewTimeToRefuel = TimeToRefuel - ( HX_Deg_Start-  Start_NormOps_Time);\nreturn  1 - Math.Exp( -HX_Degrad_Shape*( Math.Exp(HX_Degrad_Scale*NewTimeToRefuel) - 1 ) );",
+      "variableName": "",
+      "codeVariables": [
+        "HX_Degrad_Shape",
+        "HX_Degrad_Scale"
+      ],
+      "id": "2096c9ca-878e-44a3-b57b-3826cdbb3e28",
+      "objType": "Action"
+    },
+    {
+      "name": "Goto_MC_Maint",
+      "desc": "",
+      "actType": "atTransition",
+      "mainItem": false,
+      "mutExcl": true,
+      "newStates": [
+        {
+          "toState": "M-Cond_Maint",
+          "prob": -1,
+          "failDesc": ""
+        }
+      ],
+      "id": "26fc38d2-de35-455e-8a1b-5499b0916092",
+      "objType": "Action"
+    },
+    {
+      "id": "46d21a04-776a-44c7-b7a7-9ae6f197b25c",
+      "name": "Set_MC_Transient_StartTime",
+      "desc": "",
+      "actType": "atCngVarVal",
+      "mainItem": true,
+      "objType": "Action",
+      "required": false,
+      "newStates": [],
+      "mutExcl": true,
+      "codeVariables": [],
+      "variableName": "",
+      "scriptCode": "return CurTime;",
+      "sim3DMessage": "atCompModify",
+      "extSim": "",
+      "sim3DConfigData": "",
+      "sim3DModelRef": "",
+      "simEndTime": "",
+      "makeInputFileCode": "",
+      "exePath": "",
+      "processOutputFileCode": "",
+      "openSimVarParams": false,
+      "raType": "",
+      "returnProcess": "rtNone"
+    },
+    {
+      "id": "e92a17b3-8e58-4eb8-a98d-24b02319e779",
+      "name": "Set_MCond_TimeToDegrad",
+      "desc": "",
+      "actType": "atCngVarVal",
+      "mainItem": true,
+      "objType": "Action",
+      "required": false,
+      "newStates": [],
+      "mutExcl": true,
+      "codeVariables": [
+        "MCondTimeToDegrad"
+      ],
+      "variableName": "",
+      "scriptCode": "if (MCondTimeToDegrad - (CurTime-MC_Transient_StartTime)/24 > 0){\r\n    return MCondTimeToDegrad - (CurTime - MC_Transient_StartTime)/24;\r\n}\r\nelse{\r\n    return 0;\r\n}",
+      "sim3DMessage": "atCompModify",
+      "extSim": "",
+      "sim3DConfigData": "",
+      "sim3DModelRef": "",
+      "simEndTime": "",
+      "makeInputFileCode": "",
+      "exePath": "",
+      "processOutputFileCode": "",
+      "openSimVarParams": false,
+      "raType": "",
+      "returnProcess": "rtNone"
+    }
+  ],
+  "EventList": [
+    {
+      "name": "M-Cond_Demand",
+      "desc": "",
+      "mainItem": false,
+      "evType": "etStateCng",
+      "allItems": false,
+      "triggerStates": [],
+      "varNames": [],
+      "ifInState": true,
+      "id": "27592181-5785-4acd-b6d8-ef95efbbedd6",
+      "objType": "Event"
+    },
+    {
+      "id": "b459d35e-c1a1-4cad-8fe0-3035f91de5b5",
+      "name": "M-Cond_Transient_Response_Trigger",
+      "desc": "",
+      "evType": "etStateCng",
+      "mainItem": true,
+      "required": false,
+      "objType": "Event",
+      "triggerStates": [],
+      "ifInState": true
+    },
+    {
+      "id": "8e93af8a-7b03-4582-8baf-4bd301ce589f",
+      "name": "M-Cond_Degradation",
+      "desc": "",
+      "evType": "etDistribution",
+      "mainItem": true,
+      "required": false,
+      "objType": "Event",
+      "varNames": [],
+      "triggerStates": [],
+      "allItems": true,
+      "onVarChange": "ocAdjust",
+      "distType": "dtNormal",
+      "parameters": [
+        {
+          "name": "Mean",
+          "value": "91",
+          "timeRate": "trDays",
+          "useVariable": true,
+          "variable": "MCondTimeToDegrad"
+        },
+        {
+          "name": "Standard Deviation",
+          "value": "365",
+          "timeRate": "trDays",
+          "useVariable": false
+        },
+        {
+          "name": "Minimum",
+          "value": 0,
+          "timeRate": "trHours",
+          "useVariable": false
+        },
+        {
+          "name": "Maximum",
+          "value": 1000,
+          "timeRate": "trYears",
+          "useVariable": false
+        }
+      ],
+      "dfltTimeRate": "trHours"
+    },
+    {
+      "name": "M-Cond_RandFail",
+      "desc": "",
+      "mainItem": false,
+      "evType": "etDistribution",
+      "allItems": true,
+      "triggerStates": [],
+      "varNames": [],
+      "distType": "dtExponential",
+      "parameters": [
+        {
+          "name": "Rate",
+          "value": 0,
+          "timeRate": "trHours",
+          "useVariable": true,
+          "variable": "HX_Active_Rate"
+        },
+        {
+          "name": "Minimum",
+          "value": 0,
+          "timeRate": "trHours",
+          "useVariable": false
+        },
+        {
+          "name": "Maximum",
+          "value": 1000,
+          "timeRate": "trYears",
+          "useVariable": false
+        }
+      ],
+      "dfltTimeRate": "trHours",
+      "onVarChange": "ocAdjust",
+      "id": "0d411adf-91c1-4508-86a6-7d05633dc4a8",
+      "objType": "Event"
+    },
+    {
+      "name": "Maint_Duration",
+      "desc": "",
+      "mainItem": false,
+      "evType": "etTimer",
+      "allItems": true,
+      "triggerStates": [],
+      "varNames": [],
+      "useVariable": true,
+      "time": "Maint_Duration",
+      "timeVariableUnit": "trHours",
+      "onVarChange": "ocResample",
+      "fromSimStart": false,
+      "id": "ceb16f30-4dd1-4e57-9114-bd8ea16abcda",
+      "objType": "Event"
+    },
+    {
+      "name": "M-Cond_WearOut",
+      "desc": "",
+      "mainItem": false,
+      "evType": "etDistribution",
+      "allItems": true,
+      "triggerStates": [],
+      "varNames": [],
+      "distType": "dtGompertz",
+      "parameters": [
+        {
+          "name": "Shape",
+          "value": 1,
+          "timeRate": "trHours",
+          "useVariable": true,
+          "variable": "HX_Degrad_Shape"
+        },
+        {
+          "name": "Scale",
+          "value": 1,
+          "timeRate": "trHours",
+          "useVariable": true,
+          "variable": "HX_Degrad_Scale"
+        },
+        {
+          "name": "Minimum",
+          "value": 0,
+          "timeRate": "trHours",
+          "useVariable": false
+        },
+        {
+          "name": "Maximum",
+          "value": 1000,
+          "timeRate": "trYears",
+          "useVariable": false
+        }
+      ],
+      "dfltTimeRate": "trHours",
+      "onVarChange": "ocAdjust",
+      "id": "a96bec71-f7da-4cc0-84d4-1c92541a7c93",
+      "objType": "Event"
+    },
+    {
+      "name": "Start_Outage_PC",
+      "desc": "",
+      "mainItem": false,
+      "evType": "etStateCng",
+      "allItems": false,
+      "triggerStates": [],
+      "varNames": [],
+      "ifInState": true,
+      "id": "65a34d90-85dd-469e-b71e-5bdcb0ca6477",
+      "objType": "Event"
+    },
+    {
+      "name": "End_Outage_PC",
+      "desc": "",
+      "mainItem": false,
+      "evType": "etStateCng",
+      "allItems": false,
+      "triggerStates": [],
+      "varNames": [],
+      "ifInState": false,
+      "id": "34e17fe4-c64a-47c3-b453-81257e103340",
+      "objType": "Event"
+    },
+    {
+      "id": "de674b72-a783-4580-9364-e8e102b93c70",
+      "name": "M-Cond_End_Transient",
+      "desc": "",
+      "evType": "etStateCng",
+      "mainItem": true,
+      "required": false,
+      "objType": "Event",
+      "triggerStates": []
+    },
+    {
+      "id": "a000c940-9e80-4b69-aeca-d96e114463d4",
+      "name": "M-Cond_Fail_Transient",
+      "desc": "",
+      "evType": "etFailRate",
+      "mainItem": true,
+      "required": false,
+      "objType": "Event",
+      "triggerStates": [],
+      "allItems": true,
+      "lambda": 0.000001,
+      "lambdaTimeRate": "P1D"
+    }
+  ],
+  "LogicNodeList": [],
+  "VariableList": []
+}

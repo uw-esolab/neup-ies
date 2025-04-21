@@ -1,0 +1,1181 @@
+MED-EffectHeatExchanger-3
+
+Diagram
+{
+            "Diagram": {
+                "id": 23,
+                "name": "MED-EffectHeatExchanger-3",
+                "desc": "",
+                "diagramType": "dtComponent",
+                "diagramTemplate": "",
+                "diagramLabel": "Component",
+                "states": [
+                    "MED-EHX-3_StandBy",
+                    "MED-EHX-3_Active",
+                    "MED-EHX-3_Failed",
+                    "MED-EHX-3_Corr_Maint",
+                    "MED-EHX-3_Degrading",
+                    "MED-EHX-3_Maint"
+                ],
+                "singleStates": [
+                    {
+                        "stateName": "MED-EHX-3_Active",
+                        "okState": "True",
+                        "inSingleStateGroup": true,
+                        "$$hashKey": "008"
+                    },
+                    {
+                        "stateName": "MED-EHX-3_Failed",
+                        "okState": "False",
+                        "inSingleStateGroup": false,
+                        "$$hashKey": "009"
+                    },
+                    {
+                        "stateName": "MED-EHX-3_StandBy",
+                        "okState": "True",
+                        "inSingleStateGroup": true,
+                        "$$hashKey": "00A"
+                    },
+                    {
+                        "stateName": "MED-EHX-3_Corr_Maint",
+                        "okState": "False",
+                        "inSingleStateGroup": true,
+                        "$$hashKey": "00B"
+                    },
+                    {
+                        "stateName": "MED-EHX-3_Degrading",
+                        "okState": "True"
+                    },
+                    {
+                        "stateName": "MED-EHX-3_Maint",
+                        "okState": "True"
+                    }
+                ],
+                "forceMerge": false
+            }
+        },
+
+States
+{
+            "State": {
+                "id": 108,
+                "name": "MED-EHX-3_Active",
+                "desc": "",
+                "stateType": "stStart",
+                "diagramName": "MED-EffectHeatExchanger-3",
+                "immediateActions": [],
+                "events": [
+                    "MED-EHX-3_Degradation",
+                    "MED-EHX-3_RandFail"
+                ],
+                "eventActions": [
+                    {
+                        "actions": [
+                            "Goto_MED-EHX-3_Degrad"
+                        ],
+                        "moveFromCurrent": true
+                    },
+                    {
+                        "actions": [
+                            "Count_MED-EHX-3_RandFail",
+                            "Goto_MED-EHX-3_Fail"
+                        ],
+                        "moveFromCurrent": true
+                    }
+                ],
+                "geometry": "{ x: 810.5, y: 290, width: 200, height: 190}"
+            }
+        },
+        {
+            "State": {
+                "id": 109,
+                "name": "MED-EHX-3_Failed",
+                "desc": "",
+                "stateType": "stKeyState",
+                "diagramName": "MED-EffectHeatExchanger-3",
+                "immediateActions": [
+                    "Count_MED-EHX-3_Fail",
+                    "Set_MED-EHX-3_Maint_Duration"
+                ],
+                "events": [
+                    "Fail_to_Maint"
+                ],
+                "eventActions": [
+                    {
+                        "actions": [
+                            "Goto_MED-EHX-3_Recover"
+                        ],
+                        "moveFromCurrent": true
+                    }
+                ],
+                "geometry": "{ x: 410.5, y: 300, width: 200, height: 160}"
+            }
+        },
+        {
+            "State": {
+                "id": 110,
+                "name": "MED-EHX-3_Corr_Maint",
+                "desc": "",
+                "stateType": "stStandard",
+                "diagramName": "MED-EffectHeatExchanger-3",
+                "immediateActions": [],
+                "events": [
+                    "Maint_Duration"
+                ],
+                "eventActions": [
+                    {
+                        "actions": [
+                            "Goto_MED-EHX-3_StandBy"
+                        ],
+                        "moveFromCurrent": true
+                    }
+                ],
+                "geometry": "{ x: 350.5, y: 60, width: 200, height: 130}"
+            }
+        },
+        {
+            "State": {
+                "id": 111,
+                "name": "MED-EHX-3_Degrading",
+                "desc": "",
+                "stateType": "stStandard",
+                "diagramName": "MED-EffectHeatExchanger-3",
+                "immediateActions": [
+                    "Reset_MED-EHX-3_FP",
+                    "Assign_MED-EHX-3_DegStart"
+                ],
+                "events": [
+                    "MED-EHX-3_WearOut",
+                    "Start_Outage"
+                ],
+                "eventActions": [
+                    {
+                        "actions": [
+                            "Count_MED-EHX-3_WearOut",
+                            "Goto_MED-EHX-3_Fail"
+                        ],
+                        "moveFromCurrent": true
+                    },
+                    {
+                        "actions": [
+                            "Update_MED-EHX-3_FP",
+                            "Goto_MED-EHX-3_Maint"
+                        ],
+                        "moveFromCurrent": true
+                    }
+                ],
+                "geometry": "{ x: 860, y: 540, width: 200, height: 230}"
+            }
+        },
+        {
+            "State": {
+                "id": 112,
+                "name": "MED-EHX-3_Maint",
+                "desc": "",
+                "stateType": "stStandard",
+                "diagramName": "MED-EffectHeatExchanger-3",
+                "immediateActions": [
+                    "Set_MED-EHX-3_Maint_Duration"
+                ],
+                "events": [
+                    "End_Outage"
+                ],
+                "eventActions": [
+                    {
+                        "actions": [
+                            "Goto_MED-EHX-3_Active"
+                        ],
+                        "moveFromCurrent": true
+                    }
+                ],
+                "geometry": "{ x: 450, y: 540, width: 200, height: 150}"
+            }
+        },
+
+Actions
+{
+            "Action": {
+                "id": 94,
+                "name": "Goto_MED-EHX-3_Active",
+                "desc": "",
+                "actType": "atTransition",
+                "mainItem": false,
+                "mutExcl": true,
+                "newStates": [
+                    {
+                        "toState": "MED-EHX-3_Active",
+                        "prob": -1,
+                        "failDesc": ""
+                    }
+                ],
+                "moveFromCurrent": true,
+                "itemId": 0
+            }
+        },
+        {
+            "Action": {
+                "id": 11,
+                "name": "Goto_MED-EHX-3_StandBy",
+                "desc": "",
+                "actType": "atTransition",
+                "mainItem": false,
+                "mutExcl": true,
+                "newStates": [
+                    {
+                        "toState": "MED-EHX-3_StandBy",
+                        "prob": -1,
+                        "failDesc": ""
+                    }
+                ],
+                "moveFromCurrent": true,
+                "itemId": 0
+            }
+        },
+        {
+            "Action": {
+                "id": 114,
+                "name": "Goto_MED-EHX-3_Fail",
+                "desc": "",
+                "actType": "atTransition",
+                "mainItem": false,
+                "mutExcl": true,
+                "newStates": [
+                    {
+                        "toState": "MED-EHX-3_Failed",
+                        "prob": -1,
+                        "failDesc": ""
+                    }
+                ],
+                "moveFromCurrent": true,
+                "itemId": 1
+            }
+        },
+        {
+            "Action": {
+                "id": 116,
+                "name": "Goto_MED-EHX-3_Degrad",
+                "desc": "",
+                "actType": "atTransition",
+                "mainItem": false,
+                "mutExcl": true,
+                "newStates": [
+                    {
+                        "toState": "MED-EHX-3_Degrading",
+                        "prob": -1,
+                        "failDesc": ""
+                    }
+                ],
+                "itemId": 96
+            }
+        },
+        {
+            "Action": {
+                "id": 117,
+                "name": "Goto_MED-EHX-3_Maint",
+                "desc": "",
+                "actType": "atTransition",
+                "mainItem": false,
+                "mutExcl": true,
+                "newStates": [
+                    {
+                        "toState": "MED-EHX-3_Maint",
+                        "prob": -1,
+                        "failDesc": ""
+                    }
+                ],
+                "itemId": 97
+            }
+        },
+        {
+            "Action": {
+                "id": 229,
+                "name": "Goto_MED-EHX-3_Recover",
+                "desc": "",
+                "actType": "atTransition",
+                "mainItem": false,
+                "mutExcl": true,
+                "newStates": [
+                    {
+                        "toState": "MED-EHX-3_Corr_Maint",
+                        "prob": -1,
+                        "failDesc": ""
+                    }
+                ],
+                "itemId": 230
+            }
+        },
+        {
+      "Action": {
+        "id": 145,
+        "name": "Count_MED-EHX-3_Fail",
+        "desc": "",
+        "actType": "atCngVarVal",
+        "mainItem": false,
+        "mutExcl": true,
+        "newStates": [],
+        "scriptCode": "return n_MED_EHX_3_Fail+1;",
+        "variableName": "n_MED_EHX_3_Fail",
+        "codeVariables": []
+      }
+    },
+    {
+      "Action": {
+        "id": 146,
+        "name": "Count_MED-EHX-3_RandFail",
+        "desc": "",
+        "actType": "atCngVarVal",
+        "mainItem": false,
+        "mutExcl": true,
+        "newStates": [],
+        "scriptCode": "return n_MED_EHX_3_RandFail+1;",
+        "variableName": "n_MED_EHX_3_RandFail",
+        "codeVariables": []
+      }
+    },
+    {
+      "Action": {
+        "id": 147,
+        "name": "Count_MED-EHX-3_WearOut",
+        "desc": "",
+        "actType": "atCngVarVal",
+        "mainItem": false,
+        "mutExcl": true,
+        "newStates": [],
+        "scriptCode": "return n_MED_EHX_3_WearOut+1;",
+        "variableName": "n_MED_EHX_3_WearOut",
+        "codeVariables": []
+      }
+    },
+    {
+      "Action": {
+        "id": 209,
+        "name": "Reset_MED-EHX-3_FP",
+        "desc": "",
+        "actType": "atCngVarVal",
+        "mainItem": false,
+        "mutExcl": true,
+        "newStates": [],
+        "scriptCode": "return 0;",
+        "variableName": "HX_FailProb",
+        "codeVariables": []
+      }
+    },
+    {
+      "Action": {
+        "id": 210,
+        "name": "Assign_MED-EHX-3_DegStart",
+        "desc": "",
+        "actType": "atCngVarVal",
+        "mainItem": false,
+        "mutExcl": true,
+        "newStates": [],
+        "scriptCode": "return CurTime;",
+        "variableName": "HX_Deg_Start",
+        "codeVariables": []
+      }
+    },
+    {
+      "Action": {
+        "id": 211,
+        "name": "Update_MED-EHX-3_FP",
+        "desc": "",
+        "actType": "atCngVarVal",
+        "mainItem": false,
+        "mutExcl": true,
+        "newStates": [],
+        "scriptCode": "double NewTimeToRefuel = TimeToRefuel - ( HX_Deg_Start-  Start_NormOps_Time);\nreturn  1 - Math.Exp( -HX_Degrad_Shape*( Math.Exp(HX_Degrad_Scale*NewTimeToRefuel) - 1 ) );",
+        "variableName": "HX_FailProb",
+        "codeVariables": [
+          "HX_Deg_Start",
+          "TimeToRefuel",
+          "Start_NormOps_Time",
+          "HX_Degrad_Shape",
+          "HX_Degrad_Scale"
+        ]
+      }
+    },
+    {
+      "Action": {
+        "id": 218,
+        "name": "Set_MED-EHX-3_Maint_Duration",
+        "desc": "",
+        "actType": "atCngVarVal",
+        "mainItem": false,
+        "mutExcl": true,
+        "newStates": [],
+        "scriptCode": "if (Maint_Duration < HX_Repair_Time)\n\treturn HX_Repair_Time;\nelse\n\treturn Maint_Duration;",
+        "variableName": "Maint_Duration",
+        "codeVariables": [
+          "HX_Repair_Time"
+        ]
+      }
+    },
+
+Events
+{
+            "Event": {
+                "id": 112,
+                "name": "MED-EHX-3_Demand",
+                "desc": "",
+                "mainItem": false,
+                "evType": "etStateCng",
+                "allItems": false,
+                "triggerStates": [
+                    "CFWS_Normal_Ops"
+                ],
+                "moveFromCurrent": true,
+                "varNames": [],
+                "ifInState": "true",
+                "evalCurOnInitial": true
+            }
+        },
+        {
+            "Event": {
+                "id": 115,
+                "name": "MED-EHX-3_Degradation",
+                "desc": "",
+                "mainItem": false,
+                "evType": "etDistribution",
+                "allItems": true,
+                "triggerStates": [],
+                "moveFromCurrent": true,
+                "varNames": [],
+                "distType": "dtNormal",
+                "parameters": [
+                    {
+                        "name": "Mean",
+                        "value": "91",
+                        "timeRate": "trDays",
+                        "useVariable": true,
+                        "variable": "HX_TtoDegrad"
+                    },
+                    {
+                        "name": "Standard Deviation",
+                        "value": "365",
+                        "timeRate": "trDays",
+                        "useVariable": false
+                    },
+                    {
+                        "name": "Minimum",
+                        "value": 0,
+                        "timeRate": "trHours",
+                        "useVariable": false
+                    },
+                    {
+                        "name": "Maximum",
+                        "value": 1000,
+                        "timeRate": "trYears",
+                        "useVariable": false
+                    }
+                ],
+                "dfltTimeRate": "trHours",
+                "onVarChange": "ocAdjust"
+            }
+        },
+        {
+            "Event": {
+                "id": 116,
+                "name": "MED-EHX-3_WearOut",
+                "desc": "",
+                "mainItem": false,
+                "evType": "etDistribution",
+                "allItems": true,
+                "triggerStates": [],
+                "moveFromCurrent": true,
+                "varNames": [],
+                "distType": "dtGompertz",
+                "parameters": [
+                    {
+                        "name": "Shape",
+                        "value": 1,
+                        "timeRate": "trHours",
+                        "useVariable": true,
+                        "variable": "HX_Degrad_Shape"
+                    },
+                    {
+                        "name": "Scale",
+                        "value": 1,
+                        "timeRate": "trHours",
+                        "useVariable": true,
+                        "variable": "HX_Degrad_Scale"
+                    },
+                    {
+                        "name": "Minimum",
+                        "value": 0,
+                        "timeRate": "trHours",
+                        "useVariable": false
+                    },
+                    {
+                        "name": "Maximum",
+                        "value": 1000,
+                        "timeRate": "trYears",
+                        "useVariable": false
+                    }
+                ],
+                "dfltTimeRate": "trHours",
+                "onVarChange": "ocAdjust"
+            }
+        },
+        {
+            "Event": {
+                "id": 117,
+                "name": "MED-EHX-3_RandFail",
+                "desc": "",
+                "mainItem": false,
+                "evType": "etDistribution",
+                "allItems": true,
+                "triggerStates": [],
+                "moveFromCurrent": true,
+                "varNames": [],
+                "distType": "dtExponential",
+                "parameters": [
+                    {
+                        "name": "Rate",
+                        "value": 0,
+                        "timeRate": "trHours",
+                        "useVariable": true,
+                        "variable": "HX_Active_Rate"
+                    },
+                    {
+                        "name": "Minimum",
+                        "value": 0,
+                        "timeRate": "trHours",
+                        "useVariable": false
+                    },
+                    {
+                        "name": "Maximum",
+                        "value": 1000,
+                        "timeRate": "trYears",
+                        "useVariable": false
+                    }
+                ],
+                "dfltTimeRate": "trHours",
+                "onVarChange": "ocAdjust"
+            }
+        },
+
+Variables
+{
+      "Variable": {
+        "name": "n_MED_EHX_3_Fail",
+        "desc": "",
+        "varScope": "gtGlobal",
+        "value": 0,
+        "resetOnRuns": false,
+        "type": "int",
+        "id": 51
+      }
+    },
+    {
+      "Variable": {
+        "name": "n_MED_EHX_3_RandFail",
+        "desc": "",
+        "varScope": "gtGlobal",
+        "value": 0,
+        "resetOnRuns": false,
+        "type": "int",
+        "id": 50
+      }
+    },
+    {
+      "Variable": {
+        "name": "n_MED_EHX_3_WearOut",
+        "desc": "",
+        "varScope": "gtGlobal",
+        "value": 0,
+        "resetOnRuns": false,
+        "type": "int",
+        "id": 52
+      }
+    }
+
+----
+Proto-ZLD Condensor
+
+{
+            "Diagram": {
+                "id": 23,
+                "name": "Proto-ZLD-Condensor",
+                "desc": "",
+                "diagramType": "dtComponent",
+                "diagramTemplate": "",
+                "diagramLabel": "Component",
+                "states": [
+                    "PZLDC_StandBy",
+                    "PZLDC_Active",
+                    "PZLDC_Failed",
+                    "PZLDC_Corr_Maint",
+                    "PZLDC_Degrading",
+                    "PZLDC_Maint"
+                ],
+                "singleStates": [
+                    {
+                        "stateName": "PZLDC_Active",
+                        "okState": "True",
+                        "inSingleStateGroup": true,
+                        "$$hashKey": "008"
+                    },
+                    {
+                        "stateName": "PZLDC_Failed",
+                        "okState": "False",
+                        "inSingleStateGroup": false,
+                        "$$hashKey": "009"
+                    },
+                    {
+                        "stateName": "PZLDC_StandBy",
+                        "okState": "True",
+                        "inSingleStateGroup": true,
+                        "$$hashKey": "00A"
+                    },
+                    {
+                        "stateName": "PZLDC_Corr_Maint",
+                        "okState": "False",
+                        "inSingleStateGroup": true,
+                        "$$hashKey": "00B"
+                    },
+                    {
+                        "stateName": "PZLDC_Degrading",
+                        "okState": "True"
+                    },
+                    {
+                        "stateName": "PZLDC_Maint",
+                        "okState": "True"
+                    }
+                ],
+                "forceMerge": false
+            }
+        },
+
+States
+{
+            "State": {
+                "id": 108,
+                "name": "PZLDC_Active",
+                "desc": "",
+                "stateType": "stStart",
+                "diagramName": "Proto-ZLD-Condensor",
+                "immediateActions": [],
+                "events": [
+                    "PZLDC_Degradation",
+                    "PZLDC_RandFail"
+                ],
+                "eventActions": [
+                    {
+                        "actions": [
+                            "Goto_PZLDC_Degrad"
+                        ],
+                        "moveFromCurrent": true
+                    },
+                    {
+                        "actions": [
+                            "Count_PZLDC_RandFail",
+                            "Goto_PZLDC_Fail"
+                        ],
+                        "moveFromCurrent": true
+                    }
+                ],
+                "geometry": "{ x: 810.5, y: 290, width: 200, height: 190}"
+            }
+        },
+        {
+            "State": {
+                "id": 109,
+                "name": "PZLDC_Failed",
+                "desc": "",
+                "stateType": "stKeyState",
+                "diagramName": "Proto-ZLD-Condensor",
+                "immediateActions": [
+                    "Count_PZLDC_Fail",
+                    "Set_PZLDC_Maint_Duration"
+                ],
+                "events": [
+                    "Fail_to_Maint"
+                ],
+                "eventActions": [
+                    {
+                        "actions": [
+                            "Goto_PZLDC_Recover"
+                        ],
+                        "moveFromCurrent": true
+                    }
+                ],
+                "geometry": "{ x: 410.5, y: 300, width: 200, height: 160}"
+            }
+        },
+        {
+            "State": {
+                "id": 110,
+                "name": "PZLDC_Corr_Maint",
+                "desc": "",
+                "stateType": "stStandard",
+                "diagramName": "Proto-ZLD-Condensor",
+                "immediateActions": [],
+                "events": [
+                    "Maint_Duration"
+                ],
+                "eventActions": [
+                    {
+                        "actions": [
+                            "Goto_PZLDC_StandBy"
+                        ],
+                        "moveFromCurrent": true
+                    }
+                ],
+                "geometry": "{ x: 350.5, y: 60, width: 200, height: 130}"
+            }
+        },
+        {
+            "State": {
+                "id": 111,
+                "name": "PZLDC_Degrading",
+                "desc": "",
+                "stateType": "stStandard",
+                "diagramName": "Proto-ZLD-Condensor",
+                "immediateActions": [
+                    "Reset_PZLDC_FP",
+                    "Assign_PZLDC_DegStart"
+                ],
+                "events": [
+                    "PZLDC_WearOut",
+                    "Start_Outage"
+                ],
+                "eventActions": [
+                    {
+                        "actions": [
+                            "Count_PZLDC_WearOut",
+                            "Goto_PZLDC_Fail"
+                        ],
+                        "moveFromCurrent": true
+                    },
+                    {
+                        "actions": [
+                            "Update_PZLDC_FP",
+                            "Goto_PZLDC_Maint"
+                        ],
+                        "moveFromCurrent": true
+                    }
+                ],
+                "geometry": "{ x: 860, y: 540, width: 200, height: 230}"
+            }
+        },
+        {
+            "State": {
+                "id": 112,
+                "name": "PZLDC_Maint",
+                "desc": "",
+                "stateType": "stStandard",
+                "diagramName": "Proto-ZLD-Condensor",
+                "immediateActions": [
+                    "Set_PZLDC_Maint_Duration"
+                ],
+                "events": [
+                    "End_Outage"
+                ],
+                "eventActions": [
+                    {
+                        "actions": [
+                            "Goto_PZLDC_Active"
+                        ],
+                        "moveFromCurrent": true
+                    }
+                ],
+                "geometry": "{ x: 450, y: 540, width: 200, height: 150}"
+            }
+        },
+
+Actions
+{
+            "Action": {
+                "id": 94,
+                "name": "Goto_PZLDC_Active",
+                "desc": "",
+                "actType": "atTransition",
+                "mainItem": false,
+                "mutExcl": true,
+                "newStates": [
+                    {
+                        "toState": "PZLDC_Active",
+                        "prob": -1,
+                        "failDesc": ""
+                    }
+                ],
+                "moveFromCurrent": true,
+                "itemId": 0
+            }
+        },
+        {
+            "Action": {
+                "id": 11,
+                "name": "Goto_PZLDC_StandBy",
+                "desc": "",
+                "actType": "atTransition",
+                "mainItem": false,
+                "mutExcl": true,
+                "newStates": [
+                    {
+                        "toState": "PZLDC_StandBy",
+                        "prob": -1,
+                        "failDesc": ""
+                    }
+                ],
+                "moveFromCurrent": true,
+                "itemId": 0
+            }
+        },
+        {
+            "Action": {
+                "id": 114,
+                "name": "Goto_PZLDC_Fail",
+                "desc": "",
+                "actType": "atTransition",
+                "mainItem": false,
+                "mutExcl": true,
+                "newStates": [
+                    {
+                        "toState": "PZLDC_Failed",
+                        "prob": -1,
+                        "failDesc": ""
+                    }
+                ],
+                "moveFromCurrent": true,
+                "itemId": 1
+            }
+        },
+        {
+            "Action": {
+                "id": 116,
+                "name": "Goto_PZLDC_Degrad",
+                "desc": "",
+                "actType": "atTransition",
+                "mainItem": false,
+                "mutExcl": true,
+                "newStates": [
+                    {
+                        "toState": "PZLDC_Degrading",
+                        "prob": -1,
+                        "failDesc": ""
+                    }
+                ],
+                "itemId": 96
+            }
+        },
+        {
+            "Action": {
+                "id": 117,
+                "name": "Goto_PZLDC_Maint",
+                "desc": "",
+                "actType": "atTransition",
+                "mainItem": false,
+                "mutExcl": true,
+                "newStates": [
+                    {
+                        "toState": "PZLDC_Maint",
+                        "prob": -1,
+                        "failDesc": ""
+                    }
+                ],
+                "itemId": 97
+            }
+        },
+        {
+            "Action": {
+                "id": 229,
+                "name": "Goto_PZLDC_Recover",
+                "desc": "",
+                "actType": "atTransition",
+                "mainItem": false,
+                "mutExcl": true,
+                "newStates": [
+                    {
+                        "toState": "PZLDC_Corr_Maint",
+                        "prob": -1,
+                        "failDesc": ""
+                    }
+                ],
+                "itemId": 230
+            }
+        },
+        {
+      "Action": {
+        "id": 145,
+        "name": "Count_PZLDC_Fail",
+        "desc": "",
+        "actType": "atCngVarVal",
+        "mainItem": false,
+        "mutExcl": true,
+        "newStates": [],
+        "scriptCode": "return n_PZLDC_Fail+1;",
+        "variableName": "n_PZLDC_Fail",
+        "codeVariables": []
+      }
+    },
+    {
+      "Action": {
+        "id": 146,
+        "name": "Count_PZLDC_RandFail",
+        "desc": "",
+        "actType": "atCngVarVal",
+        "mainItem": false,
+        "mutExcl": true,
+        "newStates": [],
+        "scriptCode": "return n_PZLDC_RandFail+1;",
+        "variableName": "n_PZLDC_RandFail",
+        "codeVariables": []
+      }
+    },
+    {
+      "Action": {
+        "id": 147,
+        "name": "Count_PZLDC_WearOut",
+        "desc": "",
+        "actType": "atCngVarVal",
+        "mainItem": false,
+        "mutExcl": true,
+        "newStates": [],
+        "scriptCode": "return n_PZLDC_WearOut+1;",
+        "variableName": "n_PZLDC_WearOut",
+        "codeVariables": []
+      }
+    },
+    {
+      "Action": {
+        "id": 209,
+        "name": "Reset_PZLDC_FP",
+        "desc": "",
+        "actType": "atCngVarVal",
+        "mainItem": false,
+        "mutExcl": true,
+        "newStates": [],
+        "scriptCode": "return 0;",
+        "variableName": "HX_FailProb",
+        "codeVariables": []
+      }
+    },
+    {
+      "Action": {
+        "id": 210,
+        "name": "Assign_PZLDC_DegStart",
+        "desc": "",
+        "actType": "atCngVarVal",
+        "mainItem": false,
+        "mutExcl": true,
+        "newStates": [],
+        "scriptCode": "return CurTime;",
+        "variableName": "HX_Deg_Start",
+        "codeVariables": []
+      }
+    },
+    {
+      "Action": {
+        "id": 211,
+        "name": "Update_PZLDC_FP",
+        "desc": "",
+        "actType": "atCngVarVal",
+        "mainItem": false,
+        "mutExcl": true,
+        "newStates": [],
+        "scriptCode": "double NewTimeToRefuel = TimeToRefuel - ( HX_Deg_Start-  Start_NormOps_Time);\nreturn  1 - Math.Exp( -HX_Degrad_Shape*( Math.Exp(HX_Degrad_Scale*NewTimeToRefuel) - 1 ) );",
+        "variableName": "HX_FailProb",
+        "codeVariables": [
+          "HX_Deg_Start",
+          "TimeToRefuel",
+          "Start_NormOps_Time",
+          "HX_Degrad_Shape",
+          "HX_Degrad_Scale"
+        ]
+      }
+    },
+    {
+      "Action": {
+        "id": 218,
+        "name": "Set_PZLDC_Maint_Duration",
+        "desc": "",
+        "actType": "atCngVarVal",
+        "mainItem": false,
+        "mutExcl": true,
+        "newStates": [],
+        "scriptCode": "if (Maint_Duration < HX_Repair_Time)\n\treturn HX_Repair_Time;\nelse\n\treturn Maint_Duration;",
+        "variableName": "Maint_Duration",
+        "codeVariables": [
+          "HX_Repair_Time"
+        ]
+      }
+    },
+
+Events
+{
+            "Event": {
+                "id": 112,
+                "name": "PZLDC_Demand",
+                "desc": "",
+                "mainItem": false,
+                "evType": "etStateCng",
+                "allItems": false,
+                "triggerStates": [
+                    "CFWS_Normal_Ops"
+                ],
+                "moveFromCurrent": true,
+                "varNames": [],
+                "ifInState": "true",
+                "evalCurOnInitial": true
+            }
+        },
+        {
+            "Event": {
+                "id": 115,
+                "name": "PZLDC_Degradation",
+                "desc": "",
+                "mainItem": false,
+                "evType": "etDistribution",
+                "allItems": true,
+                "triggerStates": [],
+                "moveFromCurrent": true,
+                "varNames": [],
+                "distType": "dtNormal",
+                "parameters": [
+                    {
+                        "name": "Mean",
+                        "value": "91",
+                        "timeRate": "trDays",
+                        "useVariable": true,
+                        "variable": "HX_TtoDegrad"
+                    },
+                    {
+                        "name": "Standard Deviation",
+                        "value": "365",
+                        "timeRate": "trDays",
+                        "useVariable": false
+                    },
+                    {
+                        "name": "Minimum",
+                        "value": 0,
+                        "timeRate": "trHours",
+                        "useVariable": false
+                    },
+                    {
+                        "name": "Maximum",
+                        "value": 1000,
+                        "timeRate": "trYears",
+                        "useVariable": false
+                    }
+                ],
+                "dfltTimeRate": "trHours",
+                "onVarChange": "ocAdjust"
+            }
+        },
+        {
+            "Event": {
+                "id": 116,
+                "name": "PZLDC_WearOut",
+                "desc": "",
+                "mainItem": false,
+                "evType": "etDistribution",
+                "allItems": true,
+                "triggerStates": [],
+                "moveFromCurrent": true,
+                "varNames": [],
+                "distType": "dtGompertz",
+                "parameters": [
+                    {
+                        "name": "Shape",
+                        "value": 1,
+                        "timeRate": "trHours",
+                        "useVariable": true,
+                        "variable": "HX_Degrad_Shape"
+                    },
+                    {
+                        "name": "Scale",
+                        "value": 1,
+                        "timeRate": "trHours",
+                        "useVariable": true,
+                        "variable": "HX_Degrad_Scale"
+                    },
+                    {
+                        "name": "Minimum",
+                        "value": 0,
+                        "timeRate": "trHours",
+                        "useVariable": false
+                    },
+                    {
+                        "name": "Maximum",
+                        "value": 1000,
+                        "timeRate": "trYears",
+                        "useVariable": false
+                    }
+                ],
+                "dfltTimeRate": "trHours",
+                "onVarChange": "ocAdjust"
+            }
+        },
+        {
+            "Event": {
+                "id": 117,
+                "name": "PZLDC_RandFail",
+                "desc": "",
+                "mainItem": false,
+                "evType": "etDistribution",
+                "allItems": true,
+                "triggerStates": [],
+                "moveFromCurrent": true,
+                "varNames": [],
+                "distType": "dtExponential",
+                "parameters": [
+                    {
+                        "name": "Rate",
+                        "value": 0,
+                        "timeRate": "trHours",
+                        "useVariable": true,
+                        "variable": "HX_Active_Rate"
+                    },
+                    {
+                        "name": "Minimum",
+                        "value": 0,
+                        "timeRate": "trHours",
+                        "useVariable": false
+                    },
+                    {
+                        "name": "Maximum",
+                        "value": 1000,
+                        "timeRate": "trYears",
+                        "useVariable": false
+                    }
+                ],
+                "dfltTimeRate": "trHours",
+                "onVarChange": "ocAdjust"
+            }
+        },
+
+Variables
+{
+      "Variable": {
+        "name": "n_PZLDC_Fail",
+        "desc": "",
+        "varScope": "gtGlobal",
+        "value": 0,
+        "resetOnRuns": false,
+        "type": "int",
+        "id": 51
+      }
+    },
+    {
+      "Variable": {
+        "name": "n_PZLDC_RandFail",
+        "desc": "",
+        "varScope": "gtGlobal",
+        "value": 0,
+        "resetOnRuns": false,
+        "type": "int",
+        "id": 50
+      }
+    },
+    {
+      "Variable": {
+        "name": "n_PZLDC_WearOut",
+        "desc": "",
+        "varScope": "gtGlobal",
+        "value": 0,
+        "resetOnRuns": false,
+        "type": "int",
+        "id": 52
+      }
+    }

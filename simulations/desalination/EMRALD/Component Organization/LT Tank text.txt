@@ -1,0 +1,525 @@
+MED-EPV-3
+
+Diagram
+{
+      "Diagram": {
+        "id": 28,
+        "name": "MED-EPV-3",
+        "desc": "",
+        "diagramType": "dtComponent",
+        "diagramTemplate": "",
+        "diagramList": [],
+        "diagramLabel": "Component",
+        "forceMerge": false,
+        "states": [
+          "MED-EPV-3_InUse",
+          "MED-EPV-3_Degrading",
+          "MED-EPV-3_Failed",
+          "MED-EPV-3_Maint",
+          "MED-EPV-3_Corr_Maint"
+        ],
+        "singleStates": [
+          {
+            "stateName": "MED-EPV-3_InUse",
+            "okState": "True",
+            "$$hashKey": "008"
+          },
+          {
+            "stateName": "MED-EPV-3_Degrading",
+            "okState": "True",
+            "$$hashKey": "009"
+          },
+          {
+            "stateName": "MED-EPV-3_Failed",
+            "okState": "False",
+            "$$hashKey": "00A"
+          },
+          {
+            "stateName": "MED-EPV-3_Corr_Maint",
+            "okState": "False",
+            "$$hashKey": "00B"
+          },
+          {
+            "stateName": "MED-EPV-3_Maint",
+            "okState": "False",
+            "$$hashKey": "00C"
+          }
+        ]
+      }
+    },
+
+States
+{
+      "State": {
+        "id": 155,
+        "name": "MED-EPV-3_InUse",
+        "desc": "",
+        "stateType": "stStandard",
+        "diagramName": "MED-EPV-3",
+        "immediateActions": [],
+        "events": [
+          "MED-EPV-3_RandFail",
+          "MED-EPV-3_Degradation"
+        ],
+        "eventActions": [
+          {
+            "actions": [
+              "Count_MED-EPV-3_RandFail",
+              "Goto_MED-EPV-3_Failed"
+            ],
+            "moveFromCurrent": true
+          },
+          {
+            "actions": [
+              "Goto_MED-EPV-3_Degrading"
+            ],
+            "moveFromCurrent": true
+          }
+        ],
+        "geometry": "{ x: 809.7999877929688, y: 50.4000244140625, width: 200, height: 190}"
+      }
+    },
+    {
+      "State": {
+        "id": 156,
+        "name": "MED-EPV-3_Degrading",
+        "desc": "",
+        "stateType": "stStandard",
+        "diagramName": "MED-EPV-3",
+        "immediateActions": [
+          "Assign_MED-EPV-3_DegStart"
+        ],
+        "events": [
+          "MED-EPV-3_WearOut",
+          "Start_Outage_TES"
+        ],
+        "eventActions": [
+          {
+            "actions": [
+              "Count_MED-EPV-3_WearOut",
+              "Goto_MED-EPV-3_Failed"
+            ],
+            "moveFromCurrent": true
+          },
+          {
+            "actions": [
+              "Goto_MED-EPV-3_Maint"
+            ],
+            "moveFromCurrent": true
+          }
+        ],
+        "geometry": "{ x: 809.60009765625, y: 330, width: 200, height: 210}"
+      }
+    },
+    {
+      "State": {
+        "id": 157,
+        "name": "MED-EPV-3_Failed",
+        "desc": "",
+        "stateType": "stKeyState",
+        "diagramName": "MED-EPV-3",
+        "immediateActions": [
+          "Count_MED-EPV-3_Fail",
+          "Set_MED-EPV-3_Maint_Duration"
+        ],
+        "events": [
+          "Fail_to_Maint"
+        ],
+        "eventActions": [
+          {
+            "actions": [
+              "Goto_MED-EPV-3_Corr_Maint"
+            ],
+            "moveFromCurrent": true
+          }
+        ],
+        "geometry": "{ x: 499.60003662109375, y: 209.80001831054688, width: 200, height: 160}"
+      }
+    },
+    {
+      "State": {
+        "id": 158,
+        "name": "MED-EPV-3_Maint",
+        "desc": "",
+        "stateType": "stStandard",
+        "diagramName": "MED-EPV-3",
+        "immediateActions": [],
+        "events": [
+          "End_Outage_TES"
+        ],
+        "eventActions": [
+          {
+            "actions": [
+              "Goto_MED-EPV-3_InUseOrFail"
+            ],
+            "moveFromCurrent": true
+          }
+        ],
+        "geometry": "{ x: 499.60003662109375, y: 419.8000183105469, width: 200, height: 130}"
+      }
+    },
+    {
+      "State": {
+        "id": 159,
+        "name": "MED-EPV-3_Corr_Maint",
+        "desc": "",
+        "stateType": "stStandard",
+        "diagramName": "MED-EPV-3",
+        "immediateActions": [],
+        "events": [
+          "Maint_Duration"
+        ],
+        "eventActions": [
+          {
+            "actions": [
+              "Goto_MED-EPV-3_InUseOrFail"
+            ],
+            "moveFromCurrent": true
+          }
+        ],
+        "geometry": "{ x: 500.3999938964844, y: 49.599998474121094, width: 200, height: 130}"
+      }
+    },
+
+Actions
+{
+      "Action": {
+        "id": 288,
+        "name": "Goto_MED-EPV-3_Failed",
+        "desc": "",
+        "actType": "atTransition",
+        "mainItem": false,
+        "mutExcl": true,
+        "newStates": [
+          {
+            "toState": "MED-EPV-3_Degrading",
+            "prob": -1,
+            "failDesc": ""
+          },
+          {
+            "toState": "MED-EPV-3_Failed",
+            "prob": -1,
+            "failDesc": ""
+          }
+        ],
+        "itemId": 14102
+      }
+    },
+    {
+      "Action": {
+        "id": 289,
+        "name": "Count_MED-EPV-3_RandFail",
+        "desc": "",
+        "actType": "atCngVarVal",
+        "mainItem": false,
+        "mutExcl": true,
+        "newStates": [],
+        "scriptCode": "return n_MED_EPV_3_RandFail + 1;",
+        "codeVariables": [
+          "n_MED_EPV_3_RandFail"
+        ],
+        "moveFromCurrent": true,
+        "variableName": "n_MED_EPV_3_RandFail"
+      }
+    },
+    {
+      "Action": {
+        "id": 290,
+        "name": "Goto_MED-EPV-3_Degrading",
+        "desc": "",
+        "actType": "atTransition",
+        "mainItem": false,
+        "mutExcl": true,
+        "newStates": []
+      }
+    },
+    {
+      "Action": {
+        "id": 291,
+        "name": "Assign_MED-EPV-3_DegStart",
+        "desc": "",
+        "actType": "atCngVarVal",
+        "mainItem": false,
+        "mutExcl": true,
+        "newStates": [],
+        "scriptCode": "return CurTime;",
+        "codeVariables": [],
+        "variableName": "MED_EPV_3_DegStart"
+      }
+    },
+    {
+      "Action": {
+        "id": 292,
+        "name": "Count_MED-EPV-3_WearOut",
+        "desc": "",
+        "actType": "atCngVarVal",
+        "mainItem": false,
+        "mutExcl": true,
+        "newStates": [
+          {
+            "toState": "MED-EPV-3_Maint",
+            "prob": -1,
+            "failDesc": ""
+          }
+        ],
+        "scriptCode": "return n_MED_EPV_3_WearOut + 1;",
+        "codeVariables": [],
+        "moveFromCurrent": true,
+        "variableName": "n_MED_EPV_3_WearOut",
+        "itemId": 14102
+      }
+    },
+    {
+      "Action": {
+        "id": 293,
+        "name": "Goto_MED-EPV-3_Maint",
+        "desc": "",
+        "actType": "atTransition",
+        "mainItem": false,
+        "mutExcl": true,
+        "newStates": []
+      }
+    },
+    {
+      "Action": {
+        "id": 294,
+        "name": "Goto_MED-EPV-3_InUseOrFail",
+        "desc": "",
+        "actType": "atTransition",
+        "mainItem": false,
+        "mutExcl": false,
+        "newStates": [
+          {
+            "toState": "MED-EPV-3_InUse",
+            "prob": -1,
+            "failDesc": ""
+          },
+          {
+            "toState": "MED-EPV-3_Failed",
+            "prob": 0,
+            "failDesc": ""
+          }
+        ],
+        "moveFromCurrent": false
+      }
+    },
+    {
+      "Action": {
+        "id": 295,
+        "name": "Goto_MED-EPV-3_Corr_Maint",
+        "desc": "",
+        "actType": "atTransition",
+        "mainItem": false,
+        "mutExcl": true,
+        "newStates": [
+          {
+            "toState": "MED-EPV-3_Corr_Maint",
+            "prob": -1,
+            "failDesc": ""
+          }
+        ],
+        "itemId": 14102
+      }
+    },
+    {
+      "Action": {
+        "id": 296,
+        "name": "Count_MED-EPV-3_Fail",
+        "desc": "",
+        "actType": "atCngVarVal",
+        "mainItem": false,
+        "mutExcl": true,
+        "newStates": [],
+        "scriptCode": "return n_MED_EPV_3_Fail + 1;",
+        "variableName": "n_MED_EPV_3_Fail",
+        "codeVariables": []
+      }
+    },
+    {
+      "Action": {
+        "id": 297,
+        "name": "Set_MED-EPV-3_Maint_Duration",
+        "desc": "",
+        "actType": "atCngVarVal",
+        "mainItem": false,
+        "mutExcl": true,
+        "newStates": [],
+        "scriptCode": "if (Maint_Duration < PV_Repair_Time)\n\treturn PV_Repair_Time;\nelse\n\treturn Maint_Duration;",
+        "variableName": "Maint_Duration",
+        "codeVariables": [
+          "PV_Repair_Time"
+        ]
+      }
+    },
+
+Events
+{
+      "Event": {
+        "id": 136,
+        "name": "MED-EPV-3_RandFail",
+        "desc": "",
+        "mainItem": false,
+        "evType": "etDistribution",
+        "allItems": true,
+        "triggerStates": [],
+        "moveFromCurrent": true,
+        "varNames": [],
+        "distType": "dtExponential",
+        "parameters": [
+          {
+            "name": "Rate",
+            "value": 0,
+            "timeRate": "trHours",
+            "useVariable": true,
+            "variable": "PV_Active_Rate"
+          },
+          {
+            "name": "Minimum",
+            "value": 0,
+            "timeRate": "trHours",
+            "useVariable": false
+          },
+          {
+            "name": "Maximum",
+            "value": 1000,
+            "timeRate": "trYears",
+            "useVariable": false
+          }
+        ],
+        "dfltTimeRate": "trHours",
+        "onVarChange": "ocResample"
+      }
+    },
+    {
+      "Event": {
+        "id": 137,
+        "name": "MED-EPV-3_Degradation",
+        "desc": "",
+        "mainItem": false,
+        "evType": "etDistribution",
+        "allItems": true,
+        "triggerStates": [],
+        "moveFromCurrent": true,
+        "varNames": [],
+        "distType": "dtNormal",
+        "parameters": [
+          {
+            "name": "Mean",
+            "value": "1000",
+            "timeRate": "trDays",
+            "useVariable": true,
+            "variable": "PV_TtoDegrad"
+          },
+          {
+            "name": "Standard Deviation",
+            "value": "365",
+            "timeRate": "trDays",
+            "useVariable": false
+          },
+          {
+            "name": "Minimum",
+            "value": 0,
+            "timeRate": "trHours",
+            "useVariable": false
+          },
+          {
+            "name": "Maximum",
+            "value": 1000,
+            "timeRate": "trYears",
+            "useVariable": false
+          }
+        ],
+        "dfltTimeRate": "trHours",
+        "onVarChange": "ocResample"
+      }
+    },
+    {
+      "Event": {
+        "id": 138,
+        "name": "MED-EPV-3_WearOut",
+        "desc": "",
+        "mainItem": false,
+        "evType": "etDistribution",
+        "allItems": true,
+        "triggerStates": [],
+        "moveFromCurrent": true,
+        "varNames": [],
+        "distType": "dtGompertz",
+        "parameters": [
+          {
+            "name": "Shape",
+            "value": "1",
+            "timeRate": "trHours",
+            "useVariable": true,
+            "variable": "PV_Degrad_Shape"
+          },
+          {
+            "name": "Scale",
+            "value": 1,
+            "timeRate": "trHours",
+            "useVariable": true,
+            "variable": "PV_Degrad_Scale"
+          },
+          {
+            "name": "Minimum",
+            "value": 0,
+            "timeRate": "trHours",
+            "useVariable": false
+          },
+          {
+            "name": "Maximum",
+            "value": 1000,
+            "timeRate": "trYears",
+            "useVariable": false
+          }
+        ],
+        "dfltTimeRate": "trHours",
+        "onVarChange": "ocResample"
+      }
+    },
+
+Variables
+{
+      "Variable": {
+        "id": 156,
+        "name": "MED_EPV_3_DegStart",
+        "desc": "",
+        "varScope": "gtGlobal",
+        "value": 0,
+        "resetOnRuns": true,
+        "type": "double"
+      }
+    },
+    {
+      "Variable": {
+        "id": 158,
+        "name": "n_MED_EPV_3_Fail",
+        "desc": "",
+        "varScope": "gtGlobal",
+        "value": 0,
+        "resetOnRuns": true,
+        "type": "int"
+      }
+    },
+    {
+      "Variable": {
+        "id": 155,
+        "name": "n_MED_EPV_3_RandFail",
+        "desc": "",
+        "varScope": "gtGlobal",
+        "value": 0,
+        "resetOnRuns": true,
+        "type": "int"
+      }
+    },
+    {
+      "Variable": {
+        "id": 157,
+        "name": "n_MED_EPV_3_WearOut",
+        "desc": "",
+        "varScope": "gtGlobal",
+        "value": 0,
+        "resetOnRuns": true,
+        "type": "int"
+      }
+    },

@@ -1,0 +1,1057 @@
+SECV
+----
+Diagrams
+{
+      "Diagram": {
+        "id": 2001,
+        "name": "SECV",
+        "desc": "",
+        "diagramType": "dtComponent",
+        "diagramTemplate": "",
+        "diagramLabel": "Component",
+        "forceMerge": false,
+        "states": [
+          "SECV_Open",
+          "SECV_Closed",
+          "SECV_OpenFailed",
+          "SECV_CloseFailed"
+        ],
+        "singleStates": [
+          {
+            "stateName": "SECV_Open",
+            "okState": "True"
+          },
+          {
+            "stateName": "SECV_Closed",
+            "okState": "True"
+          },
+          {
+            "stateName": "SECV_OpenFailed",
+            "okState": "False"
+          },
+          {
+            "stateName": "SECV_CloseFailed",
+            "okState": "False"
+          }
+        ]
+      }
+    },
+
+States
+    {
+      "State": {
+        "id": 6201,
+        "name": "SECV_Open",
+        "desc": "",
+        "stateType": "stStart",
+        "diagramName": "SECV",
+        "immediateActions": [],
+        "events": [
+          "SECV_Close"
+        ],
+        "eventActions": [
+          {
+            "actions": [
+              "Goto_SECV_CloseOrFail"
+            ],
+            "moveFromCurrent": true
+          }
+        ],
+        "geometry": "{ x: 52.727272033691406, y: 43.89204406738281, width: 200, height: 130}"
+      }
+    },
+    {
+      "State": {
+        "id": 6301,
+        "name": "SECV_Closed",
+        "desc": "",
+        "stateType": "stStandard",
+        "diagramName": "SECV",
+        "immediateActions": [],
+        "events": [
+          "SECV_Open"
+        ],
+        "eventActions": [
+          {
+            "actions": [
+              "Goto_SECV_OpenOrFail"
+            ],
+            "moveFromCurrent": true
+          }
+        ],
+        "geometry": "{ x: 601.8181762695312, y: 50.255680084228516, width: 200, height: 130}"
+      }
+    },
+    {
+      "State": {
+        "id": 6401,
+        "name": "SECV_OpenFailed",
+        "desc": "",
+        "stateType": "stKeyState",
+        "diagramName": "SECV",
+        "immediateActions": [
+          "Count_SECV_Fail"
+        ],
+        "events": [
+          "SECV_Maint"
+        ],
+        "eventActions": [
+          {
+            "actions": [
+              "Goto_SECV_Open"
+            ],
+            "moveFromCurrent": true
+          }
+        ],
+        "geometry": "{ x: 200.90908813476562, y: 228.43748474121094, width: 200, height: 150}"
+      }
+    },
+    {
+      "State": {
+        "id": 6501,
+        "name": "SECV_CloseFailed",
+        "desc": "",
+        "stateType": "stKeyState",
+        "diagramName": "SECV",
+        "immediateActions": [
+          "Count_SECV_Fail"
+        ],
+        "events": [
+          "SECV_Maint"
+        ],
+        "eventActions": [
+          {
+            "actions": [
+              "Goto_SECV_Close"
+            ],
+            "moveFromCurrent": true
+          }
+        ],
+        "geometry": "{ x: 790.9090576171875, y: 233.8920440673828, width: 200, height: 150}"
+      }
+    },
+
+Actions
+{
+      "Action": {
+        "id": 4001,
+        "name": "Goto_SECV_OpenOrFail",
+        "desc": "",
+        "actType": "atTransition",
+        "mainItem": false,
+        "mutExcl": true,
+        "newStates": [
+          {
+            "toState": "SECV_CloseFailed",
+            "prob": 0,
+            "varProb": "SECV_FTOC",
+            "failDesc": ""
+          },
+          {
+            "toState": "SECV_Open",
+            "prob": -1,
+            "failDesc": ""
+          }
+        ],
+        "itemId": 0,
+        "moveFromCurrent": true
+      }
+    },
+    {
+      "Action": {
+        "id": 4101,
+        "name": "Goto_SECV_CloseOrFail",
+        "desc": "",
+        "actType": "atTransition",
+        "mainItem": false,
+        "mutExcl": true,
+        "newStates": [
+          {
+            "toState": "SECV_OpenFailed",
+            "prob": 0,
+            "varProb": "SECV_FTOC",
+            "failDesc": ""
+          },
+          {
+            "toState": "SECV_Closed",
+            "prob": -1,
+            "failDesc": ""
+          }
+        ],
+        "itemId": 0,
+        "moveFromCurrent": true
+      }
+    },
+    {
+      "Action": {
+        "id": 6801,
+        "name": "Goto_SECV_Open",
+        "desc": "",
+        "actType": "atTransition",
+        "mainItem": false,
+        "mutExcl": true,
+        "newStates": [
+          {
+            "toState": "SECV_Open",
+            "prob": -1,
+            "failDesc": ""
+          }
+        ]
+      }
+    },
+    {
+      "Action": {
+        "id": 6901,
+        "name": "Goto_SECV_Close",
+        "desc": "",
+        "actType": "atTransition",
+        "mainItem": false,
+        "mutExcl": true,
+        "newStates": [
+          {
+            "toState": "SECV_Closed",
+            "prob": -1,
+            "failDesc": ""
+          }
+        ]
+      }
+    },
+    {
+      "Action": {
+        "id": 14101,
+        "name": "Count_SECV_Fail",
+        "desc": "",
+        "actType": "atCngVarVal",
+        "mainItem": false,
+        "mutExcl": true,
+        "newStates": [],
+        "scriptCode": "return n_SECV_Fail+1;",
+        "variableName": "n_SECV_Fail",
+        "codeVariables": []
+      }
+    },
+
+Events
+{
+      "Event": {
+        "id": 5401,
+        "name": "SECV_Close",
+        "desc": "",
+        "moveFromCurrent": true,
+        "evType": "etStateCng",
+        "ifInState": "true",
+        "allItems": true,
+        "evalCurOnInitial": true,
+        "triggerStates": [
+          "CFWS_Failed"
+        ],
+        "varNames": []
+      }
+    },
+    {
+      "Event": {
+        "id": 5501,
+        "name": "SECV_Open",
+        "desc": "",
+        "moveFromCurrent": true,
+        "evType": "etStateCng",
+        "ifInState": "true",
+        "allItems": true,
+        "evalCurOnInitial": true,
+        "triggerStates": [
+          "CFWS_Normal_Ops"
+        ],
+        "varNames": []
+      }
+    },
+    {
+      "Event": {
+        "id": 6901,
+        "name": "SECV_Maint",
+        "desc": "",
+        "mainItem": false,
+        "evType": "etTimer",
+        "allItems": true,
+        "triggerStates": [],
+        "moveFromCurrent": true,
+        "varNames": [],
+        "useVariable": true,
+        "time": "SECV_Repair_Time",
+        "timeVariableUnit": "trHours",
+        "onVarChange": "ocIgnore"
+      }
+    },
+
+Variables
+{
+      "Variable": {
+        "id": 1601,
+        "name": "SECV_FTOC",
+        "desc": "",
+        "varScope": "gtGlobal",
+        "value": 0.000134,
+        "resetOnRuns": true,
+        "type": "double"
+      }
+    },
+    {
+      "Variable": {
+        "id": 2301,
+        "name": "SECV_Repair_Time",
+        "desc": "Feedwater Check Valve mean repair time in hr",
+        "varScope": "gtGlobal",
+        "value": 24,
+        "resetOnRuns": true,
+        "type": "int"
+      }
+    },
+    {
+      "Variable": {
+        "name": "n_SECV_Fail",
+        "desc": "",
+        "varScope": "gtGlobal",
+        "value": 0,
+        "resetOnRuns": false,
+        "type": "int",
+        "id": 4601
+      }
+    },
+
+----
+
+TBV
+----
+Diagrams
+{
+      "Diagram": {
+        "id": 23,
+        "name": "TBV",
+        "desc": "",
+        "diagramType": "dtComponent",
+        "diagramTemplate": "",
+        "diagramLabel": "Component",
+        "states": [
+          "TBV_Closed",
+          "TBV_Open",
+          "TBV_Failed",
+          "TBV_Corr_Maint",
+          "TBV_Degrading",
+          "TBV_Maint"
+        ],
+        "singleStates": [
+          {
+            "stateName": "TBV_Open",
+            "okState": "True",
+            "inSingleStateGroup": true,
+            "$$hashKey": "008"
+          },
+          {
+            "stateName": "TBV_Failed",
+            "okState": "False",
+            "inSingleStateGroup": false,
+            "$$hashKey": "009"
+          },
+          {
+            "stateName": "TBV_Closed",
+            "okState": "True",
+            "inSingleStateGroup": true,
+            "$$hashKey": "00A"
+          },
+          {
+            "stateName": "TBV_Corr_Maint",
+            "okState": "False",
+            "inSingleStateGroup": true,
+            "$$hashKey": "00B"
+          },
+          {
+            "stateName": "TBV_Degrading",
+            "okState": "True"
+          },
+          {
+            "stateName": "TBV_Maint",
+            "okState": "True"
+          }
+        ],
+        "forceMerge": false
+      }
+    },
+
+States
+{
+      "State": {
+        "id": 116,
+        "name": "TBV_Closed",
+        "desc": "",
+        "stateType": "stStandard",
+        "diagramName": "TBV",
+        "immediateActions": [],
+        "events": [
+          "TBV_Demand"
+        ],
+        "eventActions": [
+          {
+            "actions": [
+              "Goto_TBV_OpenOrFail"
+            ],
+            "moveFromCurrent": true
+          }
+        ],
+        "geometry": "{ x: 770.5, y: 60, width: 200, height: 130}"
+      }
+    },
+    {
+      "State": {
+        "id": 117,
+        "name": "TBV_Open",
+        "desc": "",
+        "stateType": "stStart",
+        "diagramName": "TBV",
+        "immediateActions": [],
+        "events": [
+          "TBV_Degradation",
+          "TBV_RandFail"
+        ],
+        "eventActions": [
+          {
+            "actions": [
+              "Goto_TBV_Degrad"
+            ],
+            "moveFromCurrent": true
+          },
+          {
+            "actions": [
+              "Count_TBV_RandFail",
+              "Goto_TBV_Fail"
+            ],
+            "moveFromCurrent": true
+          }
+        ],
+        "geometry": "{ x: 810.5, y: 290, width: 200, height: 190}"
+      }
+    },
+    {
+      "State": {
+        "id": 118,
+        "name": "TBV_Failed",
+        "desc": "",
+        "stateType": "stKeyState",
+        "diagramName": "TBV",
+        "immediateActions": [
+          "Count_TBV_Fail",
+          "Set_TBV_Maint_Duration"
+        ],
+        "events": [
+          "Fail_to_Maint"
+        ],
+        "eventActions": [
+          {
+            "actions": [
+              "Goto_TBV_Recover"
+            ],
+            "moveFromCurrent": true
+          }
+        ],
+        "geometry": "{ x: 410.5, y: 300, width: 200, height: 160}"
+      }
+    },
+    {
+      "State": {
+        "id": 119,
+        "name": "TBV_Corr_Maint",
+        "desc": "",
+        "stateType": "stStandard",
+        "diagramName": "TBV",
+        "immediateActions": [],
+        "events": [
+          "Maint_Duration"
+        ],
+        "eventActions": [
+          {
+            "actions": [
+              "Goto_TBV_Close"
+            ],
+            "moveFromCurrent": true
+          }
+        ],
+        "geometry": "{ x: 350.5, y: 60, width: 200, height: 130}"
+      }
+    },
+    {
+      "State": {
+        "id": 120,
+        "name": "TBV_Degrading",
+        "desc": "",
+        "stateType": "stStandard",
+        "diagramName": "TBV",
+        "immediateActions": [
+          "Reset_TBV_FP",
+          "Assign_TBV_DegStart"
+        ],
+        "events": [
+          "TBV_WearOut",
+          "Start_Outage"
+        ],
+        "eventActions": [
+          {
+            "actions": [
+              "Count_TBV_WearOut",
+              "Goto_TBV_Fail"
+            ],
+            "moveFromCurrent": true
+          },
+          {
+            "actions": [
+              "Update_TBV_FP",
+              "Goto_TBV_Maint"
+            ],
+            "moveFromCurrent": true
+          }
+        ],
+        "geometry": "{ x: 860, y: 540, width: 200, height: 230}"
+      }
+    },
+    {
+      "State": {
+        "id": 121,
+        "name": "TBV_Maint",
+        "desc": "",
+        "stateType": "stStandard",
+        "diagramName": "TBV",
+        "immediateActions": [
+          "Set_TBV_Maint_Duration"
+        ],
+        "events": [
+          "End_Outage"
+        ],
+        "eventActions": [
+          {
+            "actions": [
+              "Goto_TBV_Open"
+            ],
+            "moveFromCurrent": true
+          }
+        ],
+        "geometry": "{ x: 450, y: 540, width: 200, height: 150}"
+      }
+    },
+
+Actions
+{
+      "Action": {
+        "id": 24,
+        "name": "Goto_TBV_CloseOrFail",
+        "desc": "",
+        "actType": "atTransition",
+        "mainItem": false,
+        "mutExcl": true,
+        "newStates": [],
+        "itemId": 0,
+        "moveFromCurrent": true
+      }
+    },
+    {
+      "Action": {
+        "id": 25,
+        "name": "Goto_TBV_OpenOrFail",
+        "desc": "",
+        "actType": "atTransition",
+        "mainItem": false,
+        "mutExcl": true,
+        "newStates": [
+          {
+            "toState": "TBV_Failed",
+            "prob": 0,
+            "varProb": "TBV_FTOC",
+            "failDesc": ""
+          },
+          {
+            "toState": "TBV_Open",
+            "prob": -1,
+            "failDesc": ""
+          }
+        ],
+        "itemId": 0,
+        "moveFromCurrent": true
+      }
+    },
+    {
+      "Action": {
+        "id": 114,
+        "name": "Goto_TBV_Fail",
+        "desc": "",
+        "actType": "atTransition",
+        "mainItem": false,
+        "mutExcl": true,
+        "newStates": [
+          {
+            "toState": "TBV_Failed",
+            "prob": -1,
+            "failDesc": ""
+          }
+        ],
+        "moveFromCurrent": true,
+        "itemId": 1
+      }
+    },
+    {
+      "Action": {
+        "id": 119,
+        "name": "Goto_TBV_Degrad",
+        "desc": "",
+        "actType": "atTransition",
+        "mainItem": false,
+        "mutExcl": true,
+        "newStates": [
+          {
+            "toState": "TBV_Degrading",
+            "prob": -1,
+            "failDesc": ""
+          }
+        ],
+        "itemId": 96
+      }
+    },
+    {
+      "Action": {
+        "id": 131,
+        "name": "Count_TBV_WearOut",
+        "desc": "",
+        "actType": "atCngVarVal",
+        "mainItem": false,
+        "mutExcl": true,
+        "newStates": [],
+        "scriptCode": "return n_TBV_WearOut+1;",
+        "variableName": "n_TBV_WearOut",
+        "codeVariables": [],
+        "moveFromCurrent": true
+      }
+    },
+    {
+      "Action": {
+        "id": 132,
+        "name": "Goto_TBV_Maint",
+        "desc": "",
+        "actType": "atTransition",
+        "mainItem": false,
+        "mutExcl": true,
+        "newStates": [
+          {
+            "toState": "TBV_Maint",
+            "prob": -1,
+            "failDesc": ""
+          }
+        ],
+        "itemId": 97
+      }
+    },
+    {
+      "Action": {
+        "id": 132,
+        "name": "Count_TBV_Fail",
+        "desc": "",
+        "actType": "atCngVarVal",
+        "scriptCode": "return n_TBV_Fail+1;",
+        "variableName": "n_TBV_Fail",
+        "codeVariables": []
+      }
+    },
+    {
+      "Action": {
+        "id": 133,
+        "name": "Count_TBV_RandFail",
+        "desc": "",
+        "actType": "atCngVarVal",
+        "mainItem": false,
+        "mutExcl": true,
+        "newStates": [],
+        "scriptCode": "return n_TBV_RandFail+1;",
+        "variableName": "n_TBV_RandFail",
+        "codeVariables": []
+      }
+    },
+    {
+      "Action": {
+        "id": 141,
+        "name": "Goto_TBV_Close",
+        "desc": "",
+        "actType": "atTransition",
+        "mainItem": false,
+        "mutExcl": true,
+        "newStates": [
+          {
+            "toState": "TBV_Closed",
+            "prob": -1,
+            "failDesc": ""
+          }
+        ],
+        "itemId": 143,
+        "moveFromCurrent": true
+      }
+    },
+    {
+      "Action": {
+        "id": 140,
+        "name": "Goto_TBV_Open",
+        "desc": "",
+        "actType": "atTransition",
+        "mainItem": false,
+        "mutExcl": true,
+        "newStates": [
+          {
+            "toState": "TBV_Open",
+            "prob": -1,
+            "failDesc": ""
+          }
+        ],
+        "itemId": 143
+      }
+    },
+    {
+      "Action": {
+        "id": 212,
+        "name": "Reset_TBV_FP",
+        "desc": "",
+        "actType": "atCngVarVal",
+        "mainItem": false,
+        "mutExcl": true,
+        "newStates": [],
+        "scriptCode": "return 0;",
+        "variableName": "TBV_FailProb",
+        "codeVariables": []
+      }
+    },
+    {
+      "Action": {
+        "id": 213,
+        "name": "Assign_TBV_DegStart",
+        "desc": "",
+        "actType": "atCngVarVal",
+        "mainItem": false,
+        "mutExcl": true,
+        "newStates": [],
+        "scriptCode": "return CurTime;",
+        "variableName": "TBV_Deg_Start",
+        "codeVariables": []
+      }
+    },
+    {
+      "Action": {
+        "id": 214,
+        "name": "Update_TBV_FP",
+        "desc": "",
+        "actType": "atCngVarVal",
+        "mainItem": false,
+        "mutExcl": true,
+        "newStates": [],
+        "scriptCode": "double NewTimeToRefuel = TimeToRefuel - ( TBV_Deg_Start-  Start_NormOps_Time);\nreturn  1 - Math.Exp( -TBV_Degrad_Shape*( Math.Exp(TBV_Degrad_Scale*NewTimeToRefuel) - 1 ) );",
+        "variableName": "TBV_FailProb",
+        "codeVariables": [
+          "TBV_Degrad_Scale",
+          "TBV_Degrad_Shape",
+          "Start_NormOps_Time",
+          "TimeToRefuel",
+          "TBV_Deg_Start"
+        ],
+        "moveFromCurrent": false
+      }
+    },
+    {
+      "Action": {
+        "id": 219,
+        "name": "Set_TBV_Maint_Duration",
+        "desc": "",
+        "actType": "atCngVarVal",
+        "mainItem": false,
+        "mutExcl": true,
+        "newStates": [],
+        "scriptCode": "if (Maint_Duration < TBV_Repair_Time)\n\treturn TBV_Repair_Time;\nelse\n\treturn Maint_Duration;",
+        "variableName": "Maint_Duration",
+        "codeVariables": [
+          "TBV_Repair_Time"
+        ]
+      }
+    },
+    {
+      "Action": {
+        "id": 230,
+        "name": "Goto_TBV_Recover",
+        "desc": "",
+        "actType": "atTransition",
+        "mainItem": false,
+        "mutExcl": true,
+        "newStates": [
+          {
+            "toState": "TBV_Corr_Maint",
+            "prob": -1,
+            "failDesc": ""
+          }
+        ],
+        "itemId": 231
+      }
+    },
+
+Events
+{
+      "Event": {
+        "id": 117,
+        "name": "TBV_RandFail",
+        "desc": "",
+        "mainItem": false,
+        "evType": "etDistribution",
+        "allItems": true,
+        "triggerStates": [],
+        "moveFromCurrent": true,
+        "varNames": [],
+        "distType": "dtExponential",
+        "parameters": [
+          {
+            "name": "Rate",
+            "value": 0,
+            "timeRate": "trHours",
+            "useVariable": true,
+            "variable": "TBV_Active_Rate"
+          },
+          {
+            "name": "Minimum",
+            "value": 0,
+            "timeRate": "trHours",
+            "useVariable": false
+          },
+          {
+            "name": "Maximum",
+            "value": 1000,
+            "timeRate": "trYears",
+            "useVariable": false
+          }
+        ],
+        "dfltTimeRate": "trHours",
+        "onVarChange": "ocAdjust"
+      }
+    },
+    {
+      "Event": {
+        "id": 122,
+        "name": "TBV_Demand",
+        "desc": "",
+        "mainItem": false,
+        "evType": "etStateCng",
+        "allItems": false,
+        "triggerStates": [
+          "CFWS_Normal_Ops"
+        ],
+        "moveFromCurrent": true,
+        "varNames": [],
+        "ifInState": "true",
+        "evalCurOnInitial": true
+      }
+    },
+    {
+      "Event": {
+        "id": 124,
+        "name": "TBV_Degradation",
+        "desc": "",
+        "mainItem": false,
+        "evType": "etDistribution",
+        "allItems": true,
+        "triggerStates": [],
+        "moveFromCurrent": true,
+        "varNames": [],
+        "distType": "dtNormal",
+        "parameters": [
+          {
+            "name": "Mean",
+            "value": "91",
+            "timeRate": "trDays",
+            "useVariable": true,
+            "variable": "TBV_TtoDegrad"
+          },
+          {
+            "name": "Standard Deviation",
+            "value": "365",
+            "timeRate": "trDays",
+            "useVariable": false
+          },
+          {
+            "name": "Minimum",
+            "value": 0,
+            "timeRate": "trHours",
+            "useVariable": false
+          },
+          {
+            "name": "Maximum",
+            "value": 1000,
+            "timeRate": "trYears",
+            "useVariable": false
+          }
+        ],
+        "dfltTimeRate": "trHours",
+        "onVarChange": "ocAdjust"
+      }
+    },
+    {
+      "Event": {
+        "id": 125,
+        "name": "TBV_WearOut",
+        "desc": "",
+        "mainItem": false,
+        "evType": "etDistribution",
+        "allItems": true,
+        "triggerStates": [],
+        "moveFromCurrent": true,
+        "varNames": [],
+        "distType": "dtGompertz",
+        "parameters": [
+          {
+            "name": "Shape",
+            "value": 1,
+            "timeRate": "trHours",
+            "useVariable": true,
+            "variable": "TBV_Degrad_Shape"
+          },
+          {
+            "name": "Scale",
+            "value": 1,
+            "timeRate": "trHours",
+            "useVariable": true,
+            "variable": "TBV_Degrad_Scale"
+          },
+          {
+            "name": "Minimum",
+            "value": 0,
+            "timeRate": "trHours",
+            "useVariable": false
+          },
+          {
+            "name": "Maximum",
+            "value": 1000,
+            "timeRate": "trYears",
+            "useVariable": false
+          }
+        ],
+        "dfltTimeRate": "trHours",
+        "onVarChange": "ocAdjust"
+      }
+    },
+
+Variables
+{
+      "Variable": {
+        "name": "TBV_Deg_Start",
+        "desc": "",
+        "varScope": "gtGlobal",
+        "value": 0,
+        "resetOnRuns": true,
+        "type": "double",
+        "id": 113
+      }
+    },
+    {
+      "Variable": {
+        "name": "TBV_FailProb",
+        "desc": "",
+        "varScope": "gtGlobal",
+        "value": 0,
+        "resetOnRuns": true,
+        "type": "double",
+        "id": 112
+      }
+    },
+    {
+      "Variable": {
+        "name": "TBV_Active_Rate",
+        "desc": "",
+        "varScope": "gtGlobal",
+        "value": 2.01E-06,
+        "resetOnRuns": true,
+        "type": "double",
+        "id": 38
+      }
+    },
+    {
+      "Variable": {
+        "name": "TBV_Degrad_Scale",
+        "desc": "",
+        "varScope": "gtGlobal",
+        "value": 9.6817E-05,
+        "resetOnRuns": true,
+        "type": "double",
+        "id": 37
+      }
+    },
+    {
+      "Variable": {
+        "name": "TBV_Degrad_Shape",
+        "desc": "",
+        "varScope": "gtGlobal",
+        "value": 0.02079481,
+        "resetOnRuns": true,
+        "type": "double",
+        "id": 39
+      }
+    },
+    {
+      "Variable": {
+        "name": "TBV_FTOC",
+        "desc": "Feedwater Regulating Valve Failure to Open",
+        "varScope": "gtGlobal",
+        "value": 4.41E-05,
+        "resetOnRuns": true,
+        "type": "double",
+        "id": 11
+      }
+    },
+    {
+      "Variable": {
+        "id": 28,
+        "name": "TBV_Repair_Time",
+        "desc": "",
+        "varScope": "gtGlobal",
+        "value": 24,
+        "resetOnRuns": true,
+        "type": "int"
+      }
+    },
+    {
+      "Variable": {
+        "name": "TBV_TtoDegrad",
+        "desc": "days",
+        "varScope": "gtGlobal",
+        "value": 1000,
+        "resetOnRuns": true,
+        "type": "double",
+        "id": 40
+      }
+    },
+    {
+      "Variable": {
+        "name": "n_TBV_Fail",
+        "desc": "",
+        "varScope": "gtGlobal",
+        "value": 0,
+        "resetOnRuns": false,
+        "type": "int",
+        "id": 40
+      }
+    },
+    {
+      "Variable": {
+        "name": "n_TBV_RandFail",
+        "desc": "",
+        "varScope": "gtGlobal",
+        "value": 0,
+        "resetOnRuns": false,
+        "type": "int",
+        "id": 39
+      }
+    },
+    {
+      "Variable": {
+        "id": 38,
+        "name": "n_TBV_WearOut",
+        "desc": "",
+        "varScope": "gtGlobal",
+        "value": 0,
+        "resetOnRuns": false,
+        "type": "int"
+      }
+    },
