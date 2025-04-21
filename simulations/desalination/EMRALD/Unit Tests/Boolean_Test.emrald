@@ -1,0 +1,177 @@
+{
+  "id": "0",
+  "name": "Boolean_Test",
+  "desc": "",
+  "version": 1,
+  "DiagramList": [
+    {
+      "id": "4aaa61c7-3895-4df9-ba42-bb390fba6bc3",
+      "name": "Boolean_Comp",
+      "desc": "",
+      "diagramType": "dtSingle",
+      "diagramLabel": "Component",
+      "states": [
+        "Start",
+        "End"
+      ],
+      "required": false,
+      "objType": "Diagram"
+    }
+  ],
+  "StateList": [
+    {
+      "id": "865819ef-7f2c-4f68-ba44-bff97cc25164",
+      "name": "End",
+      "desc": "",
+      "diagramName": "Boolean_Comp",
+      "stateType": "stStandard",
+      "events": [],
+      "eventActions": [],
+      "immediateActions": [
+        "count_n_Endstate"
+      ],
+      "geometryInfo": {
+        "x": 432.12007731735537,
+        "y": 2.8712297496169867,
+        "width": 0,
+        "height": 0
+      },
+      "required": false,
+      "objType": "State",
+      "defaultSingleStateValue": "False"
+    },
+    {
+      "id": "9f08f1ed-e2ca-430d-b212-1ed19cbe6070",
+      "name": "Start",
+      "desc": "",
+      "diagramName": "Boolean_Comp",
+      "stateType": "stStart",
+      "events": [
+        "Boolean_Event_Test"
+      ],
+      "eventActions": [
+        {
+          "moveFromCurrent": true,
+          "actions": [
+            "Goto_End"
+          ]
+        }
+      ],
+      "immediateActions": [],
+      "geometryInfo": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0
+      },
+      "required": false,
+      "objType": "State",
+      "defaultSingleStateValue": "True"
+    }
+  ],
+  "ActionList": [
+    {
+      "id": "ceb28b89-d8c1-441e-9141-ef740edaa68e",
+      "name": "count_n_Endstate",
+      "desc": "",
+      "actType": "atCngVarVal",
+      "mainItem": true,
+      "objType": "Action",
+      "required": false,
+      "newStates": [],
+      "mutExcl": true,
+      "codeVariables": [
+        "n_Endstate"
+      ],
+      "variableName": "n_Endstate",
+      "scriptCode": "return n_Endstate + 1;",
+      "sim3DMessage": "atCompModify",
+      "extSim": "",
+      "sim3DConfigData": "",
+      "sim3DModelRef": "",
+      "simEndTime": "",
+      "makeInputFileCode": "",
+      "exePath": "",
+      "processOutputFileCode": "",
+      "openSimVarParams": false,
+      "raType": "",
+      "returnProcess": "rtNone"
+    },
+    {
+      "id": "bb8c35cc-48fa-4a14-b574-6f3a01a68ba2",
+      "name": "Goto_End",
+      "desc": "",
+      "actType": "atTransition",
+      "mainItem": true,
+      "objType": "Action",
+      "required": false,
+      "newStates": [
+        {
+          "toState": "End",
+          "prob": -1,
+          "varProb": null,
+          "failDesc": ""
+        }
+      ],
+      "mutExcl": true,
+      "codeVariables": [],
+      "variableName": "",
+      "scriptCode": "",
+      "sim3DMessage": "atCompModify",
+      "extSim": "",
+      "sim3DConfigData": "",
+      "sim3DModelRef": "",
+      "simEndTime": "",
+      "makeInputFileCode": "",
+      "exePath": "",
+      "processOutputFileCode": "",
+      "openSimVarParams": false,
+      "raType": "",
+      "returnProcess": "rtNone"
+    }
+  ],
+  "EventList": [
+    {
+      "id": "e112a09c-70e0-4bd9-88e9-d2d01d3993b1",
+      "name": "Boolean_Event_Test",
+      "desc": "",
+      "evType": "etVarCond",
+      "mainItem": true,
+      "required": false,
+      "objType": "Event",
+      "code": "return (Int >= 1);",
+      "varNames": [
+        "Int"
+      ],
+      "triggerStates": [],
+      "allItems": true
+    }
+  ],
+  "LogicNodeList": [],
+  "VariableList": [
+    {
+      "name": "Int",
+      "varScope": "gtGlobal",
+      "value": 3,
+      "type": "int",
+      "objType": "Variable",
+      "id": "8b4eb732-5da4-4f01-8ed6-02f2336c9135",
+      "desc": "",
+      "resetOnRuns": true
+    },
+    {
+      "name": "n_Endstate",
+      "varScope": "gtGlobal",
+      "value": 0,
+      "type": "int",
+      "objType": "Variable",
+      "id": "42b5561e-ef44-4eb4-9482-5e70a8dbb831",
+      "desc": "",
+      "resetOnRuns": false
+    }
+  ],
+  "ExtSimList": [],
+  "objType": "EMRALD_Model",
+  "emraldVersion": 3,
+  "templates": []
+}

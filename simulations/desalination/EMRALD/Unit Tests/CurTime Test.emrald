@@ -1,0 +1,163 @@
+{
+  "id": "0",
+  "name": "CurTime Test",
+  "desc": "",
+  "version": 1,
+  "DiagramList": [
+    {
+      "id": "34d67482-b6ce-47b1-8791-29434bbfc4a8",
+      "name": "CurTime_test",
+      "desc": "",
+      "diagramType": "dtSingle",
+      "diagramLabel": "component",
+      "states": [
+        "Start",
+        "END"
+      ],
+      "required": false,
+      "objType": "Diagram"
+    }
+  ],
+  "StateList": [
+    {
+      "id": "9bc488a0-4d75-44d6-93f1-3a3e3812a139",
+      "name": "END",
+      "desc": "",
+      "diagramName": "CurTime_test",
+      "stateType": "stTerminal",
+      "events": [],
+      "eventActions": [],
+      "immediateActions": [],
+      "geometryInfo": {
+        "x": 342.38573622183657,
+        "y": -14.015790371654134,
+        "width": 0,
+        "height": 0
+      },
+      "required": false,
+      "objType": "State",
+      "defaultSingleStateValue": "False"
+    },
+    {
+      "id": "f23a002b-1dad-477b-aed0-8c8852d9ccf8",
+      "name": "Start",
+      "desc": "",
+      "diagramName": "CurTime_test",
+      "stateType": "stStart",
+      "events": [
+        "Skip_To_End"
+      ],
+      "eventActions": [
+        {
+          "moveFromCurrent": true,
+          "actions": [
+            "Goto_End"
+          ]
+        }
+      ],
+      "immediateActions": [
+        "Assign_Time_Start"
+      ],
+      "geometryInfo": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0
+      },
+      "required": false,
+      "objType": "State",
+      "defaultSingleStateValue": "True"
+    }
+  ],
+  "ActionList": [
+    {
+      "id": "47c71254-7095-4407-9627-ea8aaa2eaf1c",
+      "name": "Assign_Time_Start",
+      "desc": "",
+      "actType": "atCngVarVal",
+      "mainItem": true,
+      "objType": "Action",
+      "required": false,
+      "newStates": [],
+      "mutExcl": true,
+      "codeVariables": [
+        "Time_start"
+      ],
+      "variableName": "Time_start",
+      "scriptCode": "return CurTime;",
+      "sim3DMessage": "atCompModify",
+      "extSim": "",
+      "sim3DConfigData": "",
+      "sim3DModelRef": "",
+      "simEndTime": "",
+      "makeInputFileCode": "",
+      "exePath": "",
+      "processOutputFileCode": "",
+      "openSimVarParams": false,
+      "raType": "",
+      "returnProcess": "rtNone"
+    },
+    {
+      "id": "0ea1ad50-2106-44e6-8a36-72ad4649329b",
+      "name": "Goto_End",
+      "desc": "",
+      "actType": "atTransition",
+      "mainItem": true,
+      "objType": "Action",
+      "required": false,
+      "newStates": [
+        {
+          "toState": "END",
+          "prob": -1,
+          "varProb": null,
+          "failDesc": ""
+        }
+      ],
+      "mutExcl": true,
+      "codeVariables": [],
+      "variableName": "",
+      "scriptCode": "",
+      "sim3DMessage": "atCompModify",
+      "extSim": "",
+      "sim3DConfigData": "",
+      "sim3DModelRef": "",
+      "simEndTime": "",
+      "makeInputFileCode": "",
+      "exePath": "",
+      "processOutputFileCode": "",
+      "openSimVarParams": false,
+      "raType": "",
+      "returnProcess": "rtNone"
+    }
+  ],
+  "EventList": [
+    {
+      "id": "d8e69fc8-1dc9-4ee8-afe1-0a44311b9c92",
+      "name": "Skip_To_End",
+      "desc": "",
+      "evType": "etTimer",
+      "mainItem": true,
+      "required": false,
+      "objType": "Event",
+      "triggerStates": [],
+      "allItems": true,
+      "time": "P5D"
+    }
+  ],
+  "LogicNodeList": [],
+  "VariableList": [
+    {
+      "name": "Time_start",
+      "varScope": "gtGlobal",
+      "value": 0,
+      "type": "double",
+      "objType": "Variable",
+      "id": "a7f6d136-2681-4c20-b2bd-d766f83ffd28",
+      "desc": ""
+    }
+  ],
+  "ExtSimList": [],
+  "objType": "EMRALD_Model",
+  "emraldVersion": 3,
+  "templates": []
+}

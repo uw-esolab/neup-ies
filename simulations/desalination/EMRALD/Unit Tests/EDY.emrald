@@ -1,0 +1,201 @@
+{
+  "id": "0",
+  "name": "",
+  "desc": "",
+  "version": 1,
+  "DiagramList": [
+    {
+      "id": "7cc25fdb-ebe9-4e3c-bcc9-223db68c2ea2",
+      "name": "Extra_days_in_year",
+      "desc": "",
+      "diagramType": "dtSingle",
+      "diagramLabel": "Component",
+      "states": [
+        "EDY_Start",
+        "EDY_End"
+      ],
+      "required": false,
+      "objType": "Diagram"
+    }
+  ],
+  "StateList": [
+    {
+      "id": "314115fe-91a2-48cd-bd86-e62bf3dea1c8",
+      "name": "EDY_End",
+      "desc": "",
+      "diagramName": "Extra_days_in_year",
+      "stateType": "stTerminal",
+      "events": [],
+      "eventActions": [],
+      "immediateActions": [
+        "Count_time_to_end"
+      ],
+      "geometryInfo": {
+        "x": 344.1631590742779,
+        "y": -8.700754021540746,
+        "width": 0,
+        "height": 0
+      },
+      "required": false,
+      "objType": "State",
+      "defaultSingleStateValue": "False"
+    },
+    {
+      "id": "8682adc7-4381-44ae-afb3-f3e8c1673e3f",
+      "name": "EDY_Start",
+      "desc": "",
+      "diagramName": "Extra_days_in_year",
+      "stateType": "stStart",
+      "events": [
+        "Transition_dist"
+      ],
+      "eventActions": [
+        {
+          "moveFromCurrent": true,
+          "actions": [
+            "Goto_EDY_End"
+          ]
+        }
+      ],
+      "immediateActions": [],
+      "geometryInfo": {
+        "x": -112,
+        "y": -10.5,
+        "width": 0,
+        "height": 0
+      },
+      "required": false,
+      "objType": "State",
+      "defaultSingleStateValue": "True"
+    }
+  ],
+  "ActionList": [
+    {
+      "id": "1e36edb0-de23-4a48-b1e4-b0a83c5ad003",
+      "name": "Count_time_to_end",
+      "desc": "",
+      "actType": "atCngVarVal",
+      "mainItem": true,
+      "objType": "Action",
+      "required": false,
+      "newStates": [],
+      "mutExcl": true,
+      "codeVariables": [
+        "Total_time_to_end"
+      ],
+      "variableName": "Total_time_to_end",
+      "scriptCode": "return Total_time_to_end + CurTime;",
+      "sim3DMessage": "atCompModify",
+      "extSim": "",
+      "sim3DConfigData": "",
+      "sim3DModelRef": "",
+      "simEndTime": "",
+      "makeInputFileCode": "",
+      "exePath": "",
+      "processOutputFileCode": "",
+      "openSimVarParams": false,
+      "raType": "",
+      "returnProcess": "rtNone"
+    },
+    {
+      "id": "2e12c605-749b-4807-aa71-d5bae7c95729",
+      "name": "Goto_EDY_End",
+      "desc": "",
+      "actType": "atTransition",
+      "mainItem": true,
+      "objType": "Action",
+      "required": false,
+      "newStates": [
+        {
+          "toState": "EDY_End",
+          "prob": -1,
+          "varProb": null,
+          "failDesc": ""
+        }
+      ],
+      "mutExcl": true,
+      "codeVariables": [],
+      "variableName": "",
+      "scriptCode": "",
+      "sim3DMessage": "atCompModify",
+      "extSim": "",
+      "sim3DConfigData": "",
+      "sim3DModelRef": "",
+      "simEndTime": "",
+      "makeInputFileCode": "",
+      "exePath": "",
+      "processOutputFileCode": "",
+      "openSimVarParams": false,
+      "raType": "",
+      "returnProcess": "rtNone"
+    }
+  ],
+  "EventList": [
+    {
+      "id": "dd35cd36-6685-4f2a-8086-76143c5d072a",
+      "name": "Transition_dist",
+      "desc": "",
+      "evType": "etDistribution",
+      "mainItem": true,
+      "required": false,
+      "objType": "Event",
+      "triggerStates": [],
+      "allItems": true,
+      "onVarChange": "ocIgnore",
+      "distType": "dtNormal",
+      "parameters": [
+        {
+          "name": "Minimum",
+          "value": 0,
+          "timeRate": "trYears",
+          "useVariable": false
+        },
+        {
+          "name": "Maximum",
+          "value": 1000,
+          "timeRate": "trYears",
+          "useVariable": false
+        },
+        {
+          "name": "Mean",
+          "value": 1000,
+          "timeRate": "trDays",
+          "useVariable": true,
+          "variable": "Mean_time_to_end"
+        },
+        {
+          "name": "Standard Deviation",
+          "value": 365,
+          "timeRate": "trDays",
+          "useVariable": false
+        }
+      ],
+      "dfltTimeRate": "trHours"
+    }
+  ],
+  "LogicNodeList": [],
+  "VariableList": [
+    {
+      "name": "Mean_time_to_end",
+      "varScope": "gtGlobal",
+      "value": 1000,
+      "type": "double",
+      "objType": "Variable",
+      "id": "065ea10b-027a-499e-89d5-be9101637d9a",
+      "desc": ""
+    },
+    {
+      "name": "Total_time_to_end",
+      "varScope": "gtGlobal",
+      "value": 0,
+      "type": "double",
+      "objType": "Variable",
+      "id": "ee1902bf-afd3-487f-ad4a-bf27030c1407",
+      "desc": ""
+    }
+  ],
+  "ExtSimList": [],
+  "objType": "EMRALD_Model",
+  "emraldVersion": 3,
+  "templates": []
+}

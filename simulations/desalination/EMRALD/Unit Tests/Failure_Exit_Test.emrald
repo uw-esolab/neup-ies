@@ -1,0 +1,354 @@
+{
+  "id": "0",
+  "name": "",
+  "desc": "",
+  "version": 1,
+  "DiagramList": [
+    {
+      "id": "a737f78a-0f21-40f1-ad1f-18753aae97e3",
+      "name": "Failure_Exit_Extension",
+      "desc": "",
+      "diagramType": "dtSingle",
+      "diagramLabel": "Component",
+      "states": [
+        "FEE_Init",
+        "FEE_End"
+      ],
+      "required": false,
+      "objType": "Diagram"
+    },
+    {
+      "id": "703712e3-ac6c-4638-81ab-41c9585a501b",
+      "name": "Failure_Exit_Test",
+      "desc": "",
+      "diagramType": "dtSingle",
+      "diagramLabel": "Component",
+      "states": [
+        "Failure_Exit_Init",
+        "Failure_Exit_End"
+      ],
+      "required": false,
+      "objType": "Diagram"
+    },
+    {
+      "id": "661c57cd-5451-44e5-be7f-c21edc3a0e68",
+      "name": "Logic_Top_Response",
+      "desc": "",
+      "diagramType": "dtSingle",
+      "diagramLabel": "Component",
+      "states": [
+        "LTR_Start",
+        "LTR_End"
+      ],
+      "required": false,
+      "objType": "Diagram"
+    }
+  ],
+  "StateList": [
+    {
+      "id": "ab8d7b8d-4a72-4cbd-b1f0-e9a3ce5ab0ab",
+      "name": "Failure_Exit_End",
+      "desc": "",
+      "diagramName": "Failure_Exit_Test",
+      "stateType": "stStandard",
+      "events": [],
+      "eventActions": [],
+      "immediateActions": [],
+      "geometryInfo": {
+        "x": 301.12697268683786,
+        "y": -2.961904649378738,
+        "width": 0,
+        "height": 0
+      },
+      "required": false,
+      "objType": "State",
+      "defaultSingleStateValue": "False"
+    },
+    {
+      "id": "34a151a4-a97c-4cd4-9960-4051bcd67d04",
+      "name": "Failure_Exit_Init",
+      "desc": "",
+      "diagramName": "Failure_Exit_Test",
+      "stateType": "stStart",
+      "events": [
+        "Failure_Exit_Timer"
+      ],
+      "eventActions": [
+        {
+          "moveFromCurrent": true,
+          "actions": [
+            "Goto_Failure_Exit_End"
+          ]
+        }
+      ],
+      "immediateActions": [],
+      "geometryInfo": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0
+      },
+      "required": false,
+      "objType": "State",
+      "defaultSingleStateValue": "True"
+    },
+    {
+      "id": "15261d23-b1e8-43b0-a06e-44ebb2bf9a23",
+      "name": "FEE_End",
+      "desc": "",
+      "diagramName": "Failure_Exit_Extension",
+      "stateType": "stStandard",
+      "events": [],
+      "eventActions": [],
+      "immediateActions": [],
+      "geometryInfo": {
+        "x": 297.9662462602185,
+        "y": -5.450602065735694,
+        "width": 0,
+        "height": 0
+      },
+      "required": false,
+      "objType": "State",
+      "defaultSingleStateValue": "False"
+    },
+    {
+      "id": "e63b8467-c005-4e8b-a0c5-8caeaff89ce0",
+      "name": "FEE_Init",
+      "desc": "",
+      "diagramName": "Failure_Exit_Extension",
+      "stateType": "stStart",
+      "events": [
+        "FEE_Timer"
+      ],
+      "eventActions": [
+        {
+          "moveFromCurrent": true,
+          "actions": [
+            "Goto_FEE_End"
+          ]
+        }
+      ],
+      "immediateActions": [],
+      "geometryInfo": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0
+      },
+      "required": false,
+      "objType": "State",
+      "defaultSingleStateValue": "True"
+    },
+    {
+      "id": "4b2718fe-fee0-484f-971d-f631ff39e85e",
+      "name": "LTR_End",
+      "desc": "",
+      "diagramName": "Logic_Top_Response",
+      "stateType": "stKeyState",
+      "events": [],
+      "eventActions": [],
+      "immediateActions": [],
+      "geometryInfo": {
+        "x": 354.9259270909115,
+        "y": 5.013078066255815,
+        "width": 0,
+        "height": 0
+      },
+      "required": false,
+      "objType": "State",
+      "defaultSingleStateValue": "False"
+    },
+    {
+      "id": "fcc0266f-cf4b-4ffe-9e1d-54785da407e5",
+      "name": "LTR_Start",
+      "desc": "",
+      "diagramName": "Logic_Top_Response",
+      "stateType": "stStart",
+      "events": [
+        "Logic_Top_Failure_Trigger"
+      ],
+      "eventActions": [
+        {
+          "moveFromCurrent": true,
+          "actions": [
+            "Goto_LTR_End"
+          ]
+        }
+      ],
+      "immediateActions": [],
+      "geometryInfo": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0
+      },
+      "required": false,
+      "objType": "State",
+      "defaultSingleStateValue": "True"
+    }
+  ],
+  "ActionList": [
+    {
+      "id": "836f936f-7354-4ed9-b19e-6d994c0d79ed",
+      "name": "Goto_Failure_Exit_End",
+      "desc": "",
+      "actType": "atTransition",
+      "mainItem": true,
+      "objType": "Action",
+      "required": false,
+      "newStates": [
+        {
+          "toState": "Failure_Exit_End",
+          "prob": -1,
+          "varProb": null,
+          "failDesc": ""
+        }
+      ],
+      "mutExcl": true,
+      "codeVariables": [],
+      "variableName": "",
+      "scriptCode": "",
+      "sim3DMessage": "atCompModify",
+      "extSim": "",
+      "sim3DConfigData": "",
+      "sim3DModelRef": "",
+      "simEndTime": "",
+      "makeInputFileCode": "",
+      "exePath": "",
+      "processOutputFileCode": "",
+      "openSimVarParams": false,
+      "raType": "",
+      "returnProcess": "rtNone"
+    },
+    {
+      "id": "3cecae7b-7568-45c1-a893-e82ec6255fda",
+      "name": "Goto_FEE_End",
+      "desc": "",
+      "actType": "atTransition",
+      "mainItem": true,
+      "objType": "Action",
+      "required": false,
+      "newStates": [
+        {
+          "toState": "FEE_End",
+          "prob": -1,
+          "varProb": null,
+          "failDesc": ""
+        }
+      ],
+      "mutExcl": true,
+      "codeVariables": [],
+      "variableName": "",
+      "scriptCode": "",
+      "sim3DMessage": "atCompModify",
+      "extSim": "",
+      "sim3DConfigData": "",
+      "sim3DModelRef": "",
+      "simEndTime": "",
+      "makeInputFileCode": "",
+      "exePath": "",
+      "processOutputFileCode": "",
+      "openSimVarParams": false,
+      "raType": "",
+      "returnProcess": "rtNone"
+    },
+    {
+      "id": "d59278bf-d333-4bf0-a2a6-51cc53ae794b",
+      "name": "Goto_LTR_End",
+      "desc": "",
+      "actType": "atTransition",
+      "mainItem": true,
+      "objType": "Action",
+      "required": false,
+      "newStates": [
+        {
+          "toState": "LTR_End",
+          "prob": -1,
+          "varProb": null,
+          "failDesc": ""
+        }
+      ],
+      "mutExcl": true,
+      "codeVariables": [],
+      "variableName": "",
+      "scriptCode": "",
+      "sim3DMessage": "atCompModify",
+      "extSim": "",
+      "sim3DConfigData": "",
+      "sim3DModelRef": "",
+      "simEndTime": "",
+      "makeInputFileCode": "",
+      "exePath": "",
+      "processOutputFileCode": "",
+      "openSimVarParams": false,
+      "raType": "",
+      "returnProcess": "rtNone"
+    }
+  ],
+  "EventList": [
+    {
+      "id": "508f0b5e-6a1d-4b5e-92b4-beb0880fcbe1",
+      "name": "Failure_Exit_Timer",
+      "desc": "",
+      "evType": "etTimer",
+      "mainItem": true,
+      "required": false,
+      "objType": "Event",
+      "triggerStates": [],
+      "allItems": true,
+      "time": "P1D"
+    },
+    {
+      "id": "24c64b0f-4513-41ad-9442-a50236cf6f88",
+      "name": "FEE_Timer",
+      "desc": "",
+      "evType": "etTimer",
+      "mainItem": true,
+      "required": false,
+      "objType": "Event",
+      "triggerStates": [],
+      "allItems": true,
+      "time": "P2D"
+    },
+    {
+      "id": "1cb4e829-1329-4867-8682-56e635c84f64",
+      "name": "Logic_Top_Failure_Trigger",
+      "desc": "",
+      "evType": "etComponentLogic",
+      "mainItem": true,
+      "required": false,
+      "objType": "Event",
+      "triggerStates": [],
+      "allItems": true,
+      "onSuccess": false,
+      "triggerOnFalse": false,
+      "logicTop": "Failure_Exit_Top"
+    }
+  ],
+  "LogicNodeList": [
+    {
+      "id": "e59445ac-7e71-47c6-bee5-c1202fa82355",
+      "name": "Failure_Exit_Top",
+      "desc": "",
+      "isRoot": true,
+      "gateType": "gtAnd",
+      "compChildren": [
+        {
+          "diagramName": "Failure_Exit_Test",
+          "stateValues": []
+        },
+        {
+          "diagramName": "Failure_Exit_Extension",
+          "stateValues": []
+        }
+      ],
+      "gateChildren": [],
+      "objType": "LogicNode"
+    }
+  ],
+  "VariableList": [],
+  "ExtSimList": [],
+  "objType": "EMRALD_Model",
+  "emraldVersion": 3,
+  "templates": []
+}

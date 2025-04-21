@@ -1,0 +1,416 @@
+{
+  "id": "7cb68390-3252-4600-addb-de716e63cea6",
+  "name": "CFWS_Debug",
+  "desc": "Condensor and Feedwater Systems",
+  "version": 1,
+  "DiagramList": [
+    {
+      "id": "036aea7e-70f2-4090-9d31-bd34f22825b2",
+      "name": "Ander-false",
+      "desc": "",
+      "diagramType": "dtSingle",
+      "diagramLabel": "Component",
+      "states": [
+        "Ander2-start-failed",
+        "Ander2-end-true"
+      ],
+      "required": false,
+      "objType": "Diagram"
+    },
+    {
+      "id": "45ae73b5-075e-4454-bde2-64177f871931",
+      "name": "Ander-switch",
+      "desc": "",
+      "diagramType": "dtSingle",
+      "diagramLabel": "Component",
+      "states": [
+        "Ander-start-true",
+        "Ander-inter-true",
+        "Ander-end-false"
+      ],
+      "required": false,
+      "objType": "Diagram"
+    },
+    {
+      "id": "02a1d2ec-61b5-48eb-9d74-c1d9c0a1bc3d",
+      "name": "Logic top response",
+      "desc": "",
+      "diagramType": "dtMulti",
+      "diagramLabel": "System",
+      "states": [
+        "LTR-start",
+        "Logic-tree-failed"
+      ],
+      "required": false,
+      "objType": "Diagram"
+    }
+  ],
+  "StateList": [
+    {
+      "id": "41c7181c-d7cc-447d-a991-7c142d42a1aa",
+      "name": "Ander-end-false",
+      "desc": "",
+      "diagramName": "Ander-switch",
+      "stateType": "stStandard",
+      "events": [],
+      "eventActions": [],
+      "immediateActions": [],
+      "geometryInfo": {
+        "x": 660.6561462932852,
+        "y": 4.360766642199906,
+        "width": 0,
+        "height": 0
+      },
+      "required": false,
+      "objType": "State",
+      "defaultSingleStateValue": "False"
+    },
+    {
+      "id": "69af05cc-b8a7-4b80-8d91-47474ef2e60d",
+      "name": "Ander-inter-true",
+      "desc": "",
+      "diagramName": "Ander-switch",
+      "stateType": "stStandard",
+      "events": [
+        "Time-to-switch"
+      ],
+      "eventActions": [
+        {
+          "moveFromCurrent": true,
+          "actions": [
+            "Goto-Ander-end"
+          ]
+        }
+      ],
+      "immediateActions": [],
+      "geometryInfo": {
+        "x": 342.3201814126924,
+        "y": 6.541149963299858,
+        "width": 0,
+        "height": 0
+      },
+      "required": false,
+      "objType": "State",
+      "defaultSingleStateValue": "True"
+    },
+    {
+      "id": "94a6f577-1742-4840-9d9c-5f02c29ed755",
+      "name": "Ander-start-true",
+      "desc": "",
+      "diagramName": "Ander-switch",
+      "stateType": "stStart",
+      "events": [
+        "Time-to-switch"
+      ],
+      "eventActions": [
+        {
+          "moveFromCurrent": true,
+          "actions": [
+            "Goto-Ander-inter"
+          ]
+        }
+      ],
+      "immediateActions": [],
+      "geometryInfo": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0
+      },
+      "required": false,
+      "objType": "State",
+      "defaultSingleStateValue": "True"
+    },
+    {
+      "id": "362cf1fc-a2b7-4b1b-b21c-3caa73ae4b57",
+      "name": "Ander2-end-true",
+      "desc": "",
+      "diagramName": "Ander-false",
+      "stateType": "stTerminal",
+      "events": [],
+      "eventActions": [],
+      "immediateActions": [],
+      "geometryInfo": {
+        "x": 110.72930023676065,
+        "y": -15.059184832199449,
+        "width": 0,
+        "height": 0
+      },
+      "required": false,
+      "objType": "State",
+      "defaultSingleStateValue": "True"
+    },
+    {
+      "id": "836b59fe-0f6d-48c5-a9ec-5e527d2dcd70",
+      "name": "Ander2-start-failed",
+      "desc": "",
+      "diagramName": "Ander-false",
+      "stateType": "stStart",
+      "events": [
+        "Time-to-change-2"
+      ],
+      "eventActions": [
+        {
+          "moveFromCurrent": true,
+          "actions": [
+            "Goto-Ander2-end"
+          ]
+        }
+      ],
+      "immediateActions": [],
+      "geometryInfo": {
+        "x": -188.65417877975537,
+        "y": -3.532185723324517,
+        "width": 0,
+        "height": 0
+      },
+      "required": false,
+      "objType": "State",
+      "defaultSingleStateValue": "False"
+    },
+    {
+      "id": "2d37ccc3-2226-4036-8188-dd8c06fc10d6",
+      "name": "Logic-tree-failed",
+      "desc": "",
+      "diagramName": "Logic top response",
+      "stateType": "stKeyState",
+      "events": [],
+      "eventActions": [],
+      "immediateActions": [],
+      "geometryInfo": {
+        "x": 341.4834495819168,
+        "y": -10.043630870056376,
+        "width": 0,
+        "height": 0
+      },
+      "required": false,
+      "objType": "State",
+      "defaultSingleStateValue": "Ignore"
+    },
+    {
+      "id": "2aea4bff-51e0-4842-81f6-c6e56a968fab",
+      "name": "LTR-start",
+      "desc": "",
+      "diagramName": "Logic top response",
+      "stateType": "stStart",
+      "events": [
+        "Logic-eval"
+      ],
+      "eventActions": [
+        {
+          "moveFromCurrent": true,
+          "actions": [
+            "Goto_LTR_Failed"
+          ]
+        }
+      ],
+      "immediateActions": [],
+      "geometryInfo": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0
+      },
+      "required": false,
+      "objType": "State",
+      "defaultSingleStateValue": "Ignore"
+    }
+  ],
+  "ActionList": [
+    {
+      "id": "31a7a5a1-fa41-4e3f-947d-0058b0548539",
+      "name": "Goto_LTR_Failed",
+      "desc": "",
+      "actType": "atTransition",
+      "mainItem": true,
+      "objType": "Action",
+      "required": false,
+      "newStates": [
+        {
+          "toState": "Logic-tree-failed",
+          "prob": -1,
+          "varProb": null,
+          "failDesc": ""
+        }
+      ],
+      "mutExcl": true,
+      "codeVariables": [],
+      "variableName": "",
+      "scriptCode": "",
+      "sim3DMessage": "atCompModify",
+      "extSim": "",
+      "sim3DConfigData": "",
+      "sim3DModelRef": "",
+      "simEndTime": "",
+      "makeInputFileCode": "",
+      "exePath": "",
+      "processOutputFileCode": "",
+      "openSimVarParams": false,
+      "raType": "",
+      "returnProcess": "rtNone"
+    },
+    {
+      "id": "4e2f2e39-47ed-496f-bb42-5be72f4dc7c6",
+      "name": "Goto-Ander-end",
+      "desc": "",
+      "actType": "atTransition",
+      "mainItem": true,
+      "objType": "Action",
+      "required": false,
+      "newStates": [
+        {
+          "toState": "Ander-end-false",
+          "prob": -1,
+          "varProb": null,
+          "failDesc": ""
+        }
+      ],
+      "mutExcl": true,
+      "codeVariables": [],
+      "variableName": "",
+      "scriptCode": "",
+      "sim3DMessage": "atCompModify",
+      "extSim": "",
+      "sim3DConfigData": "",
+      "sim3DModelRef": "",
+      "simEndTime": "",
+      "makeInputFileCode": "",
+      "exePath": "",
+      "processOutputFileCode": "",
+      "openSimVarParams": false,
+      "raType": "",
+      "returnProcess": "rtNone"
+    },
+    {
+      "id": "9f8d87fd-d57b-4bf3-bd8b-516746468cf3",
+      "name": "Goto-Ander-inter",
+      "desc": "",
+      "actType": "atTransition",
+      "mainItem": true,
+      "objType": "Action",
+      "required": false,
+      "newStates": [
+        {
+          "toState": "Ander-inter-true",
+          "prob": -1,
+          "varProb": null,
+          "failDesc": ""
+        }
+      ],
+      "mutExcl": true,
+      "codeVariables": [],
+      "variableName": "",
+      "scriptCode": "",
+      "sim3DMessage": "atCompModify",
+      "extSim": "",
+      "sim3DConfigData": "",
+      "sim3DModelRef": "",
+      "simEndTime": "",
+      "makeInputFileCode": "",
+      "exePath": "",
+      "processOutputFileCode": "",
+      "openSimVarParams": false,
+      "raType": "",
+      "returnProcess": "rtNone"
+    },
+    {
+      "id": "8d041b8a-b77c-4c23-a64e-54a20380ddb8",
+      "name": "Goto-Ander2-end",
+      "desc": "",
+      "actType": "atTransition",
+      "mainItem": true,
+      "objType": "Action",
+      "required": false,
+      "newStates": [
+        {
+          "toState": "Ander2-end-true",
+          "prob": -1,
+          "varProb": null,
+          "failDesc": ""
+        }
+      ],
+      "mutExcl": true,
+      "codeVariables": [],
+      "variableName": "",
+      "scriptCode": "",
+      "sim3DMessage": "atCompModify",
+      "extSim": "",
+      "sim3DConfigData": "",
+      "sim3DModelRef": "",
+      "simEndTime": "",
+      "makeInputFileCode": "",
+      "exePath": "",
+      "processOutputFileCode": "",
+      "openSimVarParams": false,
+      "raType": "",
+      "returnProcess": "rtNone"
+    }
+  ],
+  "EventList": [
+    {
+      "id": "c634aa00-2ee3-459a-9a4e-a5d736703435",
+      "name": "Logic-eval",
+      "desc": "",
+      "evType": "etComponentLogic",
+      "mainItem": true,
+      "required": false,
+      "objType": "Event",
+      "triggerStates": [],
+      "allItems": true,
+      "onSuccess": false,
+      "triggerOnFalse": false,
+      "logicTop": "Ander-logic-top"
+    },
+    {
+      "id": "b8b70f70-e968-4e87-8bd5-1a9060bd6725",
+      "name": "Time-to-change-2",
+      "desc": "",
+      "evType": "etTimer",
+      "mainItem": true,
+      "required": false,
+      "objType": "Event",
+      "triggerStates": [],
+      "allItems": true,
+      "time": "P20D"
+    },
+    {
+      "id": "b26b8125-a57b-4630-8932-0fec9252f5cc",
+      "name": "Time-to-switch",
+      "desc": "",
+      "evType": "etTimer",
+      "mainItem": true,
+      "required": false,
+      "objType": "Event",
+      "triggerStates": [],
+      "allItems": true,
+      "time": "P5D"
+    }
+  ],
+  "LogicNodeList": [
+    {
+      "id": "b2f5f62e-7cec-4939-86ff-ecbc565963ae",
+      "name": "Ander-logic-top",
+      "desc": "",
+      "isRoot": false,
+      "gateType": "gtAnd",
+      "compChildren": [
+        {
+          "diagramName": "Ander-false",
+          "stateValues": []
+        },
+        {
+          "diagramName": "Ander-switch",
+          "stateValues": []
+        }
+      ],
+      "gateChildren": [],
+      "objType": "LogicNode",
+      "rootName": "Ander-logic-top"
+    }
+  ],
+  "VariableList": [],
+  "templates": [],
+  "objType": "EMRALD_Model",
+  "ExtSimList": [],
+  "emraldVersion": 3
+}
