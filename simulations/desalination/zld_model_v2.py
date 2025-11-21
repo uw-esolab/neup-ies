@@ -42,40 +42,40 @@ model.cycles    = pyo.Set(initialize=['C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7'])
 # power curve piecewise function 
 # this dictionary relates the power cycle configuration with the effect that steam extraction has on power production
 # key = power cycle configuration, value = lists of tuples (x,y) where x = extraction flow (breakpoint input), units: kg/s and y = power generated (extraction output), units:kW
-piecewise_power_curve = {
-    'C1': [(0, 52921), (13.41, 41165), (26.83, 29482), (40, 17962), (50, 9226),  (57, 3111)],
-    'C2': [(0, 52921), (13.37, 41823), (26.75, 30737), (40, 19745), (50, 11452), (57, 5647)],
-    'C3': [(0, 52921), (12.71, 46067), (25.41, 39204), (40, 31329), (50, 25931), (57, 22152)],
-    'C4': [(0, 52921), (11.69, 47918), (23.37, 42931), (40, 35820), (50, 31545), (57, 28553)],
-    'C5': [(0, 52921), (11.32, 49060), (22.64, 45324), (40, 39477), (50, 36122), (57, 33773)],
-    'C6': [(0, 52921), (10.69, 50464), (21.38, 48022), (40, 43753), (50, 41462), (57, 39858)],
-    'C7': [(0, 52921), (10.45, 50719), (20.90, 48518), (40, 44492), (50, 42385), (57, 40910)]
-}
+# piecewise_power_curve = {
+#     'C1': [(0, 52921), (13.41, 41165), (26.83, 29482), (40, 17962), (50, 9226),  (57, 3111)],
+#     'C2': [(0, 52921), (13.37, 41823), (26.75, 30737), (40, 19745), (50, 11452), (57, 5647)],
+#     'C3': [(0, 52921), (12.71, 46067), (25.41, 39204), (40, 31329), (50, 25931), (57, 22152)],
+#     'C4': [(0, 52921), (11.69, 47918), (23.37, 42931), (40, 35820), (50, 31545), (57, 28553)],
+#     'C5': [(0, 52921), (11.32, 49060), (22.64, 45324), (40, 39477), (50, 36122), (57, 33773)],
+#     'C6': [(0, 52921), (10.69, 50464), (21.38, 48022), (40, 43753), (50, 41462), (57, 39858)],
+#     'C7': [(0, 52921), (10.45, 50719), (20.90, 48518), (40, 44492), (50, 42385), (57, 40910)]
+# }
 
 
-piecewise_pts_power_curve    = {c: [x for (x, y) in piecewise_power_curve[c]] for c in model.cycles}
-piecewise_f_rule_power_curve = {c: [y for (x, y) in piecewise_power_curve[c]] for c in model.cycles}
+# piecewise_pts_power_curve    = {c: [x for (x, y) in piecewise_power_curve[c]] for c in model.cycles}
+# piecewise_f_rule_power_curve = {c: [y for (x, y) in piecewise_power_curve[c]] for c in model.cycles}
 
 
 # crystallization salinity piecewise function
 # salinity points, taken from paper "Thermodynamic analysis of brine management methods: Zero-discharge desalination and salinity-gradient power production"
 # units: [g/kg]
-piecewise_pts_salinity_cry  = [
-    34.96688215, 37.86462749, 40.91736435, 44.42494171, 47.99570793,
-    51.84367052, 55.36615091, 59.62245655, 64.29843154, 68.77470591,
-    72.84084888, 77.98835577, 82.82707185, 87.24731083, 91.81956072,
-    96.4502305, 100.8227798, 104.5074052, 108.9139333, 113.6745575, 118.0214736
-]
+# piecewise_pts_salinity_cry  = [
+#     34.96688215, 37.86462749, 40.91736435, 44.42494171, 47.99570793,
+#     51.84367052, 55.36615091, 59.62245655, 64.29843154, 68.77470591,
+#     72.84084888, 77.98835577, 82.82707185, 87.24731083, 91.81956072,
+#     96.4502305, 100.8227798, 104.5074052, 108.9139333, 113.6745575, 118.0214736
+# ]
 
 
-# energy input required per unit feed
-# units: [kJ/kg]
-piecewise_f_rule_salinity_cry = [
-    10.90339561, 11.49607168, 12.02751795, 12.74430847, 13.57244738,
-    14.30365882, 14.97056714, 15.61005209, 16.57081616, 17.29848147,
-    17.9793379, 18.74104603, 19.40984563, 20.07297142, 20.69708981,
-    21.31033341, 21.98953498, 22.32665348, 22.89096053, 23.377962, 23.78340255
-]
+# # energy input required per unit feed
+# # units: [kJ/kg]
+# piecewise_f_rule_salinity_cry = [
+#     10.90339561, 11.49607168, 12.02751795, 12.74430847, 13.57244738,
+#     14.30365882, 14.97056714, 15.61005209, 16.57081616, 17.29848147,
+#     17.9793379, 18.74104603, 19.40984563, 20.07297142, 20.69708981,
+#     21.31033341, 21.98953498, 22.32665348, 22.89096053, 23.377962, 23.78340255
+# ]
 
 
 
@@ -110,11 +110,11 @@ model.Elec_required       = pyo.Param(model.processes, initialize={'RO': 3.25, '
 model.Q_required          = pyo.Param(model.processes, initialize={'RO': 0.0,  'MED': 8.0 ,'ED': 0.0, 'CRY': 0.0})                                                 # units: kW-th/m3  heat required per unit of feed (for ed and crystallization these values are calculated based on equations in the model)
 model.K_process           = pyo.Param(model.processes, initialize={'RO': 500.0,'MED': 900.0,'ED': 200.0, 'CRY': 950.0})                                                 # units: $/m3/day  capex for each process
 model.H_extract           = pyo.Param(model.cycles, initialize={'C1': 2.82e3, 'C2': 2.79e3, 'C3': 2.49e3, 'C4': 2.38e3, 'C5': 2.32e3, 'C6': 2.21e3, 'C7': 2.20e3})  # units: kJ/kg     enthalpy of steam at each extraction point within the power cycle configurations - steam enthalpy going back into condenser
-model.Conc_max            = pyo.Param(model.processes, model.ions, initialize={
-        ('RO',  'Li'): 5.0,    ('RO',  'Na'): 70.0,   ('RO',  'Cl'): 120.0,
-        ('MED', 'Li'): 5.0,    ('MED', 'Na'): 90.0,   ('MED', 'Cl'): 160.0,
-        ('ED',  'Li'): 5.0,    ('ED',  'Na'): 25.0,   ('ED',  'Cl'): 200.0,
-        ('CRY', 'Li'): 15.0,   ('CRY', 'Na'): 350.0,  ('CRY', 'Cl'): 350.0})
+# model.Conc_max            = pyo.Param(model.processes, model.ions, initialize={
+#         ('RO',  'Li'): 5.0,    ('RO',  'Na'): 70.0,   ('RO',  'Cl'): 120.0,
+#         ('MED', 'Li'): 5.0,    ('MED', 'Na'): 90.0,   ('MED', 'Cl'): 160.0,
+#         ('ED',  'Li'): 5.0,    ('ED',  'Na'): 25.0,   ('ED',  'Cl'): 200.0,
+#         ('CRY', 'Li'): 15.0,   ('CRY', 'Na'): 350.0,  ('CRY', 'Cl'): 350.0})
 
 
 # VARIABLES
@@ -152,32 +152,32 @@ model.concentration_conc      = pyo.Var(model.processes, model.ions, within=pyo.
 model.concentration_dil       = pyo.Var(model.processes, model.ions, within=pyo.NonNegativeReals)    # units: kg/h    mass concentration of each ion in the diluted stream exiting each process
 
 
-model.b_cry                   = pyo.Var(within=pyo.NonNegativeReals)                                                           # units: kJ/kg   energy needed by crystallizer per unit of feed flow
-model.salinity_cry            = pyo.Var(bounds=(float(piecewise_pts_salinity_cry[0]), float(piecewise_pts_salinity_cry[-1])))  # units: kg/m3   total concentration of dissolved solids entering the crystallizer, needed to determine the energy requirementskJ/kg   energy needed by crystallizer per unit of feed flow
+# model.b_cry                   = pyo.Var(within=pyo.NonNegativeReals)                                                           # units: kJ/kg   energy needed by crystallizer per unit of feed flow
+# model.salinity_cry            = pyo.Var(bounds=(float(piecewise_pts_salinity_cry[0]), float(piecewise_pts_salinity_cry[-1])))  # units: kg/m3   total concentration of dissolved solids entering the crystallizer, needed to determine the energy requirementskJ/kg   energy needed by crystallizer per unit of feed flow
 
 
 # PIECEWISE FUNCTIONS
 
 # piecewise function for power curve
-model.electricity_generated_piecewise = pyo.Piecewise(
-    model.cycles,
-    model.elec_generated_unmasked,
-    model.m_dot_extract_unit,
-    pw_pts = piecewise_pts_power_curve,
-    f_rule = piecewise_f_rule_power_curve,
-    pw_constr_type = 'EQ',
-    pw_repn = 'INC'
-)
+# model.electricity_generated_piecewise = pyo.Piecewise(
+#     model.cycles,
+#     model.elec_generated_unmasked,
+#     model.m_dot_extract_unit,
+#     pw_pts = piecewise_pts_power_curve,
+#     f_rule = piecewise_f_rule_power_curve,
+#     pw_constr_type = 'EQ',
+#     pw_repn = 'INC'
+# )
 
 
 # piecewise function for crystallizer energy requirements
-model.q_used_cry_piecewise = pyo.Piecewise(
-    model.b_cry,
-    model.salinity_cry,
-    pw_pts = piecewise_pts_salinity_cry,
-    f_rule = piecewise_f_rule_salinity_cry,
-    pw_constr_type = 'EQ',
-    pw_repn = 'INC')
+# model.q_used_cry_piecewise = pyo.Piecewise(
+#     model.b_cry,
+#     model.salinity_cry,
+#     pw_pts = piecewise_pts_salinity_cry,
+#     f_rule = piecewise_f_rule_salinity_cry,
+#     pw_constr_type = 'EQ',
+#     pw_repn = 'INC')
 
 
 
@@ -198,6 +198,52 @@ model.yield_linear    = pyo.Var(within=pyo.NonNegativeReals)    # units: --,   u
 model.li_recovered_ed = pyo.Var(within=pyo.NonNegativeReals)    # units: kg/h, total Li recovered
 
 
+######## 
+
+
+model.cry_salinity    = pyo.Var(domain=pyo.NonNegativeReals)
+model.q_specific_cry  = pyo.Var(domain=pyo.NonNegativeReals)
+
+model.rho             = pyo.Param(initialize=1025)   # [kg/m3]  density of seawater
+model.power_slope     = pyo.Param(model.cycles, initialize= {'C1': -873, 'C2': -829, 'C3': -540, 'C4': -427, 'C5': -335, 'C6': -229, 'C7': -211})
+model.power_intercept = pyo.Param(initialize=52920)
+
+def cry_salinity_definition_rule(m):
+    
+    total_ion_flow = sum(m.f_ion_in['CRY', i] for i in m.ions)
+    return m.cry_salinity * m.v_dot_in['CRY'] == total_ion_flow
+
+model.cry_salinity_definition = pyo.Constraint(rule=cry_salinity_definition_rule)
+
+
+
+def cry_specific_energy_rule(m):
+    
+    A = -0.0006
+    B = 0.2648
+    C = 2.2488
+
+    return m.q_specific_cry == (A * m.cry_salinity * m.cry_salinity) + (B * m.cry_salinity) + C
+
+model.cry_specific_energy = pyo.Constraint(rule=cry_specific_energy_rule)
+
+
+def cry_total_energy_rule(m):    
+    return m.q_used['CRY'] == (m.q_specific_cry * m.rho / m.Time_conversion) * m.v_dot_in['CRY']
+model.cry_total_energy = pyo.Constraint(rule=cry_total_energy_rule)
+
+
+
+def linear_power_generation_rule(m,c):
+    return m.elec_generated_unmasked[c] == m.power_slope[c] * m.m_dot_extract_unit[c] + m.power_intercept
+model.linear_power_generation = pyo.Constraint(model.cycles, rule=linear_power_generation_rule)
+
+
+
+
+########
+
+
 # new parameters
 
 
@@ -208,15 +254,15 @@ model.alpha_ed_li = pyo.Param(initialize=1500)                  # units: --, slo
 
 
 # if a process is inactive, the concentration of ions in the concentrated stream must equal 0 (added because some ions were being recorded in processes that were turned off)
-def concentration_conc_inactive_rule(m, p, i):
-    return m.concentration_conc[p,i] <= m.Conc_max[p, i] * m.y_process_active[p]
-model.concentration_conc_inactive = pyo.Constraint(model.processes, model.ions, rule=concentration_conc_inactive_rule)
+# def concentration_conc_inactive_rule(m, p, i):
+#     return m.concentration_conc[p,i] <= m.Conc_max[p, i] * m.y_process_active[p]
+# model.concentration_conc_inactive = pyo.Constraint(model.processes, model.ions, rule=concentration_conc_inactive_rule)
 
 
 # if a process is inactive, the concentration of ions in the diluted stream must equal 0
-def concentration_dil_inactive_rule(m, p, i):
-    return m.concentration_dil[p,i] <= m.Conc_max[p, i] * m.y_process_active[p]
-model.concentration_dil_inactive = pyo.Constraint(model.processes, model.ions, rule=concentration_dil_inactive_rule)
+# def concentration_dil_inactive_rule(m, p, i):
+#     return m.concentration_dil[p,i] <= m.Conc_max[p, i] * m.y_process_active[p]
+# model.concentration_dil_inactive = pyo.Constraint(model.processes, model.ions, rule=concentration_dil_inactive_rule)
 
 
 # links seawater feed to flow on the link between seawater and process p
@@ -227,28 +273,43 @@ def sw_feed_link_coupling_rule(m, p):
 model.sw_feed_link_coupling = pyo.Constraint(model.processes, rule=sw_feed_link_coupling_rule)
 
 
-# solves for concentration of feed into ED
-def ed_feed_concentration_rule(m, i):
-    return m.f_ion_in['ED', i] == m.v_dot_in['ED'] * m.conc_feed['ED', i]
-model.ed_feed_concentration = pyo.Constraint(model.ions, rule=ed_feed_concentration_rule)
+# # solves for concentration of feed into ED
+# def ed_feed_concentration_rule(m, i):
+#     return m.f_ion_in['ED', i] == m.v_dot_in['ED'] * m.conc_feed['ED', i]
+# model.ed_feed_concentration = pyo.Constraint(model.ions, rule=ed_feed_concentration_rule)
 
 
-# defines yield as a function of incoming concentration and a constant (alpha)
-def yield_definition_rule(m):
-    return m.yield_linear == m.alpha_ed_li * m.conc_feed['ED','Li']
-model.yield_definition = pyo.Constraint(rule=yield_definition_rule)
+#  connects lithium recovered to what is still in diluted stream
+def ed_li_dil_mass_balance_rule(m):
+    return m.concentration_conc['ED','Li'] * m.v_dot_conc['ED'] == m.f_ion_in['ED','Li'] - m.li_recovered_ed
+model.ed_li_dil_mass_balance = pyo.Constraint(rule=ed_li_dil_mass_balance_rule)
 
 
-# yield is capped by linear prediction 
-def yield_cap_linear_rule(m):
-    return m.yield_ed_li <= m.yield_linear
-model.yield_cap_linear = pyo.Constraint(rule=yield_cap_linear_rule)
 
 
-# yield cannot exceed 1 (saturation)
-def yield_cap_max_rule(m):
-    return m.yield_ed_li <= 1.0
-model.yield_cap_max = pyo.Constraint(rule=yield_cap_max_rule)
+#  precipitation criteria (Na:Li ratio in concentrate)
+def ed_precipitation_ratio_rule(m):
+    return m.concentration_dil['ED','Na'] == m.Ratio_ed_na_li * m.concentration_dil['ED','Li']
+model.ed_precipitation_ratio = pyo.Constraint(rule=ed_precipitation_ratio_rule)
+
+
+
+# # defines yield as a function of incoming concentration and a constant (alpha)
+# def yield_definition_rule(m):
+#     return m.yield_linear == m.alpha_ed_li * m.conc_feed['ED','Li']
+# model.yield_definition = pyo.Constraint(rule=yield_definition_rule)
+
+
+# # yield is capped by linear prediction 
+# def yield_cap_linear_rule(m):
+#     return m.yield_ed_li <= m.yield_linear
+# model.yield_cap_linear = pyo.Constraint(rule=yield_cap_linear_rule)
+
+
+# # yield cannot exceed 1 (saturation)
+# def yield_cap_max_rule(m):
+#     return m.yield_ed_li <= 1.0
+# model.yield_cap_max = pyo.Constraint(rule=yield_cap_max_rule)
 
 
 # lithium recovered is yield * what is entering ED
@@ -257,31 +318,32 @@ def li_recovery_rule(m):
 model.li_recovery = pyo.Constraint(rule=li_recovery_rule)
 
 
-# connects lithium recovered to concentrated stream
+# connects lithium recovered to diluted stream
 def ed_li_conc_mass_balance_rule(m):
-    return m.li_recovered_ed == m.concentration_conc['ED','Li'] * m.v_dot_conc['ED']
+    return m.li_recovered_ed == m.concentration_dil['ED','Li'] * m.v_dot_dil['ED']
 model.ed_li_conc_mass_balance = pyo.Constraint(rule=ed_li_conc_mass_balance_rule)
+
 
 
 # connects lithium recovered to what is still in diluted stream
 def ed_li_dil_mass_balance_rule(m):
-    return m.concentration_dil['ED','Li'] * m.v_dot_dil['ED'] == m.f_ion_in['ED','Li'] - m.li_recovered_ed
+    return m.concentration_conc['ED','Li'] * m.v_dot_conc['ED'] == m.f_ion_in['ED','Li'] - m.li_recovered_ed
 model.ed_li_dil_mass_balance = pyo.Constraint(rule=ed_li_dil_mass_balance_rule)
 
 
 # this makes the concentration in both sides of the ED stream equal...not sure if this is the best choice 
 # (although the concentrations would be equal entering the stream,
 # but without setting some type of relationship it will make one side extremely concentrated)
-def ed_na_conc_mass_balance_rule(m):
-    return m.concentration_conc['ED','Na'] == m.concentration_dil['ED', 'Na']
-model.ed_na_conc_mass_balance = pyo.Constraint(rule=ed_na_conc_mass_balance_rule)
+# def ed_na_conc_mass_balance_rule(m):
+#     return m.concentration_conc['ED','Na'] == m.concentration_dil['ED', 'Na']
+# model.ed_na_conc_mass_balance = pyo.Constraint(rule=ed_na_conc_mass_balance_rule)
 
 
 # lithium precipitation criteria is that concentrated ed stream needs 5 times as much sodium as lithium
 # this has been changed from "equal" to "less than or equal to"
-def ed_precipitation_ratio_rule(m):
-    return m.concentration_conc['ED','Na'] == m.Ratio_ed_na_li * m.concentration_conc['ED','Li']
-model.ed_precipitation_ratio = pyo.Constraint(rule=ed_precipitation_ratio_rule)
+# def ed_precipitation_ratio_rule(m):
+#     return m.concentration_conc['ED','Na'] == m.Ratio_ed_na_li * m.concentration_conc['ED','Li']
+# model.ed_precipitation_ratio = pyo.Constraint(rule=ed_precipitation_ratio_rule)
 
 
 # end of new constraints
@@ -312,14 +374,14 @@ model.heat_gating = pyo.Constraint(model.cycles, model.processes, rule=heat_gati
 
 
 # each process can only be supplied heat from one cycle configuration
-def single_heat_source_rule(m, p):
-    return sum(m.y_q_source[c, p] for c in m.cycles) <= 1
-model.single_heat_source = pyo.Constraint(model.processes, rule=single_heat_source_rule)
+# def single_heat_source_rule(m, p):
+#     return sum(m.y_q_source[c, p] for c in m.cycles) <= 1
+# model.single_heat_source = pyo.Constraint(model.processes, rule=single_heat_source_rule)
 
 
 # general rule for heat used by each process, there are explicitly defined equations for ed and crystallization
 def heat_used_general_rule(m, p):
-    if p in ['ED', 'CRY']:
+    if p == 'CRY':
         return pyo.Constraint.Skip
     return m.q_used[p] == m.Q_required[p] * m.v_dot_in[p]
 model.heat_used_general = pyo.Constraint(model.processes, rule=heat_used_general_rule)
@@ -375,8 +437,11 @@ model.process_flow_balance = pyo.Constraint(model.processes, rule=process_flow_b
 
 # ion conservation from inlet to concentrated and diluted stream
 def ion_conservation_rule(m, p, i):
+    if p == 'CRY':
+        return pyo.Constraint.Skip
     return m.f_ion_in[p, i] == m.v_dot_conc[p] * m.concentration_conc[p, i] + m.v_dot_dil[p] * m.concentration_dil[p, i]
 model.ion_conservation = pyo.Constraint(model.processes, model.ions, rule=ion_conservation_rule)
+
 
 
 # the volumetric flow into a process is the sum of the flow on the links connected to the process upstream
@@ -464,58 +529,60 @@ model.logical_link_capacity = pyo.Constraint(model.links, rule=logical_link_capa
 
 # the ion flow to each process is related to what is feeding it 
 def logical_ion_mass_in_rule(m, p, i):
-    
     seawater_term = 0.0
     if ('SW', p) in m.links:
-        seawater_term = m.v_dot_sw_feed[p] * m.Conc_sw[i] * m.y_link_active['SW', p]
-           
+
+        seawater_term = m.v_dot_sw_feed[p] * m.Conc_sw[i]
+            
     upstream_term = sum(
-        ( m.v_dot_link[upstream, p] * m.concentration_conc[upstream, i]
-          if not (upstream == 'ED' and downstream == 'CRY')
-          else m.v_dot_link[upstream, p] * m.concentration_dil[upstream, i] )
+        m.v_dot_link[upstream, p] * m.concentration_conc[upstream, i]
         for (upstream, downstream) in m.links if downstream == p and upstream != 'SW'
     )
-    
+
     return m.f_ion_in[p, i] == seawater_term + upstream_term
 model.logical_ion_mass_in = pyo.Constraint(model.processes, model.ions, rule=logical_ion_mass_in_rule)
 
 
+# I think the constraint below is redundant given logical_link_flow_balance and inlet_flow_balance
 # flow routing depending on upstream process
-def logical_inlet_flow_routing_rule(m, p):
+# def logical_inlet_flow_routing_rule(m, p):
     
-    seawater_term = 0.0
-    upstream_term = 0.0
+#     seawater_term = 0.0
+#     upstream_term = 0.0
     
-    if ('SW', p) in m.links:
-        seawater_term = m.v_dot_sw_feed[p] * m.y_link_active['SW', p]
-    
-    if p == 'CRY':
-        upstream_term = sum(
-            m.v_dot_dil[upstream] * m.y_link_active[upstream, 'CRY']
-            for (upstream, downstream) in m.links if downstream == 'CRY' and upstream == 'ED')
         
-    else:
-        upstream_term = sum(
-            m.v_dot_conc[upstream] * m.y_link_active[upstream, p]
-            for (upstream, downstream) in m.links if downstream == p and upstream != 'SW')
-    
-    return m.v_dot_in[p] == seawater_term + upstream_term
+#     if ('SW', p) in m.links:
+#         seawater_term = m.v_dot_sw_feed[p] * m.y_link_active['SW', p]
 
-model.logical_inlet_flow_routing = pyo.Constraint(model.processes, rule=logical_inlet_flow_routing_rule)
+    
+#     if p == 'CRY':
+#         upstream_term = sum(
+#             m.v_dot_dil[upstream] * m.y_link_active[upstream, 'CRY']
+#             for (upstream, downstream) in m.links if downstream == 'CRY' and upstream == 'ED')+ sum(
+#             m.v_dot_conc[upstream] * m.y_link_active[upstream, 'CRY']
+#             for (upstream, downstream) in m.links if downstream == 'CRY' and upstream in ['MED','RO'])
+    
+                    
+#     else:
+#         upstream_term = sum(
+#             m.v_dot_conc[upstream] * m.y_link_active[upstream, p]
+#             for (upstream, downstream) in m.links if downstream == p and upstream != 'SW')
+    
+#     return m.v_dot_in[p] == seawater_term + upstream_term
+
+# model.logical_inlet_flow_routing = pyo.Constraint(model.processes, rule=logical_inlet_flow_routing_rule)
 
 
 # ensures that the flow on the links is correct depending on the processes being used
+# this constraint is changed so that concentrated stream is always what is being routed to downstream processes and 
+# diluted stream is always being sold
 def logical_link_flow_balance(m, upstream, p):
     
     if (upstream, p) not in m.links or upstream == 'SW':
         return pyo.Constraint.Skip
-
-    if p == 'CRY' and upstream == 'ED':
-        return m.v_dot_link[upstream, p] == m.v_dot_dil[upstream] * m.y_link_active[upstream, p]
     
-    else:
-        return m.v_dot_link[upstream, p] == m.v_dot_conc[upstream] * m.y_link_active[upstream, p]
-    
+    return m.v_dot_link[upstream, p] == m.v_dot_conc[upstream] * m.y_link_active[upstream, p]
+        
 model.logical_link_flow_balance = pyo.Constraint(model.links, rule=logical_link_flow_balance)
 
 
@@ -593,15 +660,15 @@ model.diluate_concentration_cry = pyo.Constraint(model.ions, rule=diluate_concen
 
 
 # constraint to calculate total salinity coming into crystallizer, used to calculate energy requirement for crystallization
-def calculate_salinity_cry_rule(m):
-    return sum(model.f_ion_in['CRY', i] for i in m.ions) == model.salinity_cry * model.v_dot_in['CRY']
-model.calculate_salinity_cry = pyo.Constraint(rule=calculate_salinity_cry_rule)
+# def calculate_salinity_cry_rule(m):
+#     return sum(model.f_ion_in['CRY', i] for i in m.ions) == model.salinity_cry * model.v_dot_in['CRY']
+# model.calculate_salinity_cry = pyo.Constraint(rule=calculate_salinity_cry_rule)
 
 
 # heat used in crystallization 
-def heat_used_cry_rule(m):
-    return m.q_used['CRY'] == (m.b_cry * model.Rho / model.Time_conversion) * m.v_dot_in['CRY']
-model.heat_used_cry = pyo.Constraint(rule=heat_used_cry_rule)
+# def heat_used_cry_rule(m):
+#     return m.q_used['CRY'] == (m.b_cry * model.Rho / model.Time_conversion) * m.v_dot_in['CRY']
+# model.heat_used_cry = pyo.Constraint(rule=heat_used_cry_rule)
 
 
 
@@ -609,9 +676,10 @@ model.heat_used_cry = pyo.Constraint(rule=heat_used_cry_rule)
 
 profit = (
     model.Price_li * 8760 * model.li_recovered_ed + 
-    model.Price_water * 8760 * (model.v_dot_dil['RO'] + model.v_dot_dil['MED'] + model.v_dot_dil['CRY']) +
-    model.Price_elec * 8760 * sum(model.elec_sold[c] for c in model.cycles) +
-    model.Price_salt * 8760 * sum(model.f_ion_in['CRY', i] for i in model.ions))
+    model.Price_water * 8760 * (model.v_dot_dil['RO'] + model.v_dot_dil['MED']) +
+    model.Price_elec * 8760 * sum(model.elec_sold[c] for c in model.cycles) 
+    #model.Price_salt * 8760 * sum(model.f_ion_in['CRY', i] for i in model.ions)
+    )
 
 cost   = (sum(model.K_cycle * model.elec_generated_unit[c] for c in model.cycles)/30 +
          sum(model.K_process[p] * model.v_dot_in[p] * 24 for p in model.processes)/30
@@ -621,7 +689,7 @@ model.obj = pyo.Objective(expr=(profit-cost), sense=pyo.maximize)
 
 solver = pyo.SolverFactory("gurobi")
 solver.options['NonConvex'] = 2
-results = solver.solve(model, tee=False)
+results = solver.solve(model, tee=True)
 
 
 
