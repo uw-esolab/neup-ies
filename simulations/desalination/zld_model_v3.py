@@ -1,11 +1,37 @@
 # import necessary packages
 import pyomo.environ as pyo
 
+"""Important Notes
+The Crystallizer function was seemingly causing local minima and could result in garbage results. More details below 
+but TLDR - use a constant crystallizer heat requirement.
+Model is still nonlinear but behavior is now OK
+"""
+
 """TEST CASES
 
-Base case (as in this file: SW->RO at 7900
+Note: I could not resolve the base case heat/electricity estimates so picked new ones from (frankly) ChatGPT. This obviously
+needs revisiting. However, the base estimates can be used to validate model behavior
 
+Base case: SW->MED. Note: extremely good (but not implausible) heat diversion from power conversion cycle is driving this being best
+                    Note2: not fully MED, it maxes out at a cycle extraction tradeoff point, which is interesting and good
 
+All perturbations return to nominal before making new change
+
+Perturbation 1: Drop RO energy use to 3.0 - RO enters the system, MED is still present
+
+Perturbation 2: 10x MED electricity use - RO only at maximum
+
+Perturbation 3: water is worthless - no active links
+
+Perturbation 4: lithium price x100. SW->MED->ED. Behavior is sensible
+
+Perturbation 5: 10x MED electricity usage AND lithium price x100. SW->RO->MED->ED. MED is still used to help concentrate for ED
+
+Perturbation 6: 100x MED electricity usage AND lithium price x100. SW->RO->ED. Now MED is not worth it
+
+Perturbation 7: Salt is now worth $100/kg. Processed food becomes far too expensive. SW->RO->MED->CRY. No point in ED as Li is too cheap and it doesnt concentrate. But use CRY
+
+Perturbation 8: Salt is worth $100/kg, Li price x100. Seawater mining takes off. RDO-3 team wins Nobel Prize for Engineering. SW->RO->MED->ED->CRY is built. $724Bn in revenue.
 """
 
 
@@ -53,8 +79,8 @@ model.Lambda              = pyo.Param(initialize=2257)   # units: kJ/kg,  latent
 model.Time_conversion     = pyo.Param(initialize=3600)   # units: sec/hr, conversion between seconds and hours
 model.Price_water         = pyo.Param(initialize=1.0)    # units: $/m3,   sales price of desalinated water
 model.Price_elec          = pyo.Param(initialize=0.1)    # units: $/kWh,  sales price of electricity
-model.Price_li            = pyo.Param(initialize=7000.0) # units: $/kg,   sales price of lithium
-model.Price_salt          = pyo.Param(initialize=0.0)    # units: $/kg    sales price of general salts
+model.Price_li            = pyo.Param(initialize=70.0) # units: $/kg,   sales price of lithium
+model.Price_salt          = pyo.Param(initialize=1.0)    # units: $/kg    sales price of general salts
 model.X_max               = pyo.Param(initialize=1)      # units: --,     maximum allowable number of units built for each power cycle configuration
 model.Z_ed                = pyo.Param(initialize=0.9)    # units: --,     fraction of water evaporated from ED concentrate stream
 model.Big_m               = pyo.Param(initialize=40000)  # units: --,     big M used for logical constraints
@@ -65,10 +91,11 @@ model.V_dot_max           = pyo.Param(initialize=40000)  # units; m3/h,   maximu
 model.K_cycle             = pyo.Param(initialize=6000)   # units: $/kW,   capex for nuclear power plants
 model.T_hour              = pyo.Param(initialize=1)      # units: hr,     need to convert from kW to kWh
 
+#BL are the heat and electricity consumptions in kWh/m3 ???? (electric or thermal)
 
 model.Conc_sw             = pyo.Param(model.ions, initialize={'Li': 0.00018, 'Na': 10.8, 'Cl': 19.3})                                                               # units: kg/m3     mass concentration of ions in seawater
-model.Elec_required       = pyo.Param(model.processes, initialize={'RO': 3.25, 'MED': 0.0, 'ED': 4.07,'CRY': 2.25})                                                # units: kWe/m3    electrical energy required per unit of feed
-model.Q_required          = pyo.Param(model.processes, initialize={'RO': 0.0,  'MED': 8.0 ,'ED': 0.0, 'CRY': 0.0})                                                 # units: kW-th/m3  heat required per unit of feed (for ed and crystallization these values are calculated based on equations in the model)
+model.Elec_required       = pyo.Param(model.processes, initialize={'RO': 4.5, 'MED': 1.0, 'ED': 3.5,'CRY': 3.5})                                                # units: kWe/m3    electrical energy required per unit of feed 
+model.Q_required          = pyo.Param(model.processes, initialize={'RO': 0.0,  'MED': 25.0 ,'ED': 0.0, 'CRY': 90})                                                 # units: kW-th/m3  heat required per unit of feed (for ed and crystallization these values are calculated based on equations in the model)
 model.K_process           = pyo.Param(model.processes, initialize={'RO': 500.0,'MED': 900.0,'ED': 200.0, 'CRY': 950.0})                                                 # units: $/m3/day  capex for each process
 model.H_extract           = pyo.Param(model.cycles, initialize={'C1': 2.82e3, 'C2': 2.79e3, 'C3': 2.49e3, 'C4': 2.38e3, 'C5': 2.32e3, 'C6': 2.21e3, 'C7': 2.20e3})  # units: kJ/kg     enthalpy of steam at each extraction point within the power cycle configurations - steam enthalpy going back into condenser
 
@@ -146,6 +173,12 @@ def cry_salinity_definition_rule(m):
 model.cry_salinity_definition = pyo.Constraint(rule=cry_salinity_definition_rule)
 
 
+"""BL: I believe this constraints are good but are messing up the solver. Instead have fixed this to 15 which 
+I believe roughly lines up with the exit salinity of MED (or for that matter ED). I believe this is OK
+because RO->CRY will never make sense, and all we are doing is slightly penalizing that
+I cannot resolve the numbers from the paper cited with that for MED and have instead used a rule of thumb from online
+that crystallizer needs about 4x as much heat and 3x as much power. This needs revisiting
+
 
 def cry_specific_energy_rule(m):
     
@@ -153,7 +186,7 @@ def cry_specific_energy_rule(m):
     B = 0.2648
     C = 2.2488
 
-    return m.q_specific_cry == (A * m.cry_salinity * m.cry_salinity) + (B * m.cry_salinity) + C
+    return m.q_specific_cry ==  C  + (A * m.cry_salinity * m.cry_salinity) + (B * m.cry_salinity) 
 
 model.cry_specific_energy = pyo.Constraint(rule=cry_specific_energy_rule)
 
@@ -161,11 +194,11 @@ model.cry_specific_energy = pyo.Constraint(rule=cry_specific_energy_rule)
 def cry_total_energy_rule(m):    
     return m.q_used['CRY'] == (m.q_specific_cry * m.Rho / m.Time_conversion) * m.v_dot_in['CRY']
 model.cry_total_energy = pyo.Constraint(rule=cry_total_energy_rule)
-
+"""
 
 
 def linear_power_generation_rule(m,c):
-    return m.elec_generated_unmasked[c] == m.power_slope[c] * m.m_dot_extract_unit[c] * 100 + m.power_intercept
+    return m.elec_generated_unmasked[c] == m.power_slope[c] * m.m_dot_extract_unit[c]  + m.power_intercept
 model.linear_power_generation = pyo.Constraint(model.cycles, rule=linear_power_generation_rule)
 
 
@@ -292,8 +325,8 @@ model.heat_gating = pyo.Constraint(model.cycles, model.processes, rule=heat_gati
 
 # general rule for heat used by each process, there are explicitly defined equations for ed and crystallization
 def heat_used_general_rule(m, p):
-    if p == 'CRY':
-        return pyo.Constraint.Skip
+    #if p == 'CRY':
+    #    return pyo.Constraint.Skip
     return m.q_used[p] == m.Q_required[p] * m.v_dot_in[p]
 model.heat_used_general = pyo.Constraint(model.processes, rule=heat_used_general_rule)
 
