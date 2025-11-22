@@ -17,6 +17,8 @@ Base case: SW->MED. Note: extremely good (but not implausible) heat diversion fr
 
 All perturbations return to nominal before making new change
 
+Note: at the 
+
 Perturbation 1: Drop RO energy use to 3.0 - RO enters the system, MED is still present
 
 Perturbation 2: 10x MED electricity use - RO only at maximum
@@ -32,6 +34,10 @@ Perturbation 6: 100x MED electricity usage AND lithium price x100. SW->RO->ED. N
 Perturbation 7: Salt is now worth $100/kg. Processed food becomes far too expensive. SW->RO->MED->CRY. No point in ED as Li is too cheap and it doesnt concentrate. But use CRY
 
 Perturbation 8: Salt is worth $100/kg, Li price x100. Seawater mining takes off. RDO-3 team wins Nobel Prize for Engineering. SW->RO->MED->ED->CRY is built. $724Bn in revenue.
+
+Perturbation 9: 10x MED electricity use, RO up to 4.6 electricity. No active links. This is important cos RO is v.marginal at baseline
+
+Final note: there are still some differnces in the ED rules between 
 """
 
 
@@ -227,6 +233,7 @@ model.sw_feed_link_coupling = pyo.Constraint(model.processes, rule=sw_feed_link_
 
 
 # solves for concentration of feed into ED
+#BL - when I remove this constraint I get weird behavior. Dont know why but leaving it in
 def ed_feed_concentration_rule(m, i):
     return m.f_ion_in['ED', i] == m.v_dot_in['ED'] * m.conc_feed['ED', i]
 model.ed_feed_concentration = pyo.Constraint(model.ions, rule=ed_feed_concentration_rule)
@@ -262,6 +269,7 @@ model.ed_li_dil_mass_balance = pyo.Constraint(rule=ed_li_dil_mass_balance_rule)
 # this makes the concentration in both sides of the ED stream equal...not sure if this is the best choice 
 # (although the concentrations would be equal entering the stream,
 # but without setting some type of relationship it will make one side extremely concentrated)
+#BL thinks that while this constraint does nto affect the results, it should be left in to keep Na stream tidy.
 def ed_na_conc_mass_balance_rule(m):
     return m.concentration_conc['ED','Na'] == m.concentration_dil['ED', 'Na']
 model.ed_na_conc_mass_balance = pyo.Constraint(rule=ed_na_conc_mass_balance_rule)
@@ -325,6 +333,14 @@ model.electricity_requirement = pyo.Constraint(model.processes, rule=electricity
 def electricity_used_balance_rule(m, p):
     return m.elec_used[p] == sum(m.elec_allocated[c, p] for c in m.cycles)
 model.electricity_used_balance = pyo.Constraint(model.processes, rule=electricity_used_balance_rule)
+
+
+#BL: this rule was removed because alocatede+sold=generated via electricity balance, so it is redundant
+# amount of electricity allocated to all processes from each power cycle configuration can not exceed the amount of electricity generated from the power cycle
+#def electricity_allocated_capacity_rule(m, c):
+#    return sum(m.elec_allocated[c, p] for p in m.processes) <= m.elec_generated_unit[c]
+#model.electricity_allocated_capacity = pyo.Constraint(model.cycles, rule=electricity_allocated_capacity_rule)
+
 
 
 # mass conservation constraints
@@ -452,7 +468,7 @@ def logical_ion_mass_in_rule(m, p, i):
     return m.f_ion_in[p, i] == seawater_term + upstream_term
 model.logical_ion_mass_in = pyo.Constraint(model.processes, model.ions, rule=logical_ion_mass_in_rule)
 
-
+""" BL - after rerunning tests, I concur this is redundant and have removed it again
 # flow routing depending on upstream process
 def logical_inlet_flow_routing_rule(m, p):
     
@@ -468,7 +484,7 @@ def logical_inlet_flow_routing_rule(m, p):
     return m.v_dot_in[p] == seawater_term + upstream_term
 
 model.logical_inlet_flow_routing = pyo.Constraint(model.processes, rule=logical_inlet_flow_routing_rule)
-
+"""
 
 # ensures that the flow on the links is correct depending on the processes being used
 def logical_link_flow_balance(m, upstream, p):
