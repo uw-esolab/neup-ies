@@ -159,7 +159,7 @@ model.cry_total_energy = pyo.Constraint(rule=cry_total_energy_rule)
 
 
 def linear_power_generation_rule(m,c):
-    return m.elec_generated_unmasked[c] == m.power_slope[c] * m.m_dot_extract_unit[c] + m.power_intercept
+    return m.elec_generated_unmasked[c] == m.power_slope[c] * m.m_dot_extract_unit[c] * 100 + m.power_intercept
 model.linear_power_generation = pyo.Constraint(model.cycles, rule=linear_power_generation_rule)
 
 
