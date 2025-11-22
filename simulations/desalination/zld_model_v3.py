@@ -80,7 +80,7 @@ model.Time_conversion     = pyo.Param(initialize=3600)   # units: sec/hr, conver
 model.Price_water         = pyo.Param(initialize=1.0)    # units: $/m3,   sales price of desalinated water
 model.Price_elec          = pyo.Param(initialize=0.1)    # units: $/kWh,  sales price of electricity
 model.Price_li            = pyo.Param(initialize=70.0) # units: $/kg,   sales price of lithium
-model.Price_salt          = pyo.Param(initialize=1.0)    # units: $/kg    sales price of general salts
+model.Price_salt          = pyo.Param(initialize=0.0)    # units: $/kg    sales price of general salts
 model.X_max               = pyo.Param(initialize=1)      # units: --,     maximum allowable number of units built for each power cycle configuration
 model.Z_ed                = pyo.Param(initialize=0.9)    # units: --,     fraction of water evaporated from ED concentrate stream
 model.Big_m               = pyo.Param(initialize=40000)  # units: --,     big M used for logical constraints
@@ -151,8 +151,7 @@ model.conc_feed = pyo.Var(model.processes, model.ions, within=pyo.NonNegativeRea
 model.conc_feed['ED','Li'].setlb(0)
 model.conc_feed['ED','Li'].setub(0.002) 
 
-model.yield_ed_li     = pyo.Var(bounds=(0,1))                   # units: --,   li recovery fraction
-model.yield_linear    = pyo.Var(within=pyo.NonNegativeReals)    # units: --,   unconstrained linear yield
+model.yield_ed_li     = pyo.Param(initialize=1.0)                  # units: --,   li recovery fraction, assumed 100%. 
 model.li_recovered_ed = pyo.Var(within=pyo.NonNegativeReals)    # units: kg/h, total Li recovered
 
 
@@ -205,12 +204,6 @@ model.linear_power_generation = pyo.Constraint(model.cycles, rule=linear_power_g
 ########
 
 
-# new parameters
-
-
-model.alpha_ed_li = pyo.Param(initialize=1500)                  # units: --, slope of li yield vs concentration
-
-
 # new constraints
 
 # if a process is inactive, the concentration of ions in the concentrated stream must equal 0 (added because some ions were being recorded in processes that were turned off)
@@ -245,22 +238,6 @@ model.ed_feed_concentration = pyo.Constraint(model.ions, rule=ed_feed_concentrat
 def ed_precipitation_ratio_rule(m):
     return m.concentration_dil['ED','Na'] == m.Ratio_ed_na_li * m.concentration_dil['ED','Li']
 model.ed_precipitation_ratio = pyo.Constraint(rule=ed_precipitation_ratio_rule)
-
-# defines yield as a function of incoming concentration and a constant (alpha)
-def yield_definition_rule(m):
-    return m.yield_linear == m.alpha_ed_li * m.conc_feed['ED','Li']
-model.yield_definition = pyo.Constraint(rule=yield_definition_rule)
-
-# yield is capped by linear prediction 
-def yield_cap_linear_rule(m):
-    return m.yield_ed_li <= m.yield_linear
-model.yield_cap_linear = pyo.Constraint(rule=yield_cap_linear_rule)
-
-                                                    
-# yield cannot exceed 1 (saturation)
-def yield_cap_max_rule(m):
-    return m.yield_ed_li <= 1.0
-model.yield_cap_max = pyo.Constraint(rule=yield_cap_max_rule)
 
 
 # lithium recovered is yield * what is entering ED
