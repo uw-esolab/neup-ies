@@ -1,6 +1,12 @@
 # import necessary packages
 import pyomo.environ as pyo
 
+"""TEST CASES
+
+Base case (as in this file: SW->RO at 7900
+
+
+"""
 
 
 # build model
@@ -311,13 +317,6 @@ def electricity_used_balance_rule(m, p):
 model.electricity_used_balance = pyo.Constraint(model.processes, rule=electricity_used_balance_rule)
 
 
-# amount of electricity allocated to all processes from each power cycle configuration can not exceed the amount of electricity generated from the power cycle
-def electricity_allocated_capacity_rule(m, c):
-    return sum(m.elec_allocated[c, p] for p in m.processes) <= m.elec_generated_unit[c]
-model.electricity_allocated_capacity = pyo.Constraint(model.cycles, rule=electricity_allocated_capacity_rule)
-
-
-
 # mass conservation constraints
 
 # seawater intake flow is limited by parameter, sums over all connections that include sw as a source node, however a single upstream and downstream node is also enforced in the model
@@ -543,9 +542,6 @@ def diluate_concentration_cry_rule(m, i):
     return m.concentration_dil['CRY', i] == 0.0
 model.diluate_concentration_cry = pyo.Constraint(model.ions, rule=diluate_concentration_cry_rule)
 
-
-
-
 # OBJECTIVE FUNCTION
 
 profit = (
@@ -564,11 +560,7 @@ solver = pyo.SolverFactory("gurobi")
 solver.options['NonConvex'] = 2
 results = solver.solve(model, tee=False)
 
-
-
 # RESULTS 
-
-
 def safe_val(v, fmt="{:.2f}"):
     """Return variable value or 'not solved' if uninitialized."""
     if v.value is None:
@@ -613,6 +605,7 @@ for c in model.cycles:
     print(f"  ṁ_cycle_unit        = {safe_val(model.m_dot_cycle_unit[c])} kg/s")
     print(f"  ṁ_extract_unit      = {safe_val(model.m_dot_extract_unit[c])} kg/s")
     print(f"  Ẇ_generated_unit    = {safe_val(model.elec_generated_unit[c])} kWe")
+    print(f"  Ẇ_sold_unit         = {safe_val(model.elec_sold[c])} kWe")
     print(f"  Q_generated         = {safe_val(model.q_generated[c])} kWth")
 
 
@@ -623,8 +616,8 @@ for p in model.processes:
     print(f"  v̇_in                = {safe_val(model.v_dot_in[p])} m³/h")
     print(f"  v̇_conc              = {safe_val(model.v_dot_conc[p])} m³/h")
     print(f"  v̇_dil               = {safe_val(model.v_dot_dil[p])} m³/h")
-    print(f"  Electricity used    = {safe_val(model.elec_used[p])} kWh")
-    print(f"  Heat used           = {safe_val(model.q_used[p])} kWh-th")
+    print(f"  Electricity used    = {safe_val(model.elec_used[p])} kWe")
+    print(f"  Heat used           = {safe_val(model.q_used[p])} kW-th")
 
     for i in model.ions:
         print(f"    Ion {i}:")
