@@ -153,9 +153,6 @@ model.concentration_dil       = pyo.Var(model.processes, model.ions, within=pyo.
 # new variables
 
 
-model.conc_feed = pyo.Var(model.processes, model.ions, within=pyo.NonNegativeReals)
-model.conc_feed['ED','Li'].setlb(0)
-model.conc_feed['ED','Li'].setub(0.002) 
 
 model.yield_ed_li     = pyo.Param(initialize=1.0)                  # units: --,   li recovery fraction, assumed 100%. 
 model.li_recovered_ed = pyo.Var(within=pyo.NonNegativeReals)    # units: kg/h, total Li recovered
@@ -164,8 +161,6 @@ model.li_recovered_ed = pyo.Var(within=pyo.NonNegativeReals)    # units: kg/h, t
 ######## 
 
 
-model.cry_salinity    = pyo.Var(domain=pyo.NonNegativeReals)
-model.q_specific_cry  = pyo.Var(domain=pyo.NonNegativeReals)
 
 model.power_slope     = pyo.Param(model.cycles, initialize= {'C1': -873, 'C2': -829, 'C3': -540, 'C4': -427, 'C5': -335, 'C6': -229, 'C7': -211})
 model.power_intercept = pyo.Param(initialize=52920)
@@ -317,19 +312,19 @@ model.heat_used_general = pyo.Constraint(model.processes, rule=heat_used_general
 
 # electricity-related constraints
 
-## electricity generated must either be sold or allocated to a process
+# moved to other model --  electricity generated must either be sold or allocated to a process
 def electricity_balance_rule(m, c):
     return m.elec_sold[c] == m.elec_generated_unit[c] - sum(m.elec_allocated[c, p] for p in m.processes)
 model.electricity_balance = pyo.Constraint(model.cycles, rule=electricity_balance_rule)
 
 
-# electricity used by each process is related to the electrical requirements of each process
+# moved to other model -- electricity used by each process is related to the electrical requirements of each process
 def electricity_requirement_rule(m, p):
     return m.elec_used[p] == m.Elec_required[p] * m.v_dot_in[p]
 model.electricity_requirement = pyo.Constraint(model.processes, rule=electricity_requirement_rule)
 
 
-# electricity used by each process is the sum of the electricity allocated to it from each cycle
+# not needed because there is a singular power cycle -- electricity used by each process is the sum of the electricity allocated to it from each cycle
 def electricity_used_balance_rule(m, p):
     return m.elec_used[p] == sum(m.elec_allocated[c, p] for c in m.cycles)
 model.electricity_used_balance = pyo.Constraint(model.processes, rule=electricity_used_balance_rule)
