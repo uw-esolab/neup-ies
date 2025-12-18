@@ -157,7 +157,7 @@ model.concentration_dil       = pyo.Var(model.processes, model.ions, within=pyo.
 model.yield_ed_li     = pyo.Param(initialize=1.0)                  # units: --,   li recovery fraction, assumed 100%. 
 model.li_recovered_ed = pyo.Var(within=pyo.NonNegativeReals)    # units: kg/h, total Li recovered
 
-
+model.cry_salinity    = pyo.Var(within=pyo.NonNegativeReals)
 ######## 
 
 
@@ -196,7 +196,7 @@ def cry_total_energy_rule(m):
 model.cry_total_energy = pyo.Constraint(rule=cry_total_energy_rule)
 """
 
-
+# not needed in other model because different power cycle used
 def linear_power_generation_rule(m,c):
     return m.elec_generated_unmasked[c] == m.power_slope[c] * m.m_dot_extract_unit[c]  + m.power_intercept
 model.linear_power_generation = pyo.Constraint(model.cycles, rule=linear_power_generation_rule)
@@ -273,25 +273,25 @@ model.ed_na_conc_mass_balance = pyo.Constraint(rule=ed_na_conc_mass_balance_rule
 # end of new constraints
 
 
-# amount of heat generated is a function of the enthalpy of the steam at that point and the extraction flow rate
+# moved to other model and edited --  amount of heat generated is a function of the enthalpy of the steam at that point and the extraction flow rate
 def heat_generated_rule(m, c):
     return m.q_generated[c] == m.H_extract[c] * m.m_dot_extract_unit[c]
 model.heat_generated = pyo.Constraint(model.cycles, rule=heat_generated_rule)
 
  
-# amount of heat allocated to all processes from each power cycle configuration can not exceed the amount of heat generated from the power cycle
+# not needed in other model -- amount of heat allocated to all processes from each power cycle configuration can not exceed the amount of heat generated from the power cycle
 def heat_allocated_capacity_rule(m, c):
     return sum(m.q_allocated[c, p] for p in m.processes) == m.q_generated[c]
 model.heat_allocated_capacity = pyo.Constraint(model.cycles, rule=heat_allocated_capacity_rule)
 
 
-# amount of heat used by each process is the sum of the heat allocated to it from each cycle
+# not needed in other model -- amount of heat used by each process is the sum of the heat allocated to it from each cycle
 def heat_used_balance_rule(m, p):
     return m.q_used[p] == sum(m.q_allocated[c, p] for c in m.cycles)
 model.heat_used_balance = pyo.Constraint(model.processes, rule=heat_used_balance_rule)            
 
 
-# heat cannot be allocated to a process unless the binary indicator for supplying heat from cycle c to process p is turned on
+# not needed for dispatch model -- heat cannot be allocated to a process unless the binary indicator for supplying heat from cycle c to process p is turned on
 def heat_gating_rule(m, c, p):
     return m.q_allocated[c, p] <= m.Big_m_heat * m.y_q_source[c, p]
 model.heat_gating = pyo.Constraint(model.cycles, model.processes, rule=heat_gating_rule)
@@ -303,7 +303,7 @@ model.heat_gating = pyo.Constraint(model.cycles, model.processes, rule=heat_gati
 #model.single_heat_source = pyo.Constraint(model.processes, rule=single_heat_source_rule)
 
 
-# general rule for heat used by each process, there are explicitly defined equations for ed and crystallization
+# moved to other model -- general rule for heat used by each process, there are explicitly defined equations for ed and crystallization
 def heat_used_general_rule(m, p):
     #if p == 'CRY':
     #    return pyo.Constraint.Skip
@@ -340,25 +340,25 @@ model.electricity_used_balance = pyo.Constraint(model.processes, rule=electricit
 
 # mass conservation constraints
 
-# seawater intake flow is limited by parameter, sums over all connections that include sw as a source node, however a single upstream and downstream node is also enforced in the model
+# moved to other model -- seawater intake flow is limited by parameter, sums over all connections that include sw as a source node, however a single upstream and downstream node is also enforced in the model
 def feed_intake_capacity_rule(m):
     return sum(m.v_dot_link['SW', p] for (upstream, p) in m.links if upstream == 'SW') <= m.V_dot_max
 model.feed_intake_capacity = pyo.Constraint(rule=feed_intake_capacity_rule)
 
 
-## mass flow in power cycle either has to be expanded in the turbines or extracted to provide heat to thermal processes, per cycle flow is limited by nominal conditions
+## not needed in other model because power cycle modeled differently -- mass flow in power cycle either has to be expanded in the turbines or extracted to provide heat to thermal processes, per cycle flow is limited by nominal conditions
 def split_flow_rule(m, c):
     return m.m_dot_cycle_unit[c] + m.m_dot_extract_unit[c] == m.M_dot_max * model.y_cycle_active[c]
 model.split_flow = pyo.Constraint(model.cycles, rule=split_flow_rule)
 
 
-# conservation of volumetric flow through the inlet and outlet of each process
+# moved to other model, kept the same -- conservation of volumetric flow through the inlet and outlet of each process
 def process_flow_balance_rule(m, p):
     return m.v_dot_in[p] == m.v_dot_conc[p] + m.v_dot_dil[p]
 model.process_flow_balance = pyo.Constraint(model.processes, rule=process_flow_balance_rule)
 
 
-# ion conservation from inlet to concentrated and diluted stream
+# moved to other model -- ion conservation from inlet to concentrated and diluted stream
 def ion_conservation_rule(m, p, i):
     if p == 'CRY':
         return pyo.Constraint.Skip
@@ -367,7 +367,7 @@ def ion_conservation_rule(m, p, i):
 model.ion_conservation = pyo.Constraint(model.processes, model.ions, rule=ion_conservation_rule)
 
 
-# the volumetric flow into a process is the sum of the flow on the links connected to the process upstream
+# moved to other model -- the volumetric flow into a process is the sum of the flow on the links connected to the process upstream
 def inlet_flow_balance_rule(m, p):
     inflow_from_links = sum(m.v_dot_link[q, downstream] for (q, downstream) in m.links if downstream == p)
     return m.v_dot_in[p] == inflow_from_links
@@ -383,42 +383,42 @@ model.inlet_flow_balance = pyo.Constraint(model.processes, rule=inlet_flow_balan
 # model.logical_concentration_inactive = pyo.Constraint(model.processes, model.ions, rule=logical_concentration_inactive_rule)
 
 
-# connects the electricity generated to the piecewise variable elec_generated_unmasked through the binary variable activation
+# not needed in other model because power cycle modeled differently -- connects the electricity generated to the piecewise variable elec_generated_unmasked through the binary variable activation
 def logical_mask_cycle_generation_rule(m, c):
     return m.elec_generated_unit[c] == m.elec_generated_unmasked[c] * m.y_cycle_active[c]
 model.logical_mask_cycle_generation = pyo.Constraint(model.cycles, rule=logical_mask_cycle_generation_rule)
 
 
-# if a link is turned on there has to be flow on it
+# moved to other model -- if a link is turned on there has to be flow on it
 def logical_no_flow_means_inactive_rule(m, q, p):
     return m.v_dot_link[q, p] >= m.Little_m * m.y_link_active[q, p]
 model.logical_no_flow_means_inactive = pyo.Constraint(model.links, rule=logical_no_flow_means_inactive_rule)
 
 
-# process can only have inlet flow if its binary activation is turned on
+# moved to other model -- process can only have inlet flow if its binary activation is turned on
 def logical_inflow_maximum_activation_rule(m, p):
     return m.v_dot_in[p] <= m.Big_m * m.y_process_active[p]
 model.logical_inflow_maximum_activation = pyo.Constraint(model.processes, rule=logical_inflow_maximum_activation_rule)
 
 
-# process must have inlet flow if it's binary activation is turned on
+# moved to other model -- process must have inlet flow if it's binary activation is turned on
 def logical_inflow_minimum_activation_rule(m, p):
     return m.v_dot_in[p] >= m.Little_m * m.y_process_active[p]
 model.logical_inflow_minimum_activation = pyo.Constraint(model.processes, rule=logical_inflow_minimum_activation_rule)
    
 
-# seawater feed can only go to one process to start the chain of processes
+# moved to other model -- seawater feed can only go to one process to start the chain of processes
 def logical_single_feed_target_rule(m):
     return sum(m.y_link_active['SW', p] for p in m.processes if ('SW', p) in m.links) <= 1
 model.logical_single_feed_target = pyo.Constraint(rule=logical_single_feed_target_rule)
 
-# each downstream process can be fed by only one upstream process
+# moved to other model -- each downstream process can be fed by only one upstream process
 def logical_single_upstream_rule(m, p):
     return sum(m.y_link_active[upstream, p] for (upstream, downstream) in m.links if downstream==p) <= 1
 model.logical_single_upstream = pyo.Constraint(model.processes, rule=logical_single_upstream_rule)
 
 
-# each process can send outlet flow to only one downstream process, checks to make sure there is a downstream process and if not skips the constraint
+# moved to other model -- each process can send outlet flow to only one downstream process, checks to make sure there is a downstream process and if not skips the constraint
 def logical_single_downstream_rule(m, p):
     terms = [m.y_link_active[p, downstream] for (upstream, downstream) in m.links if upstream == p]
     if not terms:
@@ -427,7 +427,8 @@ def logical_single_downstream_rule(m, p):
 model.logical_single_downstream = pyo.Constraint(model.processes, rule=logical_single_downstream_rule)
 
 
-# link between processes can only be activated if the upstream process is activated
+
+# moved to other model -- link between processes can only be activated if the upstream process is activated
 def logical_link_activation_upstream_rule(m, upstream, downstream):
     if upstream == 'SW':
         return pyo.Constraint.Skip
@@ -435,20 +436,20 @@ def logical_link_activation_upstream_rule(m, upstream, downstream):
 model.logical_link_activation_upstream = pyo.Constraint(model.links, rule=logical_link_activation_upstream_rule)
 
 
-# link between processes can only be activated if the downstream process is activated
+# moved to other model -- link between processes can only be activated if the downstream process is activated
 def logical_link_activation_downstream_rule(m, upstream, downstream):
     return m.y_link_active[upstream, downstream] <= m.y_process_active[downstream]
 model.logical_link_activation_downstream = pyo.Constraint(model.links, rule=logical_link_activation_downstream_rule)
 
 
-# the flow from one link to another is 0 if the link is inactive; otherwise it is limited by a big M
+# moved to other model -- the flow from one link to another is 0 if the link is inactive; otherwise it is limited by a big M
 def logical_link_capacity_rule(m, upstream, downstream):
     return m.v_dot_link[upstream, downstream] <= m.Big_m * m.y_link_active[upstream, downstream]
 model.logical_link_capacity = pyo.Constraint(model.links, rule=logical_link_capacity_rule)
 
 
 
-# the ion flow to each process is related to what is feeding it 
+# moved to other model -- the ion flow to each process is related to what is feeding it 
 def logical_ion_mass_in_rule(m, p, i):
     
     seawater_term = 0.0
@@ -481,7 +482,7 @@ def logical_inlet_flow_routing_rule(m, p):
 model.logical_inlet_flow_routing = pyo.Constraint(model.processes, rule=logical_inlet_flow_routing_rule)
 """
 
-# ensures that the flow on the links is correct depending on the processes being used
+# moved to other model -- ensures that the flow on the links is correct depending on the processes being used
 def logical_link_flow_balance(m, upstream, p):
     
     if (upstream, p) not in m.links or upstream == 'SW':

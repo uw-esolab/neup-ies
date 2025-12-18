@@ -291,16 +291,153 @@ def electricity_balance_rule(model, t):
 model.electricity_balance = pyomo.Constraint(model.T, rule=electricity_balance_rule)
 
 
+
 # discharge from lt-storage can either go to med or cry
 def constr_lt_tes_heat_balance(model, t, p):
     return model.m_dot_lt_tes_out[t, p] * Delta_H_water * model.Delta_t == model.q_used[t, p]
 model.constr_lt_tes_heat_balance = pyomo.Constraint(model.T, model.processes, rule=constr_lt_tes_heat_balance)
 
 
+
 # heat used by each process must equal the kWh-th required
 def constr_q_used_defn(model, t, p):
     return model.q_used[t, p] == model.Q_required[p] * model.v_dot_in[t, p]
 model.constr_q_used_defn = pyomo.Constraint(model.T, model.processes, rule=constr_q_used_defn)
+
+
+
+# desalination constraints
+
+# conservation of volumetric flow through the inlet and outlet of each process
+def process_flow_balance_rule(model, t, p):
+    return model.v_dot_in[t, p] == model.v_dot_conc[t, p] + model.v_dot_dil[t, p]
+model.process_flow_balance = pyomo.Constraint(model.T, model.processes, rule=process_flow_balance_rule)
+
+
+
+# if a link is turned on there has to be flow on it
+def logical_no_flow_means_inactive_rule(model, q, p):
+    return model.v_dot_link[q, p] >= model.Little_m * model.y_link_active[q, p]
+model.logical_no_flow_means_inactive = pyomo.Constraint(model.links, rule=logical_no_flow_means_inactive_rule)
+
+
+
+# process can only have inlet flow if its binary activation is turned on
+def logical_inflow_maximum_activation_rule(model, t, p):
+    return model.v_dot_in[t, p] <= model.Big_m * model.y_process_active[p]
+model.logical_inflow_maximum_activation = pyomo.Constraint(model.T, model.processes, rule=logical_inflow_maximum_activation_rule)
+
+
+
+# process must have inlet flow if it's binary activation is turned on
+def logical_inflow_minimum_activation_rule(model, t, p):
+    return model.v_dot_in[t, p] >= model.Little_m * model.y_process_active[p]
+model.logical_inflow_minimum_activation = pyomo.Constraint(model.T, model.processes, rule=logical_inflow_minimum_activation_rule)
+   
+
+
+# seawater feed can only go to one process to start the chain of processes
+def logical_single_feed_target_rule(model):
+    return sum(model.y_link_active['SW', p] for p in model.processes if ('SW', p) in model.links) <= 1
+model.logical_single_feed_target = pyomo.Constraint(rule=logical_single_feed_target_rule)
+
+
+
+# each downstream process can be fed by only one upstream process
+def logical_single_upstream_rule(model, p):
+    return sum(model.y_link_active[upstream, p] for (upstream, downstream) in model.links if downstream==p) <= 1
+model.logical_single_upstream = pyomo.Constraint(model.processes, rule=logical_single_upstream_rule)
+
+
+
+# each process can send outlet flow to only one downstream process, checks to make sure there is a downstream process and if not skips the constraint
+def logical_single_downstream_rule(model, p):
+    terms = [model.y_link_active[p, downstream] for (upstream, downstream) in model.links if upstream == p]
+    if not terms:
+        return pyomo.Constraint.Skip
+    return sum(terms) <= 1
+model.logical_single_downstream = pyomo.Constraint(model.processes, rule=logical_single_downstream_rule)
+
+
+
+# link between processes can only be activated if the upstream process is activated
+def logical_link_activation_upstream_rule(model, upstream, downstream):
+    if upstream == 'SW':
+        return pyomo.Constraint.Skip
+    return model.y_link_active[upstream, downstream] <= model.y_process_active[upstream]
+model.logical_link_activation_upstream = pyomo.Constraint(model.links, rule=logical_link_activation_upstream_rule)
+
+
+
+# link between processes can only be activated if the downstream process is activated
+def logical_link_activation_downstream_rule(model, upstream, downstream):
+    return model.y_link_active[upstream, downstream] <= model.y_process_active[downstream]
+model.logical_link_activation_downstream = pyomo.Constraint(model.links, rule=logical_link_activation_downstream_rule)
+
+
+
+# the flow from one link to another is 0 if the link is inactive; otherwise it is limited by a big M
+def logical_link_capacity_rule(model, upstream, downstream):
+    return model.v_dot_link[upstream, downstream] <= model.Big_m * model.y_link_active[upstream, downstream]
+model.logical_link_capacity = pyomo.Constraint(model.links, rule=logical_link_capacity_rule)
+
+
+
+# the ion flow to each process is related to what is feeding it 
+def logical_ion_mass_in_rule(model, t, p, i):
+    
+    seawater_term = 0.0
+    if ('SW', p) in model.links:
+        seawater_term = model.v_dot_sw_feed[t, p] * model.Conc_sw[i] * model.y_link_active['SW', p]
+           
+    upstream_term = sum(
+        model.v_dot_link[upstream, p] * model.concentration_conc[t, upstream, i]
+        for (upstream, downstream) in model.links if downstream == p and upstream != 'SW'
+    )
+    
+    return model.f_ion_in[t, p, i] == seawater_term + upstream_term
+model.logical_ion_mass_in = pyomo.Constraint(model. T, model.processes, model.ions, rule=logical_ion_mass_in_rule)
+
+
+
+
+# ensures that the flow on the links is correct depending on the processes being used
+def logical_link_flow_balance(model, t, upstream, p):
+    
+    if (upstream, p) not in model.links or upstream == 'SW':
+        return pyomo.Constraint.Skip
+
+    else:
+        return model.v_dot_link[upstream, p] == model.v_dot_conc[t, upstream] * model.y_link_active[upstream, p]
+    
+model.logical_link_flow_balance = pyomo.Constraint(model.T, model.links, rule=logical_link_flow_balance)
+
+
+
+# ion conservation from inlet to concentrated and diluted stream
+def ion_conservation_rule(model, t, p, i):
+    if p == 'CRY':
+        return pyomo.Constraint.Skip
+    else:
+        return model.f_ion_in[t, p, i] == model.v_dot_conc[t, p] * model.concentration_conc[t, p, i] + model.v_dot_dil[t, p] * model.concentration_dil[t, p, i]
+model.ion_conservation = pyomo.Constraint(model.T, model.processes, model.ions, rule=ion_conservation_rule)
+
+
+
+# the volumetric flow into a process is the sum of the flow on the links connected to the process upstream
+def inlet_flow_balance_rule(model, t, p):
+    inflow_from_links = sum(model.v_dot_link[q, downstream] for (q, downstream) in model.links if downstream == p)
+    return model.v_dot_in[t, p] == inflow_from_links
+model.inlet_flow_balance = pyomo.Constraint(model.T, model.processes, rule=inlet_flow_balance_rule)
+
+
+
+# seawater intake flow is limited by parameter, sums over all connections that include sw as a source node, however a single upstream and downstream node is also enforced in the model
+def feed_intake_capacity_rule(model):
+    return sum(model.v_dot_link['SW', p] for (upstream, p) in model.links if upstream == 'SW') <= model.V_dot_max
+model.feed_intake_capacity = pyomo.Constraint(rule=feed_intake_capacity_rule)
+
+
 
 
 def obj_rule(model):
@@ -310,17 +447,20 @@ model.obj = pyomo.Objective(rule=obj_rule, sense=pyomo.maximize)
 
 
 solver = SolverFactory('gurobi') 
+
 results = solver.solve(model, tee=True)
 
-print(results.solver.termination_condition)
 
-
-for t in [1, 2, 3]:
+for t in model.T:
     print(t,
           pyomo.value(model.w_dot_gen[t]),
           pyomo.value(model.elec_sold[t]),
           pyomo.value(model.m_dot_hpt[t]),
           pyomo.value(model.m_dot_extract[t]))
+
+
+print(results.solver.termination_condition)
+
 
 
 
