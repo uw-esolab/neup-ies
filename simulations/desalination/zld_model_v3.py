@@ -495,13 +495,13 @@ model.logical_link_flow_balance = pyo.Constraint(model.links, rule=logical_link_
 
 # ro specific constraints
 
-# diluted (potable) water is a function of recovery ratio
+# moved to combined model -- diluted (potable) water is a function of recovery ratio
 def recovery_ratio_ro_rule(m):
     return m.v_dot_dil['RO'] == m.Recovery_ro * m.v_dot_in['RO']
 model.recovery_ratio_ro = pyo.Constraint(rule=recovery_ratio_ro_rule)
 
 
-# no ions in diluted ro stream
+# moved to combined model -- no ions in diluted ro stream
 def diluate_concentration_ro_rule(m, p, i):
     if p!= 'RO':
         return pyo.Constraint.Skip
@@ -512,16 +512,15 @@ model.diluate_concentration_ro = pyo.Constraint(model.processes, model.ions, rul
 
 # med specific constraints
 
-# diluted water is a function of recovery ratio - recovery ratio for med depends on if it is fed by seawater or ro brine
+# moved to combined model -- diluted water is a function of recovery ratio - recovery ratio for med depends on if it is fed by seawater or ro brine
 def logical_recovery_ratio_med_rule(m):
     return m.v_dot_dil['MED'] == (
         m.v_dot_in['MED'] * m.Recovery_sw_to_med * (1 - m.y_link_active['RO','MED']) + 
         m.v_dot_in['MED'] * m.Recovery_ro_to_med * m.y_link_active['RO','MED'])
-    
-model.logical_recovery_ratio_med = pyo.Constraint(rule=logical_recovery_ratio_med_rule)
+    model.logical_recovery_ratio_med = pyo.Constraint(rule=logical_recovery_ratio_med_rule)
 
 
-# no ions in diluted med stream
+# moved to combined model -- no ions in diluted med stream
 def diluate_concentration_med_rule(m, p, i):
     if p!= 'MED':
         return pyo.Constraint.Skip
@@ -544,7 +543,8 @@ model.diluate_concentration_med = pyo.Constraint(model.processes, model.ions, ru
 # model.ed_na_maximum_concentration = pyo.Constraint(rule=ed_na_maximum_concentration_rule)
 
 
-# chloride ions are split between the two streams
+# moved to other model but don't think it should be used because changed from using concentration to ion mass -- 
+#chloride ions are split between the two streams
 def ed_cl_concentration_rule(m):
     return m.concentration_conc['ED', 'Cl'] == m.concentration_dil['ED', 'Cl']
 model.ed_cl_concentration = pyo.Constraint(rule=ed_cl_concentration_rule)
@@ -553,13 +553,13 @@ model.ed_cl_concentration = pyo.Constraint(rule=ed_cl_concentration_rule)
 
 # crystallization constraints
 
-# there is no concentrated brine from crystallization, only potable water and solid salts
+# moved to other model -- there is no concentrated brine from crystallization, only potable water and solid salts
 def cry_no_concentrated_flow_rule(m):
     return m.v_dot_conc['CRY'] == 0.0
 model.cry_no_concentrated_flow = pyo.Constraint(rule=cry_no_concentrated_flow_rule)
 
     
-# there are no ions in the diluted stream outflowing from crystallization
+# moved to other model -- there are no ions in the diluted stream outflowing from crystallization
 def diluate_concentration_cry_rule(m, i):
     return m.concentration_dil['CRY', i] == 0.0
 model.diluate_concentration_cry = pyo.Constraint(model.ions, rule=diluate_concentration_cry_rule)
