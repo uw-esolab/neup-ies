@@ -18,10 +18,9 @@ Schedule_elec  = pd.read_csv("DIABLOCN_2_N001_PRICES.csv", usecols=["LMP"]).to_n
 
 
 
-
 model = pyo.ConcreteModel()
 
-N = 1
+N = 24
 
 add_sets(model)
 add_time_set(model, N)
@@ -120,52 +119,50 @@ model.hot_tes_limit = pyo.Constraint(model.T, rule=hot_tes_limit)
 
 
 
+def prev_circular(T, t):
+    return T.prev(t) if t != T.first() else T.last()
+
 # tracks power ramping upwards 
 def hpt_track_up(model, t):
-    return model.m_dot_hpt_Delta_up[t] >= model.m_dot_hpt[t] - model.m_dot_hpt[t-1]
-model.hpt_track_up = pyo.Constraint(model.T-[1], rule=hpt_track_up)
-
+    t_prev = prev_circular(model.T,t)
+    return model.m_dot_hpt_Delta_up[t] >= model.m_dot_hpt[t] - model.m_dot_hpt[t_prev]
+model.hpt_track_up = pyo.Constraint(model.T, rule=hpt_track_up)
 
 
 # tracks power ramping downwards
 def hpt_track_down(model, t):
-    return model.m_dot_hpt_Delta_dn[t] >= model.m_dot_hpt[t-1] - model.m_dot_hpt[t]
-model.hpt_track_down = pyo.Constraint(model.T-[1], rule=hpt_track_down)
+    t_prev = prev_circular(model.T,t)
+    return model.m_dot_hpt_Delta_dn[t] >= model.m_dot_hpt[t_prev] - model.m_dot_hpt[t]
+model.hpt_track_down = pyo.Constraint(model.T, rule=hpt_track_down)
 
 
 
 # limits power ramping upwards based on power ramp limit
 def hpt_ramp_up(model,t):
     return model.m_dot_hpt_Delta_up[t] <= model.W_dot_ramp_max/model.K_power*model.Delta_t
-model.hpt_ramp_up = pyo.Constraint(model.T-[1], rule=hpt_ramp_up)
+model.hpt_ramp_up = pyo.Constraint(model.T, rule=hpt_ramp_up)
 
 
 
 # limits power ramping downwards based on power ramp limit
 def hpt_ramp_down(model,t):
     return model.m_dot_hpt_Delta_dn[t] <= model.W_dot_ramp_max/model.K_power*model.Delta_t
-model.hpt_ramp_down = pyo.Constraint(model.T-[1], rule=hpt_ramp_down)  
+model.hpt_ramp_down = pyo.Constraint(model.T, rule=hpt_ramp_down)  
 
 
 
 # conserves mass in hot tes
 def hot_tes_inventory(model, t):  
-    if t > 1:
-        return model.m_hot_tes[t] == (model.M_dot_salt[t] - model.m_dot_hot_tes[t]) * model.Convert_time * model.Delta_t + model.m_hot_tes[t-1]
-    else:
-        return model.m_hot_tes[t] == (model.M_dot_salt[t] - model.m_dot_hot_tes[t]) * model.Convert_time * model.Delta_t 
+    t_prev = prev_circular(model.T,t)
+    return model.m_hot_tes[t] == (model.M_dot_salt[t] - model.m_dot_hot_tes[t]) * model.Convert_time * model.Delta_t + model.m_hot_tes[t_prev]
 model.hot_tes_inventory = pyo.Constraint(model.T, rule=hot_tes_inventory)
 
 
 
 # conserves mass in cold tes low-temp tes inventory tracking between time steps
 def cold_tes_inventory(model, t):
-    if t > 1:
-        return model.m_cold_tes[t] == model.m_cold_tes[t-1] + (
-            model.K_hx2 * model.m_dot_extract[t] 
-            - sum(model.m_dot_cold_tes[t, p] for p in ['MED', 'CRY'])) * model.Delta_t
-    else:
-        return model.m_cold_tes[t] == (
+    t_prev = prev_circular(model.T,t)
+    return model.m_cold_tes[t] == model.m_cold_tes[t_prev] + (
             model.K_hx2 * model.m_dot_extract[t] 
             - sum(model.m_dot_cold_tes[t, p] for p in ['MED', 'CRY'])) * model.Delta_t
 model.cold_tes_inventory = pyo.Constraint(model.T, rule=cold_tes_inventory)
@@ -454,13 +451,13 @@ model.obj = pyo.Objective(expr=(profit_yr - capex_yr
 
 
 solver  = pyo.SolverFactory("gurobi")
+solver.options['NonConvex'] = 2
 results = solver.solve(model, tee=True)
 
 
 
 
 model.solutions.load_from(results)
-
 
 print("\n=== Process Status and Capacity ===")
 for p in model.processes:
