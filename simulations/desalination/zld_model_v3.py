@@ -40,7 +40,7 @@ Perturbation 9: 10x MED electricity use, RO up to 4.6 electricity. No active lin
 Final note: there are still some differnces in the ED rules between 
 """
 
-def main(Li_price=70,ED_elec_req=3.5,RO_elec_req=4.5):
+def main(Li_price=70,ED_elec_req=3.5,RO_elec_req=4.5,MED_elec_req=1.0):
 
     # build model
     
@@ -101,7 +101,7 @@ def main(Li_price=70,ED_elec_req=3.5,RO_elec_req=4.5):
     #BL are the heat and electricity consumptions in kWh/m3 ???? (electric or thermal)
     
     model.Conc_sw             = pyo.Param(model.ions, initialize={'Li': 0.00018, 'Na': 10.8, 'Cl': 19.3})                                                               # units: kg/m3     mass concentration of ions in seawater
-    model.Elec_required       = pyo.Param(model.processes, initialize={'RO': RO_elec_req, 'MED': 1.0, 'ED': ED_elec_req,'CRY': 3.5})                                                # units: kWe/m3    electrical energy required per unit of feed 
+    model.Elec_required       = pyo.Param(model.processes, initialize={'RO': RO_elec_req, 'MED': MED_elec_req, 'ED': ED_elec_req,'CRY': 3.5})                                                # units: kWe/m3    electrical energy required per unit of feed 
     model.Q_required          = pyo.Param(model.processes, initialize={'RO': 0.0,  'MED': 25.0 ,'ED': 0.0, 'CRY': 90})                                                 # units: kW-th/m3  heat required per unit of feed (for ed and crystallization these values are calculated based on equations in the model)
     model.K_process           = pyo.Param(model.processes, initialize={'RO': 500.0,'MED': 900.0,'ED': 200.0, 'CRY': 950.0})                                                 # units: $/m3/day  capex for each process
     model.H_extract           = pyo.Param(model.cycles, initialize={'C1': 2.82e3, 'C2': 2.79e3, 'C3': 2.49e3, 'C4': 2.38e3, 'C5': 2.32e3, 'C6': 2.21e3, 'C7': 2.20e3})  # units: kJ/kg     enthalpy of steam at each extraction point within the power cycle configurations - steam enthalpy going back into condenser
