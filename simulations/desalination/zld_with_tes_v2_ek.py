@@ -3,6 +3,51 @@ import pandas as pd
 import os
 
 
+## for all of these cases, the electricity price is set to $0.12/kWhe
+# BASE CASE: SW to MED turned on
+
+# TEST 1: Decrease RO electricity requirement
+# Result: When decreased to 3.0 kWe/m3, RO did not turn on; however, decreasing to 2.5 kWe/m3 the same results happen as steady state
+#         model where RO turns on and goes RO->MED
+
+
+# TEST 2: 10x MED electricity use
+# Results: Does not initially turn on only RO like in base case; but when I change the multiplier on water to 1.2 and greater it does exhibit the same behavior
+
+
+# TEST 3: Water is worth nothing
+# Result: No active links, same as steady-state model
+
+
+# TEST 4: Lithium price is x100
+# Result: SW->RO->MED->ED (different from steady-state where it is SW->MED->ED)
+
+
+# TEST 5: Lithium price is x100 and MED electricity is x10
+# Result: SW->RO->ED (different from steady-state where it is SW->RO->MED->ED)
+
+
+# TEST 6: Lithium price is x100 and MED electricity is x100
+# Result: SW->RO->ED (same as steady-state model)
+
+
+# TEST 7: Salt price 100$/kg
+# Result: SW->RO->MED->CRY (same as steady-state model)
+
+
+# TEST 8: Salt price $100/kg and lithium price 100x base cost
+# Result: SW->RO->MED->ED->CRY (same as base model)
+
+
+# TEST 9: 10x MED electricity, RO at 4.6 kWe/m3
+# Result: No desalination turned on (same as steady-state)
+
+
+# TEST 10: Oversized turbine (x2), RO elec x100, cry elec x100 (so those aren't built)
+# Result: Sawtooth harging and discharging of tes systems, constant med output
+    
+    
+
 from zld_params import (
     add_sets,
     add_time_set,
@@ -17,16 +62,15 @@ Schedule_effic = pd.read_csv("sched_eff.csv", usecols=["Efficiency"]).to_numpy()
 Schedule_elec  = pd.read_csv("DIABLOCN_2_N001_PRICES.csv", usecols=["LMP"]).to_numpy().flatten()
 
 
-
 model = pyo.ConcreteModel()
 
-N = 24
+N = 168
 
 add_sets(model)
 add_time_set(model, N)
 add_time_series_params(model, sched_price_elec=Schedule_elec, sched_cyc_eff=Schedule_effic)
 add_thermo_params(model, oversize_factor=1.0)
-add_process_params(model, process_scale={})
+add_process_params(model, process_scale={'RO_elec':1.0, 'CRY_elec':1})
 add_economic_params(model, price_scale={'water'  : 1.0,
                                         'lithium': 1.0}, cost_scale={})
 add_zld_params(model, yield_scale=1.0)
@@ -65,19 +109,6 @@ model.v_dot_cap               = pyo.Var(model.processes, within=pyo.NonNegativeR
 
 
 
-###### new constraints ######
-
-V_dot_cap_max = 1e7   # units: m3/day
-
-def capacity_if_active(m, p):
-    return m.v_dot_cap[p] <= V_dot_cap_max * m.y_process_active[p]
-model.capacity_if_active = pyo.Constraint(model.processes, rule=capacity_if_active)
-
-def ed_cl_split(m, t):
-    return (m.f_ion_conc[t,'ED','Cl'] * m.v_dot_dil[t,'ED'] == m.f_ion_dil[t,'ED','Cl'] * m.v_dot_conc[t,'ED'])
-model.ed_cl_split = pyo.Constraint(model.T, rule=ed_cl_split)
-
-###### end constraints ######
 
 
 # convert steam to power in the power cycle
@@ -116,6 +147,13 @@ model.hx1_conversion = pyo.Constraint(model.T, rule=hx1_conversion)
 def hot_tes_limit(model,t):
     return model.m_hot_tes[t] <= model.m_hot_tes_max
 model.hot_tes_limit = pyo.Constraint(model.T, rule=hot_tes_limit)
+
+
+
+# limits cold tes inventory
+def cold_tes_limit(m, t):
+    return m.m_cold_tes[t] <= m.m_cold_tes_max
+model.cold_tes_limit = pyo.Constraint(model.T, rule=cold_tes_limit)
 
 
 
@@ -227,21 +265,6 @@ model.link_gate_all = pyo.Constraint(model.T, model.links, rule=link_gate_all)
 
 
 
-# routes concentrated stream to next node
-def conc_outflow_balance(m, t, p):
-    if p == 'SW':
-        return pyo.Constraint.Skip
-
-    outs = [q for (p2,q) in m.links if p2 == p]
-    if not outs:
-        return pyo.Constraint.Skip
-
-    return sum(m.v_dot_link[t, (p,q)] for q in outs) == m.v_dot_conc[t, p]
-
-model.conc_outflow_balance = pyo.Constraint(model.T, model.processes, rule=conc_outflow_balance)
-
-
-
 # constrains flow to one downstream process
 def one_outgoing(m, t, p):
     if p == 'SW':
@@ -254,20 +277,6 @@ def one_outgoing(m, t, p):
     return sum(m.y_link_active[(p, q)] for q in outs) <= 1
 
 model.one_outgoing = pyo.Constraint(model.T, model.processes, rule=one_outgoing)
-
-
-# routes ion flow in concentrated stream though downstream links
-def route_conc_ions(m, t, p, i):
-    if p in ['SW', 'CRY']:
-        return pyo.Constraint.Skip
-
-    outs = [q for (p2, q) in m.links if p2 == p]
-    if not outs:
-        return pyo.Constraint.Skip
-
-    return sum(m.f_ion_link[t, (p,q), i] for q in outs) == m.f_ion_conc[t, p, i]
-
-model.route_conc_ions = pyo.Constraint(model.T, model.processes, model.ions, rule=route_conc_ions)
 
 
 
@@ -402,51 +411,175 @@ model.li_recovery = pyo.Constraint(model.T, rule=li_recovery)
 
 
 # equates li recovered with amount in diluted stream
-def li_mass_balance(model, t):
+def li_mass_balance(model,t):
     return model.li_recovered_ed[t] == model.f_ion_dil[t,'ED','Li']
 model.li_mass_balance = pyo.Constraint(model.T, rule=li_mass_balance)
 
 
 
 # splits na between ed outlet streams
-def ed_split(model, t):
+def ed_split(model,t):
     return (model.f_ion_conc[t,'ED','Na'] * model.v_dot_dil[t,'ED']
         == model.f_ion_dil[t,'ED','Na'] * model.v_dot_conc[t, 'ED'])
 model.ed_split = pyo.Constraint(model.T, rule=ed_split)
 
 
+# splits cl between ed outlet streams
+def ed_cl_split(model,t):
+    return (model.f_ion_conc[t,'ED','Cl'] * model.v_dot_dil[t,'ED']
+            == model.f_ion_dil[t,'ED','Cl'] * model.v_dot_conc[t,'ED'])
+model.ed_cl_split = pyo.Constraint(model.T, rule=ed_cl_split)
+
+
 
 # sets capacity on processes
-def capacity_limit_rule(m, t, p):
-    return m.v_dot_in[t,p] <= m.v_dot_cap[p]/24
+def capacity_limit_rule(model,t,p):
+    return model.v_dot_in[t,p] <= model.v_dot_cap[p]/24
 model.capacity_limit = pyo.Constraint(model.T, model.processes, rule=capacity_limit_rule)
 
 
+
 # allows flow on link to be some multiple of seawater inflow
-def ion_link_gate(m, t, p, q, i):
-    M = pyo.value(m.Conc_sw[i]) * pyo.value(m.V_dot_max)
-    return m.f_ion_link[t, (p,q), i] <= M * m.y_link_active[(p,q)]
+def ion_link_gate(model,t,p,q,i):
+    M = pyo.value(model.Conc_sw[i]) * pyo.value(model.V_dot_max)
+    return model.f_ion_link[t, (p,q), i] <= M * model.y_link_active[(p,q)]
 model.ion_link_gate = pyo.Constraint(model.T, model.links, model.ions, rule=ion_link_gate)
 
 
 
+############################ NEW CONSTRAINTS ################################
+
+# limits link flow to less than upstream process concentrate flow:
+def upper_link_flow_balance(model,t,p,q):
+    if p == 'SW':
+        return pyo.Constraint.Skip
+    return model.v_dot_link[t,(p,q)] <= model.v_dot_conc[t,p]
+model.upper_link_flow_balance = pyo.Constraint(model.T, model.links, rule=upper_link_flow_balance)
+
+
+# requires link flow to be upstream process concentrate flow if active
+def lower_link_flow_balance(model,t,p,q):
+    if p == 'SW':
+        return pyo.Constraint.Skip
+    return model.v_dot_link[t,(p,q)] >= model.v_dot_conc[t,p] - model.V_dot_max*(1 - model.y_link_active[(p,q)])
+model.lower_link_flow_balance = pyo.Constraint(model.T, model.links, rule=lower_link_flow_balance)
 
 
 
-epsilon   = 1e-6
+# requires incoming link for process to be active
+def process_requires_incoming(model, p):
+    if p == 'SW':
+        return pyo.Constraint.Skip
+    incoming = [u for (u,v) in model.links if v == p]
+    if not incoming:
+        return pyo.Constraint.Skip
+    return model.y_process_active[p] <= sum(model.y_link_active[u,p] for u in incoming)
+model.process_requires_incoming = pyo.Constraint(model.processes, rule=process_requires_incoming)
+
+
+
+# creates big-M for each ion
+M_ion       = {i:pyo.value(model.V_dot_max) * 20.0 * pyo.value(model.Conc_sw[i]) for i in model.ions}
+model.M_ion = pyo.Param(model.ions, initialize=M_ion, within=pyo.NonNegativeReals)
+
+
+
+# sets upper limit on ion concentrate along a link
+def ion_link_upper(model,t,p,q,i):
+    if p == 'SW': 
+        return pyo.Constraint.Skip
+    return model.f_ion_link[t,(p,q),i] <= model.f_ion_conc[t,p,i]
+model.ion_link_upper  = pyo.Constraint(model.T, model.links, model.ions, rule=ion_link_upper)
+
+
+
+# sets lower limit on ion concentration along a link
+def ion_link_lower(model,t,p,q,i):
+    if p == 'SW': 
+        return pyo.Constraint.Skip
+    return model.f_ion_link[t,(p,q),i] >= model.f_ion_conc[t,p,i] - model.M_ion[i] * (1 - model.y_link_active[(p,q)])
+model.ion_link_lower  = pyo.Constraint(model.T, model.links, model.ions, rule=ion_link_lower)
+
+
+
+# guarantees no ion flow on inactive links
+def ion_link_off(model,t,p,q,i):
+    if p == 'SW': 
+        return pyo.Constraint.Skip
+    return model.f_ion_link[t,(p,q),i] <= model.M_ion[i] * model.y_link_active[(p,q)]
+model.ion_link_off = pyo.Constraint(model.T, model.links, model.ions, rule=ion_link_off)
+
+
+
+V_dot_min_total = 1e-3
+Price_salt      = 0.0
+
+# enforces processes must be used if binary active
+def process_used_if_active(model,p):
+    if p == 'SW':
+        return pyo.Constraint.Skip
+    return sum(model.v_dot_in[t,p] for t in model.T) >= V_dot_min_total * model.y_process_active[p]
+model.process_used_if_active = pyo.Constraint(model.processes, rule=process_used_if_active)
+
+
+
+# enforces links must be used if binary active
+def link_used_if_active(model,p,q):
+    return sum(model.v_dot_link[t,(p,q)] for t in model.T) >= V_dot_min_total * model.y_link_active[(p,q)]
+model.link_used_if_active = pyo.Constraint(model.links, rule=link_used_if_active)
+
+ 
+
+# enforces downstream endpoint required for all links
+def link_requires_downstream_rule(model,p,q):
+    return model.y_link_active[p, q] <= model.y_process_active[q]
+model.link_requires_downstream = pyo.Constraint(model.links, rule=link_requires_downstream_rule)
+
+
+
+# enforces upstream point required for links
+def link_requires_upstream_rule(model,p,q):
+    if p == 'SW':
+        return pyo.Constraint.Skip
+    return model.y_link_active[p, q] <= model.y_process_active[p]
+model.link_requires_upstream = pyo.Constraint(model.links, rule=link_requires_upstream_rule)
+
+
+    
+# enforces if process is on it must have at least one incoming link
+def process_requires_incoming(m, p):
+    if p == 'SW':
+        return pyo.Constraint.Skip
+    incoming = [q for (q,v) in m.links if v == p]
+    if not incoming:
+        return pyo.Constraint.Skip
+    return m.y_process_active[p] <= sum(m.y_link_active[(q,p)] for q in incoming)
+
+model.process_requires_incoming = pyo.Constraint(model.processes, rule=process_requires_incoming)
+
+
+
+############################ NEW CONSTRAINTS ################################
+
+
 annualize = 8760/len(model.T)
 
-profit_yr = annualize * sum(model.Price_li * model.li_recovered_ed[t]
-            + model.Price_water * (model.v_dot_dil[t,'RO'] + model.v_dot_dil[t,'MED'] + model.v_dot_dil[t,'CRY'])
-            for t in model.T)
+profit_yr = annualize * sum(
+    model.Price_li * model.li_recovered_ed[t]
+  + model.Price_water * (model.v_dot_dil[t,'RO'] + model.v_dot_dil[t,'MED'] + model.v_dot_dil[t,'CRY'])
+  + model.Price_elec[t] * model.elec_sold[t] + Price_salt * sum(model.f_ion_in[t,'CRY', i] for i in model.ions)
+  for t in model.T)
 
-capex_total = sum(model.K_process[p] * model.v_dot_cap[p] for p in model.processes)
+
+
+capex_total = sum(model.K_process[p] * model.v_dot_cap[p] for p in model.processes) + model.Cost_tes_cold*model.m_cold_tes_max + model.Cost_tes_hot*model.m_hot_tes_max 
+
+
 capex_yr    = capex_total/30
 
-model.obj = pyo.Objective(expr=(profit_yr - capex_yr
-                               - epsilon*sum(model.y_process_active[p] for p in model.processes)
-                               - epsilon*sum(model.y_link_active[l] for l in model.links)), sense=pyo.maximize)
+model.obj   = pyo.Objective(expr=(profit_yr - capex_yr), sense=pyo.maximize)
 
+                          
 
 
 
@@ -562,8 +695,20 @@ with open("solution_summary.csv", "w", newline="") as f:
             pyo.value(model.m_dot_extract[t]),
             pyo.value(model.m_hot_tes[t]),
             pyo.value(model.m_cold_tes[t]),
-            pyo.value(model.w_dot_gen[t]),
-
+            pyo.value(model.w_dot_gen[t])
         ])
+        
+    writer.writerow([])
+    writer.writerow(["# PROCESS FLOWS (m3/h)"])
+    writer.writerow(["time", "process", "v_in", "v_conc", "v_dil"])
+    
+    for t in model.T:
+        for p in model.processes:
+            writer.writerow([
+                t, p,
+                pyo.value(model.v_dot_in[t, p]),
+                pyo.value(model.v_dot_conc[t, p]),
+                pyo.value(model.v_dot_dil[t, p]),
+            ])
 
 
