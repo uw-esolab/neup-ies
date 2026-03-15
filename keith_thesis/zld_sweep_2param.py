@@ -21,16 +21,16 @@ def run_2d_sensitivity():
 
     ########## mode selection ##########
 
-    sweep_mode = "schedule_x_param"
-    # sweep_mode = "param_x_param"
+    # sweep_mode = "schedule_x_param"
+    sweep_mode = "param_x_param"
 
     ########## parameter sweep ##########
 
     sweep_name_1   = "lithium"
     sweep_values_1 = [0.25, 0.5, 1.0, 2.5, 5.0, 7.5, 10.0, 20.0]
 
-    # sweep_name_2   = "water"
-    # sweep_values_2 = [0.25, 0.5, 1.0, 1.5, 2.0, 5.0]
+    sweep_name_2   = "water"
+    sweep_values_2 = [0.25, 0.5, 1.0, 1.5, 2.0, 5.0]
     
     ########## pricing schedule files ##########
 
