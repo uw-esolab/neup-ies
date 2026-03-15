@@ -1,16 +1,14 @@
 import pyomo.environ as pyo
-import pandas as pd
-import os
-import numpy as np
+
 
 
 def build_model(N, Schedule_elec, Schedule_effic, price_mults=None, cost_mults=None, process_mults=None, turbine_mults=1.0):
     
     
     # default dictionaries
-    price_mults   = price_mults or {'water':1.0, 'lithium':1.0}
-    cost_mults    = cost_mults or {'tes_hot':1.0, 'tes_cold':1.0}
-    process_mults = process_mults or {'RO_elec':1.0, 'ED_elec':1.0}
+    price_mults   = price_mults or {}
+    cost_mults    = cost_mults or {}
+    process_mults = process_mults or {}
     
 
     from zld_params import (

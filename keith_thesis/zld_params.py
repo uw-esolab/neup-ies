@@ -1,11 +1,8 @@
 import pyomo.environ as pyo
 
-from power_cycle_calcs import compute_power_cycle_nominals
+from zld_power_cycle_calcs import compute_power_cycle_nominals
 
-
-
-
-    
+  
     
 def add_sets(model):
    
