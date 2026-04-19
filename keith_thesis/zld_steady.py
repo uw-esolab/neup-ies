@@ -180,8 +180,23 @@ def main(Li_price=70,ED_elec_req=3.5,RO_elec_req=4.5,MED_elec_req=1.0):
     I cannot resolve the numbers from the paper cited with that for MED and have instead used a rule of thumb from online
     that crystallizer needs about 4x as much heat and 3x as much power. This needs revisiting
   """
-    
-    
+
+
+
+    def link_used_if_active(m, p, q):
+        return m.v_dot_link[(p,q)] >= m.V_dot_min * m.y_link_active[(p,q)]
+    model.link_used_if_active = pyo.Constraint(model.links, rule=link_used_if_active)
+
+
+  
+    def ion_link_off(m, p, q, i):
+        if p == 'SW':
+            return pyo.Constraint.Skip
+        return m.f_ion_link[(p,q), i] <= m.M_ion[i] * m.y_link_active[(p,q)]
+    model.ion_link_off = pyo.Constraint(model.links, model.ions, rule=ion_link_off)
+
+
+  
     def linear_power_generation_rule(m,c):
         return m.elec_generated[c] == (m.power_slope[c] * m.m_dot_extract[c]  + m.power_intercept) * model.y_cycle_active[c]
     model.linear_power_generation = pyo.Constraint(model.cycles, rule=linear_power_generation_rule)
