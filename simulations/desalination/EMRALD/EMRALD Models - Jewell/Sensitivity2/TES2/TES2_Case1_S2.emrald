@@ -33468,7 +33468,7 @@
       "name": "Tank_Active_Rate",
       "desc": "",
       "varScope": "gtGlobal",
-      "value": 8.8e-4,
+      "value": 8.8e-5,
       "resetOnRuns": true,
       "type": "double",
       "id": "70dfc947-c105-45ba-b718-ffe632922ad0",
