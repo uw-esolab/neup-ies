@@ -33128,7 +33128,7 @@
       "name": "NF_Active_Rate",
       "desc": "",
       "varScope": "gtGlobal",
-      "value": 9.51E-05,
+      "value": 9.51E-06,
       "resetOnRuns": true,
       "type": "double",
       "id": "ee4aa0c5-99d6-495b-ac84-c5cf242dd237",
